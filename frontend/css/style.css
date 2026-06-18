@@ -1,0 +1,503 @@
+/* Estilos Generales y Reseteo */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    color: #333;
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Contenedor de Login (Centrado) */
+.login-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f5f5f5;
+}
+
+.login-card {
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-card img {
+    width: 120px;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #555;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #f9f9f9;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    background-color: #1a1f2c;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #2d3548;
+}
+
+/* Estructura del Dashboard con Barra Lateral */
+.sidebar {
+    width: 260px;
+    background-color: #1a1f2c;
+    color: #fff;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar h2 {
+    font-size: 18px;
+    padding: 10px 20px;
+    border-bottom: 1px solid #2d3548;
+    margin-bottom: 20px;
+    color: #b0b5c0;
+}
+
+.sidebar a {
+    padding: 15px 20px;
+    color: #b0b5c0;
+    text-decoration: none;
+    display: block;
+    font-size: 15px;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.sidebar a:hover, .sidebar a.active {
+    background-color: #8a1c24; /* Tono guinda institucional */
+    color: #fff;
+}
+
+.sidebar a.hidden {
+    display: none;
+}
+
+.sidebar .logout {
+    margin-top: auto;
+    border-top: 1px solid #2d3548;
+}
+
+/* Contenido Principal */
+.main-content {
+    margin-left: 260px;
+    padding: 40px;
+    width: calc(100% - 260px);
+}
+
+.header-user {
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 30px;
+}
+
+/* Vistas Dinámicas */
+.view-section {
+    display: none;
+}
+
+.view-section.active {
+    display: block;
+}
+
+/* Tarjetas del Menú de Inicio (Dashboard) */
+.dashboard-grid {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.card {
+    background: #fff;
+    padding: 25px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    flex: 1;
+    min-width: 280px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.card h3 {
+    margin-bottom: 10px;
+    color: #1a1f2c;
+}
+
+/* Configuración Específica de Convocatorias (Cajas Centradas Izquierda/Derecha) */
+.programas-container {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 40px;
+}
+
+.box-programa {
+    background-color: #ffffff;
+    border: 2px solid #8a1c24;
+    border-radius: 8px;
+    width: 300px;
+    padding: 50px 20px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    color: #1a1f2c;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    transition: transform 0.3s, background-color 0.3s, color 0.3s;
+}
+
+.box-programa:hover {
+    transform: translateY(-5px);
+    background-color: #8a1c24;
+    color: #ffffff;
+}
+
+/* Lista de convocatorias reales */
+.lista-convocatorias h3 {
+    color: #8a1c24;
+    margin-bottom: 15px;
+}
+.convocatoria-item {
+    background: #fff;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 5px solid #8a1c24;
+    border-radius: 4px;
+}
+.convocatoria-item h4 {
+    color: #1a1f2c;
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+/* Estilos para el Flujo Secuencial (Stepper) */
+.stepper-wrapper {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: 30px;
+    max-width: 800px;
+}
+
+.stepper-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background-color: #ccc;
+    z-index: 1;
+}
+
+.step-node {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 3px solid #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    z-index: 2;
+    position: relative;
+    color: #777;
+    transition: all 0.3s;
+}
+
+.step-node.active {
+    border-color: #8a1c24;
+    background-color: #8a1c24;
+    color: #fff;
+}
+
+.step-node.completed {
+    border-color: #27ae60;
+    background-color: #27ae60;
+    color: #fff;
+}
+
+.step-label {
+    position: absolute;
+    top: 50px;
+    font-size: 11px;
+    white-space: nowrap;
+    color: #333;
+    font-weight: normal;
+}
+
+/* Manejo de paneles de las estaciones */
+.station-panel {
+    display: none;
+}
+
+.station-panel.active-panel {
+    display: block;
+}
+
+/* Opciones de Modalidad (Radio Cards) */
+.modalidad-opciones {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.radio-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #fdfdfd;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.radio-card:hover {
+    background: #f5f5f5;
+}
+
+.radio-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.radio-content strong {
+    color: #1a1f2c;
+}
+
+.radio-content span {
+    font-size: 13px;
+    color: #666;
+}
+
+/* Cuadro de costos */
+.costos-box {
+    background: #f9f2f3;
+    border-left: 5px solid #8a1c24;
+    padding: 15px;
+    border-radius: 4px;
+    max-width: 500px;
+}
+
+.costos-box h4 {
+    color: #8a1c24;
+    margin-bottom: 8px;
+}
+
+.costo-linea {
+    display: flex;
+    justify-content: space-between;
+    font-size: 15px;
+}
+
+/* Grid de archivos cargados */
+.file-grid {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.file-box {
+    background: #fff;
+    border: 1px dashed #bbb;
+    padding: 15px;
+    border-radius: 6px;
+    flex: 1;
+    min-width: 220px;
+}
+
+.file-box label {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.file-box.warning-border {
+    border-color: #e67e22;
+    background-color: #fffaf5;
+}
+
+.btn-secondary {
+    padding: 12px 25px;
+    background: #7f8c8d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.btn-primary:disabled, .btn-secondary:disabled {
+    background-color: #cccccc !important;
+    cursor: not-allowed;
+}
+/* --- DISEÑO DE VISTA DE PROCESO (GRÁFICA Y TABLA ADMIN) --- */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.admin-table th, .admin-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 14px;
+}
+
+.admin-table th {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+/* Botones de acción rápidos */
+.btn-stat {
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-right: 5px;
+    color: white;
+    transition: opacity 0.2s;
+}
+
+.btn-stat:hover {
+    opacity: 0.8;
+}
+
+.btn-accept { background-color: #27ae60; }
+.btn-reject { background-color: #c0392b; }
+
+/* Configuración de la Gráfica de Pastel (Pie Chart Proporcional) */
+.pie-chart {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: conic-gradient(#7f8c8d 0% 100%); /* Estado Inicial Gris Pendiente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: background 0.4s ease;
+}
+
+.pie-center {
+    width: 100px;
+    height: 100px;
+    background-color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#txt-porcentaje {
+    font-size: 22px;
+    font-weight: bold;
+    color: #1a1f2c;
+}
+
+/* Leyendas de la gráfica */
+.chart-legend {
+    margin-top: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.dot.approved { background-color: #27ae60; }
+.dot.rejected { background-color: #c0392b; }
+.dot.pending  { background-color: #7f8c8d; }
+/* Estilos para Notas de Retroalimentación de Profesores Evaluadores */
+.retro-box {
+    background-color: #fcf8e3;
+    border: 1px solid #faebcc;
+    border-left: 5px solid #f0ad4e;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 15px;
+}
+
+.retro-box h4, .entrevista-status-box h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 15px;
+    color: #8a6d3b;
+}
+
+.entrevista-status-box h4 {
+    color: #2c3e50;
+}
+
+.comentario-profesor {
+    background: rgba(255, 255, 255, 0.7);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-bottom: 6px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.comentario-profesor strong {
+    color: #1a1f2c;
+}

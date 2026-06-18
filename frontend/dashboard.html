@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión - Posgrado FIE</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <nav class="sidebar">
+        <h2>Barra de navegación</h2>
+        <a id="nav-inicio" onclick="switchView('inicio')" class="active">Inicio / Menú Principal</a>
+        <a id="nav-proceso" onclick="switchView('proceso')">Vista de Proceso</a>
+        <a id="nav-convocatorias" onclick="switchView('convocatorias')">Convocatorias</a>
+        
+        <a id="nav-documentos" onclick="switchView('documentos')" class="hidden">Documentos y Pagos</a>
+        
+        <a id="nav-notificaciones" onclick="switchView('notificaciones')">Notificaciones o Mensajes</a>
+        <a class="logout" onclick="cerrarSesion()">Cerrar Sesión</a>
+    </nav>
+
+    <main class="main-content">
+        <div class="header-user">
+            <h1 id="saludo-usuario">Hola Bienvenid@, "Nombre del estudiante"</h1>
+        </div>
+
+        <section id="view-inicio" class="view-section active">
+            <h2>Vista de Menú Principal</h2>
+            <br>
+            <div class="dashboard-grid">
+                <div class="card" onclick="switchView('proceso')" style="cursor:pointer;">
+                    <h3>Proceso de admisión</h3>
+                    <p>Ver estado actual</p>
+                </div>
+                <div class="card" onclick="switchView('convocatorias')" style="cursor:pointer;">
+                    <h3>Convocatorias abiertas</h3>
+                    <p>Explorar opciones de posgrado</p>
+                </div>
+                <div class="card" onclick="switchView('notificaciones')" style="cursor:pointer;">
+                    <h3>Mensajes y Notificaciones</h3>
+                    <p>Notificaciones importantes</p>
+                </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: VISTA DE PROCESO -->
+<section id="view-proceso" class="view-section">
+    <h2>Vista de Proceso</h2>
+    <p>Seguimiento del estado de tu postulación paso a paso y auditoría de documentos.</p>
+    <br>
+
+    <div style="display: flex; gap: 25px; flex-wrap: wrap;">
+        
+        <!-- COLUMNA IZQUIERDA: SIMULADOR DE CONTROL ESCOLAR (ADMINISTRADOR) -->
+        <div class="card" style="flex: 1; min-width: 320px;">
+            <h3 style="color: #8a1c24; margin-bottom: 5px;">🛠️ Panel de Simulación: Control Escolar</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Simula las acciones que tomaría un administrador al revisar tus archivos subidos:</p>
+            
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Documento</th>
+                            <th>Acciones del Admin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Acta de Nacimiento</td>
+                            <td>
+                                <button class="btn-stat btn-accept" onclick="cambiarEstadoDocumento('acta', 'aprobado')">✓</button>
+                                <button class="btn-stat btn-reject" onclick="cambiarEstadoDocumento('acta', 'rechazado')">✗</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Identificación INE</td>
+                            <td>
+                                <button class="btn-stat btn-accept" onclick="cambiarEstadoDocumento('ine', 'aprobado')">✓</button>
+                                <button class="btn-stat btn-reject" onclick="cambiarEstadoDocumento('ine', 'rechazado')">✗</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Certificado de Calificaciones</td>
+                            <td>
+                                <button class="btn-stat btn-accept" onclick="cambiarEstadoDocumento('certificado', 'aprobado')">✓</button>
+                                <button class="btn-stat btn-reject" onclick="cambiarEstadoDocumento('certificado', 'rechazado')">✗</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Cartas de Recomendación</td>
+                            <td>
+                                <button class="btn-stat btn-accept" onclick="cambiarEstadoDocumento('cartas', 'aprobado')">✓</button>
+                                <button class="btn-stat btn-reject" onclick="cambiarEstadoDocumento('cartas', 'rechazado')">✗</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Examen CENEVAL EXANI-III</td>
+                            <td>
+                                <button class="btn-stat btn-accept" onclick="cambiarEstadoDocumento('ceneval', 'aprobado')">✓</button>
+                                <button class="btn-stat btn-reject" onclick="cambiarEstadoDocumento('ceneval', 'rechazado')">✗</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: MÉTRICAS Y GRÁFICA DE PASTEL -->
+        <div class="card" style="flex: 1; min-width: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <h3>Estatus del Expediente Digital</h3>
+            <br>
+            
+            <!-- Gráfica de Pastel generada mediante CSS Conic-Gradient -->
+            <div id="grafica-pastel" class="pie-chart">
+                <div class="pie-center"><span id="txt-porcentaje">0%</span></div>
+            </div>
+            
+            <!-- Acotaciones / Leyendas -->
+            <div class="chart-legend">
+                <div class="legend-item"><span class="dot approved"></span> Aprobados (<strong id="lbl-aprobados">0</strong>)</div>
+                <div class="legend-item"><span class="dot rejected"></span> Rechazados (<strong id="lbl-rechazados">0</strong>)</div>
+                <div class="legend-item"><span class="dot pending"></span> Pendientes (<strong id="lbl-pendientes">5</strong>)</div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+        <section id="view-convocatorias" class="view-section">
+            <h2>Convocatorias Disponibles</h2>
+            
+            <div id="seleccion-programa" class="programas-container">
+                <div class="box-programa" onclick="seleccionarPrograma('Maestría en Ingeniería Eléctrica')">
+                    Maestría
+                </div>
+                <div class="box-programa" onclick="seleccionarPrograma('Doctorado en Ingeniería Eléctrica')">
+                    Doctorado
+                </div>
+            </div>
+
+            <!-- Estado Posterior: Convocatorias Desbloqueadas post-registro -->
+<div id="lista-programas-abiertos" class="lista-convocatorias" style="display: none;">
+    <p>Has iniciado sesión y desbloqueado los accesos para el registro formal al programa seleccionado.</p>
+    <br>
+    
+    <!-- Contenedor dinámico que se llenará desde JavaScript -->
+    <div id="contenedor-tarjetas-programas"></div>
+</div>
+        </section>
+
+        <!-- SECCIÓN: DOCUMENTOS Y PAGOS (FLUJO POR ESTACIONES ADAPTATIVO M/D) -->
+<section id="view-documentos" class="view-section">
+    <h2 id="titulo-flujo-documentos">Seguimiento de Trámites y Requisitos de Ingreso</h2>
+    <p>Completa cada una de las estaciones requeridas para enviar tu postulación a revisión administrativa.</p>
+    <br>
+
+    <!-- Indicador Visual de Estaciones (Stepper) -->
+    <div class="stepper-wrapper">
+        <div class="step-node active" id="node-0">0<span class="step-label">Admisión / Grado</span></div>
+        <div class="step-node" id="node-1">1<span class="step-label" id="lbl-step-1">Personales / CV</span></div>
+        <div class="step-node" id="node-2">2<span class="step-label" id="lbl-step-2">Académicos / Proyecto</span></div>
+        <div class="step-node" id="node-3">3<span class="step-label" id="lbl-step-3">Cartas / Idioma</span></div>
+        <div class="step-node" id="node-4">4<span class="step-label" id="lbl-step-4">CENEVAL / Entrevista</span></div>
+    </div>
+
+    <!-- PANEL ESTACIÓN 0 -->
+    <div id="panel-estacion-0" class="station-panel active-panel">
+        <div class="card">
+            <h3 id="tit-estacion-0">Estación 0: Mecanismo de Admisión Seleccionado</h3>
+            <p id="desc-estacion-0" style="margin-bottom: 15px; color: #555;">De acuerdo a la normativa institucional, selecciona tu modalidad de ingreso:</p>
+            
+            <!-- Bloque Maestría -->
+            <div id="opciones-admision-maestria" class="modalidad-opciones">
+                <label class="radio-card">
+                    <input type="radio" name="modalidad" value="examen" checked onchange="actualizarCostosAdmision()">
+                    <div class="radio-content"><strong>1. Examen de Admisión</strong><span>Examen escrito sobre temas comunes y específicos.</span></div>
+                </label>
+                <label class="radio-card">
+                    <input type="radio" name="modalidad" value="prope" onchange="actualizarCostosAdmision()">
+                    <div class="radio-content"><strong>2. Curso Propedéutico</strong><span>Cursar y aprobar el bloque académico asignado.</span></div>
+                </label>
+                <label class="radio-card">
+                    <input type="radio" name="modalidad" value="promedio-fie" onchange="actualizarCostosAdmision()">
+                    <div class="radio-content"><strong>3. Ingreso por Promedio (Egresados FIE)</strong><span>Mínimo de 8.0 general en su tira de materias.</span></div>
+                </label>
+                <label class="radio-card">
+                    <input type="radio" name="modalidad" value="examen-especial" onchange="actualizarCostosAdmision()">
+                    <div class="radio-content"><strong>4. Examen de Conocimientos Especiales (EXA-FIE)</strong><span>Evaluación directa aprobada por el Comité Técnico del Posgrado.</span></div>
+                </label>
+            </div>
+
+            <!-- Bloque Doctorado -->
+            <div id="opciones-admision-doctorado" class="file-box" style="display:none; border-color:#8a1c24; background-color:#fff9f9;">
+                <label style="color:#8a1c24; font-size:16px;">Requisito Esencial: Tener Grado de Maestría Académica *</label>
+                <p style="font-size:13px; color:#555; margin-bottom:10px;">El sistema detectó tu historial de egreso de Maestría FIE. Tus documentos previos se han migrado automáticamente.</p>
+                <input type="file" id="file-grado-maestria" onchange="verificarArchivosEstacion(0)">
+            </div>
+
+            <div class="costos-box" id="box-costos-desglose" style="margin-top:15px;">
+                <h4>Aranceles y Conceptos de Pago</h4>
+                <div class="costo-linea"><span>Examen de Admisión:</span> <strong>$ 1,000.00 MXN</strong></div>
+            </div>
+            <br>
+            <button class="btn-primary" id="btn-next-0" style="width: auto; padding: 12px 30px;" onclick="cambiarEstacion(1)">Confirmar y Continuar ➔</button>
+        </div>
+    </div>
+
+    <!-- PANEL ESTACIÓN 1 -->
+    <div id="panel-estacion-1" class="station-panel">
+        <div class="card">
+            <h3 id="tit-estacion-1">Estación 1: Documentación de Identidad</h3>
+            
+            <!-- Vista Maestría -->
+            <div id="grid-maestria-1" class="file-grid">
+                <div class="file-box"><label>Acta de Nacimiento *</label><input type="file" id="file-acta" onchange="verificarArchivosEstacion(1)"></div>
+                <div class="file-box"><label>Clave CURP *</label><input type="file" id="file-curp" onchange="verificarArchivosEstacion(1)"></div>
+                <div class="file-box"><label>Identificación Oficial (INE) *</label><input type="file" id="file-ine" onchange="verificarArchivosEstacion(1)"></div>
+                <div class="file-box"><label>Fotografía Tamaño Infantil *</label><input type="file" id="file-foto" onchange="verificarArchivosEstacion(1)"></div>
+            </div>
+
+            <!-- Vista Doctorado -->
+            <div id="grid-doctorado-1" style="display:none;">
+                <p style="color:green; font-weight:bold; margin-bottom:15px;">✓ Requisitos de identidad validados y heredados de tu expediente de maestría.</p>
+                <div class="file-box" style="max-width:400px; border-color:#8a1c24;">
+                    <label>Currículum Vítae (CV) Único Actualizado *</label>
+                    <input type="file" id="file-cv" onchange="verificarArchivosEstacion(1)">
+                </div>
+            </div>
+            <br>
+            <div style="display:flex; gap:15px;">
+                <button class="btn-secondary" onclick="cambiarEstacion(0)">⬅️ Volver</button>
+                <button class="btn-primary" id="btn-next-1" style="width:auto; padding:12px 30px;" disabled onclick="cambiarEstacion(2)">Siguiente Estación ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL ESTACIÓN 2 -->
+    <div id="panel-estacion-2" class="station-panel">
+        <div class="card">
+            <h3 id="tit-estacion-2">Estación 2: Antecedentes Académicos</h3>
+            
+            <!-- Vista Maestría -->
+            <div id="grid-maestria-2" class="file-grid">
+                <div class="file-box warning-border">
+                    <label>Título de Licenciatura</label>
+                    <input type="file" id="file-titulo" onchange="verificarArchivosEstacion(2)">
+                </div>
+                <div class="file-box"><label>Certificado Oficial de Calificaciones *</label><input type="file" id="file-certificado" onchange="verificarArchivosEstacion(2)"></div>
+            </div>
+
+            <!-- Vista Doctorado -->
+            <div id="grid-doctorado-2" style="display:none;">
+                <div class="file-box" style="border-color:#8a1c24; margin-bottom:20px;">
+                    <label>Carga de Propuesta de Proyecto de Investigación *</label>
+                    <input type="file" id="file-propuesta" onchange="verificarArchivosEstacion(2)">
+                </div>
+                
+                <!-- Espacio de Retroalimentación de los Profesores Anónimos (P1, P2, P3) -->
+                <div class="retro-box">
+                    <h4>💬 Buzón de Evaluación y Retroalimentación de Propuesta</h4>
+                    <div class="comentario-profesor"><strong>Revisor P1:</strong> <span style="color:#27ae60;">✓ Visto Bueno (Aprobado sin cambios necesarios).</span></div>
+                    <div class="comentario-profesor"><strong>Revisor P2:</strong> <span>"Se recomienda delimitar con mayor claridad el alcance del segundo objetivo específico de automatización."</span></div>
+                    <div class="comentario-profesor"><strong>Revisor P3:</strong> <span>"Estructura metodológica adecuada. Sugiero enriquecer las referencias del estado del arte."</span></div>
+                </div>
+            </div>
+            <br>
+            <div style="display:flex; gap:15px;">
+                <button class="btn-secondary" onclick="cambiarEstacion(1)">⬅️ Volver</button>
+                <button class="btn-primary" id="btn-next-2" style="width:auto; padding:12px 30px;" disabled onclick="cambiarEstacion(3)">Siguiente Estación ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL ESTACIÓN 3 -->
+    <div id="panel-estacion-3" class="station-panel">
+        <div class="card">
+            <h3 id="tit-estacion-3">Estación 3: Examen TOEFL - Ingles</h3>
+            
+            <!-- Vista Maestría -->
+            <div id="grid-maestria-3" class="file-grid">
+                <div class="file-box"><label>Carta 1 *</label><input type="file" id="file-carta1" onchange="verificarArchivosEstacion(3)"></div>
+                <div class="file-box"><label>Carta 2 *</label><input type="file" id="file-carta2" onchange="verificarArchivosEstacion(3)"></div>
+                <div class="file-box"><label>Carta 3 *</label><input type="file" id="file-carta3" onchange="verificarArchivosEstacion(3)"></div>
+            </div>
+
+            <!-- Vista Doctorado -->
+            <div id="grid-doctorado-3" style="display:none;">
+                <p style="color:green; font-weight:bold; margin-bottom:15px;">✓ Cartas de recomendación validadas en el expediente base.</p>
+                <div class="file-box" style="max-width:450px; border-color:#8a1c24;">
+                    <label>Constancia / Examen de Certificación de Idioma Oficial *</label>
+                    <input type="file" id="file-idioma" onchange="verificarArchivosEstacion(3)">
+                </div>
+            </div>
+            <br>
+            <div style="display:flex; gap:15px;">
+                <button class="btn-secondary" onclick="cambiarEstacion(2)">⬅️ Volver</button>
+                <button class="btn-primary" id="btn-next-3" style="width:auto; padding:12px 30px;" disabled onclick="cambiarEstacion(4)">Siguiente Estación ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL ESTACIÓN 4 -->
+    <div id="panel-estacion-4" class="station-panel">
+        <div class="card">
+            <h3 id="tit-estacion-4">Estación 4: Evaluación General</h3>
+            
+            <!-- Vista Maestría -->
+            <div id="grid-maestria-4" class="file-box" style="max-width:400px;">
+                <label>Constancia de Resultados Examen CENEVAL - EXANI III *</label>
+                <input type="file" id="file-ceneval" onchange="verificarArchivosEstacion(4)">
+            </div>
+
+            <!-- Vista Doctorado -->
+            <div id="grid-doctorado-4" style="display:none;">
+                <div class="entrevista-status-box" style="background:#f4f6f7; padding:15px; border-radius:6px; border-left:5px solid #2980b9;">
+                    <h4>🗓️ Estatus de Agenda para Entrevista de Admisión</h4>
+                    <p style="font-size:14px; margin: 5px 0;"><strong>Sínodo Asignado:</strong> 3 Profesores Investigadores del Núcleo de la FIE (Datos protegidos por anonimato institucional).</p>
+                    <p style="font-size:13px; color:#e67e22;"><strong>Nota de seguridad:</strong> Los nombres de los sinodales asignados se mantendrán ocultos para asegurar la imparcialidad del proceso.</p>
+                    <hr style="margin:10px 0; border:0; border-top:1px solid #ddd;">
+                    
+                    <!-- Retroalimentación de la entrevista -->
+                    <h5 style="margin-bottom:5px; font-size:14px; color:#333;">Dictámenes y notas del Sínodo Evaluador:</h5>
+                    <div class="comentario-profesor"><strong>Evaluador J1:</strong> <span style="color:#27ae60;">✓ Visto Bueno - Perfil de investigación idóneo para el programa.</span></div>
+                    <div class="comentario-profesor"><strong>Evaluador J2:</strong> <span>"Muestra excelente dominio de sus líneas de generación de conocimiento. Proyecto viable."</span></div>
+                    <div class="comentario-profesor"><strong>Evaluador J3:</strong> <span>"Habilidades de comunicación científica sobresalientes en la defensa técnica."</span></div>
+                </div>
+                <br>
+                <!-- Checkbox simulador de asistencia a entrevista -->
+                <label style="display:flex; align-items:center; gap:10px; font-weight:bold; cursor:pointer;">
+                    <input type="checkbox" id="chk-entrevista" onchange="verificarArchivosEstacion(4)"> Confirmo que mi entrevista formal con el sínodo ha concluido.
+                </label>
+            </div>
+            <br>
+            <div style="display:flex; gap:15px;">
+                <button class="btn-secondary" onclick="cambiarEstacion(3)">⬅️ Volver</button>
+                <button class="btn-primary" id="btn-finalizar" style="width:auto; padding:12px 30px; background-color:#27ae60;" disabled onclick="finalizarProcesoEstaciones()">Concluir y Enviar Expediente ✓</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+        <section id="view-notificaciones" class="view-section">
+            <h2>Notificaciones o Mensajes</h2>
+            <div class="card">
+                <p><strong>Sistema FIE:</strong> Recuerda verificar las fechas límite del calendario de admisiones.</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

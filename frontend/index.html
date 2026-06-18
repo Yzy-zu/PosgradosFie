@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UMSNH Sistema de Gestión - Posgrado</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="login-card">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/ea/Escudo-UMSNH.png" alt="Escudo UMSNH">
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="usuario">Usuario</label>
+                    <input type="text" id="usuario" placeholder="Ingresa tu usuario" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" placeholder="Ingresa tu contraseña" required>
+                </div>
+                <button type="submit" class="btn-primary">Iniciar Sesión</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Guardamos el nombre del usuario logueado
+        const nombreUsuario = document.getElementById('usuario').value;
+        localStorage.setItem('usuarioLogueado', nombreUsuario);
+        
+        // DETECCIÓN CLAVE: Verificamos si en la URL venía la petición de registro
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action') === 'register') {
+            // Si venía de elegir un programa, le avisamos al dashboard que ya quedó registrado
+            localStorage.setItem('registroCompletado', 'true');
+        }
+        
+        // Redirigimos al panel principal
+        window.location.href = 'dashboard.html';
+    });
+</script>
+</body>
+</html>
