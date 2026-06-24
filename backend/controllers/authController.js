@@ -17,12 +17,14 @@ exports.login = (req, res) => {
         (err, result) => {
 
             if (err) {
+
                 console.error(err);
 
                 return res.status(500).json({
                     success: false,
                     mensaje: 'Error del servidor'
                 });
+
             }
 
             if (result.length > 0) {
@@ -35,7 +37,7 @@ exports.login = (req, res) => {
 
             }
 
-            res.json({
+            return res.json({
                 success: false,
                 mensaje: 'Correo o contraseña incorrectos'
             });

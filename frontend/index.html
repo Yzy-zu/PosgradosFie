@@ -49,71 +49,65 @@
         </div>
     </div>
 
-    <script>
+   <script>
+document.getElementById('loginForm').addEventListener(
+    'submit',
+    async function(e){
 
-    document.getElementById('loginForm').addEventListener(
-        'submit',
-        async function(e){
+        e.preventDefault();
 
-            e.preventDefault();
+        const usuario =
+            document.getElementById('usuario').value;
 
-            const usuario =
-                document.getElementById('usuario').value;
+        const password =
+            document.getElementById('password').value;
 
-            const password =
-                document.getElementById('password').value;
+        try {
 
-            try{
-
-                const respuesta = await fetch(
-                    'http://localhost:4000/api/auth/login',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            usuario,
-                            password
-                        })
-                    }
-                );
-
-                const datos = await respuesta.json();
-
-                if(datos.success){
-
-                    localStorage.setItem(
-                        'usuarioLogueado',
-                        usuario
-                    );
-
-                    window.location.href =
-                        'dashboard.html';
-
-                }else{
-
-                    alert(
-                        datos.mensaje ||
-                        'Usuario o contraseña incorrectos'
-                    );
-
+            const respuesta = await fetch(
+                'http://localhost:4000/api/auth/login',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        usuario,
+                        password
+                    })
                 }
+            );
 
-            }catch(error){
+            const datos = await respuesta.json();
 
-                console.error(error);
+            if(datos.success){
 
-                alert(
-                    'Error al conectar con el servidor'
+                localStorage.setItem(
+                    'usuarioLogueado',
+                    usuario
                 );
+
+                window.location.href =
+                    'dashboard.html';
+
+            }else{
+
+                alert(datos.mensaje);
 
             }
 
+        } catch(error){
+
+            console.error(error);
+
+            alert(
+                'Error al conectar con el servidor'
+            );
+
         }
-    );
 
-    </script>
-
+    }
+);
+</script>
 </body>
 </html>
