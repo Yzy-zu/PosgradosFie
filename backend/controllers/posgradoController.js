@@ -6,11 +6,14 @@ exports.obtenerPosgrados = (req, res) => {
 
     db.query(sql, (err, result) => {
 
-        if (err) {
-            return res.status(500).json(err);
+      if (err) {
+            return res.status(500).json({
+                error: err
+            });
         }
 
         res.json(result);
+
     });
 
 };
