@@ -53,7 +53,7 @@ function seleccionarPrograma(nombrePrograma) {
     localStorage.setItem('programaPendiente', nombrePrograma);
     
     // Mandamos al login con el parámetro en la URL (?action=register)
-    window.location.href = 'index.html?action=register';
+    window.location.href = 'login.html?action=register';
 }
 
 /**
@@ -129,7 +129,7 @@ function activarModulosPostRegistro(nombrePrograma) {
  */
 function cerrarSesion() {
     localStorage.clear();
-    window.location.href = 'index.html';
+    window.location.href = 'login.html';
 }
 // Variable global para controlar qué nivel se está ejecutando en el flujo actual
 let nivelAcademicoSeleccionado = "Maestría"; 
