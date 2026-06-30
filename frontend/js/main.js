@@ -51,6 +51,9 @@ function seleccionarPrograma(nombrePrograma) {
     
     // Guardamos qué programa eligió para mostrarlo al volver
     localStorage.setItem('programaPendiente', nombrePrograma);
+
+     // GUARDAMOS TAMBIÉN QUE YA SE INICIÓ EL REGISTRO/PROCESO (Esta es la línea que faltaba)
+    localStorage.setItem('registroCompletado', 'true');
     
     // Mandamos al login con el parámetro en la URL (?action=register)
     window.location.href = 'index.html?action=register';
@@ -60,6 +63,7 @@ function seleccionarPrograma(nombrePrograma) {
  * Activa las opciones exclusivas de "Documentos y Pagos" y llena el listado de Convocatorias
  */
 function activarModulosPostRegistro(nombrePrograma) {
+    console.log("¡La función activarModulos se está ejecutando para:", nombrePrograma);
     // 1. Mostrar la pestaña oculta de Documentos y Pagos en la barra vertical
     const navDocumentos = document.getElementById('nav-documentos');
     if (navDocumentos) {
