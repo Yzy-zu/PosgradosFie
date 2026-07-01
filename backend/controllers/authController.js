@@ -6,7 +6,7 @@ exports.login = (req, res) => {
 
     const sql = `
         SELECT *
-        FROM usuario
+        FROM Usuario
         WHERE correo = ?
         AND contraseña = ?
     `;

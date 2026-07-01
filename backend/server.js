@@ -17,7 +17,7 @@ app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/posgrado', require('./routes/posgrado.routes'))
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+    res.sendFile(path.join(__dirname, '../frontend/login.html'));
 });
 
 app.listen(PORT, () => {
