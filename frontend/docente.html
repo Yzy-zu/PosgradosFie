@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Docente - Posgrado FIE</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Estilos complementarios para la vista de Docente */
+        .aspirantes-layout {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            align-items: stretch;
+            height: calc(100vh - 180px);
+            min-height: 500px;
+        }
+
+        .aspirantes-sidebar {
+            width: 330px;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .sidebar-filters {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sidebar-filters input, .sidebar-filters select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 13px;
+            background-color: #f9f9f9;
+        }
+
+        .sidebar-filters input:focus, .sidebar-filters select:focus {
+            border-color: #8a1c24;
+            outline: none;
+            background-color: #fff;
+        }
+
+        .aspirantes-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 5px;
+        }
+
+        /* Scrollbar styling */
+        .aspirantes-list::-webkit-scrollbar, .aspirante-detail::-webkit-scrollbar {
+            width: 6px;
+        }
+        .aspirantes-list::-webkit-scrollbar-track, .aspirante-detail::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .aspirantes-list::-webkit-scrollbar-thumb, .aspirante-detail::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+        .aspirantes-list::-webkit-scrollbar-thumb:hover, .aspirante-detail::-webkit-scrollbar-thumb:hover {
+            background: #8a1c24;
+        }
+
+        .aspirante-item {
+            padding: 12px;
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .aspirante-item:hover {
+            background: #f5f5f5;
+            border-color: #c0c0c0;
+            transform: translateY(-1px);
+        }
+
+        .aspirante-item.active {
+            background: #fdf5f6;
+            border-color: #8a1c24;
+            border-left: 4px solid #8a1c24;
+        }
+
+        .aspirante-item h4 {
+            margin: 0;
+            font-size: 14px;
+            color: #1a1f2c;
+        }
+
+        .aspirante-item p {
+            margin: 0;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .aspirante-item .badge {
+            align-self: flex-start;
+            margin-top: 3px;
+        }
+
+        .aspirante-detail {
+            flex: 1;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #777;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .detail-placeholder img {
+            width: 80px;
+            opacity: 0.3;
+            margin-bottom: 15px;
+        }
+
+        .detail-header {
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .detail-header h2 {
+            color: #8a1c24;
+            margin: 0 0 5px 0;
+        }
+
+        .detail-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e8e8e8;
+        }
+
+        .info-block p {
+            margin: 4px 0;
+            font-size: 13px;
+        }
+
+        .info-block strong {
+            color: #333;
+        }
+
+        /* Badges de Estado */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .badge-pendiente {
+            background-color: #f39c12;
+            color: #ffffff;
+        }
+
+        .badge-aprobado {
+            background-color: #27ae60;
+            color: #ffffff;
+        }
+
+        .badge-rechazado {
+            background-color: #c0392b;
+            color: #ffffff;
+        }
+
+        .badge-completo {
+            background-color: #2980b9;
+            color: #ffffff;
+        }
+
+        /* Botones de acción extendidos */
+        .btn-view-doc {
+            background-color: #1a1f2c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: background-color 0.2s;
+        }
+        .btn-view-doc:hover {
+            background-color: #34495e;
+        }
+
+        /* Nota de Rechazo */
+        .rejection-note-text {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #c0392b;
+            background-color: #fdf2f2;
+            border-left: 3px solid #c0392b;
+            padding: 6px 10px;
+            border-radius: 3px;
+            word-break: break-word;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(2px);
+        }
+
+        .modal-card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            width: 100%;
+            max-width: 460px;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-card h3 {
+            color: #8a1c24;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .modal-card p {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .modal-card textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: none;
+            margin-bottom: 20px;
+        }
+
+        .modal-card textarea:focus {
+            border-color: #8a1c24;
+            outline: none;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .modal-actions button {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            border: none;
+        }
+
+        .btn-cancel {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+        .btn-cancel:hover {
+            background-color: #d0d0d0;
+        }
+
+        .btn-save-reject {
+            background-color: #c0392b;
+            color: white;
+        }
+        .btn-save-reject:hover {
+            background-color: #a93226;
+        }
+
+        /* Estilo para Previsualización de Documentos */
+        .preview-box {
+            background-color: #f5f6f8;
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border-left: 5px solid #1a1f2c;
+            display: none;
+        }
+
+        .preview-box h4 {
+            margin-top: 0;
+            color: #1a1f2c;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-content {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 25px;
+            margin-top: 10px;
+            height: 200px;
+            overflow-y: auto;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            color: #555;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BARRA LATERAL DE NAVEGACIÓN -->
+    <nav class="sidebar">
+        <h2>Portal de Docente</h2>
+        <a id="nav-inicio" onclick="switchView('inicio')" class="active">Inicio / Resumen</a>
+        <a id="nav-aspirantes" onclick="switchView('aspirantes')">Revisión de Aspirantes</a>
+        <a id="nav-notificaciones" onclick="switchView('notificaciones')">Notificaciones</a>
+        <a class="logout" onclick="cerrarSesion()">Cerrar Sesión</a>
+    </nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+        <div class="header-user">
+            <h1 id="saludo-usuario">Hola Bienvenid@, Docente</h1>
+        </div>
+
+        <!-- SECCIÓN: INICIO / RESUMEN -->
+        <section id="view-inicio" class="view-section active">
+            <h2>Cuadro de Mando del Evaluador</h2>
+            <p>Monitoreo general de expedientes asignados para el proceso de admisión.</p>
+            <br>
+
+            <div class="dashboard-grid" style="margin-bottom: 30px;">
+                <div class="card" onclick="switchView('aspirantes')" style="cursor:pointer;">
+                    <h3>Total Aspirantes</h3>
+                    <p style="font-size: 28px; font-weight: bold; color: #1a1f2c; margin-top: 10px;" id="stat-total">0</p>
+                    <p style="font-size: 12px; color: #777;">Asignados a tu revisión</p>
+                </div>
+                <div class="card" onclick="switchView('aspirantes')" style="cursor:pointer;">
+                    <h3>Expedientes Revisados</h3>
+                    <p style="font-size: 28px; font-weight: bold; color: #27ae60; margin-top: 10px;" id="stat-revisados">0</p>
+                    <p style="font-size: 12px; color: #777;">Aprobados en su totalidad</p>
+                </div>
+                <div class="card" onclick="switchView('aspirantes')" style="cursor:pointer;">
+                    <h3>Expedientes Incompletos</h3>
+                    <p style="font-size: 28px; font-weight: bold; color: #c0392b; margin-top: 10px;" id="stat-incompletos">0</p>
+                    <p style="font-size: 12px; color: #777;">Con documentos rechazados</p>
+                </div>
+                <div class="card" onclick="switchView('aspirantes')" style="cursor:pointer;">
+                    <h3>Revisiones Pendientes</h3>
+                    <p style="font-size: 28px; font-weight: bold; color: #f39c12; margin-top: 10px;" id="stat-pendientes">0</p>
+                    <p style="font-size: 12px; color: #777;">Aspirantes por evaluar</p>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 25px; flex-wrap: wrap;">
+                <!-- COLUMNA IZQUIERDA: GRÁFICA DE CONTROL -->
+                <div class="card" style="flex: 1; min-width: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px;">
+                    <h3>Distribución de Documentos Evaluados</h3>
+                    <p style="font-size: 13px; color: #666; margin-bottom: 20px; text-align: center;">Porcentaje general de documentos revisados en la plataforma.</p>
+                    
+                    <div id="grafica-pastel" class="pie-chart">
+                        <div class="pie-center"><span id="txt-porcentaje">0%</span></div>
+                    </div>
+                    
+                    <div class="chart-legend">
+                        <div class="legend-item"><span class="dot approved"></span> Aprobados (<strong id="lbl-aprobados">0</strong>)</div>
+                        <div class="legend-item"><span class="dot rejected"></span> Rechazados (<strong id="lbl-rechazados">0</strong>)</div>
+                        <div class="legend-item"><span class="dot pending"></span> Pendientes (<strong id="lbl-pendientes">0</strong>)</div>
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA: NOTAS INFORMATIVAS -->
+                <div class="card" style="flex: 1; min-width: 320px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <h3 style="color: #8a1c24; margin-bottom: 10px;">📋 Guía de Evaluación Documental</h3>
+                        <p style="font-size: 14px; line-height: 1.5; color: #444; margin-bottom: 10px;">
+                            Como docente evaluador del Posgrado de la Facultad de Ingeniería Eléctrica, tienes la facultad de revisar y validar el expediente digital de los aspirantes:
+                        </p>
+                        <ul style="font-size: 13px; color: #555; padding-left: 20px; line-height: 1.6;">
+                            <li>Comprueba que los documentos cargados sean legibles y correctos.</li>
+                            <li>En caso de rechazar algún documento, **deberás proveer una nota detallada** explicando la causa para que el aspirante pueda corregirlo.</li>
+                            <li>El aspirante será notificado de inmediato para cargar un nuevo archivo.</li>
+                        </ul>
+                    </div>
+                    <div style="background-color: #fff9f9; border: 1px solid #f5b7b1; padding: 12px; border-radius: 4px; margin-top: 15px;">
+                        <small style="color: #8a1c24; font-weight: bold; display: block; margin-bottom: 2px;">Atención Sínodo:</small>
+                        <small style="color: #555;">La revisión es un acto de transparencia académica. Las notas de rechazo son visibles para el estudiante.</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: REVISIÓN DE ASPIRANTES -->
+        <section id="view-aspirantes" class="view-section">
+            <h2>Revisión y Dictamen de Expedientes</h2>
+            <p>Selecciona un aspirante para visualizar sus datos académicos y evaluar cada uno de sus archivos.</p>
+
+            <div class="aspirantes-layout">
+                <!-- BARRA LATERAL IZQUIERDA: LISTA DE ASPIRANTES -->
+                <div class="aspirantes-sidebar">
+                    <div class="sidebar-filters">
+                        <input type="text" id="filtro-nombre" placeholder="🔍 Buscar por nombre..." oninput="filtrarYMostrarAspirantes()">
+                        <select id="filtro-programa" onchange="filtrarYMostrarAspirantes()">
+                            <option value="">Todos los programas</option>
+                            <option value="Maestría">Maestría</option>
+                            <option value="Doctorado">Doctorado</option>
+                        </select>
+                        <select id="filtro-estado" onchange="filtrarYMostrarAspirantes()">
+                            <option value="">Todos los estados</option>
+                            <option value="pendiente">Pendientes</option>
+                            <option value="revisado">Revisados (Completos)</option>
+                            <option value="incompleto">Rechazados / Incompletos</option>
+                        </select>
+                    </div>
+                    <div class="aspirantes-list" id="contenedor-aspirantes">
+                        <!-- Inyección dinámica desde JS -->
+                    </div>
+                </div>
+
+                <!-- DETALLE DEL ASPIRANTE SELECCIONADO -->
+                <div class="aspirante-detail" id="detalle-aspirante-panel">
+                    <!-- Marcador de posición inicial -->
+                    <div class="detail-placeholder" id="placeholder-detalle">
+                        <img src="css/Escudo UMSNH.webp" alt="UMSNH" style="width: 100px; height: auto;">
+                        <h3>Ningún aspirante seleccionado</h3>
+                        <p>Haz clic en un registro de la lista de la izquierda para comenzar con la auditoría documental.</p>
+                    </div>
+
+                    <!-- Panel de detalles (Oculto inicialmente) -->
+                    <div id="contenido-detalle" style="display: none;">
+                        <div class="detail-header">
+                            <div>
+                                <h2 id="det-nombre">Juan Pérez Gómez</h2>
+                                <p id="det-programa" style="font-weight: bold; color: #555; margin: 0;">Maestría en Ciencias en Ingeniería Eléctrica</p>
+                            </div>
+                            <span id="det-estado-badge" class="badge badge-pendiente">Pendiente</span>
+                        </div>
+
+                        <div class="detail-info-grid">
+                            <div class="info-block">
+                                <p><strong>Correo:</strong> <span id="det-correo">juan@correo.com</span></p>
+                                <p><strong>Fecha Registro:</strong> <span id="det-fecha">2026-06-15</span></p>
+                            </div>
+                            <div class="info-block">
+                                <p><strong>Mecanismo de Admisión:</strong> <span id="det-mecanismo">Curso Propedéutico</span></p>
+                                <p><strong>Nivel:</strong> <span id="det-nivel">Maestría</span></p>
+                            </div>
+                        </div>
+
+                        <h3>Archivos y Documentos Digitales</h3>
+                        <p style="font-size: 13px; color: #666; margin-bottom: 10px;">
+                            Revisa el documento haciendo clic en "Ver". Posteriormente, define si el documento es aprobado o rechazado.
+                        </p>
+
+                        <div class="admin-table-container">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Documento</th>
+                                        <th>Estado</th>
+                                        <th style="width: 250px; text-align: center;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-documentos-cuerpo">
+                                    <!-- Filas inyectadas por JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Panel de Vista Previa de Documento (Simulado) -->
+                        <div id="contenedor-preview" class="preview-box">
+                            <h4>
+                                <span>📄 Vista Previa Documental: <strong id="preview-nombre-doc">Acta de Nacimiento</strong></span>
+                                <button onclick="cerrarVistaPrevia()" style="background: none; border: none; font-size: 16px; cursor: pointer; color: #c0392b; font-weight: bold;">✕ Cerrar Vista</button>
+                            </h4>
+                            <div id="preview-contenido-texto" class="preview-content">
+                                <!-- Texto simulado del documento -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: NOTIFICACIONES -->
+        <section id="view-notificaciones" class="view-section">
+            <h2>Mensajes y Notificaciones del Sistema</h2>
+            <p>Buzón de avisos de la coordinación de posgrados de la Facultad de Ingeniería Eléctrica.</p>
+            <br>
+
+            <div class="card" style="margin-bottom: 15px; border-left: 5px solid #8a1c24;">
+                <h4 style="color: #8a1c24; margin-bottom: 5px;">⚠️ Recordatorio de Plazos de Admisión</h4>
+                <p style="font-size: 13px; color: #555; line-height: 1.4;">
+                    Estimados docentes, les recordamos que la fecha límite para emitir dictámenes finales en la plataforma de admisión de posgrados para el ciclo escolar entrante concluye el **15 de Agosto de 2026**. Agradecemos su puntualidad en la revisión de expedientes.
+                </p>
+                <small style="color: #777; display: block; margin-top: 8px;">Enviado por: Coordinación Académica FIE | Hace 2 días</small>
+            </div>
+
+            <div class="card" style="margin-bottom: 15px; border-left: 5px solid #2980b9;">
+                <h4 style="color: #2c3e50; margin-bottom: 5px;">🎓 Actualización en Lineamientos de Doctorado</h4>
+                <p style="font-size: 13px; color: #555; line-height: 1.4;">
+                    Se ha habilitado la sección de retroalimentación de la propuesta de proyecto de investigación en la vista de doctorado. Favor de evaluar las propuestas con base en la viabilidad técnica y aportar sugerencias constructivas en las notas de los expedientes asignados.
+                </p>
+                <small style="color: #777; display: block; margin-top: 8px;">Enviado por: Comité Técnico de Posgrado | Hace 1 semana</small>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL DE RECHAZO PARA CAPTURAR NOTAS -->
+    <div class="modal-overlay" id="modal-rechazo">
+        <div class="modal-card">
+            <h3 id="modal-titulo-documento">Rechazar Documento</h3>
+            <p>Por favor, escribe detalladamente la nota o el motivo de rechazo del documento. Esta nota será visible para el aspirante para que pueda realizar la corrección correspondiente.</p>
+            <textarea id="modal-nota-texto" placeholder="Escribe aquí el motivo del rechazo del documento (ej. El acta de nacimiento es ilegible o le falta la firma oficial)..."></textarea>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="cerrarModalRechazo()">Cancelar</button>
+                <button class="btn-save-reject" onclick="guardarRechazoDocumento()">Guardar y Rechazar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/docente.js"></script>
+</body>
+</html>
