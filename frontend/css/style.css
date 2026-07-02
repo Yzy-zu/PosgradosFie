@@ -501,3 +501,194 @@ body {
 .comentario-profesor strong {
     color: #1a1f2c;
 }
+/* --- NUEVOS ESTILOS: ICONOGRAFÍA Y MENÚ DE PERFIL SUPERIOR --- */
+
+/* Ajustar cabecera para distribución en extremos */
+.header-user {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 30px;
+}
+
+/* Espaciado de Iconos en la Barra Lateral */
+.sidebar a i {
+    margin-right: 12px;
+    width: 20px;
+    text-align: center;
+    font-size: 16px;
+}
+
+/* Iconos dentro de las Tarjetas e Interfaces */
+.card h3 i, .box-programa i {
+    margin-right: 8px;
+}
+.box-programa i {
+    font-size: 36px;
+    margin-bottom: 15px;
+    margin-right: 0;
+}
+
+/* Contenedor del Perfil Superior Derecho */
+.profile-container {
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+}
+
+.profile-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #ffffff;
+    padding: 8px 16px;
+    border-radius: 30px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+.profile-trigger:hover {
+    background: #fdfdfd;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.profile-avatar {
+    font-size: 24px;
+    color: #1a1f2c;
+}
+
+.profile-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+}
+
+.arrow-icon {
+    font-size: 11px;
+    color: #666;
+    transition: transform 0.2s;
+}
+
+/* Menú Desplegable (Dropdown) */
+.profile-menu {
+    position: absolute;
+    top: 45px;
+    right: 0;
+    background: #ffffff;
+    min-width: 200px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: none;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.profile-menu.show {
+    display: block;
+    animation: fadeInDropdown 0.2s ease-out;
+}
+
+.menu-header {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: bold;
+    color: #777;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #eee;
+}
+
+.profile-menu a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.profile-menu a:hover {
+    background: #f5f5f5;
+}
+
+.profile-menu hr {
+    border: 0;
+    border-top: 1px solid #eee;
+    margin: 0;
+}
+
+/* Opción de Salida */
+.profile-menu a.logout-link {
+    color: #c0392b;
+    font-weight: bold;
+}
+
+.profile-menu a.logout-link:hover {
+    background: #fdf2f2;
+}
+
+/* Animación de apertura suave */
+@keyframes fadeInDropdown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+/* --- NUEVOS ESTILOS PARA LOS DETALLES DEL PERFIL --- */
+
+.profile-user-details {
+    padding: 15px;
+    background: #fdfdfd;
+}
+
+.user-role-badge {
+    display: inline-block;
+    background-color: #8a1c24;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.user-role-badge i {
+    margin-right: 4px;
+    font-size: 10px;
+}
+
+.user-full-name {
+    margin: 0 0 6px 0;
+    font-size: 15px;
+    color: #1a1f2c;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.user-info-text {
+    margin: 3px 0;
+    font-size: 12px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.user-info-text i {
+    color: #8a1c24;
+    width: 14px;
+    text-align: center;
+}
