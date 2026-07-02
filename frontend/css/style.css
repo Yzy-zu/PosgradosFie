@@ -656,10 +656,10 @@ body {
     display: inline-block;
     background-color: #8a1c24;
     color: #ffffff;
-    font-size: 11px;
-    font-weight: bold;
+    font-size: 10px;
+    font-weight: 800;
     padding: 3px 8px;
-    border-radius: 12px;
+    border-radius: 6px;
     margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -688,7 +688,7 @@ body {
 }
 
 .user-info-text i {
-    color: #8a1c24;
+    color: #94a3b8;
     width: 14px;
     text-align: center;
 }

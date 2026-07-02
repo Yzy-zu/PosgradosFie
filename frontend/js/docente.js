@@ -135,6 +135,21 @@ function cerrarSesion() {
     window.location.href = 'login.html';
 }
 
+// Función para abrir/cerrar el menú desplegable del perfil
+function toggleProfileMenu(event) {
+    event.stopPropagation(); // Evita que se cierre inmediatamente al hacer click
+    const dropdown = document.getElementById('profile-dropdown');
+    dropdown.classList.toggle('active');
+}
+
+// Cerrar el menú si se hace click fuera de él en la pantalla
+window.addEventListener('click', function() {
+    const dropdown = document.getElementById('profile-dropdown');
+    if (dropdown && dropdown.classList.contains('active')) {
+        dropdown.classList.remove('active');
+    }
+});
+
 /**
  * Calcula Contadores Estadísticos y Redibuja Gráfica de Avance
  */

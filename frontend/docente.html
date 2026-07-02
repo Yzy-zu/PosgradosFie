@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal de Docente - Posgrado FIE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
         /* Estilos complementarios para la vista de Docente */
@@ -356,62 +357,197 @@
             height: 200px;
             overflow-y: auto;
             border-radius: 4px;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Courier New', Courier, monospace;  
             font-size: 12px;
             color: #555;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
             white-space: pre-line;
         }
+
+        /* Asegura que el menú esté oculto por defecto */
+.profile-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+    z-index: 1000;
+    width: 260px;
+    padding: 15px;
+}
+
+/* Regla indispensable para mostrarlo cuando se hace click */
+.profile-menu.active {
+    display: block !important;
+}
+
+/* Contenedor principal del menú flotante */
+.profile-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 105%;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    width: 240px;
+    padding: 16px;
+    text-align: left;
+    font-family: sans-serif;
+}
+
+/* Mostrar cuando se activa por JS */
+.profile-menu.active {
+    display: block !important;
+}
+
+/* El Gafete Superior (Badge) */
+.profile-badge-container {
+    margin-bottom: 8px;
+}
+
+.profile-role-badge {
+    background-color: #8a1c24; /* Color guinda institucional */
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: 0.5px;
+}
+
+/* Nombre de usuario destacado */
+.profile-display-name {
+    color: #1e293b;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0 0 10px 0;
+}
+
+/* Bloque de detalles (correo y teléfono) */
+.profile-display-details p {
+    color: #64748b;
+    font-size: 12px;
+    margin: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-display-details i {
+    color: #94a3b8;
+    width: 14px;
+    text-align: center;
+}
+
+/* Línea divisoria sutil */
+.profile-divider {
+    border: 0;
+    border-top: 1px solid #f1f5f9;
+    margin: 12px 0 8px 0;
+}
+
+/* Enlace de Cerrar Sesión en Rojo */
+.logout-link {
+    color: #dc2626 !important;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: color 0.2s ease;
+}
+
+.logout-link:hover {
+    color: #b91c1c !important;
+}
+
     </style>
 </head>
 <body>
 
     <!-- BARRA LATERAL DE NAVEGACIÓN -->
     <nav class="sidebar">
-        <h2>Portal de Docente</h2>
-        <a id="nav-inicio" onclick="switchView('inicio')" class="active">Inicio / Resumen</a>
-        <a id="nav-aspirantes" onclick="switchView('aspirantes')">Revisión de Aspirantes</a>
-        <a id="nav-notificaciones" onclick="switchView('notificaciones')">Notificaciones</a>
-        <a class="logout" onclick="cerrarSesion()">Cerrar Sesión</a>
+        <h2><i class="fa-solid fa-bars-staggered"></i> Navegación</h2>
+        <a id="nav-inicio" onclick="switchView('inicio')" class="active"><i class="fa-solid fa-chalkboard-user"></i> Inicio / Resumen</a>
+        <a id="nav-aspirantes" onclick="switchView('aspirantes')"><i class="fa-solid fa-id-card-clip"></i> Revisión de Aspirantes</a>
+        <a id="nav-notificaciones" onclick="switchView('notificaciones')"><i class="fa-solid fa-bell"></i> Notificaciones</a>
     </nav>
 
-    <!-- CONTENIDO PRINCIPAL -->
     <main class="main-content">
         <div class="header-user">
-            <h1 id="saludo-usuario">Hola Bienvenid@, Docente</h1>
+            <h1 id="saludo-usuario"><i class="fa-solid fa-graduation-cap"></i> Hola Bienvenid@, <span id="nombre-usuario-saludo">Docente</span></h1>
+            
+            <div class="profile-container" onclick="toggleProfileMenu(event)">
+                <div class="profile-trigger">
+                    <i class="fa-solid fa-circle-user profile-avatar"></i>
+                    <span class="profile-name">Mi Perfil</span>
+                    <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                </div>
+                
+                <!-- Desplegable del Perfil -->
+<div id="profile-dropdown" class="profile-menu">
+    <div class="profile-badge-container">
+        <span class="profile-role-badge">
+            <i class="fa-solid fa-shield-halved"></i> DOCENTE
+        </span>
+    </div>
+    
+    <h4 class="profile-display-name" id="perf-nombre">Dr. Fernando Bautista</h4>
+    
+    <div class="profile-display-details">
+        <p><i class="fa-solid fa-envelope"></i> <span id="perf-correo">fernando.bautista@umsnh.mx</span></p>
+        <p><i class="fa-solid fa-phone"></i> <span id="perf-telefono">+52 443 123 4567</span></p>
+    </div>
+                    <hr class="profile-divider">
+                    <a class="logout-link" onclick="cerrarSesion()">
+                        <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+                    </a>
+                </div>
+            </div>
         </div>
 
-        <!-- SECCIÓN: INICIO / RESUMEN -->
         <section id="view-inicio" class="view-section active">
-            <h2>Cuadro de Mando del Evaluador</h2>
+            <h2><i class="fa-solid fa-chart-pie"></i> Cuadro de Mando del Evaluador</h2>
             <p>Monitoreo general de expedientes asignados para el proceso de admisión.</p>
             <br>
 
             <div class="dashboard-grid" style="margin-bottom: 30px;">
                 <div class="card" onclick="switchView('aspirantes')" style="cursor:pointer;">
-                    <h3>Total Aspirantes</h3>
+                    <h3><i class="fa-solid fa-users" style="color: #2980b9;"></i> Total Aspirantes</h3>
                     <p style="font-size: 28px; font-weight: bold; color: #1a1f2c; margin-top: 10px;" id="stat-total">0</p>
                     <p style="font-size: 12px; color: #777;">Asignados a tu revisión</p>
                 </div>
                 <div class="card" onclick="switchView('aspirantes')" style="cursor:pointer;">
-                    <h3>Expedientes Revisados</h3>
+                    <h3><i class="fa-solid fa-circle-check" style="color: #27ae60;"></i> Expedientes Revisados</h3>
                     <p style="font-size: 28px; font-weight: bold; color: #27ae60; margin-top: 10px;" id="stat-revisados">0</p>
                     <p style="font-size: 12px; color: #777;">Aprobados en su totalidad</p>
                 </div>
                 <div class="card" onclick="switchView('aspirantes')" style="cursor:pointer;">
-                    <h3>Expedientes Incompletos</h3>
+                    <h3><i class="fa-solid fa-circle-exclamation" style="color: #c0392b;"></i> Expedientes Incompletos</h3>
                     <p style="font-size: 28px; font-weight: bold; color: #c0392b; margin-top: 10px;" id="stat-incompletos">0</p>
                     <p style="font-size: 12px; color: #777;">Con documentos rechazados</p>
                 </div>
                 <div class="card" onclick="switchView('aspirantes')" style="cursor:pointer;">
-                    <h3>Revisiones Pendientes</h3>
+                    <h3><i class="fa-solid fa-clock" style="color: #f39c12;"></i> Revisiones Pendientes</h3>
                     <p style="font-size: 28px; font-weight: bold; color: #f39c12; margin-top: 10px;" id="stat-pendientes">0</p>
                     <p style="font-size: 12px; color: #777;">Aspirantes por evaluar</p>
                 </div>
             </div>
 
             <div style="display: flex; gap: 25px; flex-wrap: wrap;">
-                <!-- COLUMNA IZQUIERDA: GRÁFICA DE CONTROL -->
                 <div class="card" style="flex: 1; min-width: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px;">
                     <h3>Distribución de Documentos Evaluados</h3>
                     <p style="font-size: 13px; color: #666; margin-bottom: 20px; text-align: center;">Porcentaje general de documentos revisados en la plataforma.</p>
@@ -427,37 +563,37 @@
                     </div>
                 </div>
 
-                <!-- COLUMNA DERECHA: NOTAS INFORMATIVAS -->
                 <div class="card" style="flex: 1; min-width: 320px; display: flex; flex-direction: column; justify-content: space-between;">
                     <div>
-                        <h3 style="color: #8a1c24; margin-bottom: 10px;">📋 Guía de Evaluación Documental</h3>
+                        <h3 style="color: #8a1c24; margin-bottom: 10px;"><i class="fa-solid fa-clipboard-list"></i> Guía de Evaluación Documental</h3>
                         <p style="font-size: 14px; line-height: 1.5; color: #444; margin-bottom: 10px;">
                             Como docente evaluador del Posgrado de la Facultad de Ingeniería Eléctrica, tienes la facultad de revisar y validar el expediente digital de los aspirantes:
                         </p>
                         <ul style="font-size: 13px; color: #555; padding-left: 20px; line-height: 1.6;">
                             <li>Comprueba que los documentos cargados sean legibles y correctos.</li>
-                            <li>En caso de rechazar algún documento, **deberás proveer una nota detallada** explicando la causa para que el aspirante pueda corregirlo.</li>
+                            <li>En caso de rechazar algún documento, *deberás proveer una nota detallada* explicando la causa para que el aspirante pueda corregirlo.</li>
                             <li>El aspirante será notificado de inmediato para cargar un nuevo archivo.</li>
                         </ul>
                     </div>
                     <div style="background-color: #fff9f9; border: 1px solid #f5b7b1; padding: 12px; border-radius: 4px; margin-top: 15px;">
-                        <small style="color: #8a1c24; font-weight: bold; display: block; margin-bottom: 2px;">Atención Sínodo:</small>
+                        <small style="color: #8a1c24; font-weight: bold; display: block; margin-bottom: 2px;"><i class="fa-solid fa-triangle-exclamation"></i> Atención Sínodo:</small>
                         <small style="color: #555;">La revisión es un acto de transparencia académica. Las notas de rechazo son visibles para el estudiante.</small>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- SECCIÓN: REVISIÓN DE ASPIRANTES -->
         <section id="view-aspirantes" class="view-section">
-            <h2>Revisión y Dictamen de Expedientes</h2>
+            <h2><i class="fa-solid fa-folder-open"></i> Revisión y Dictamen de Expedientes</h2>
             <p>Selecciona un aspirante para visualizar sus datos académicos y evaluar cada uno de sus archivos.</p>
 
             <div class="aspirantes-layout">
-                <!-- BARRA LATERAL IZQUIERDA: LISTA DE ASPIRANTES -->
                 <div class="aspirantes-sidebar">
                     <div class="sidebar-filters">
-                        <input type="text" id="filtro-nombre" placeholder="🔍 Buscar por nombre..." oninput="filtrarYMostrarAspirantes()">
+                        <div style="position: relative; width: 100%;">
+                            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #777;"></i>
+                            <input type="text" id="filtro-nombre" placeholder="Buscar por nombre..." oninput="filtrarYMostrarAspirantes()" style="padding-left: 30px; width: 100%; box-sizing: border-box;">
+                        </div>
                         <select id="filtro-programa" onchange="filtrarYMostrarAspirantes()">
                             <option value="">Todos los programas</option>
                             <option value="Maestría">Maestría</option>
@@ -471,20 +607,16 @@
                         </select>
                     </div>
                     <div class="aspirantes-list" id="contenedor-aspirantes">
-                        <!-- Inyección dinámica desde JS -->
-                    </div>
+                        </div>
                 </div>
 
-                <!-- DETALLE DEL ASPIRANTE SELECCIONADO -->
                 <div class="aspirante-detail" id="detalle-aspirante-panel">
-                    <!-- Marcador de posición inicial -->
                     <div class="detail-placeholder" id="placeholder-detalle">
                         <img src="css/Escudo UMSNH.webp" alt="UMSNH" style="width: 100px; height: auto;">
                         <h3>Ningún aspirante seleccionado</h3>
                         <p>Haz clic en un registro de la lista de la izquierda para comenzar con la auditoría documental.</p>
                     </div>
 
-                    <!-- Panel de detalles (Oculto inicialmente) -->
                     <div id="contenido-detalle" style="display: none;">
                         <div class="detail-header">
                             <div>
@@ -496,12 +628,12 @@
 
                         <div class="detail-info-grid">
                             <div class="info-block">
-                                <p><strong>Correo:</strong> <span id="det-correo">juan@correo.com</span></p>
-                                <p><strong>Fecha Registro:</strong> <span id="det-fecha">2026-06-15</span></p>
+                                <p><strong><i class="fa-solid fa-envelope"></i> Correo:</strong> <span id="det-correo">juan@correo.com</span></p>
+                                <p><strong><i class="fa-solid fa-calendar-days"></i> Fecha Registro:</strong> <span id="det-fecha">2026-06-15</span></p>
                             </div>
                             <div class="info-block">
-                                <p><strong>Mecanismo de Admisión:</strong> <span id="det-mecanismo">Curso Propedéutico</span></p>
-                                <p><strong>Nivel:</strong> <span id="det-nivel">Maestría</span></p>
+                                <p><strong><i class="fa-solid fa-handshake"></i> Mecanismo de Admisión:</strong> <span id="det-mecanismo">Curso Propedéutico</span></p>
+                                <p><strong><i class="fa-solid fa-graduation-cap"></i> Nivel:</strong> <span id="det-nivel">Maestría</span></p>
                             </div>
                         </div>
 
@@ -520,64 +652,58 @@
                                     </tr>
                                 </thead>
                                 <tbody id="tabla-documentos-cuerpo">
-                                    <!-- Filas inyectadas por JS -->
-                                </tbody>
+                                    </tbody>
                             </table>
                         </div>
 
-                        <!-- Panel de Vista Previa de Documento (Simulado) -->
                         <div id="contenedor-preview" class="preview-box">
                             <h4>
-                                <span>📄 Vista Previa Documental: <strong id="preview-nombre-doc">Acta de Nacimiento</strong></span>
-                                <button onclick="cerrarVistaPrevia()" style="background: none; border: none; font-size: 16px; cursor: pointer; color: #c0392b; font-weight: bold;">✕ Cerrar Vista</button>
+                                <span><i class="fa-solid fa-file-pdf" style="color: #e74c3c;"></i> Vista Previa Documental: <strong id="preview-nombre-doc">Acta de Nacimiento</strong></span>
+                                <button onclick="cerrarVistaPrevia()" style="background: none; border: none; font-size: 16px; cursor: pointer; color: #c0392b; font-weight: bold;"><i class="fa-solid fa-xmark"></i> Cerrar Vista</button>
                             </h4>
                             <div id="preview-contenido-texto" class="preview-content">
-                                <!-- Texto simulado del documento -->
-                            </div>
+                                </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- SECCIÓN: NOTIFICACIONES -->
         <section id="view-notificaciones" class="view-section">
-            <h2>Mensajes y Notificaciones del Sistema</h2>
+            <h2><i class="fa-solid fa-bullhorn"></i> Mensajes y Notificaciones del Sistema</h2>
             <p>Buzón de avisos de la coordinación de posgrados de la Facultad de Ingeniería Eléctrica.</p>
             <br>
 
             <div class="card" style="margin-bottom: 15px; border-left: 5px solid #8a1c24;">
-                <h4 style="color: #8a1c24; margin-bottom: 5px;">⚠️ Recordatorio de Plazos de Admisión</h4>
+                <h4 style="color: #8a1c24; margin-bottom: 5px;"><i class="fa-solid fa-triangle-exclamation"></i> Recordatorio de Plazos de Admisión</h4>
                 <p style="font-size: 13px; color: #555; line-height: 1.4;">
-                    Estimados docentes, les recordamos que la fecha límite para emitir dictámenes finales en la plataforma de admisión de posgrados para el ciclo escolar entrante concluye el **15 de Agosto de 2026**. Agradecemos su puntualidad en la revisión de expedientes.
+                    Estimados docentes, les recordamos que la fecha límite para emitir dictámenes finales en la plataforma de admisión de posgrados para el ciclo escolar entrante concluye el *15 de Agosto de 2026*. Agradecemos su puntualidad en la revisión de expedientes.
                 </p>
-                <small style="color: #777; display: block; margin-top: 8px;">Enviado por: Coordinación Académica FIE | Hace 2 días</small>
+                <small style="color: #777; display: block; margin-top: 8px;"><i class="fa-solid fa-user-tie"></i> Enviado por: Coordinación Académica FIE | Hace 2 días</small>
             </div>
 
             <div class="card" style="margin-bottom: 15px; border-left: 5px solid #2980b9;">
-                <h4 style="color: #2c3e50; margin-bottom: 5px;">🎓 Actualización en Lineamientos de Doctorado</h4>
+                <h4 style="color: #2c3e50; margin-bottom: 5px;"><i class="fa-solid fa-scroll"></i> Actualización en Lineamientos de Doctorado</h4>
                 <p style="font-size: 13px; color: #555; line-height: 1.4;">
                     Se ha habilitado la sección de retroalimentación de la propuesta de proyecto de investigación en la vista de doctorado. Favor de evaluar las propuestas con base en la viabilidad técnica y aportar sugerencias constructivas en las notas de los expedientes asignados.
                 </p>
-                <small style="color: #777; display: block; margin-top: 8px;">Enviado por: Comité Técnico de Posgrado | Hace 1 semana</small>
+                <small style="color: #777; display: block; margin-top: 8px;"><i class="fa-solid fa-users-gear"></i> Enviado por: Comité Técnico de Posgrado | Hace 1 semana</small>
             </div>
         </section>
     </main>
 
-    <!-- MODAL DE RECHAZO PARA CAPTURAR NOTAS -->
     <div class="modal-overlay" id="modal-rechazo">
         <div class="modal-card">
-            <h3 id="modal-titulo-documento">Rechazar Documento</h3>
+            <h3 id="modal-titulo-documento"><i class="fa-solid fa-circle-xmark" style="color: #c0392b;"></i> Rechazar Documento</h3>
             <p>Por favor, escribe detalladamente la nota o el motivo de rechazo del documento. Esta nota será visible para el aspirante para que pueda realizar la corrección correspondiente.</p>
             <textarea id="modal-nota-texto" placeholder="Escribe aquí el motivo del rechazo del documento (ej. El acta de nacimiento es ilegible o le falta la firma oficial)..."></textarea>
             <div class="modal-actions">
-                <button class="btn-cancel" onclick="cerrarModalRechazo()">Cancelar</button>
-                <button class="btn-save-reject" onclick="guardarRechazoDocumento()">Guardar y Rechazar</button>
+                <button class="btn-cancel" onclick="cerrarModalRechazo()"><i class="fa-solid fa-ban"></i> Cancelar</button>
+                <button class="btn-save-reject" onclick="guardarRechazoDocumento()"><i class="fa-solid fa-floppy-disk"></i> Guardar y Rechazar</button>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPTS -->
     <script src="js/docente.js"></script>
 </body>
 </html>
