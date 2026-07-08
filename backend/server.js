@@ -20,8 +20,13 @@ app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/usuario', require('./routes/usuario.routes'));
 app.use('/api/posgrado', require('./routes/posgrado.routes'));
 app.use('/api/aspirante', require('./routes/aspirante.routes'));
+app.use('/api/docentes', require('./routes/docentes.routes'));
+app.use('/api/evaluacion', require('./routes/evaluacion.routes'));
+app.use('/api/pagos', require('./routes/pagos.routes'));
 app.use('/api/solicitud', require('./routes/solicitud.routes'));
 app.use('/api/documentos', require('./routes/documentos.routes'));
+
+
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/login.html'));
