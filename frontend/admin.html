@@ -1,319 +1,215 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administrador | Sistema de Posgrados FIE</title>
+    <title>Administrador | Sistema de Gestión de Posgrados</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../frontend/css/style.css">
+    <link rel="stylesheet"> 
 </head>
 
 <body>
 
 <div class="d-flex">
 
-    <!-- Sidebar -->
     <aside class="sidebar bg-dark text-white p-3">
-
-        <h4 class="text-center mb-4">
-            POSGRADOS FIE
-        </h4>
+        <h3 class="text-center mb-4">POSGRADOS FIE</h3>
 
         <ul class="nav flex-column">
-
-            <li class="nav-item mb-2">
+            <li class="nav-item">
                 <a href="#" class="nav-link text-white">
-                    <i class="bi bi-house-door"></i>
-                    Inicio
+                    <i class="bi bi-speedometer2"></i> Dashboard
                 </a>
             </li>
-
-            <li class="nav-item mb-2">
+            <li class="nav-item">
                 <a href="#" class="nav-link text-white">
-                    <i class="bi bi-people"></i>
-                    Usuarios
+                    <i class="bi bi-people"></i> Usuarios
                 </a>
             </li>
-
-            <li class="nav-item mb-2">
+            <li class="nav-item">
                 <a href="#" class="nav-link text-white">
-                    <i class="bi bi-mortarboard"></i>
-                    Posgrados
+                    <i class="bi bi-mortarboard"></i> Posgrados
                 </a>
             </li>
-
-            <li class="nav-item mb-2">
+            <li class="nav-item">
                 <a href="#" class="nav-link text-white">
-                    <i class="bi bi-calendar-event"></i>
-                    Convocatorias
+                    <i class="bi bi-calendar-event"></i> Convocatorias
                 </a>
             </li>
-
-            <li class="nav-item mb-2">
+            <li class="nav-item">
                 <a href="#" class="nav-link text-white">
-                    <i class="bi bi-person-vcard"></i>
-                    Aspirantes
+                    <i class="bi bi-file-earmark-person"></i> Aspirantes
                 </a>
             </li>
-
-            <li class="nav-item mb-2">
+            <li class="nav-item">
                 <a href="#" class="nav-link text-white">
-                    <i class="bi bi-file-earmark-text"></i>
-                    Solicitudes
+                    <i class="bi bi-file-earmark-text"></i> Solicitudes
                 </a>
             </li>
-
-            <li class="nav-item mb-2">
+            <li class="nav-item">
                 <a href="#" class="nav-link text-white">
-                    <i class="bi bi-folder2-open"></i>
-                    Documentos
+                    <i class="bi bi-folder2-open"></i> Documentos
                 </a>
             </li>
-
-            <li class="nav-item mb-2">
+            <li class="nav-item">
                 <a href="#" class="nav-link text-white">
-                    <i class="bi bi-person-video3"></i>
-                    Entrevistas
+                    <i class="bi bi-clipboard-data"></i> Reportes
                 </a>
             </li>
-
-            <li class="nav-item mb-2">
-                <a href="#" class="nav-link text-white">
-                    <i class="bi bi-clipboard-data"></i>
-                    Evaluaciones
-                </a>
-            </li>
-
-            <li class="nav-item mb-2">
-                <a href="#" class="nav-link text-white">
-                    <i class="bi bi-check2-square"></i>
-                    Dictámenes
-                </a>
-            </li>
-
-            <li class="nav-item mb-2">
-                <a href="#" class="nav-link text-white">
-                    <i class="bi bi-bar-chart"></i>
-                    Reportes
-                </a>
-            </li>
-
         </ul>
 
         <hr>
-
-        <button class="btn btn-danger w-100">
-            <i class="bi bi-box-arrow-right"></i>
-            Cerrar sesión
+        <button class="btn btn-danger w-100" id="btnCerrarSesion">
+            <i class="bi bi-box-arrow-right"></i> Cerrar sesión
         </button>
-
     </aside>
 
-    <!-- Contenido -->
     <main class="flex-grow-1">
 
-        <!-- Navbar -->
-        <nav class="navbar navbar-light bg-white shadow-sm px-4">
-
+        <nav class="navbar bg-white shadow-sm px-4">
             <button class="btn">
                 <i class="bi bi-list fs-4"></i>
             </button>
 
             <div class="d-flex align-items-center">
+                <i class="bi bi-bell fs-5 me-4"></i>
+                <img src="css/Escudo UMSNH.webp" width="45" height="45" class="rounded-circle">
 
-                <i class="bi bi-bell fs-5 me-3"></i>
-
-                <img src="../img/user.png"
-                     class="rounded-circle"
-                     width="40"
-                     height="40">
-
-                <span class="ms-2 fw-bold">
-                    Administrador
-                </span>
-
+                <div class="ms-3">
+                    <h6 class="mb-0" id="nombreAdministrador">Administrador</h6>
+                    <small class="text-muted">Administrador del Sistema</small>
+                </div>
             </div>
-
         </nav>
 
-        <!-- Contenido principal -->
         <div class="container-fluid p-4">
+            <h2>Panel de Administración</h2>
+            <p class="text-muted">Bienvenido al sistema de gestión de Posgrados.</p>
 
-            <h2>
-                Bienvenido, Administrador
-            </h2>
-
-            <p class="text-muted">
-                Panel principal del sistema
-            </p>
-
-            <!-- Tarjetas -->
             <div class="row mt-4">
-
                 <div class="col-md-3">
-
-                    <div class="card shadow-sm">
-
-                        <div class="card-body">
-
-                            <h6>Usuarios</h6>
-
-                            <h2>28</h2>
-
-                            <i class="bi bi-people fs-2 text-primary"></i>
-
+                    <div class="card shadow">
+                        <div class="card-body text-center">
+                            <i class="bi bi-people-fill fs-1 text-primary"></i>
+                            <h2 id="totalUsuarios">0</h2>
+                            <p>Usuarios</p>
                         </div>
-
                     </div>
-
                 </div>
 
                 <div class="col-md-3">
-
-                    <div class="card shadow-sm">
-
-                        <div class="card-body">
-
-                            <h6>Posgrados</h6>
-
-                            <h2>5</h2>
-
-                            <i class="bi bi-mortarboard fs-2 text-success"></i>
-
+                    <div class="card shadow">
+                        <div class="card-body text-center">
+                            <i class="bi bi-mortarboard-fill fs-1 text-success"></i>
+                            <h2 id="totalPosgrados">0</h2>
+                            <p>Posgrados</p>
                         </div>
-
                     </div>
-
                 </div>
 
                 <div class="col-md-3">
-
-                    <div class="card shadow-sm">
-
-                        <div class="card-body">
-
-                            <h6>Convocatorias</h6>
-
-                            <h2>3</h2>
-
-                            <i class="bi bi-calendar-event fs-2 text-warning"></i>
-
+                    <div class="card shadow">
+                        <div class="card-body text-center">
+                            <i class="bi bi-person-vcard-fill fs-1 text-warning"></i>
+                            <h2 id="totalAspirantes">0</h2>
+                            <p>Aspirantes</p>
                         </div>
-
                     </div>
-
                 </div>
 
                 <div class="col-md-3">
-
-                    <div class="card shadow-sm">
-
-                        <div class="card-body">
-
-                            <h6>Aspirantes</h6>
-
-                            <h2>142</h2>
-
-                            <i class="bi bi-person-vcard fs-2 text-danger"></i>
-
+                    <div class="card shadow">
+                        <div class="card-body text-center">
+                            <i class="bi bi-file-earmark-text-fill fs-1 text-danger"></i>
+                            <h2 id="totalSolicitudes">0</h2>
+                            <p>Solicitudes</p>
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
 
-            <!-- Tabla -->
-            <div class="card mt-5 shadow-sm">
-
-                <div class="card-header bg-white">
-
-                    <div class="d-flex justify-content-between">
-
-                        <h5>Usuarios registrados</h5>
-
-                        <button class="btn btn-primary">
-                            Nuevo Usuario
-                        </button>
-
-                    </div>
-
+            <div class="card mt-5 shadow">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Usuarios registrados</h5>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalUsuario">
+                        Nuevo Usuario
+                    </button>
                 </div>
 
                 <div class="card-body">
-
                     <table class="table table-hover">
-
                         <thead>
-
-                        <tr>
-
-                            <th>ID</th>
-
-                            <th>Nombre</th>
-
-                            <th>Correo</th>
-
-                            <th>Rol</th>
-
-                            <th>Estado</th>
-
-                            <th>Acciones</th>
-
-                        </tr>
-
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Correo</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
                         </thead>
-
-                        <tbody>
-
-                        <tr>
-
-                            <td>1</td>
-
-                            <td>Administrador</td>
-
-                            <td>admin@umich.mx</td>
-
-                            <td>Administrador</td>
-
-                            <td>
-                                <span class="badge bg-success">
-                                    Activo
-                                </span>
-                            </td>
-
-                            <td>
-
-                                <button class="btn btn-warning btn-sm">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-
-                            </td>
-
-                        </tr>
-
-                        </tbody>
-
+                        <tbody id="tablaUsuarios"></tbody>
                     </table>
-
                 </div>
-
             </div>
-
         </div>
 
     </main>
+</div>
 
+<div class="modal fade" id="modalUsuario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header d-flex justify-content-between align-items-center">
+                <h5 class="modal-title">Nuevo Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="formUsuario">
+                    <input type="hidden" id="idUsuarioForm">
+
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" id="nombre" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Correo</label>
+                        <input type="email" id="correo" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" id="password" class="form-control">
+                        <small class="text-muted d-block mt-1">Dejar en blanco si está editando y no desea cambiarla.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Rol</label>
+                        <select id="rol" class="form-select">
+                            <option value="ADMIN">ADMIN</option>
+                            <option value="COORDINADOR">COORDINADOR</option>
+                            <option value="SECRETARIO">SECRETARIO</option>
+                            <option value="ASPIRANTE">ASPIRANTE</option>
+                            <option value="DOCENTE">DOCENTE</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 mt-2">
+                        Guardar Usuario
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
-
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="js/admin.js"></script>
 </body>
 </html>

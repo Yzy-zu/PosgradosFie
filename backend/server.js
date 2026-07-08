@@ -1,21 +1,25 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-
 require('dotenv').config();
 require('./database/db');
 
 const app = express();
 const PORT = 4000;
 
-app.use(cors());
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, '../frontend')));
-
 app.use('/api/auth', require('./routes/auth.routes'));
-app.use('/api/posgrado', require('./routes/posgrado.routes'))
-app.use('/api/aspirante', require ('./routes/aspirante.routes'));
+app.use('/api/usuario', require('./routes/usuario.routes'));
+app.use('/api/posgrado', require('./routes/posgrado.routes'));
+app.use('/api/aspirante', require('./routes/aspirante.routes'));
 app.use('/api/solicitud', require('./routes/solicitud.routes'));
 app.use('/api/documentos', require('./routes/documentos.routes'));
 
@@ -25,4 +29,4 @@ app.get('/', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Servidor listo en http://localhost:${PORT}`);
-});
+})
