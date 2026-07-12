@@ -142,6 +142,7 @@
         <section id="view-convocatorias" class="view-section">
             <h2>Convocatorias Disponibles</h2>
             
+            <!-- Contenedor 1: Selección inicial de tarjetas -->
             <div id="seleccion-programa" class="programas-container">
                 <div class="box-programa" onclick="seleccionarPrograma('Maestría en Ingeniería Eléctrica')">
                     <i class="fa-solid fa-book-bookmark"></i><br>Maestría
@@ -151,7 +152,13 @@
                 </div>
             </div>
 
+            <!-- Contenedor 2: Vista detallada del programa seleccionado -->
             <div id="lista-programas-abiertos" class="lista-convocatorias" style="display: none;">
+                <!-- 🚀 NUEVO BOTÓN DE RETORNO INSTITUCIONAL -->
+                <button onclick="regresarAConvocatorias()" style="background-color: #8a1c24; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 14px; cursor: pointer; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 8px; font-weight: bold; transition: background 0.2s;">
+                    <i class="fa-solid fa-arrow-left"></i> Cambiar de Programa / Volver
+                </button>
+
                 <p>Has iniciado sesión y desbloqueado los accesos para el registro formal al programa seleccionado.</p>
                 <br>
                 <div id="contenedor-tarjetas-programas"></div>

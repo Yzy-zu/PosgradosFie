@@ -30,7 +30,7 @@ app.use('/api/documentos', require('./routes/documentos.routes'));
 
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/login.html'));
+    res.sendFile(path.join(__dirname, '../frontend/aspirante.html'));
 });
 
 app.listen(PORT, () => {
