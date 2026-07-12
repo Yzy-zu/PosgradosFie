@@ -1,16 +1,28 @@
-const URL_TUNEL_ADMIN = " https://open-zoos-kneel.loca.lt";
+
 document.addEventListener("DOMContentLoaded", () => {
     validarSesion();
     mostrarAdministrador();
     configurarBotones();
+    configurarNavegacion(); // Configurar eventos de clic
+    cargarDashboard();
     cargarUsuarios();
+    cargarConvocatorias(); // Inicializar panel de convocatorias
+
+    // Router inicial: si no hay hash, lo ponemos en dashboard
+    if (!window.location.hash) {
+        window.location.hash = "#dashboard";
+    } else {
+        activarSeccionPorHash(); // Procesar el hash que ya venía en la URL
+    }
 });
+
+// Escuchar cambios en la URL (Botón Atrás/Adelante o clics en el menú)
+window.addEventListener("hashchange", activarSeccionPorHash);
 
 function validarSesion() {
     const usuario = localStorage.getItem("usuario");
     const token = localStorage.getItem("token");
 
-    // Si falta el usuario o el token, lo mandamos directo a loguearse
     if (!usuario || !token) {
         alert("Sesión inválida o expirada. Por favor, inicie sesión.");
         localStorage.clear();
@@ -20,13 +32,21 @@ function validarSesion() {
 }
 
 function mostrarAdministrador() {
-    const usuario = JSON.parse(localStorage.getItem("usuario"));
-    if (!usuario) return;
+    let usuario = JSON.parse(localStorage.getItem("usuario"));
+    if (!usuario) return; // Si no hay usuario, validarSesion() ya se encargó de redirigir al login
 
-    const nombre = document.getElementById("nombreAdministrador");
-    if (nombre) {
-        nombre.textContent = usuario.correo;
+    // Actualizar nombre en el header superior
+    const nombreHeader = document.getElementById("nombreAdministrador");
+    if (nombreHeader) {
+        nombreHeader.textContent = usuario.nombre || usuario.correo.split('@')[0];
     }
+
+    // Actualizar información en el menú desplegable (perfil)
+    const menuNombre = document.getElementById("menu-nombre-admin");
+    const menuCorreo = document.getElementById("menu-correo-admin");
+
+    if (menuNombre) menuNombre.textContent = usuario.nombre || "Administrador";
+    if (menuCorreo) menuCorreo.textContent = usuario.correo || "";
 }
 
 function configurarBotones() {
@@ -34,20 +54,123 @@ function configurarBotones() {
     if (btnCerrar) {
         btnCerrar.addEventListener("click", cerrarSesion);
     }
+
+    // Asegurarnos de limpiar el formulario cuando se abre el modal para "Nuevo Usuario"
+    const btnNuevoUsuario = document.querySelector('[data-bs-target="#modalUsuario"]');
+    if (btnNuevoUsuario) {
+        btnNuevoUsuario.addEventListener("click", () => {
+            document.getElementById("formUsuario").reset();
+            const idInput = document.getElementById("idUsuarioForm");
+            if (idInput) idInput.value = "";
+            document.querySelector("#modalUsuario .modal-title").textContent = "Nuevo Usuario";
+        });
+    }
+
+    // Lógica para el menú desplegable del perfil (antes estaba en el HTML)
+    const profileContainer = document.getElementById('profile-container');
+    if (profileContainer) {
+        profileContainer.addEventListener('click', function (event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('profile-dropdown');
+            if (dropdown) dropdown.classList.toggle('show');
+        });
+    }
+
+    // Cierra el menú desplegable si se hace clic fuera de él
+    window.addEventListener('click', function () {
+        const dropdown = document.getElementById('profile-dropdown');
+        if (dropdown && dropdown.classList.contains('show')) {
+            dropdown.classList.remove('show');
+        }
+    });
+}
+
+function activarSeccionPorHash() {
+    const hash = window.location.hash.replace("#", "");
+    if (!hash) return;
+
+    const enlaces = document.querySelectorAll("#sidebarMenu .nav-link");
+    const secciones = document.querySelectorAll(".content-section");
+    const tituloSeccion = document.getElementById("seccion-titulo");
+    const descSeccion = document.getElementById("seccion-descripcion");
+
+    // Remover estado activo de todos los enlaces en el menú
+    enlaces.forEach(link => link.classList.remove("active"));
+
+    // Ocultar todas las secciones del contenido
+    secciones.forEach(sec => sec.classList.add("d-none"));
+
+    // Activar el enlace correspondiente
+    const enlaceActivo = document.querySelector(`#sidebarMenu .nav-link[data-target="${hash}"]`);
+    if (enlaceActivo) {
+        enlaceActivo.classList.add("active");
+
+        // Actualizar el título dinámicamente basado en el texto del enlace
+        const textoEnlace = enlaceActivo.textContent.trim();
+        if (tituloSeccion && descSeccion) {
+            if (hash === "dashboard") {
+                tituloSeccion.textContent = "Panel de Administración";
+                descSeccion.textContent = "Bienvenido al sistema de gestión de Posgrados.";
+            } else {
+                tituloSeccion.textContent = "Gestión de " + textoEnlace;
+                descSeccion.textContent = "Administra la información de " + textoEnlace.toLowerCase() + ".";
+            }
+        }
+    }
+
+    // Mostrar la sección correspondiente en el HTML
+    const seccionMostrar = document.getElementById(`seccion-${hash}`);
+    if (seccionMostrar) {
+        seccionMostrar.classList.remove("d-none");
+    }
+}
+
+function configurarNavegacion() {
+    const enlaces = document.querySelectorAll("#sidebarMenu .nav-link");
+
+    enlaces.forEach(enlace => {
+        enlace.addEventListener("click", (e) => {
+            e.preventDefault();
+            // Al hacer clic, simplemente cambiamos la URL. 
+            // Esto dispara el evento 'hashchange' automáticamente.
+            const target = e.currentTarget.getAttribute("data-target");
+            window.location.hash = `#${target}`;
+        });
+    });
 }
 
 function cerrarSesion() {
     if (!confirm("¿Desea cerrar sesión?")) return;
-    localStorage.clear(); // Limpia token y usuario de golpe
+    localStorage.clear();
     window.location.href = "login.html";
+}
+
+function cargarDashboard() {
+    // Inicializar contadores en 0 hasta que existan las APIs correspondientes
+    const totalUsuarios = document.getElementById("totalUsuarios");
+    const totalPosgrados = document.getElementById("totalPosgrados");
+    const totalAspirantes = document.getElementById("totalAspirantes");
+    const totalSolicitudes = document.getElementById("totalSolicitudes");
+    const totalConvocatorias = document.getElementById("totalConvocatorias");
+    const totalDocumentos = document.getElementById("totalDocumentos");
+
+    if (totalUsuarios) totalUsuarios.textContent = "0";
+    if (totalPosgrados) totalPosgrados.textContent = "0";
+    if (totalAspirantes) totalAspirantes.textContent = "0";
+    if (totalSolicitudes) totalSolicitudes.textContent = "0";
+    if (totalConvocatorias) totalConvocatorias.textContent = "0";
+    if (totalDocumentos) totalDocumentos.textContent = "0";
 }
 
 async function cargarUsuarios() {
     try {
-        const respuesta = await fetch("http://localhost:4000/api/usuario");
-        if (!respuesta.ok) throw new Error("Error al obtener los usuarios");
-
+        const respuesta = await fetch("/api/usuario");
         const usuarios = await respuesta.json();
+
+        // Actualizar contador del dashboard
+        const totalUsuarios = document.getElementById("totalUsuarios");
+        if (totalUsuarios) totalUsuarios.textContent = usuarios.length || 0;
+
         const tbody = document.getElementById("tablaUsuarios");
         if (!tbody) return;
         tbody.innerHTML = "";
@@ -57,9 +180,10 @@ async function cargarUsuarios() {
 
             fila.innerHTML = `
                 <td>${usuario.id}</td>
+                <td>${usuario.nombre || 'Sin nombre'}</td>
                 <td>${usuario.correo}</td>
                 <td>${usuario.rol || 'Usuario'}</td>
-                <td><span class="badge bg-success">Activo</span></td>
+                <td><span class="badge bg-success">${usuario.estado || 'Activo'}</span></td>
                 <td>
                     <button class="btn btn-warning btn-sm" onclick="editarUsuario(${usuario.id})">Editar</button>
                     <button class="btn btn-danger btn-sm" onclick="eliminarUsuario(${usuario.id})">Eliminar</button>
@@ -74,17 +198,25 @@ async function cargarUsuarios() {
 
 async function editarUsuario(id) {
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/usuario/${id}`);
-        if (!respuesta.ok) throw new Error("No se pudo obtener la información");
-
+        const respuesta = await fetch(`/api/usuario/${id}`);
         const usuario = await respuesta.json();
+
+        if (!usuario) throw new Error("Usuario no encontrado");
 
         const inputId = document.getElementById("idUsuarioForm");
         if (inputId) inputId.value = usuario.id;
-        
-        document.getElementById("correo").value = usuario.correo;
-        document.getElementById("rol").value = usuario.rol;
-        document.getElementById("password").value = ""; 
+
+        const inputNombre = document.getElementById("nombre");
+        if (inputNombre) inputNombre.value = usuario.nombre || "";
+
+        const inputCorreo = document.getElementById("correo");
+        if (inputCorreo) inputCorreo.value = usuario.correo || "";
+
+        const inputRol = document.getElementById("rol");
+        if (inputRol) inputRol.value = usuario.rol || "ADMIN";
+
+        const inputPassword = document.getElementById("password");
+        if (inputPassword) inputPassword.value = "";
 
         document.querySelector("#modalUsuario .modal-title").textContent = "Editar Usuario";
 
@@ -103,25 +235,26 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
 
     const idInput = document.getElementById("idUsuarioForm");
     const idUsuario = idInput ? idInput.value : "";
+    const nombre = document.getElementById("nombre").value;
     const correo = document.getElementById("correo").value;
     const password = document.getElementById("password").value;
     const rol = document.getElementById("rol").value;
 
-    const datosUsuario = { correo, password, rol };
-    const token = localStorage.getItem("token");
+    const datosUsuario = { nombre, correo, password, rol };
+    const token = localStorage.getItem("token") || ""; // Por si requiere token más adelante
 
     try {
-        let url = "http://localhost:4000/api/usuario";
-        let metodo = "POST"; 
+        let url = "/api/usuario";
+        let metodo = "POST";
 
         if (idUsuario && idUsuario.trim() !== "") {
-            url = `http://localhost:4000/api/usuario/${idUsuario}`; 
-            metodo = "PUT"; 
+            url = `/api/usuario/${idUsuario}`;
+            metodo = "PUT";
         }
 
         const respuesta = await fetch(url, {
             method: metodo,
-            headers: { 
+            headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`
             },
@@ -130,12 +263,12 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
 
         const resultado = await respuesta.json();
 
-        if (respuesta.ok) {
+        if (respuesta.ok && resultado.success !== false) {
             alert(resultado.mensaje || "Operación realizada con éxito");
-            
+
             const modalElement = document.getElementById("modalUsuario");
             const modal = bootstrap.Modal.getInstance(modalElement);
-            modal.hide();
+            if (modal) modal.hide();
 
             document.getElementById("formUsuario").reset();
             if (idInput) idInput.value = "";
@@ -148,19 +281,19 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
 
     } catch (error) {
         console.error("Error al guardar el usuario:", error);
-        alert("Ocurrió un error de conexión con el servidor.");
+        alert("Ocurrió un error en la conexión con el servidor.");
     }
 });
 
 async function eliminarUsuario(id) {
     if (!confirm(`¿Está seguro de eliminar al usuario con ID: ${id}?`)) {
-        return; 
+        return;
     }
 
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token") || "";
 
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/usuario/${id}`, {
+        const respuesta = await fetch(`/api/usuario/${id}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -169,8 +302,8 @@ async function eliminarUsuario(id) {
 
         const resultado = await respuesta.json();
 
-        if (respuesta.ok) {
-            alert(resultado.mensaje || "Usuario eliminado con éxito");
+        if (respuesta.ok && resultado.success !== false) {
+            alert(resultado.mensaje || "Usuario eliminado con éxito.");
             cargarUsuarios();
         } else {
             alert(resultado.mensaje || "No se pudo eliminar el usuario.");
@@ -179,5 +312,324 @@ async function eliminarUsuario(id) {
     } catch (error) {
         console.error("Error en eliminarUsuario:", error);
         alert("Ocurrió un error al intentar eliminar el usuario.");
+    }
+}
+
+// ==========================================
+// MÓDULO CONVOCATORIAS
+// ==========================================
+
+async function cargarConvocatorias() {
+    const contenedor = document.getElementById("contenedorConvocatorias");
+    const totalConvocatorias = document.getElementById("totalConvocatorias");
+
+    if (!contenedor) return;
+
+    try {
+        const respuesta = await fetch("/api/convocatoria");
+
+        // Si el endpoint no existe o falla, detenemos el renderizado
+        if (!respuesta.ok) throw new Error("Endpoint no disponible");
+
+        const convocatorias = await respuesta.json();
+
+        if (totalConvocatorias) {
+            totalConvocatorias.textContent = convocatorias.length || 0;
+        }
+
+        contenedor.innerHTML = "";
+
+        if (!convocatorias || convocatorias.length === 0) {
+            contenedor.innerHTML = "<p class='text-muted' style='grid-column: 1 / -1;'>No hay convocatorias registradas.</p>";
+            return;
+        }
+
+        convocatorias.forEach(conv => {
+            let colorEstado = "#6c757d"; // Borrador / Cerrada
+            if (conv.estado === "Activa") colorEstado = "#2ecc71";
+            if (conv.estado === "Evaluacion") colorEstado = "#f1c40f";
+
+            const card = document.createElement("div");
+            card.className = "card p-3 shadow-sm text-center";
+            card.style.cursor = "pointer";
+            card.style.transition = "transform 0.2s, box-shadow 0.2s";
+            card.onmouseover = () => { card.style.transform = "scale(1.02)"; };
+            card.onmouseout = () => { card.style.transform = "scale(1)"; };
+
+            card.onclick = () => editarConvocatoria(conv.id);
+
+            card.innerHTML = `
+                <div class="mb-2" style="font-size: 2.5rem; color: #9b59b6;">
+                    <i class="fa-solid fa-file-invoice"></i>
+                </div>
+                <h5 class="mb-1" style="font-weight:600; color:#2c3e50;">${conv.nombre}</h5>
+                <p class="mb-2 text-muted" style="font-size:0.9rem;">${conv.fecha_inicio} a ${conv.fecha_fin}</p>
+                <div>
+                    <span class="badge" style="background-color: ${colorEstado}; font-size:0.8rem;">${conv.estado}</span>
+                </div>
+            `;
+
+            contenedor.appendChild(card);
+        });
+    } catch (error) {
+        console.error("Error en cargarConvocatorias:", error);
+        contenedor.innerHTML = "<p class='text-muted' style='grid-column: 1 / -1;'>Esperando API de convocatorias...</p>";
+    }
+}
+
+function limpiarFormularioConvocatoria() {
+    document.getElementById("formConvocatoria").reset();
+    document.getElementById("idConvocatoriaForm").value = "";
+    document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-bullhorn"></i> Nueva Convocatoria';
+    document.getElementById("btnEliminarConvocatoria").style.display = "none";
+    document.getElementById("contenedorRequisitos").innerHTML = ""; // Limpiar requisitos
+}
+
+function agregarRequisitoUI(descripcion = "", obligatorio = true) {
+    const contenedor = document.getElementById("contenedorRequisitos");
+
+    const div = document.createElement("div");
+    div.className = "input-group mb-2 requisito-item";
+
+    const checkedHtml = obligatorio ? "checked" : "";
+
+    div.innerHTML = `
+        <input type="text" class="form-control req-descripcion" placeholder="Descripción del requisito..." value="${descripcion}" required>
+        <div class="input-group-text bg-light">
+            <input class="form-check-input mt-0 req-obligatorio" type="checkbox" ${checkedHtml} title="¿Obligatorio?">
+            <label class="ms-1 mb-0 text-muted" style="font-size:0.8rem; cursor:pointer;" onclick="this.previousElementSibling.click()">Obligatorio</label>
+        </div>
+        <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()" title="Eliminar requisito">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    `;
+
+    contenedor.appendChild(div);
+}
+
+async function editarConvocatoria(id) {
+    try {
+        const respuesta = await fetch(`/api/convocatoria/${id}`);
+        const conv = await respuesta.json();
+
+        if (!conv) throw new Error("Convocatoria no encontrada");
+
+        document.getElementById("idConvocatoriaForm").value = conv.id;
+        document.getElementById("convocatoria_nombre").value = conv.nombre || "";
+        document.getElementById("convocatoria_descripcion").value = conv.descripcion || "";
+        document.getElementById("convocatoria_fecha_inicio").value = conv.fecha_inicio || "";
+        document.getElementById("convocatoria_fecha_fin").value = conv.fecha_fin || "";
+        document.getElementById("convocatoria_estado").value = conv.estado || "Borrador";
+
+        // Cargar requisitos dinámicos
+        const contenedor = document.getElementById("contenedorRequisitos");
+        contenedor.innerHTML = "";
+        if (conv.requisitos && Array.isArray(conv.requisitos)) {
+            conv.requisitos.forEach(req => agregarRequisitoUI(req.descripcion, req.obligatorio));
+        }
+
+        document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Editar Convocatoria';
+
+        const btnEliminar = document.getElementById("btnEliminarConvocatoria");
+        if (btnEliminar) {
+            btnEliminar.style.display = "inline-block";
+            btnEliminar.onclick = () => eliminarConvocatoria(conv.id);
+        }
+
+        const modalElement = document.getElementById("modalConvocatoria");
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modal.show();
+
+    } catch (error) {
+        console.error("Error al preparar la edición:", error);
+        alert("No se pudieron cargar los datos de la convocatoria.");
+    }
+}
+
+document.getElementById("formConvocatoria")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const idInput = document.getElementById("idConvocatoriaForm").value;
+    const nombre = document.getElementById("convocatoria_nombre").value;
+    const descripcion = document.getElementById("convocatoria_descripcion").value;
+    const fecha_inicio = document.getElementById("convocatoria_fecha_inicio").value;
+    const fecha_fin = document.getElementById("convocatoria_fecha_fin").value;
+    const estado = document.getElementById("convocatoria_estado").value;
+
+    // Recopilar requisitos del DOM
+    const reqItems = document.querySelectorAll("#contenedorRequisitos .requisito-item");
+    const requisitos = [];
+    reqItems.forEach(item => {
+        const desc = item.querySelector(".req-descripcion").value;
+        const oblig = item.querySelector(".req-obligatorio").checked;
+        if (desc.trim() !== "") {
+            requisitos.push({ descripcion: desc.trim(), obligatorio: oblig });
+        }
+    });
+
+    const datosConvocatoria = { nombre, descripcion, fecha_inicio, fecha_fin, estado, requisitos };
+    const token = localStorage.getItem("token") || "";
+
+    try {
+        let url = "/api/convocatoria";
+        let metodo = "POST";
+
+        if (idInput && idInput.trim() !== "") {
+            url = `/api/convocatoria/${idInput}`;
+            metodo = "PUT";
+        }
+
+        const respuesta = await fetch(url, {
+            method: metodo,
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(datosConvocatoria)
+        });
+
+        const resultado = await respuesta.json();
+
+        if (respuesta.ok && resultado.success !== false) {
+            alert(resultado.mensaje || "Operación realizada con éxito");
+
+            const modalElement = document.getElementById("modalConvocatoria");
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+
+            limpiarFormularioConvocatoria();
+            cargarConvocatorias();
+        } else {
+            alert(resultado.mensaje || "Hubo un error al procesar la solicitud.");
+        }
+
+    } catch (error) {
+        console.error("Error al guardar la convocatoria:", error);
+        alert("Ocurrió un error en la conexión con el servidor.");
+    }
+});
+
+async function eliminarConvocatoria(id) {
+    if (!confirm(`¿Está seguro de eliminar la convocatoria con ID: ${id}?`)) {
+        return;
+    }
+
+    const token = localStorage.getItem("token") || "";
+
+    try {
+        const respuesta = await fetch(`/api/convocatoria/${id}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        const resultado = await respuesta.json();
+
+        if (respuesta.ok && resultado.success !== false) {
+            alert(resultado.mensaje || "Convocatoria eliminada con éxito.");
+
+            const modalElement = document.getElementById("modalConvocatoria");
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+
+            cargarConvocatorias();
+        } else {
+            alert(resultado.mensaje || "No se pudo eliminar la convocatoria.");
+        }
+
+    } catch (error) {
+        console.error("Error en eliminarConvocatoria:", error);
+        alert("Ocurrió un error al intentar eliminar la convocatoria.");
+    }
+}
+// ==========================================
+// MÓDULO ASPIRANTES
+// ==========================================
+
+async function cargarAspirantes() {
+    const totalAspirantes = document.getElementById("totalAspirantes");
+    const tbody = document.getElementById("tablaAspirantes");
+    if (!tbody) return;
+
+    try {
+        const respuesta = await fetch("/api/aspirante");
+
+        if (!respuesta.ok) throw new Error("Endpoint no disponible");
+
+        const aspirantes = await respuesta.json();
+        console.log(aspirantes)
+
+        if (totalAspirantes) {
+            totalAspirantes.textContent = aspirantes.length || 0;
+        }
+
+        tbody.innerHTML = "";
+
+        if (!aspirantes || aspirantes.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='4' class='text-center text-muted'>No hay aspirantes registrados.</td></tr>";
+            return;
+        }
+
+        aspirantes.forEach(aspirante => {
+            const tr = document.createElement("tr");
+            // Formatear nombre completo
+            const nombreCompleto = `${aspirante.nombre || ''} ${aspirante.primerApellido || ''} ${aspirante.segundoApellido || ''}`.trim();
+
+            tr.innerHTML = `
+                <td>${nombreCompleto || 'Sin nombre'}</td>
+                <td>${aspirante.correo || 'Sin correo'}</td>
+                <td><span class="badge bg-secondary">Registrado</span></td>
+                <td>
+                    <button class="btn btn-info btn-sm text-white" onclick="verAspirante(${aspirante.id})">
+                        <i class="fa-solid fa-eye"></i> Ver Detalles
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error("Error al cargar aspirantes:", error);
+        tbody.innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Esperando API de aspirantes...</td></tr>";
+    }
+}
+
+async function verAspirante(id) {
+    try {
+        const respuesta = await fetch(`/api/aspirante/${id}`);
+        if (!respuesta.ok) throw new Error("Aspirante no encontrado");
+
+        const aspirante = await respuesta.json();
+
+        // Llenar el modal
+        document.getElementById("detalleAspNombre").textContent = aspirante.nombre || "N/A";
+        document.getElementById("detalleAspPrimerApellido").textContent = aspirante.primerApellido || "N/A";
+        document.getElementById("detalleAspSegundoApellido").textContent = aspirante.segundoApellido || "N/A";
+        document.getElementById("detalleAspCurp").textContent = aspirante.curp || "N/A";
+        document.getElementById("detalleAspCorreo").textContent = aspirante.correo || "N/A";
+        document.getElementById("detalleAspTelefono").textContent = aspirante.telefono || "N/A";
+
+        // Formatear la fecha si existe
+        let fechaFormat = "N/A";
+        if (aspirante.fechaNacimiento) {
+            const d = new Date(aspirante.fechaNacimiento);
+            if (!isNaN(d.getTime())) {
+                fechaFormat = d.toLocaleDateString("es-MX");
+            } else {
+                fechaFormat = aspirante.fechaNacimiento;
+            }
+        }
+        document.getElementById("detalleAspFechaNac").textContent = fechaFormat;
+
+        document.getElementById("detalleAspDireccion").textContent = aspirante.direccion || "N/A";
+
+        // Mostrar modal
+        const modalElement = document.getElementById("modalAspirante");
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modal.show();
+
+    } catch (error) {
+        console.error("Error al cargar detalles del aspirante:", error);
+        alert("Ocurrió un error al cargar los detalles del aspirante.");
     }
 }

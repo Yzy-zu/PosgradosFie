@@ -6,210 +6,407 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administrador | Sistema de Gestión de Posgrados</title>
 
+    <!-- Bootstrap for modals and tables -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="stylesheet"> 
+    <!-- FontAwesome from aspirante.html -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Style CSS from aspirante.html -->
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
 
-<div class="d-flex">
+    <!-- Sidebar from aspirante.html design -->
+    <nav class="sidebar">
+        <h2><i class="fa-solid fa-bars-staggered"></i> POSGRADOS FIE</h2>
 
-    <aside class="sidebar bg-dark text-white p-3">
-        <h3 class="text-center mb-4">POSGRADOS FIE</h3>
+        <div id="sidebarMenu">
+            <a href="#" class="nav-link active" data-target="dashboard">
+                <i class="fa-solid fa-gauge-high"></i> Dashboard
+            </a>
+            <a href="#" class="nav-link" data-target="usuarios">
+                <i class="fa-solid fa-users"></i> Usuarios
+            </a>
+            <a href="#" class="nav-link" data-target="posgrados">
+                <i class="fa-solid fa-graduation-cap"></i> Posgrados
+            </a>
+            <a href="#" class="nav-link" data-target="convocatorias">
+                <i class="fa-solid fa-bullhorn"></i> Convocatorias
+            </a>
+            <a href="#" class="nav-link" data-target="aspirantes">
+                <i class="fa-solid fa-user-graduate"></i> Aspirantes
+            </a>
+            <a href="#" class="nav-link" data-target="solicitudes">
+                <i class="fa-solid fa-file-signature"></i> Solicitudes
+            </a>
+            <a href="#" class="nav-link" data-target="documentos">
+                <i class="fa-solid fa-folder-open"></i> Documentos
+            </a>
+            <a href="#" class="nav-link" data-target="reportes">
+                <i class="fa-solid fa-chart-bar"></i> Reportes
+            </a>
+        </div>
+    </nav>
 
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a href="#" class="nav-link text-white">
-                    <i class="bi bi-speedometer2"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link text-white">
-                    <i class="bi bi-people"></i> Usuarios
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link text-white">
-                    <i class="bi bi-mortarboard"></i> Posgrados
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link text-white">
-                    <i class="bi bi-calendar-event"></i> Convocatorias
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link text-white">
-                    <i class="bi bi-file-earmark-person"></i> Aspirantes
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link text-white">
-                    <i class="bi bi-file-earmark-text"></i> Solicitudes
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link text-white">
-                    <i class="bi bi-folder2-open"></i> Documentos
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link text-white">
-                    <i class="bi bi-clipboard-data"></i> Reportes
-                </a>
-            </li>
-        </ul>
+    <main class="main-content">
 
-        <hr>
-        <button class="btn btn-danger w-100" id="btnCerrarSesion">
-            <i class="bi bi-box-arrow-right"></i> Cerrar sesión
-        </button>
-    </aside>
+        <!-- Header from aspirante.html design -->
+        <div class="header-user">
+            <h1 id="seccion-titulo"><i class="fa-solid fa-screwdriver-wrench"></i> Panel de Administración</h1>
 
-    <main class="flex-grow-1">
-
-        <nav class="navbar bg-white shadow-sm px-4">
-            <button class="btn">
-                <i class="bi bi-list fs-4"></i>
-            </button>
-
-            <div class="d-flex align-items-center">
-                <i class="bi bi-bell fs-5 me-4"></i>
-                <img src="css/Escudo UMSNH.webp" width="45" height="45" class="rounded-circle">
-
-                <div class="ms-3">
-                    <h6 class="mb-0" id="nombreAdministrador">Administrador</h6>
-                    <small class="text-muted">Administrador del Sistema</small>
+            <div class="profile-container" id="profile-container">
+                <div class="profile-trigger">
+                    <i class="fa-solid fa-circle-user profile-avatar"></i>
+                    <span class="profile-name" id="nombreAdministrador">Administrador</span>
+                    <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                </div>
+                <div id="profile-dropdown" class="profile-menu">
+                    <div class="profile-user-details">
+                        <div class="user-role-badge"><i class="fa-solid fa-shield"></i> Admin</div>
+                        <h4 class="user-full-name" id="menu-nombre-admin">Administrador</h4>
+                        <p class="user-info-text"><i class="fa-regular fa-envelope"></i> <span
+                                id="menu-correo-admin">admin@umsnh.mx</span></p>
+                    </div>
+                    <hr>
+                    <a class="logout-link" id="btnCerrarSesion" style="cursor:pointer;"><i
+                            class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</a>
                 </div>
             </div>
-        </nav>
+        </div>
 
-        <div class="container-fluid p-4">
-            <h2>Panel de Administración</h2>
-            <p class="text-muted">Bienvenido al sistema de gestión de Posgrados.</p>
+        <div class="container-fluid p-0">
+            <p class="text-muted mb-4" id="seccion-descripcion">Bienvenido al sistema de gestión de Posgrados.</p>
 
-            <div class="row mt-4">
-                <div class="col-md-3">
-                    <div class="card shadow">
-                        <div class="card-body text-center">
-                            <i class="bi bi-people-fill fs-1 text-primary"></i>
-                            <h2 id="totalUsuarios">0</h2>
-                            <p>Usuarios</p>
-                        </div>
+            <!-- SECCIÓN: DASHBOARD -->
+            <div id="seccion-dashboard" class="content-section d-none">
+                <div class="dashboard-grid">
+                    <div class="card text-center" style="cursor:default;">
+                        <h3 style="font-size:2rem; margin-bottom: 5px;"><i class="fa-solid fa-users"
+                                style="color: #3498db;"></i> <span id="totalUsuarios">0</span></h3>
+                        <p style="color:#666; font-weight:bold;">Usuarios</p>
                     </div>
-                </div>
 
-                <div class="col-md-3">
-                    <div class="card shadow">
-                        <div class="card-body text-center">
-                            <i class="bi bi-mortarboard-fill fs-1 text-success"></i>
-                            <h2 id="totalPosgrados">0</h2>
-                            <p>Posgrados</p>
-                        </div>
+                    <div class="card text-center" style="cursor:default;">
+                        <h3 style="font-size:2rem; margin-bottom: 5px;"><i class="fa-solid fa-graduation-cap"
+                                style="color: #2ecc71;"></i> <span id="totalPosgrados">0</span></h3>
+                        <p style="color:#666; font-weight:bold;">Posgrados</p>
                     </div>
-                </div>
 
-                <div class="col-md-3">
-                    <div class="card shadow">
-                        <div class="card-body text-center">
-                            <i class="bi bi-person-vcard-fill fs-1 text-warning"></i>
-                            <h2 id="totalAspirantes">0</h2>
-                            <p>Aspirantes</p>
-                        </div>
+                    <div class="card text-center" style="cursor:default;">
+                        <h3 style="font-size:2rem; margin-bottom: 5px;"><i class="fa-solid fa-address-card"
+                                style="color: #f1c40f;"></i> <span id="totalAspirantes">0</span></h3>
+                        <p style="color:#666; font-weight:bold;">Aspirantes</p>
                     </div>
-                </div>
 
-                <div class="col-md-3">
-                    <div class="card shadow">
-                        <div class="card-body text-center">
-                            <i class="bi bi-file-earmark-text-fill fs-1 text-danger"></i>
-                            <h2 id="totalSolicitudes">0</h2>
-                            <p>Solicitudes</p>
-                        </div>
+                    <div class="card text-center" style="cursor:default;">
+                        <h3 style="font-size:2rem; margin-bottom: 5px;"><i class="fa-solid fa-file-contract"
+                                style="color: #e74c3c;"></i> <span id="totalSolicitudes">0</span></h3>
+                        <p style="color:#666; font-weight:bold;">Solicitudes</p>
+                    </div>
+
+                    <div class="card text-center" style="cursor:default;">
+                        <h3 style="font-size:2rem; margin-bottom: 5px;"><i class="fa-solid fa-bullhorn"
+                                style="color: #9b59b6;"></i> <span id="totalConvocatorias">0</span></h3>
+                        <p style="color:#666; font-weight:bold;">Convocatorias</p>
+                    </div>
+                    <div class="card text-center" style="cursor:default;">
+                        <h3 style="font-size:2rem; margin-bottom: 5px;"><i class="fa-solid fa-folder-open"
+                                style="color: #e67e22;"></i> <span id="totalDocumentos">0</span></h3>
+                        <p style="color:#666; font-weight:bold;">Documentos</p>
                     </div>
                 </div>
             </div>
 
-            <div class="card mt-5 shadow">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Usuarios registrados</h5>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalUsuario">
-                        Nuevo Usuario
-                    </button>
-                </div>
+            <!-- SECCIÓN: USUARIOS -->
+            <div id="seccion-usuarios" class="content-section d-none">
+                <div class="card mt-2 shadow-sm" style="flex:auto;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0" style="color:#1a1f2c;"><i class="fa-solid fa-list-ul"></i> Usuarios registrados
+                        </h5>
+                        <button class="btn btn-primary" style="width:auto; padding: 8px 15px;" data-bs-toggle="modal"
+                            data-bs-target="#modalUsuario">
+                            <i class="fa-solid fa-plus"></i> Nuevo Usuario
+                        </button>
+                    </div>
 
-                <div class="card-body">
-                    <table class="table table-hover">
-                        <thead>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Correo</th>
+                                    <th>Rol</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaUsuarios"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OTRAS SECCIONES (Cascarones) -->
+            <div id="seccion-posgrados" class="content-section d-none">
+                <div class="card mt-2 shadow-sm" style="flex:auto;">
+                    <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i>Módulo de
+                        Posgrados en construcción.</p>
+                </div>
+            </div>
+
+            <div id="seccion-convocatorias" class="content-section d-none">
+                <div class="card mt-2 shadow-sm" style="flex:auto;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0" style="color:#1a1f2c;"><i class="fa-solid fa-bullhorn"></i> Gestión de
+                            Convocatorias</h5>
+                        <button class="btn btn-primary" style="width:auto; padding: 8px 15px;" data-bs-toggle="modal"
+                            data-bs-target="#modalConvocatoria" onclick="limpiarFormularioConvocatoria()">
+                            <i class="fa-solid fa-plus"></i> Nueva Convocatoria
+                        </button>
+                    </div>
+                    <!-- Grid donde se dibujarán las tarjetas de cada convocatoria -->
+                    <div id="contenedorConvocatorias" class="dashboard-grid mt-3">
+                        <!-- Las tarjetas se inyectarán con JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="seccion-aspirantes" class="content-section d-none">
+            <div class="card mt-2 shadow-sm" style="flex:auto;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0" style="color:#1a1f2c;"><i class="fa-solid fa-list-ul"></i> Aspirantes registrados
+                    </h5>
+
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
                             <tr>
-                                <th>ID</th>
                                 <th>Nombre</th>
                                 <th>Correo</th>
-                                <th>Rol</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="tablaUsuarios"></tbody>
+                        <tbody id="tablaAspirantes"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-    </main>
-</div>
-
-<div class="modal fade" id="modalUsuario" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header d-flex justify-content-between align-items-center">
-                <h5 class="modal-title">Nuevo Usuario</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div id="seccion-solicitudes" class="content-section d-none">
+            <div class="card mt-2 shadow-sm" style="flex:auto;">
+                <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i>Módulo de
+                    Solicitudes en construcción.</p>
             </div>
+        </div>
 
-            <div class="modal-body">
-                <form id="formUsuario">
-                    <input type="hidden" id="idUsuarioForm">
+        <div id="seccion-documentos" class="content-section d-none">
+            <div class="card mt-2 shadow-sm" style="flex:auto;">
+                <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i>Módulo de
+                    Documentos en construcción.</p>
+            </div>
+        </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Nombre</label>
-                        <input type="text" id="nombre" class="form-control" required>
-                    </div>
+        <div id="seccion-reportes" class="content-section d-none">
+            <div class="card mt-2 shadow-sm" style="flex:auto;">
+                <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i>Módulo de
+                    Reportes en construcción.</p>
+            </div>
+        </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Correo</label>
-                        <input type="email" id="correo" class="form-control" required>
-                    </div>
+        </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Contraseña</label>
-                        <input type="password" id="password" class="form-control">
-                        <small class="text-muted d-block mt-1">Dejar en blanco si está editando y no desea cambiarla.</small>
-                    </div>
+    </main>
 
-                    <div class="mb-3">
-                        <label class="form-label">Rol</label>
-                        <select id="rol" class="form-select">
-                            <option value="ADMIN">ADMIN</option>
-                            <option value="COORDINADOR">COORDINADOR</option>
-                            <option value="SECRETARIO">SECRETARIO</option>
-                            <option value="ASPIRANTE">ASPIRANTE</option>
-                            <option value="DOCENTE">DOCENTE</option>
-                        </select>
-                    </div>
+    <!-- Modal Nuevo Usuario -->
+    <div class="modal fade" id="modalUsuario" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header d-flex justify-content-between align-items-center">
+                    <h5 class="modal-title"><i class="fa-solid fa-user-plus"></i> Nuevo Usuario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
 
-                    <button type="submit" class="btn btn-success w-100 mt-2">
-                        Guardar Usuario
-                    </button>
-                </form>
+                <div class="modal-body">
+                    <form id="formUsuario">
+                        <input type="hidden" id="idUsuarioForm">
+
+                        <div class="mb-3">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" id="nombre" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Correo</label>
+                            <input type="email" id="correo" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" id="password" class="form-control">
+                            <small class="text-muted d-block mt-1">Dejar en blanco si está editando y no desea
+                                cambiarla.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Rol</label>
+                            <select id="rol" class="form-select">
+                                <option value="ADMIN">ADMIN</option>
+                                <option value="COORDINADOR">COORDINADOR</option>
+                                <option value="SECRETARIO">SECRETARIO</option>
+                                <option value="ASPIRANTE">ASPIRANTE</option>
+                                <option value="DOCENTE">DOCENTE</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn-primary" style="margin-top:10px;">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar Usuario
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="js/admin.js"></script>
+    <!-- Modal Convocatoria -->
+    <div class="modal fade" id="modalConvocatoria" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header d-flex justify-content-between align-items-center">
+                    <h5 class="modal-title" id="tituloModalConvocatoria"><i class="fa-solid fa-bullhorn"></i> Nueva
+                        Convocatoria</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="formConvocatoria">
+                        <input type="hidden" id="idConvocatoriaForm">
+
+                        <div class="mb-3">
+                            <label class="form-label">Nombre de la Convocatoria</label>
+                            <input type="text" id="convocatoria_nombre" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea id="convocatoria_descripcion" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Fecha Inicio</label>
+                                <input type="date" id="convocatoria_fecha_inicio" class="form-control" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Fecha Fin</label>
+                                <input type="date" id="convocatoria_fecha_fin" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Estado</label>
+                            <select id="convocatoria_estado" class="form-select">
+                                <option value="Borrador">Borrador</option>
+                                <option value="Activa">Activa</option>
+                                <option value="Evaluacion">Evaluación</option>
+                                <option value="Cerrada">Cerrada</option>
+                            </select>
+                        </div>
+
+                        <hr class="my-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label mb-0 fw-bold" style="color: #2c3e50;">Requisitos
+                                Solicitados</label>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="agregarRequisitoUI()">
+                                <i class="fa-solid fa-plus"></i> Añadir Requisito
+                            </button>
+                        </div>
+                        <div id="contenedorRequisitos" class="mb-3">
+                            <!-- Los requisitos dinámicos se insertarán aquí -->
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-danger" id="btnEliminarConvocatoria"
+                                style="display:none;" onclick="eliminarConvocatoria()">
+                                <i class="fa-solid fa-trash"></i> Eliminar
+                            </button>
+                            <button type="submit" class="btn btn-primary" style="margin-left:auto;">
+                                <i class="fa-solid fa-floppy-disk"></i> Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Aspirante (Ver Detalles) -->
+    <div class="modal fade" id="modalAspirante" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header d-flex justify-content-between align-items-center">
+                    <h5 class="modal-title"><i class="fa-solid fa-user-graduate"></i> Detalles del Aspirante</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold text-muted">Nombre</label>
+                            <p id="detalleAspNombre" class="mb-0 fs-5"></p>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold text-muted">Primer Apellido</label>
+                            <p id="detalleAspPrimerApellido" class="mb-0 fs-5"></p>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold text-muted">Segundo Apellido</label>
+                            <p id="detalleAspSegundoApellido" class="mb-0 fs-5"></p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted">CURP</label>
+                            <p id="detalleAspCurp" class="mb-0 fs-5"></p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted">Correo</label>
+                            <p id="detalleAspCorreo" class="mb-0 fs-5"></p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted">Teléfono</label>
+                            <p id="detalleAspTelefono" class="mb-0 fs-5"></p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted">Fecha de Nacimiento</label>
+                            <p id="detalleAspFechaNac" class="mb-0 fs-5"></p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-bold text-muted">Dirección</label>
+                            <p id="detalleAspDireccion" class="mb-0 fs-5"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="js/admin.js"></script>
 </body>
 </html>

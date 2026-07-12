@@ -5,9 +5,9 @@ module.exports = (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
-        return res.status(401).json({ 
-            success: false, 
-            mensaje: 'Acceso denegado. Token no proporcionado.' 
+        return res.status(401).json({
+            success: false,
+            mensaje: 'Acceso denegado. Token no proporcionado.'
         });
     }
 
@@ -16,9 +16,12 @@ module.exports = (req, res, next) => {
         req.usuario = verificado;
         next();
     } catch (error) {
-        res.status(403).json({ 
-            success: false, 
-            mensaje: 'Token inválido o expirado.' 
+        res.status(403).json({
+            success: false,
+            mensaje: 'Token inválido o expirado.'
         });
     }
 };
+
+
+

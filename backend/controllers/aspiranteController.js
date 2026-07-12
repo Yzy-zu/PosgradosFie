@@ -229,8 +229,44 @@ const registrarAspirante = async (req, res) => {
 
 };
 
+const obtenerAspirantes = async (req, res) => {
+    try {
+        db.query("SELECT * FROM aspirante", (err, resultados) => {
+            if (err) {
+                console.error("Error al obtener aspirantes:", err);
+                return res.status(500).json({ success: false, mensaje: "Error en el servidor" });
+            }
+            return res.status(200).json(resultados);
+        });
+    } catch (error) {
+        console.error("Error en obtenerAspirantes:", error);
+        return res.status(500).json({ success: false, mensaje: "Error en el servidor" });
+    }
+};
+
+const obtenerAspirantePorId = async (req, res) => {
+    try {
+        const { id } = req.params;
+        db.query("SELECT * FROM aspirante WHERE id = ?", [id], (err, resultados) => {
+            if (err) {
+                console.error("Error al obtener aspirante:", err);
+                return res.status(500).json({ success: false, mensaje: "Error en el servidor" });
+            }
+            
+            if (resultados.length === 0) {
+                return res.status(404).json({ success: false, mensaje: "Aspirante no encontrado" });
+            }
+            
+            return res.status(200).json(resultados[0]);
+        });
+    } catch (error) {
+        console.error("Error en obtenerAspirantePorId:", error);
+        return res.status(500).json({ success: false, mensaje: "Error en el servidor" });
+    }
+};
+
 module.exports = {
-
-    registrarAspirante
-
-};  
+    registrarAspirante,
+    obtenerAspirantes,
+    obtenerAspirantePorId
+};
