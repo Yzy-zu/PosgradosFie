@@ -80,36 +80,37 @@
             <!-- SECCIÓN: DASHBOARD -->
             <div id="seccion-dashboard" class="content-section d-none">
                 <div class="dashboard-grid">
-                    <div class="card text-center" style="cursor:default;">
+                    <div class="card text-center" style="cursor:pointer;" onclick="window.location.hash = '#usuarios'">
                         <h3 style="font-size:2rem; margin-bottom: 5px;"><i class="fa-solid fa-users"
                                 style="color: #3498db;"></i> <span id="totalUsuarios">0</span></h3>
                         <p style="color:#666; font-weight:bold;">Usuarios</p>
                     </div>
 
-                    <div class="card text-center" style="cursor:default;">
+                    <div class="card text-center" style="cursor:pointer;" onclick="window.location.hash = '#posgrados'">
                         <h3 style="font-size:2rem; margin-bottom: 5px;"><i class="fa-solid fa-graduation-cap"
                                 style="color: #2ecc71;"></i> <span id="totalPosgrados">0</span></h3>
                         <p style="color:#666; font-weight:bold;">Posgrados</p>
                     </div>
 
-                    <div class="card text-center" style="cursor:default;">
+                    <div class="card text-center" style="cursor:pointer;" onclick="window.location.hash = '#aspirantes'">
                         <h3 style="font-size:2rem; margin-bottom: 5px;"><i class="fa-solid fa-address-card"
                                 style="color: #f1c40f;"></i> <span id="totalAspirantes">0</span></h3>
                         <p style="color:#666; font-weight:bold;">Aspirantes</p>
                     </div>
 
-                    <div class="card text-center" style="cursor:default;">
+                    <div class="card text-center" style="cursor:pointer;" onclick="window.location.hash = '#solicitudes'">
                         <h3 style="font-size:2rem; margin-bottom: 5px;"><i class="fa-solid fa-file-contract"
                                 style="color: #e74c3c;"></i> <span id="totalSolicitudes">0</span></h3>
                         <p style="color:#666; font-weight:bold;">Solicitudes</p>
                     </div>
 
-                    <div class="card text-center" style="cursor:default;">
+                    <div class="card text-center" style="cursor:pointer;" onclick="window.location.hash = '#convocatorias'">
                         <h3 style="font-size:2rem; margin-bottom: 5px;"><i class="fa-solid fa-bullhorn"
                                 style="color: #9b59b6;"></i> <span id="totalConvocatorias">0</span></h3>
                         <p style="color:#666; font-weight:bold;">Convocatorias</p>
                     </div>
-                    <div class="card text-center" style="cursor:default;">
+                    
+                    <div class="card text-center" style="cursor:pointer;" onclick="window.location.hash = '#documentos'">
                         <h3 style="font-size:2rem; margin-bottom: 5px;"><i class="fa-solid fa-folder-open"
                                 style="color: #e67e22;"></i> <span id="totalDocumentos">0</span></h3>
                         <p style="color:#666; font-weight:bold;">Documentos</p>
@@ -138,7 +139,6 @@
                                     <th>Correo</th>
                                     <th>Rol</th>
                                     <th>Estado</th>
-                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="tablaUsuarios"></tbody>
@@ -187,7 +187,6 @@
                                 <th>Nombre</th>
                                 <th>Correo</th>
                                 <th>Estado</th>
-                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tablaAspirantes"></tbody>
@@ -262,9 +261,14 @@
                             </select>
                         </div>
 
-                        <button type="submit" class="btn-primary" style="margin-top:10px;">
-                            <i class="fa-solid fa-floppy-disk"></i> Guardar Usuario
-                        </button>
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-danger" id="btnEliminarUsuario" style="display:none;" onclick="eliminarUsuario(document.getElementById('idUsuarioForm').value)">
+                                <i class="fa-solid fa-trash"></i> Eliminar
+                            </button>
+                            <button type="submit" class="btn-primary" style="margin-left:auto; width: auto; padding: 8px 15px;">
+                                <i class="fa-solid fa-floppy-disk"></i> Guardar Usuario
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -343,63 +347,67 @@
         </div>
     </div>
 
-    <!-- Modal Aspirante (Ver Detalles) -->
+    <!-- Modal Aspirante (Editar Detalles) -->
     <div class="modal fade" id="modalAspirante" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header d-flex justify-content-between align-items-center">
-                    <h5 class="modal-title"><i class="fa-solid fa-user-graduate"></i> Detalles del Aspirante</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold text-muted">Nombre</label>
-                            <p id="detalleAspNombre" class="mb-0 fs-5"></p>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold text-muted">Primer Apellido</label>
-                            <p id="detalleAspPrimerApellido" class="mb-0 fs-5"></p>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold text-muted">Segundo Apellido</label>
-                            <p id="detalleAspSegundoApellido" class="mb-0 fs-5"></p>
-                        </div>
+                <form id="formAspirante">
+                    <div class="modal-header d-flex justify-content-between align-items-center">
+                        <h5 class="modal-title"><i class="fa-solid fa-user-pen"></i> Editar Aspirante</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-muted">CURP</label>
-                            <p id="detalleAspCurp" class="mb-0 fs-5"></p>
+                    <div class="modal-body">
+                        <input type="hidden" id="detalleAspId">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold text-muted">Nombre</label>
+                                <input type="text" id="detalleAspNombre" class="form-control" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold text-muted">Primer Apellido</label>
+                                <input type="text" id="detalleAspPrimerApellido" class="form-control" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold text-muted">Segundo Apellido</label>
+                                <input type="text" id="detalleAspSegundoApellido" class="form-control">
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-muted">Correo</label>
-                            <p id="detalleAspCorreo" class="mb-0 fs-5"></p>
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-muted">Teléfono</label>
-                            <p id="detalleAspTelefono" class="mb-0 fs-5"></p>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-muted">CURP</label>
+                                <input type="text" id="detalleAspCurp" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-muted">Correo</label>
+                                <input type="email" id="detalleAspCorreo" class="form-control" required>
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-muted">Fecha de Nacimiento</label>
-                            <p id="detalleAspFechaNac" class="mb-0 fs-5"></p>
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-12 mb-3">
-                            <label class="form-label fw-bold text-muted">Dirección</label>
-                            <p id="detalleAspDireccion" class="mb-0 fs-5"></p>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-muted">Teléfono</label>
+                                <input type="text" id="detalleAspTelefono" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-muted">Fecha de Nacimiento</label>
+                                <input type="date" id="detalleAspFechaNac" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-bold text-muted">Dirección</label>
+                                <input type="text" id="detalleAspDireccion" class="form-control">
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

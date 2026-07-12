@@ -1,94 +1,11 @@
-// Base de Datos Local Simulada para el Portal de Docente
-const aspirantesIniciales = [
-    {
-        id: "asp-001",
-        nombre: "Juan Pérez Gómez",
-        programa: "Maestría en Ciencias en Ingeniería Eléctrica (Opción Automatización)",
-        correo: "juan.perez@correo.com",
-        fechaRegistro: "2026-06-10",
-        mecanismo: "Curso Propedéutico",
-        nivel: "Maestría",
-        documentos: [
-            { id: "acta", nombre: "Acta de Nacimiento", estado: "pendiente", note: "", content: "ACTA DE NACIMIENTO DIGITAL OFICIAL\n---------------------------------\nNombre del Registrado: Juan Pérez Gómez\nFecha de Nacimiento: 12 de Mayo de 2002\nLugar de Nacimiento: Morelia, Michoacán, México\nNacionalidad: Mexicana\nCURP: PEGJ020512HMNRRS09\n\nSello Digital de la Secretaría de Gobernación vigente. Certificación del Registro Civil efectuada en formato digital XML." },
-            { id: "curp", nombre: "Clave CURP", estado: "aprobado", note: "", content: "CLAVE ÚNICA DE REGISTRO DE POBLACIÓN (CURP)\n------------------------------------------\nCURP: PEGJ020512HMNRRS09\nNombre: Juan Pérez Gómez\nFecha de Registro: 15 de Mayo de 2002\nEntidad de Registro: Michoacán\n\nEstatus: Certificada por el Registro Civil ante la RENAPO." },
-            { id: "ine", nombre: "Identificación Oficial (INE)", estado: "pendiente", note: "", content: "INSTITUTO NACIONAL ELECTORAL\nCREDENCIAL PARA VOTAR\n--------------------------\nNombre: Juan Pérez Gómez\nDomicilio: Calle Melchor Ocampo #450, Col. Centro, Morelia, Mich.\nClave de Elector: PRGMJN02051239H200\nCURP: PEGJ020512HMNRRS09\nRegistro: 2020 01\n\nFotografía e identificación oficial legible y vigente. Firmas al reverso validadas." },
-            { id: "certificado", nombre: "Certificado de Calificaciones", estado: "pendiente", note: "", content: "CERTIFICADO DE ESTUDIOS PROFESIONALES\n------------------------------------\nInstitución: Instituto Tecnológico de Morelia\nCarrera: Ingeniería en Electrónica\nPasante: Juan Pérez Gómez\nPeriodo: 2020-2024\nPromedio General obtenido: 8.7 (Ocho punto siete)\n\nLista de Materias:\n- Control Analógico: 9.0\n- Microcontroladores: 8.0\n- Instrumentación Industrial: 9.0\n- Programación Avanzada: 10.0\n- Seminario de Tesis: 9.0\n\nFirmado y sellado electrónicamente por la Dirección de Control Escolar." },
-            { id: "cartas", nombre: "Cartas de Recomendación", estado: "pendiente", note: "", content: "CARTA DE RECOMENDACIÓN ACADÉMICA\n--------------------------------\nFecha: 02 de Junio de 2026\nPara: Comité de Admisión de Posgrado FIE - UMSNH\n\nPor medio de la presente, recomiendo ampliamente al C. Juan Pérez Gómez para ingresar a la Maestría en Ciencias en Ingeniería Eléctrica. Durante su formación de licenciatura, demostró un alto nivel intelectual, proactividad y rigor científico, destacando en el desarrollo de un módulo de control adaptativo para brazos robóticos.\n\nAtentamente,\nDr. Alejandro Ramos Vega\nProfesor-Investigador SNI Nivel I\nFIE-UMSNH" },
-            { id: "ceneval", nombre: "Examen CENEVAL EXANI-III", estado: "rechazado", note: "La puntuación total no es legible en el documento cargado. Favor de volver a escanear a color asegurando resolución nítida de la tabla de puntajes.", content: "CENTRO NACIONAL DE EVALUACIÓN PARA LA EDUCACIÓN SUPERIOR (CENEVAL)\nREPORTE DE RESULTADOS DE EXAMEN - EXANI-III\n-----------------------------------------------\nNombre del sustentante: Juan Pérez Gómez\nFolio Ceneval: 9982716\nFecha de examen: 18 de Mayo de 2026\n\n[ERROR DE LECTURA: ESCANEO EN BAJA CALIDAD Y MANCHADO]\nPuntaje Global: [ILEGIBLE]\nPuntaje en Metodología de Investigación: [ILEGIBLE]\nPuntaje en Pensamiento Matemático: 1050\nEstatus: Requiere carga de archivo corregido." }
-        ]
-    },
-    {
-        id: "asp-002",
-        nombre: "María Elena Rodríguez",
-        programa: "Doctorado en Ciencias en Ingeniería Eléctrica (Sistemas Eléctricos de Potencia)",
-        correo: "maria.elena@gmail.com",
-        fechaRegistro: "2026-06-12",
-        mecanismo: "Grado de Maestría Académica",
-        nivel: "Doctorado",
-        documentos: [
-            { id: "grado-maestria", nombre: "Grado de Maestría", estado: "aprobado", note: "", content: "TÍTULO DE GRADO ACADÉMICO PROFESIONAL\n------------------------------------\nLa Universidad Michoacana de San Nicolás de Hidalgo otorga a:\nMaría Elena Rodríguez\n\nEl Grado de: Maestría en Ciencias en Ingeniería Eléctrica\nCon mención honorífica por la defensa de la tesis: 'Optimización de Flujos de Potencia en Redes de Distribución Inteligentes'.\n\nDado en Morelia, Michoacán el 14 de Enero de 2026. Registrado ante la Dirección General de Profesiones de la SEP." },
-            { id: "cv", nombre: "Currículum Vítae (CV) Único", estado: "pendiente", note: "", content: "CURRÍCULUM VÍTAE ÚNICO (CONACYT SIMULADO)\n----------------------------------------\nDatos de Identificación:\nNombre: María Elena Rodríguez\nGrados Obtenidos:\n- Licenciatura en Ingeniería Eléctrica (UMSNH, 2023) - Promedio: 9.3\n- Maestría en Ciencias en Ingeniería Eléctrica (UMSNH, 2026) - Promedio: 9.8\n\nProducción Científica:\n- 1 artículo publicado en IEEE Transactions on Power Systems (Coautora).\n- 2 contribuciones en congresos internacionales de IEEE (RVP-AI/2025).\n- Idiomas: Inglés certificado TOEFL ITP (560 puntos)." },
-            { id: "propuesta", nombre: "Propuesta de Proyecto de Investigación", estado: "pendiente", note: "", content: "PROPUESTA DE PROYECTO DE INVESTIGACIÓN DOCTORAL\n---------------------------------------------\nTítulo: Control Tolerante a Fallas Basado en Observadores Difusos para Generadores Eólicos Autónomos en Zonas Remotas.\nCandidata: María Elena Rodríguez\nAsesor Propuesto: Dr. Carlos Martínez Silva\n\nResumen Ejecutivo:\nEsta investigación propone diseñar e implementar una arquitectura de control automático tolerante a fallas (FTC) para mitigar el impacto de fallas en sensores y actuadores de aerogeneradores de imanes permanentes (PMSG). Se emplearán modelos matemáticos Takagi-Sugeno y observadores difusos para reconstruir los estados de falla en tiempo real y compensarlos sin interrupción de potencia eléctrica." },
-            { id: "idioma", nombre: "Constancia de Idioma Oficial", estado: "aprobado", note: "", content: "CENTRO DE IDIOMAS UMSNH\nCONSTANCIA DE CERTIFICACIÓN OFICIAL DE INGLÉS\n-------------------------------------------\nFolio: IDI-ING-2026-9082\nSe certifica que la alumna: María Elena Rodríguez\n\nHa acreditado satisfactoriamente la evaluación TOEFL ITP.\nPuntaje Oficial Obtenido: 560 puntos (Nivel B2 según MCER)\nFecha de emisión: 10 de Febrero de 2026\nValidez oficial institucional por 2 años." }
-        ]
-    },
-    {
-        id: "asp-003",
-        nombre: "Carlos Alberto Sánchez",
-        programa: "Maestría en Tecnologías Aplicadas a la Ingeniería FIE",
-        correo: "carlos.sanchez@gmail.com",
-        fechaRegistro: "2026-06-18",
-        mecanismo: "Examen de Admisión",
-        nivel: "Maestría",
-        documentos: [
-            { id: "acta", nombre: "Acta de Nacimiento", estado: "aprobado", note: "", content: "ACTA DE NACIMIENTO OFICIAL\n-------------------------\nNombre: Carlos Alberto Sánchez\nFecha de Nacimiento: 04 de Noviembre de 2001\nLugar: Uruapan, Michoacán\nPadres: Juan Sánchez Ruiz y Clara Ruiz Huerta\nEstatus: Certificación gubernamental en formato digital completa." },
-            { id: "curp", nombre: "Clave CURP", estado: "aprobado", note: "", content: "CLAVE ÚNICA DE REGISTRO DE POBLACIÓN (CURP)\n------------------------------------------\nCURP: SACC011104HMNRRD02\nNombre: Carlos Alberto Sánchez" },
-            { id: "ine", nombre: "Identificación Oficial (INE)", estado: "aprobado", note: "", content: "INSTITUTO NACIONAL ELECTORAL\nNombre: Carlos Alberto Sánchez\nDomicilio: Privada de Bugambilias #12, Uruapan, Mich.\nClave de Elector: SNCHCR011104H800" },
-            { id: "certificado", nombre: "Certificado de Calificaciones", estado: "aprobado", note: "", content: "CERTIFICADO DE ESTUDIOS PROFESIONALES\n------------------------------------\nInstitución: Universidad de Guadalajara\nCarrera: Ingeniería Mecánica\nEgresado: Carlos Alberto Sánchez\nPromedio General: 9.1 (Nueve punto uno)\n\nEstatus: Copia fotostática legible y certificada ante notario público de materias aprobadas." },
-            { id: "cartas", nombre: "Cartas de Recomendación", estado: "aprobado", note: "", content: "RECOMENDACIÓN ACADÉMICA PROFESIONAL\n------------------------------------\nRecomendante: Dra. Patricia Torres Luna\nDocente Investigador FIE-UMSNH\n\nExpreso mi recomendación favorable para Carlos Alberto Sánchez. Es un egresado sobresaliente, hábil en el diseño termodinámico asistido por computadora y con alta ética profesional." },
-            { id: "ceneval", nombre: "Examen CENEVAL EXANI-III", estado: "aprobado", note: "", content: "CENEVAL EXANI-III OFICIAL\n--------------------------\nNombre: Carlos Alberto Sánchez\nFolio: 8092716\nPuntuación Global: 1080 puntos\nEstatus: Aprobado (Supera el mínimo de 1000 puntos establecido por el reglamento)." }
-        ]
-    },
-    {
-        id: "asp-004",
-        nombre: "Laura Sofia Méndez",
-        programa: "Maestría en Ciencias en Ingeniería Eléctrica (Opción Automatización)",
-        correo: "laura.mendez@outlook.com",
-        fechaRegistro: "2026-06-20",
-        mecanismo: "Ingreso por Promedio (Egresados FIE)",
-        nivel: "Maestría",
-        documentos: [
-            { id: "acta", nombre: "Acta de Nacimiento", estado: "pendiente", note: "", content: "ACTA DE NACIMIENTO DIGITAL\n--------------------------\nNombre: Laura Sofia Méndez\nFecha de Nacimiento: 10 de Septiembre de 2003\nLugar: Morelia, Michoacán" },
-            { id: "curp", nombre: "Clave CURP", estado: "pendiente", note: "", content: "CLAVE CURP\nCURP: MENL030910FMNRSS01\nNombre: Laura Sofia Méndez" },
-            { id: "ine", nombre: "Identificación Oficial (INE)", estado: "pendiente", note: "", content: "INE DIGITAL CREDENCIAL PARA VOTAR\nNombre: Laura Sofia Méndez\nRegistro: Validez vigente." },
-            { id: "certificado", nombre: "Certificado de Calificaciones", estado: "pendiente", note: "", content: "CERTIFICADO ACADÉMICO PARCIAL\n-----------------------------\nInstitución: Facultad de Ingeniería Eléctrica, UMSNH\nCarrera: Ingeniería Eléctrica\nNombre: Laura Sofia Méndez\nPromedio Acumulado: 9.6 (Nueve punto seis)\n\nEstatus: Promedio excelente. Cumple con los requisitos del ingreso directo sin examen." }
-        ]
-    }
-];
-
 // Variables de Estado Global de la Interfaz
 let aspirantes = [];
 let idAspiranteActivo = null;
 let documentoARechazar = null;
 
 // Inicialización de la Aplicación
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", async function() {
     console.log("Portal de Docente Inicializado.");
-
-    // Cargar o inicializar la base de datos simulada en localStorage para persistencia
-    const localData = localStorage.getItem("docenteAspirantes");
-    if (localData) {
-        try {
-            aspirantes = JSON.parse(localData);
-        } catch (e) {
-            console.error("Error cargando datos locales, inicializando con valores predeterminados.");
-            aspirantes = [...aspirantesIniciales];
-            localStorage.setItem("docenteAspirantes", JSON.stringify(aspirantes));
-        }
-    } else {
-        aspirantes = [...aspirantesIniciales];
-        localStorage.setItem("docenteAspirantes", JSON.stringify(aspirantes));
-    }
 
     // Configurar el saludo de usuario personalizado
     const usuarioLogueado = localStorage.getItem('usuarioLogueado') || "Docente Evaluador";
@@ -97,10 +14,41 @@ document.addEventListener("DOMContentLoaded", function() {
         saludo.innerText = `Hola Bienvenid@, ${usuarioLogueado}`;
     }
 
-    // Calcular estadísticas iniciales e inyectar el listado
-    actualizarEstadisticas();
-    filtrarYMostrarAspirantes();
+    await cargarAspirantesAPI();
 });
+
+async function cargarAspirantesAPI() {
+    try {
+        const token = localStorage.getItem("token") || "";
+        const respuesta = await fetch('/api/aspirante', {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        
+        if (respuesta.ok) {
+            const data = await respuesta.json();
+            // Mapear los datos de la BD a la estructura que requiere la vista
+            aspirantes = data.map(asp => ({
+                id: asp.id,
+                nombre: `${asp.nombre || ''} ${asp.primerApellido || ''} ${asp.segundoApellido || ''}`.trim() || "Sin nombre",
+                programa: "Por asignar",
+                correo: asp.correo || "Sin correo",
+                fechaRegistro: asp.fechaNacimiento ? asp.fechaNacimiento.split('T')[0] : "N/A",
+                mecanismo: "Regular",
+                nivel: "Por asignar",
+                documentos: [] // Vacío por ahora, se llenará cuando se tenga la API de documentos
+            }));
+            
+            actualizarEstadisticas();
+            filtrarYMostrarAspirantes();
+        } else {
+            console.error("Error al obtener aspirantes de la API");
+        }
+    } catch (error) {
+        console.error("Error de conexión:", error);
+    }
+}
 
 /**
  * Control de Navegación Lateral (Cambio de Secciones)
@@ -130,23 +78,23 @@ function switchView(viewId) {
  * Cierre de Sesión Limpiando Variables No Persistentes de Login
  */
 function cerrarSesion() {
-    localStorage.removeItem('usuarioLogueado');
-    alert("Sesión cerrada de forma segura.");
-    window.location.href = 'login.html';
+    localStorage.removeItem("token");
+    localStorage.removeItem("usuarioLogueado");
+    window.location.href = "login.html";
 }
 
 // Función para abrir/cerrar el menú desplegable del perfil
 function toggleProfileMenu(event) {
     event.stopPropagation(); // Evita que se cierre inmediatamente al hacer click
     const dropdown = document.getElementById('profile-dropdown');
-    dropdown.classList.toggle('active');
+    dropdown.classList.toggle('show');
 }
 
 // Cerrar el menú si se hace click fuera de él en la pantalla
 window.addEventListener('click', function() {
     const dropdown = document.getElementById('profile-dropdown');
-    if (dropdown && dropdown.classList.contains('active')) {
-        dropdown.classList.remove('active');
+    if (dropdown && dropdown.classList.contains('show')) {
+        dropdown.classList.remove('show');
     }
 });
 

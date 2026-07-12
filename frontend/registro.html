@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,15 +8,18 @@
     <!-- Enlazamos tus mismos estilos del Login -->
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 
     <div class="login-container">
         <div class="login-card">
             <!-- Escudo institucional centrado superior -->
             <img src="css/Escudo UMSNH.webp" alt="Escudo UMSNH">
-            
-            <h2 style="color: #1a1f2c; margin-bottom: 5px; font-size: 20px; font-weight: 700;">Registro de Aspirante</h2>
-            <p style="color: #666; font-size: 13px; margin-bottom: 25px;">Crea tu cuenta para el ingreso al Posgrado FIE</p>
+
+            <h2 style="color: #1a1f2c; margin-bottom: 5px; font-size: 20px; font-weight: 700;">Registro de Aspirante
+            </h2>
+            <p style="color: #666; font-size: 13px; margin-bottom: 25px;">Crea tu cuenta para el ingreso al Posgrado FIE
+            </p>
 
             <!-- Formulario de captura -->
             <form id="formularioRegistro" onsubmit="enviarRegistro(event)">
@@ -54,49 +58,50 @@
     <script>
         async function enviarRegistro(event) {
             event.preventDefault();
-    // 1. OBTENER LOS TRES VALORES DESDE EL HTML (Te faltaba el nombre)
-    const nombre = document.getElementById('reg-nombre').value.trim(); // Asegúrate de que el id sea el de tu input de nombre completo
-    const correo = document.getElementById('reg-correo').value.trim().toLowerCase();
-    const password = document.getElementById('reg-password').value.trim();
+            // 1. OBTENER LOS TRES VALORES DESDE EL HTML (Te faltaba el nombre)
+            const nombre = document.getElementById('reg-nombre').value.trim(); // Asegúrate de que el id sea el de tu input de nombre completo
+            const correo = document.getElementById('reg-correo').value.trim().toLowerCase();
+            const password = document.getElementById('reg-password').value.trim();
 
-    // Validación del dominio institucional
-    if (!correo.endsWith('@umich.mx')) {
-        alert("⚠️ Registro Restringido:\nDebes utilizar obligatoriamente un correo institucional @umich.mx");
-        return;
-    }
+            // Validación del dominio institucional
+            if (!correo.endsWith('@umich.mx')) {
+                alert("⚠️ Registro Restringido:\nDebes utilizar obligatoriamente un correo institucional @umich.mx");
+                return;
+            }
 
-    try {
-        // Envío de parámetros estructurados a tu API en Node.js
-        const respuesta = await fetch("http://localhost:4000/api/auth/register", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                nombre, // Ahora sí tiene valor real
-                correo,
-                password,
-                rol: "ASPIRANTE"
-            })
-        });
+            try {
+                // Envío de parámetros estructurados a tu API en Node.js
+                const respuesta = await fetch("http://localhost:4000/api/auth/register", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        nombre, // Ahora sí tiene valor real
+                        correo,
+                        password,
+                        rol: "ASPIRANTE"
+                    })
+                });
 
-        const datos = await respuesta.json();
+                const datos = await respuesta.json();
 
-        if (datos.success) {
-            alert("¡Registro exitoso! Por favor, inicia sesión con tu nueva cuenta.");
-            
-            // Redirigir directamente al panel de aspirante
-            window.location.href = `login.html?correo=${encodeURIComponent(correo)}`;
-        } else {
-            // Esto te mostrará el error exacto que te arroje el backend en el alert
-            alert(datos.mensaje || "Error al procesar el registro del aspirante.");
+                if (datos.success) {
+                    alert("¡Registro exitoso! Por favor, inicia sesión con tu nueva cuenta.");
+
+                    // Redirigir directamente al panel de aspirante
+                    window.location.href = `login.html?correo=${encodeURIComponent(correo)}`;
+                } else {
+                    // Esto te mostrará el error exacto que te arroje el backend en el alert
+                    alert(datos.mensaje || "Error al procesar el registro del aspirante.");
+                }
+
+            } catch (error) {
+                console.error("Error en la petición:", error);
+                alert("Error de red o el servidor está caído.");
+            }
         }
-
-    } catch (error) {
-        console.error("Error en la petición:", error);
-        alert("Error de red o el servidor está caído.");
-    }
-}
     </script>
 </body>
+
 </html>

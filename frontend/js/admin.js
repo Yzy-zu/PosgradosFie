@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarDashboard();
     cargarUsuarios();
     cargarConvocatorias(); // Inicializar panel de convocatorias
+    cargarAspirantes();
 
     // Router inicial: si no hay hash, lo ponemos en dashboard
     if (!window.location.hash) {
@@ -62,7 +63,9 @@ function configurarBotones() {
             document.getElementById("formUsuario").reset();
             const idInput = document.getElementById("idUsuarioForm");
             if (idInput) idInput.value = "";
-            document.querySelector("#modalUsuario .modal-title").textContent = "Nuevo Usuario";
+            document.querySelector("#modalUsuario .modal-title").innerHTML = '<i class="fa-solid fa-user-plus"></i> Nuevo Usuario';
+            const btnEliminar = document.getElementById("btnEliminarUsuario");
+            if (btnEliminar) btnEliminar.style.display = "none";
         });
     }
 
@@ -177,6 +180,9 @@ async function cargarUsuarios() {
 
         usuarios.forEach(usuario => {
             const fila = document.createElement("tr");
+            
+            fila.style.cursor = "pointer";
+            fila.onclick = () => editarUsuario(usuario.id);
 
             fila.innerHTML = `
                 <td>${usuario.id}</td>
@@ -184,10 +190,6 @@ async function cargarUsuarios() {
                 <td>${usuario.correo}</td>
                 <td>${usuario.rol || 'Usuario'}</td>
                 <td><span class="badge bg-success">${usuario.estado || 'Activo'}</span></td>
-                <td>
-                    <button class="btn btn-warning btn-sm" onclick="editarUsuario(${usuario.id})">Editar</button>
-                    <button class="btn btn-danger btn-sm" onclick="eliminarUsuario(${usuario.id})">Eliminar</button>
-                </td>
             `;
             tbody.appendChild(fila);
         });
@@ -218,7 +220,10 @@ async function editarUsuario(id) {
         const inputPassword = document.getElementById("password");
         if (inputPassword) inputPassword.value = "";
 
-        document.querySelector("#modalUsuario .modal-title").textContent = "Editar Usuario";
+        document.querySelector("#modalUsuario .modal-title").innerHTML = '<i class="fa-solid fa-user-pen"></i> Editar Usuario';
+
+        const btnEliminar = document.getElementById("btnEliminarUsuario");
+        if (btnEliminar) btnEliminar.style.display = "inline-block";
 
         const modalElement = document.getElementById("modalUsuario");
         const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
@@ -272,7 +277,9 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
 
             document.getElementById("formUsuario").reset();
             if (idInput) idInput.value = "";
-            document.querySelector("#modalUsuario .modal-title").textContent = "Nuevo Usuario";
+            document.querySelector("#modalUsuario .modal-title").innerHTML = '<i class="fa-solid fa-user-plus"></i> Nuevo Usuario';
+            const btnElim = document.getElementById("btnEliminarUsuario");
+            if (btnElim) btnElim.style.display = "none";
 
             cargarUsuarios();
         } else {
@@ -304,6 +311,9 @@ async function eliminarUsuario(id) {
 
         if (respuesta.ok && resultado.success !== false) {
             alert(resultado.mensaje || "Usuario eliminado con éxito.");
+            const modalElement = document.getElementById("modalUsuario");
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
             cargarUsuarios();
         } else {
             alert(resultado.mensaje || "No se pudo eliminar el usuario.");
@@ -576,15 +586,12 @@ async function cargarAspirantes() {
             // Formatear nombre completo
             const nombreCompleto = `${aspirante.nombre || ''} ${aspirante.primerApellido || ''} ${aspirante.segundoApellido || ''}`.trim();
 
+            tr.style.cursor = "pointer";
+            tr.onclick = () => editarAspirante(aspirante.id);
             tr.innerHTML = `
                 <td>${nombreCompleto || 'Sin nombre'}</td>
                 <td>${aspirante.correo || 'Sin correo'}</td>
                 <td><span class="badge bg-secondary">Registrado</span></td>
-                <td>
-                    <button class="btn btn-info btn-sm text-white" onclick="verAspirante(${aspirante.id})">
-                        <i class="fa-solid fa-eye"></i> Ver Detalles
-                    </button>
-                </td>
             `;
             tbody.appendChild(tr);
         });
@@ -594,7 +601,7 @@ async function cargarAspirantes() {
     }
 }
 
-async function verAspirante(id) {
+async function editarAspirante(id) {
     try {
         const respuesta = await fetch(`/api/aspirante/${id}`);
         if (!respuesta.ok) throw new Error("Aspirante no encontrado");
@@ -602,26 +609,27 @@ async function verAspirante(id) {
         const aspirante = await respuesta.json();
 
         // Llenar el modal
-        document.getElementById("detalleAspNombre").textContent = aspirante.nombre || "N/A";
-        document.getElementById("detalleAspPrimerApellido").textContent = aspirante.primerApellido || "N/A";
-        document.getElementById("detalleAspSegundoApellido").textContent = aspirante.segundoApellido || "N/A";
-        document.getElementById("detalleAspCurp").textContent = aspirante.curp || "N/A";
-        document.getElementById("detalleAspCorreo").textContent = aspirante.correo || "N/A";
-        document.getElementById("detalleAspTelefono").textContent = aspirante.telefono || "N/A";
+        document.getElementById("detalleAspId").value = aspirante.id || "";
+        document.getElementById("detalleAspNombre").value = aspirante.nombre || "";
+        document.getElementById("detalleAspPrimerApellido").value = aspirante.primerApellido || "";
+        document.getElementById("detalleAspSegundoApellido").value = aspirante.segundoApellido || "";
+        document.getElementById("detalleAspCurp").value = aspirante.curp || "";
+        document.getElementById("detalleAspCorreo").value = aspirante.correo || "";
+        document.getElementById("detalleAspTelefono").value = aspirante.telefono || "";
 
         // Formatear la fecha si existe
-        let fechaFormat = "N/A";
+        let fechaFormat = "";
         if (aspirante.fechaNacimiento) {
             const d = new Date(aspirante.fechaNacimiento);
             if (!isNaN(d.getTime())) {
-                fechaFormat = d.toLocaleDateString("es-MX");
+                fechaFormat = d.toISOString().split('T')[0];
             } else {
                 fechaFormat = aspirante.fechaNacimiento;
             }
         }
-        document.getElementById("detalleAspFechaNac").textContent = fechaFormat;
+        document.getElementById("detalleAspFechaNac").value = fechaFormat;
 
-        document.getElementById("detalleAspDireccion").textContent = aspirante.direccion || "N/A";
+        document.getElementById("detalleAspDireccion").value = aspirante.direccion || "";
 
         // Mostrar modal
         const modalElement = document.getElementById("modalAspirante");
@@ -633,3 +641,47 @@ async function verAspirante(id) {
         alert("Ocurrió un error al cargar los detalles del aspirante.");
     }
 }
+
+document.getElementById("formAspirante")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = document.getElementById("detalleAspId").value;
+    
+    const datos = {
+        nombre: document.getElementById("detalleAspNombre").value,
+        primerApellido: document.getElementById("detalleAspPrimerApellido").value,
+        segundoApellido: document.getElementById("detalleAspSegundoApellido").value,
+        curp: document.getElementById("detalleAspCurp").value,
+        correo: document.getElementById("detalleAspCorreo").value,
+        telefono: document.getElementById("detalleAspTelefono").value,
+        fechaNacimiento: document.getElementById("detalleAspFechaNac").value,
+        direccion: document.getElementById("detalleAspDireccion").value
+    };
+    
+    const token = localStorage.getItem("token") || "";
+
+    try {
+        const respuesta = await fetch(`/api/aspirante/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(datos)
+        });
+
+        const resultado = await respuesta.json();
+        
+        if (respuesta.ok && resultado.success !== false) {
+            alert(resultado.mensaje || "Aspirante actualizado con éxito");
+            const modalElement = document.getElementById("modalAspirante");
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+            cargarAspirantes();
+        } else {
+            alert(resultado.mensaje || "Hubo un error al procesar la solicitud.");
+        }
+    } catch (error) {
+        console.error("Error al guardar aspirante:", error);
+        alert("Ocurrió un error en la conexión con el servidor.");
+    }
+});

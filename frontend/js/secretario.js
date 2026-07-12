@@ -1,0 +1,100 @@
+document.addEventListener("DOMContentLoaded", async function() {
+    console.log("Portal de Secretario Inicializado.");
+
+    // Configurar el saludo de usuario personalizado
+    const usuarioLogueado = localStorage.getItem('usuarioLogueado') || "Secretario Académico";
+    const saludo = document.getElementById('saludo-usuario');
+    if (saludo) {
+        saludo.innerText = `Hola Bienvenid@, ${usuarioLogueado}`;
+    }
+
+    await cargarAspirantes();
+});
+
+async function cargarAspirantes() {
+    try {
+        const token = localStorage.getItem("token") || "";
+        const respuesta = await fetch('/api/aspirante', {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (respuesta.ok) {
+            const aspirantes = await respuesta.json();
+            
+            // Actualizar contador del dashboard
+            const statAspirantes = document.getElementById("stat-aspirantes");
+            if (statAspirantes) statAspirantes.innerText = aspirantes.length;
+
+            // Renderizar la tabla de aspirantes
+            const tbody = document.getElementById("tablaAspirantesSecretario");
+            if (!tbody) return;
+            
+            tbody.innerHTML = "";
+            aspirantes.forEach(asp => {
+                const tr = document.createElement("tr");
+                const nombreCompleto = `${asp.nombre || ''} ${asp.primerApellido || ''} ${asp.segundoApellido || ''}`.trim();
+                
+                tr.innerHTML = `
+                    <td>${nombreCompleto || "Sin nombre"}</td>
+                    <td>${asp.correo || "Sin correo"}</td>
+                    <td>${asp.telefono || "Sin teléfono"}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            console.error("Error al cargar aspirantes");
+        }
+    } catch (error) {
+        console.error("Error de conexión:", error);
+    }
+}
+
+/**
+ * Control de Navegación Lateral (Cambio de Secciones)
+ */
+function switchView(viewId) {
+    // Ocultar todas las secciones
+    const sections = document.querySelectorAll('.view-section');
+    sections.forEach(sec => sec.style.display = 'none');
+
+    // Mostrar sección de destino
+    const targetSection = document.getElementById(`view-${viewId}`);
+    if (targetSection) {
+        targetSection.style.display = 'block';
+    }
+
+    // Actualizar clase activa en enlaces de navegación
+    const navLinks = document.querySelectorAll('.sidebar a');
+    navLinks.forEach(link => link.classList.remove('active'));
+
+    const activeNavLink = document.getElementById(`nav-${viewId}`);
+    if (activeNavLink) {
+        activeNavLink.classList.add('active');
+    }
+}
+
+/**
+ * Cierre de Sesión Limpiando Variables No Persistentes de Login
+ */
+function cerrarSesion() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("usuarioLogueado");
+    window.location.href = "login.html";
+}
+
+// Función para abrir/cerrar el menú desplegable del perfil
+function toggleProfileMenu(event) {
+    event.stopPropagation(); // Evita que se cierre inmediatamente al hacer click
+    const dropdown = document.getElementById('profile-dropdown');
+    dropdown.classList.toggle('show');
+}
+
+// Cerrar el menú si se hace click fuera de él en la pantalla
+window.addEventListener('click', function() {
+    const dropdown = document.getElementById('profile-dropdown');
+    if (dropdown && dropdown.classList.contains('show')) {
+        dropdown.classList.remove('show');
+    }
+});
