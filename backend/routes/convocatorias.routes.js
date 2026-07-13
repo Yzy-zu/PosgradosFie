@@ -9,7 +9,7 @@ const {
     actualizarConvocatoria,
     eliminarConvocatoria
 
-} = require('../controllers/convocatoriaController');
+} = require('../controllers/convocatoriasController');
 
 router.get('/', obtenerConvocatorias);
 
