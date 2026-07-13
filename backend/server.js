@@ -19,6 +19,7 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/usuario', require('./routes/usuario.routes'));
 app.use('/api/posgrado', require('./routes/posgrado.routes'));
+app.use('/api/convocatoria', require('./routes/convocatoria.routes'));
 app.use('/api/aspirante', require('./routes/aspirante.routes'));
 //app.use('/api/docentes', require('./routes/docentes.routes'));
 //app.use('/api/evaluacion', require('./routes/evaluacion.routes'));
