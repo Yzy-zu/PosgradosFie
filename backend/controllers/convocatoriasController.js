@@ -3,7 +3,7 @@ const db = require('../database/db');
 // Obtener todas
 exports.obtenerConvocatorias = (req, res) => {
 
-    const sql = 'SELECT * FROM convocatoria';
+    const sql = 'SELECT * FROM convocatorias';
 
     db.query(sql, (err, resultados) => {
 
@@ -28,7 +28,7 @@ exports.obtenerConvocatoria = (req, res) => {
     const { id } = req.params;
 
     db.query(
-        'SELECT * FROM convocatoria WHERE id = ?',
+        'SELECT * FROM convocatorias WHERE id = ?',
         [id],
         (err, resultados) => {
 
@@ -68,7 +68,7 @@ exports.crearConvocatoria = (req, res) => {
     } = req.body;
 
     const sql = `
-        INSERT INTO convocatoria
+        INSERT INTO convocatorias
         (titulo, descripcion, fechaInicio, fechaFin, estado)
         VALUES (?, ?, ?, ?, ?)
     `;
@@ -106,7 +106,7 @@ exports.crearConvocatoria = (req, res) => {
 };
 
 // Actualizar
-exports.actualizarConvocatoria = (req, res) => {
+exports.actualizarConvocatorias = (req, res) => {
 
     const { id } = req.params;
 
@@ -121,7 +121,7 @@ exports.actualizarConvocatoria = (req, res) => {
     } = req.body;
 
     const sql = `
-        UPDATE convocatoria
+        UPDATE convocatorias
         SET
             titulo=?,
             descripcion=?,
@@ -165,12 +165,12 @@ exports.actualizarConvocatoria = (req, res) => {
 };
 
 // Eliminar
-exports.eliminarConvocatoria = (req, res) => {
+exports.eliminarConvocatorias = (req, res) => {
 
     const { id } = req.params;
 
     db.query(
-        'DELETE FROM convocatoria WHERE id=?',
+        'DELETE FROM convocatorias WHERE id=?',
         [id],
         (err) => {
 
