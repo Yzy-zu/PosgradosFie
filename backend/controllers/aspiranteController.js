@@ -14,7 +14,8 @@ const registrarAspirante = async (req, res) => {
             telefono,
             fechaNacimiento,
             direccion,
-            password
+            password,
+            rfc
         } = req.body;
 
         // ============================
@@ -29,7 +30,8 @@ const registrarAspirante = async (req, res) => {
             !telefono ||
             !fechaNacimiento ||
             !direccion ||
-            !password
+            !password ||
+            !rfc
         ) {
 
             return res.status(400).json({
@@ -134,6 +136,25 @@ const registrarAspirante = async (req, res) => {
 
                         }
 
+                        //=================================
+                        //BUSCAR RFC
+                        //==================================
+                        db.query(
+                            "SELECT * FROM aspirante WHERE rfc=?",
+                            [rfc],
+                            async (err,resultadorfc) =>{
+                                if(err){
+                                    return res.status(500).json(err);
+                                }
+                                if(resultadorfc.length >0){
+                                    return res.status(409).json({
+                                        mensaje: "La RFC ya esta registrada"
+                                    })
+                                }
+                            }
+
+                        )
+
                         // ============================
                         // ENCRIPTAR CONTRASEÑA
                         // ============================
@@ -175,9 +196,10 @@ const registrarAspirante = async (req, res) => {
                                     telefono,
                                     fechaNacimiento,
                                     direccion,
+                                    rfc,
                                     idUsuario)
 
-                                    VALUES(?,?,?,?,?,?,?,?,?)`,
+                                    VALUES(?,?,?,?,?,?,?,?,?,?)`,
 
                                     [
                                         nombre,
@@ -188,6 +210,7 @@ const registrarAspirante = async (req, res) => {
                                         telefono,
                                         fechaNacimiento,
                                         direccion,
+                                        rfc,
                                         idUsuario
                                     ],
 
