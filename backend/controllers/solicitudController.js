@@ -3,10 +3,10 @@ const db = require('../database/db');
 // Crear una solicitud
 const crearSolicitud = (req, res) => {
 
-    const { idAspi, idPos } = req.body;
+    const { idAspi, idConvocatoria } = req.body;
 
     // Validar campos obligatorios
-    if (!idAspi || !idPos) {
+    if (!idAspi || !idConvocatoria) {
         return res.status(400).json({
             mensaje: "Todos los campos son obligatorios."
         });
@@ -27,26 +27,26 @@ const crearSolicitud = (req, res) => {
                 });
             }
 
-            // Verificar que exista el posgrado
+            // Verificar que exista la convocatoria
             db.query(
-                "SELECT * FROM posgrado WHERE id = ?",
-                [idPos],
-                (err, posgrado) => {
+                "SELECT * FROM convocatorias WHERE id = ?",
+                [idConvocatoria],
+                (err, convocatoria) => {
 
                     if (err)
                         return res.status(500).json(err);
 
-                    if (posgrado.length === 0) {
+                    if (convocatoria.length === 0) {
                         return res.status(404).json({
-                            mensaje: "El posgrado no existe."
+                            mensaje: "La convocatoria no existe."
                         });
                     }
 
                     // Insertar la solicitud
                     db.query(
-                        `INSERT INTO solicitud (idAspi, idPos)
+                        `INSERT INTO solicitud (idAspi, idConvocatoria)
                          VALUES (?, ?)`,
-                        [idAspi, idPos],
+                        [idAspi, idConvocatoria],
                         (err, resultado) => {
 
                             if (err)

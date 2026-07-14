@@ -3,7 +3,11 @@ const db = require('../database/db');
 // Obtener todas
 exports.obtenerConvocatorias = (req, res) => {
 
-    const sql = 'SELECT * FROM convocatorias';
+    const sql = `
+        SELECT c.*, p.tipo as posgrado_tipo, p.nombre as posgrado_nombre 
+        FROM convocatorias c 
+        LEFT JOIN posgrado p ON c.posgrado_id = p.id
+    `;
 
     db.query(sql, (err, resultados) => {
 
@@ -59,28 +63,30 @@ exports.crearConvocatoria = (req, res) => {
 
     const {
 
-        titulo,
+        nombre,
         descripcion,
-        fechaInicio,
-        fechaFin,
-        estado
+        fecha_inicio,
+        fecha_fin,
+        estado,
+        posgrado_id
 
     } = req.body;
 
     const sql = `
         INSERT INTO convocatorias
-        (titulo, descripcion, fechaInicio, fechaFin, estado)
-        VALUES (?, ?, ?, ?, ?)
+        (nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id)
+        VALUES (?, ?, ?, ?, ?, ?)
     `;
 
     db.query(
         sql,
         [
-            titulo,
+            nombre,
             descripcion,
-            fechaInicio,
-            fechaFin,
-            estado
+            fecha_inicio,
+            fecha_fin,
+            estado,
+            posgrado_id
         ],
         (err) => {
 
@@ -112,33 +118,36 @@ exports.actualizarConvocatorias = (req, res) => {
 
     const {
 
-        titulo,
+        nombre,
         descripcion,
-        fechaInicio,
-        fechaFin,
-        estado
+        fecha_inicio,
+        fecha_fin,
+        estado,
+        posgrado_id
 
     } = req.body;
 
     const sql = `
         UPDATE convocatorias
         SET
-            titulo=?,
+            nombre=?,
             descripcion=?,
-            fechaInicio=?,
-            fechaFin=?,
-            estado=?
+            fecha_inicio=?,
+            fecha_fin=?,
+            estado=?,
+            posgrado_id=?
         WHERE id=?
     `;
 
     db.query(
         sql,
         [
-            titulo,
+            nombre,
             descripcion,
-            fechaInicio,
-            fechaFin,
+            fecha_inicio,
+            fecha_fin,
             estado,
+            posgrado_id,
             id
         ],
         (err) => {

@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarDashboard();
     cargarUsuarios();
     cargarConvocatorias(); // Inicializar panel de convocatorias
+    cargarPosgradosEnSelect();
     cargarAspirantes();
 
     // Router inicial: si no hay hash, lo ponemos en dashboard
@@ -180,7 +181,7 @@ async function cargarUsuarios() {
 
         usuarios.forEach(usuario => {
             const fila = document.createElement("tr");
-            
+
             fila.style.cursor = "pointer";
             fila.onclick = () => editarUsuario(usuario.id);
 
@@ -336,7 +337,7 @@ async function cargarConvocatorias() {
     if (!contenedor) return;
 
     try {
-        const respuesta = await fetch("/api/convocatoria");
+        const respuesta = await fetch("/api/convocatorias");
 
         // Si el endpoint no existe o falla, detenemos el renderizado
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
@@ -387,9 +388,31 @@ async function cargarConvocatorias() {
     }
 }
 
+async function cargarPosgradosEnSelect() {
+    try {
+        const respuesta = await fetch("/api/posgrado");
+        if (!respuesta.ok) return;
+        const posgrados = await respuesta.json();
+        const select = document.getElementById("convocatoria_posgrado");
+        if (!select) return;
+        select.innerHTML = '<option value="">Seleccione un posgrado...</option>';
+        if (Array.isArray(posgrados)) {
+            posgrados.forEach(pos => {
+                const option = document.createElement("option");
+                option.value = pos.id;
+                option.textContent = pos.nombre;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error("Error al cargar posgrados en select:", error);
+    }
+}
+
 function limpiarFormularioConvocatoria() {
     document.getElementById("formConvocatoria").reset();
     document.getElementById("idConvocatoriaForm").value = "";
+    document.getElementById("convocatoria_posgrado").value = "";
     document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-bullhorn"></i> Nueva Convocatoria';
     document.getElementById("btnEliminarConvocatoria").style.display = "none";
     document.getElementById("contenedorRequisitos").innerHTML = ""; // Limpiar requisitos
@@ -419,12 +442,13 @@ function agregarRequisitoUI(descripcion = "", obligatorio = true) {
 
 async function editarConvocatoria(id) {
     try {
-        const respuesta = await fetch(`/api/convocatoria/${id}`);
+        const respuesta = await fetch(`/api/convocatorias/${id}`);
         const conv = await respuesta.json();
 
         if (!conv) throw new Error("Convocatoria no encontrada");
 
         document.getElementById("idConvocatoriaForm").value = conv.id;
+        document.getElementById("convocatoria_posgrado").value = conv.posgrado_id || "";
         document.getElementById("convocatoria_nombre").value = conv.nombre || "";
         document.getElementById("convocatoria_descripcion").value = conv.descripcion || "";
         document.getElementById("convocatoria_fecha_inicio").value = conv.fecha_inicio || "";
@@ -460,6 +484,7 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
     e.preventDefault();
 
     const idInput = document.getElementById("idConvocatoriaForm").value;
+    const posgrado_id = document.getElementById("convocatoria_posgrado").value;
     const nombre = document.getElementById("convocatoria_nombre").value;
     const descripcion = document.getElementById("convocatoria_descripcion").value;
     const fecha_inicio = document.getElementById("convocatoria_fecha_inicio").value;
@@ -477,15 +502,15 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
         }
     });
 
-    const datosConvocatoria = { nombre, descripcion, fecha_inicio, fecha_fin, estado, requisitos };
+    const datosConvocatoria = { nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, requisitos };
     const token = localStorage.getItem("token") || "";
 
     try {
-        let url = "/api/convocatoria";
+        let url = "/api/convocatorias";
         let metodo = "POST";
 
         if (idInput && idInput.trim() !== "") {
-            url = `/api/convocatoria/${idInput}`;
+            url = `/api/convocatorias/${idInput}`;
             metodo = "PUT";
         }
 
@@ -527,7 +552,7 @@ async function eliminarConvocatoria(id) {
     const token = localStorage.getItem("token") || "";
 
     try {
-        const respuesta = await fetch(`/api/convocatoria/${id}`, {
+        const respuesta = await fetch(`/api/convocatorias/${id}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -645,7 +670,7 @@ async function editarAspirante(id) {
 document.getElementById("formAspirante")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const id = document.getElementById("detalleAspId").value;
-    
+
     const datos = {
         nombre: document.getElementById("detalleAspNombre").value,
         primerApellido: document.getElementById("detalleAspPrimerApellido").value,
@@ -656,7 +681,7 @@ document.getElementById("formAspirante")?.addEventListener("submit", async (e) =
         fechaNacimiento: document.getElementById("detalleAspFechaNac").value,
         direccion: document.getElementById("detalleAspDireccion").value
     };
-    
+
     const token = localStorage.getItem("token") || "";
 
     try {
@@ -670,7 +695,7 @@ document.getElementById("formAspirante")?.addEventListener("submit", async (e) =
         });
 
         const resultado = await respuesta.json();
-        
+
         if (respuesta.ok && resultado.success !== false) {
             alert(resultado.mensaje || "Aspirante actualizado con éxito");
             const modalElement = document.getElementById("modalAspirante");
