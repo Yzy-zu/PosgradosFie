@@ -59,28 +59,30 @@ exports.crearConvocatorias = (req, res) => {
 
     const {
 
-        titulo,
+        nombre,
         descripcion,
-        fechaInicio,
-        fechaFin,
+        fecha_inicio,
+        fecha_fin,
         estado
 
     } = req.body;
 
     const sql = `
         INSERT INTO convocatorias
-        (titulo, descripcion, fechaInicio, fechaFin, estado)
+        (nombre, descripcion, fecha_inicio, fecha_fin, estado)
         VALUES (?, ?, ?, ?, ?)
     `;
 
     db.query(
         sql,
         [
-            titulo,
-            descripcion,
-            fechaInicio,
-            fechaFin,
-            estado
+            
+        nombre,
+        descripcion,
+        fecha_inicio,
+        fecha_fin,
+        estado
+
         ],
         (err) => {
 
@@ -111,11 +113,10 @@ exports.actualizarConvocatorias = (req, res) => {
     const { id } = req.params;
 
     const {
-
-        titulo,
+        nombre,
         descripcion,
-        fechaInicio,
-        fechaFin,
+        fecha_inicio,
+        fecha_fin,
         estado
 
     } = req.body;
@@ -123,22 +124,22 @@ exports.actualizarConvocatorias = (req, res) => {
     const sql = `
         UPDATE convocatorias
         SET
-            titulo=?,
-            descripcion=?,
-            fechaInicio=?,
-            fechaFin=?,
-            estado=?
+        nombre=?,
+        descripcion=?,
+        fecha_inicio=?,
+        fecha_fin=?,
+        estado=?
         WHERE id=?
     `;
 
     db.query(
         sql,
         [
-            titulo,
-            descripcion,
-            fechaInicio,
-            fechaFin,
-            estado,
+        nombre,
+        descripcion,
+        fecha_inicio,
+        fecha_fin,
+        estado,
             id
         ],
         (err) => {
