@@ -23,7 +23,7 @@ exports.obtenerConvocatorias = (req, res) => {
 };
 
 // Obtener una
-exports.obtenerConvocatoria = (req, res) => {
+exports.obtenerConvocatorias = (req, res) => {
 
     const { id } = req.params;
 
@@ -55,7 +55,7 @@ exports.obtenerConvocatoria = (req, res) => {
 };
 
 // Crear
-exports.crearConvocatoria = (req, res) => {
+exports.crearConvocatorias = (req, res) => {
 
     const {
 
