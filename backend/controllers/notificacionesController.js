@@ -61,18 +61,19 @@ exports.crearNotificacion = (req, res) => {
     const {
         nombre,
         mensaje,
-        destino
+        destino,
+        activa
     } = req.body;
 
     const sql = `
         INSERT INTO notificaciones
-        (nombre, mensaje, destino)
-        VALUES (?, ?, ?)
+        (nombre, mensaje, destino, activa)
+        VALUES (?, ?, ?, ?)
     `;
 
     db.query(
         sql,
-        [nombre, mensaje, destino],
+        [nombre, mensaje, destino, activa],
         (err, resultado) => {
 
             if (err) {
@@ -103,7 +104,8 @@ exports.actualizarNotificacion = (req, res) => {
     const {
         nombre,
         mensaje,
-        destino
+        destino,
+        activa
     } = req.body;
 
     const sql = `
@@ -111,13 +113,14 @@ exports.actualizarNotificacion = (req, res) => {
         SET
             nombre = ?,
             mensaje = ?,
-            destino = ?
+            destino = ?,
+            activa = ?
         WHERE id = ?
     `;
 
     db.query(
         sql,
-        [nombre, mensaje, destino, id],
+        [nombre, mensaje, destino, activa, id],
         (err) => {
 
             if (err) {

@@ -4,7 +4,7 @@ const router = express.Router();
 const {
 
     obtenerConvocatorias,
-    obtenerConvocatorias,
+    obtenerConvocatoria,
     crearConvocatorias,
     actualizarConvocatorias,
     eliminarConvocatorias
@@ -13,7 +13,7 @@ const {
 
 router.get('/', obtenerConvocatorias);
 
-router.get('/:id', obtenerConvocatorias);
+router.get('/:id', obtenerConvocatoria);
 
 router.post('/', crearConvocatorias);
 

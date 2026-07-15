@@ -738,10 +738,10 @@ async function cargarNotificacionesAdmin() {
             tr.onclick = () => editarNotificacion(notif.id);
             tr.innerHTML = `
                 <td>${notif.id}</td>
-                <td>${notif.titulo}</td>
+                <td>${notif.nombre}</td>
                 <td>${notif.mensaje.substring(0, 50)}...</td>
                 <td>${notif.fecha_creacion || 'N/A'}</td>
-                <td><span class="badge ${notif.estado === 'Activa' ? 'bg-success' : 'bg-secondary'}">${notif.estado || 'Activa'}</span></td>
+                <td><span class="badge ${notif.activa === 'true' ? 'bg-success' : 'bg-secondary'}">${notif.activa || 'true'}</span></td>
                 <td><span class="badge ${notif.destino === 'Todos' ? 'bg-success' : 'bg-secondary'}">${notif.destino || 'Todos'}</span></td>
                 `;
             tbody.appendChild(tr);
@@ -768,10 +768,10 @@ async function editarNotificacion(id) {
         const notif = await respuesta.json();
 
         document.getElementById("idNotificacionForm").value = notif.id;
-        document.getElementById("notif_titulo").value = notif.titulo || "";
+        document.getElementById("notif_titulo").value = notif.nombre || "";
         document.getElementById("notif_mensaje").value = notif.mensaje || "";
-        document.getElementById("notif_estado").value = notif.estado || "Activa";
         document.getElementById("notif_destino").value = notif.destino || "Todos";
+        document.getElementById("notif_estado").value = notif.activa || "Activa";
 
         document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Editar Notificación';
 
@@ -794,12 +794,12 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
     e.preventDefault();
 
     const idInput = document.getElementById("idNotificacionForm").value;
-    const titulo = document.getElementById("notif_titulo").value;
+    const nombre = document.getElementById("notif_titulo").value;
     const mensaje = document.getElementById("notif_mensaje").value;
-    const estado = document.getElementById("notif_estado").value;
+    const activa = document.getElementById("notif_estado").value;
     const destino = document.getElementById("notif_destino").value;
 
-    const datosNotif = { titulo, mensaje, estado, destino };
+    const datosNotif = { nombre, mensaje, destino, activa };
     const token = localStorage.getItem("token") || "";
 
     try {

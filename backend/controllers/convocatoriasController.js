@@ -23,7 +23,7 @@ exports.obtenerConvocatorias = (req, res) => {
 };
 
 // Obtener una
-exports.obtenerConvocatorias = (req, res) => {
+exports.obtenerConvocatoria = (req, res) => {
 
     const { id } = req.params;
 
@@ -76,12 +76,12 @@ exports.crearConvocatorias = (req, res) => {
     db.query(
         sql,
         [
-            
-        nombre,
-        descripcion,
-        fecha_inicio,
-        fecha_fin,
-        estado
+
+            nombre,
+            descripcion,
+            fecha_inicio,
+            fecha_fin,
+            estado
 
         ],
         (err) => {
@@ -135,11 +135,11 @@ exports.actualizarConvocatorias = (req, res) => {
     db.query(
         sql,
         [
-        nombre,
-        descripcion,
-        fecha_inicio,
-        fecha_fin,
-        estado,
+            nombre,
+            descripcion,
+            fecha_inicio,
+            fecha_fin,
+            estado,
             id
         ],
         (err) => {
