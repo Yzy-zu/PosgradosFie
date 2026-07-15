@@ -1,9 +1,9 @@
 const db = require('../database/db');
 
-// Obtener todas
-exports.obtenerConvocatorias = (req, res) => {
+// Obtener todas las notificaciones
+exports.obtenerNotificaciones = (req, res) => {
 
-    const sql = 'SELECT * FROM convocatorias';
+    const sql = 'SELECT * FROM notificaciones';
 
     db.query(sql, (err, resultados) => {
 
@@ -12,7 +12,7 @@ exports.obtenerConvocatorias = (req, res) => {
 
             return res.status(500).json({
                 success: false,
-                mensaje: 'Error al obtener convocatorias'
+                mensaje: 'Error al obtener las notificaciones'
             });
         }
 
@@ -22,29 +22,30 @@ exports.obtenerConvocatorias = (req, res) => {
 
 };
 
-// Obtener una
-exports.obtenerConvocatorias = (req, res) => {
+// Obtener una notificación
+exports.obtenerNotificacion = (req, res) => {
 
     const { id } = req.params;
 
     db.query(
-        'SELECT * FROM convocatorias WHERE id = ?',
+        'SELECT * FROM notificaciones WHERE id = ?',
         [id],
         (err, resultados) => {
 
             if (err) {
+                console.error(err);
 
-                return res.status(500).json(err);
-
+                return res.status(500).json({
+                    success: false,
+                    mensaje: 'Error al obtener la notificación'
+                });
             }
 
             if (resultados.length === 0) {
-
                 return res.status(404).json({
                     success: false,
-                    mensaje: 'Convocatoria no encontrada'
+                    mensaje: 'Notificación no encontrada'
                 });
-
             }
 
             res.json(resultados[0]);
@@ -54,52 +55,39 @@ exports.obtenerConvocatorias = (req, res) => {
 
 };
 
-// Crear
-exports.crearConvocatorias = (req, res) => {
+// Crear notificación
+exports.crearNotificacion = (req, res) => {
 
     const {
-
         nombre,
-        descripcion,
-        fecha_inicio,
-        fecha_fin,
-        estado
-
+        mensaje,
+        destino
     } = req.body;
 
     const sql = `
-        INSERT INTO convocatorias
-        (nombre, descripcion, fecha_inicio, fecha_fin, estado)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO notificaciones
+        (nombre, mensaje, destino)
+        VALUES (?, ?, ?)
     `;
 
     db.query(
         sql,
-        [
-            
-        nombre,
-        descripcion,
-        fecha_inicio,
-        fecha_fin,
-        estado
-
-        ],
-        (err) => {
+        [nombre, mensaje, destino],
+        (err, resultado) => {
 
             if (err) {
-
                 console.error(err);
 
                 return res.status(500).json({
                     success: false,
-                    mensaje: 'Error al crear convocatoria'
+                    mensaje: 'Error al crear la notificación'
                 });
-
             }
 
             res.json({
                 success: true,
-                mensaje: 'Convocatoria creada correctamente'
+                mensaje: 'Notificación creada correctamente',
+                id: resultado.insertId
             });
 
         }
@@ -107,57 +95,43 @@ exports.crearConvocatorias = (req, res) => {
 
 };
 
-// Actualizar
-exports.actualizarConvocatorias = (req, res) => {
+// Actualizar notificación
+exports.actualizarNotificacion = (req, res) => {
 
     const { id } = req.params;
 
     const {
         nombre,
-        descripcion,
-        fecha_inicio,
-        fecha_fin,
-        estado
-
+        mensaje,
+        destino
     } = req.body;
 
     const sql = `
-        UPDATE convocatorias
+        UPDATE notificaciones
         SET
-        nombre=?,
-        descripcion=?,
-        fecha_inicio=?,
-        fecha_fin=?,
-        estado=?
-        WHERE id=?
+            nombre = ?,
+            mensaje = ?,
+            destino = ?
+        WHERE id = ?
     `;
 
     db.query(
         sql,
-        [
-        nombre,
-        descripcion,
-        fecha_inicio,
-        fecha_fin,
-        estado,
-            id
-        ],
+        [nombre, mensaje, destino, id],
         (err) => {
 
             if (err) {
-
                 console.error(err);
 
                 return res.status(500).json({
                     success: false,
-                    mensaje: 'Error al actualizar convocatoria'
+                    mensaje: 'Error al actualizar la notificación'
                 });
-
             }
 
             res.json({
                 success: true,
-                mensaje: 'Convocatoria actualizada correctamente'
+                mensaje: 'Notificación actualizada correctamente'
             });
 
         }
@@ -165,30 +139,28 @@ exports.actualizarConvocatorias = (req, res) => {
 
 };
 
-// Eliminar
-exports.eliminarConvocatorias = (req, res) => {
+// Eliminar notificación
+exports.eliminarNotificacion = (req, res) => {
 
     const { id } = req.params;
 
     db.query(
-        'DELETE FROM convocatorias WHERE id=?',
+        'DELETE FROM notificaciones WHERE id = ?',
         [id],
         (err) => {
 
             if (err) {
-
                 console.error(err);
 
                 return res.status(500).json({
                     success: false,
-                    mensaje: 'Error al eliminar convocatoria'
+                    mensaje: 'Error al eliminar la notificación'
                 });
-
             }
 
             res.json({
                 success: true,
-                mensaje: 'Convocatoria eliminada correctamente'
+                mensaje: 'Notificación eliminada correctamente'
             });
 
         }

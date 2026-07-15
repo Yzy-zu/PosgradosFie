@@ -4,8 +4,8 @@ const router = express.Router();
 const {
 
     obtenerConvocatorias,
-    obtenerConvocatoria,
-    crearConvocatoria,
+    obtenerConvocatorias,
+    crearConvocatorias,
     actualizarConvocatorias,
     eliminarConvocatorias
 
@@ -13,9 +13,9 @@ const {
 
 router.get('/', obtenerConvocatorias);
 
-router.get('/:id', obtenerConvocatoria);
+router.get('/:id', obtenerConvocatorias);
 
-router.post('/', crearConvocatoria);
+router.post('/', crearConvocatorias);
 
 router.put('/:id', actualizarConvocatorias);
 

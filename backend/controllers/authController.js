@@ -49,10 +49,10 @@ exports.login = (req, res) => {
 };
 
 exports.register = (req, res) => {
-    const { correo, password, rol } = req.body;
+    const { nombre, correo, password, rol } = req.body;
 
     // 1. Validar que no vengan campos vacíos
-    if (!correo || !password) {
+    if (!nombre || !correo || !password) {
         return res.status(400).json({
             success: false,
             mensaje: 'Todos los campos son obligatorios'
@@ -62,12 +62,12 @@ exports.register = (req, res) => {
     // 2. Query SQL para insertar el nuevo aspirante
     // Nota: Revisa que los nombres de las columnas coincidan con tu tabla 'usuario' (nombre, correo, contraseña, rol)
     const sql = `
-        INSERT INTO usuario (correo, contraseña, rol) 
-        VALUES (?, ?, ?)
+        INSERT INTO usuario (nombre, correo, contraseña, rol) 
+        VALUES (?, ?, ?, ?)
     `;
 
     // 3. Ejecutar la consulta en la base de datos
-    db.query(sql, [correo, password, rol || 'ASPIRANTE'], (err, result) => {
+    db.query(sql, [nombre, correo, password, rol || 'ASPIRANTE'], (err, result) => {
         if (err) {
             console.error('Error al insertar en la base de datos:', err);
             
