@@ -1,27 +1,55 @@
-// Variable global para controlar qué nivel se está ejecutando en el flujo actual
+// Variables globales
 let nivelAcademicoSeleccionado = "Maestría";
 let estacionActual = 0;
+let aspiranteData = null; // Almacenará los datos de la BD del aspirante
+let currentSolicitudId = null;
 
 // Comprobación de Sesión y Estado de Registro al inicializar la página
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
     console.log("Sistema Frontend UMSNH-FIE inicializado.");
 
-    // 1. Mostrar saludo del usuario
-    const usuarioLogueado = localStorage.getItem('usuarioLogueado') || "Aspirante";
-    const saludo = document.getElementById('saludo-usuario');
-    if (saludo) {
-        saludo.innerText = `Hola Bienvenid@, ${usuarioLogueado}`;
-    }
-
-    // 2. VERIFICACIÓN CRÍTICA: ¿El usuario ya inició sesión con su registro?
     const token = localStorage.getItem('token');
-    const usuario = localStorage.getItem('usuario');
+    const usuarioStr = localStorage.getItem('usuario');
     const programaElegido = localStorage.getItem('programaPendiente') || "Maestría";
 
-    // Si ya está logueado en el sistema, forzamos que aparezcan los módulos de Documentos y Pagos
-    if (token && usuario) {
-        activarModulosPostRegistro(programaElegido);
+    if (!token || !usuarioStr) {
+        // Redirigir al login si se accede directamente a aspirante.html sin sesión
+        window.location.href = "login.html";
+        return;
     }
+
+    const usuario = JSON.parse(usuarioStr);
+    const saludo = document.getElementById('saludo-usuario');
+    
+    // Obtener datos del aspirante real
+    try {
+        const resAspirantes = await fetch('http://localhost:4000/api/aspirante');
+        if (resAspirantes.ok) {
+            const listaAspirantes = await resAspirantes.json();
+            // Buscar aspirante por idUsuario
+            aspiranteData = listaAspirantes.find(a => a.idUsuario === usuario.id);
+            
+            if (aspiranteData) {
+                if (saludo) saludo.innerText = `Hola Bienvenid@, ${aspiranteData.nombre} ${aspiranteData.primerApellido}`;
+                
+                // Actualizar menú de perfil
+                const lblNombre = document.getElementById('perfil-nombre');
+                const lblCorreo = document.getElementById('perfil-correo');
+                const lblTelefono = document.getElementById('perfil-telefono');
+                
+                if(lblNombre) lblNombre.innerText = `${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido}`;
+                if(lblCorreo) lblCorreo.innerText = aspiranteData.correo;
+                if(lblTelefono) lblTelefono.innerText = aspiranteData.telefono;
+            } else {
+                if (saludo) saludo.innerText = `Hola Bienvenid@, Aspirante`;
+            }
+        }
+    } catch (e) {
+        console.error("Error obteniendo datos del aspirante:", e);
+    }
+
+    // Activar módulos si venía de un redireccionamiento
+    activarModulosPostRegistro(programaElegido);
 });
 
 /**
@@ -45,6 +73,53 @@ function switchView(viewId) {
     const targetNavLink = document.getElementById(`nav-${viewId}`);
     if (targetNavLink) {
         targetNavLink.classList.add('active');
+    }
+
+    // Cargar notificaciones si se abre esa vista
+    if (viewId === 'notificaciones') {
+        cargarNotificaciones();
+    }
+}
+
+/**
+ * Carga las notificaciones desde la API
+ */
+async function cargarNotificaciones() {
+    const contenedor = document.getElementById('contenedor-notificaciones');
+    if (!contenedor) return;
+
+    // Estado de carga inicial
+    contenedor.innerHTML = '<div class="card"><p>Cargando notificaciones...</p></div>';
+
+    try {
+        const res = await fetch('http://localhost:4000/api/notificaciones', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (res.ok) {
+            const notificaciones = await res.json();
+            if (!notificaciones || notificaciones.length === 0) {
+                contenedor.innerHTML = '<div class="card"><p>No tienes notificaciones nuevas.</p></div>';
+            } else {
+                let html = '';
+                notificaciones.forEach(notif => {
+                    html += `
+                    <div class="card" style="margin-bottom: 10px;">
+                        <p><strong><i class="fa-solid fa-bell" style="color: #8a1c24;"></i> ${notif.titulo || 'Notificación'}:</strong> ${notif.mensaje}</p>
+                    </div>`;
+                });
+                contenedor.innerHTML = html;
+            }
+        } else {
+            // Error o endpoint no existe
+            contenedor.innerHTML = '<div class="card"><p><strong><i class="fa-solid fa-triangle-exclamation" style="color: #e67e22;"></i> Sistema FIE:</strong> Las notificaciones no están disponibles por el momento.</p></div>';
+        }
+    } catch (e) {
+        // Fallback por si la API aún no está implementada por el backend
+        console.warn("API de notificaciones no disponible:", e);
+        contenedor.innerHTML = '<div class="card"><p><strong><i class="fa-solid fa-triangle-exclamation" style="color: #e67e22;"></i> Sistema FIE:</strong> Recuerda verificar las fechas límite del calendario de admisiones. (Modo Offline)</p></div>';
     }
 }
 
@@ -77,8 +152,8 @@ function seleccionarPrograma(nombrePrograma) {
 async function activarModulosPostRegistro(nombrePrograma) {
     const navDocumentos = document.getElementById('nav-documentos');
     if (navDocumentos) {
-        navDocumentos.style.display = 'block';
-        navDocumentos.classList.remove('hidden');
+        navDocumentos.style.display = 'none';
+        navDocumentos.classList.add('hidden');
     }
 
     const panelSeleccion = document.getElementById('seleccion-programa');
@@ -140,9 +215,47 @@ async function activarModulosPostRegistro(nombrePrograma) {
 /**
  * Reconfigura los textos y despliega los formularios correctos según la herencia de datos
  */
-function prepararFlujoEstaciones(nivel, idConvocatoria) {
+async function prepararFlujoEstaciones(nivel, idConvocatoria) {
+    if (!aspiranteData) {
+        alert("No se pudo cargar la información del aspirante. Intente recargar.");
+        return;
+    }
+    
+    // Crear Solicitud en la base de datos
+    try {
+        const respuestaSoli = await fetch('http://localhost:4000/api/solicitud/crear', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                idAspi: aspiranteData.id,
+                idConvocatoria: idConvocatoria
+            })
+        });
+        
+        if (respuestaSoli.ok) {
+            const dataSoli = await respuestaSoli.json();
+            currentSolicitudId = dataSoli.idSolicitud;
+        } else {
+            alert("Hubo un error al crear la solicitud en el servidor.");
+            return;
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Fallo de conexión al crear solicitud.");
+        return;
+    }
+
     if (idConvocatoria) localStorage.setItem('idConvocatoriaPendiente', idConvocatoria);
     nivelAcademicoSeleccionado = nivel;
+
+    // Mostrar pestaña de Documentos ahora que ya seleccionó convocatoria
+    const navDocumentos = document.getElementById('nav-documentos');
+    if (navDocumentos) {
+        navDocumentos.style.display = 'block';
+        navDocumentos.classList.remove('hidden');
+    }
 
     // Elementos generales
     const titulo = document.getElementById('titulo-flujo-documentos');
@@ -223,6 +336,44 @@ function cambiarEstacion(nuevaEstacion) {
     document.getElementById(`node-${nuevaEstacion}`).classList.add('active');
 
     estacionActual = nuevaEstacion;
+}
+
+/**
+ * Avanza estación e intenta subir los documentos al backend
+ */
+async function avanzarEstacion(nuevaEstacion) {
+    const boton = document.getElementById(`btn-next-${estacionActual}`);
+    if (boton) boton.disabled = true; // Deshabilitar temporalmente para evitar doble click
+
+    const form = document.getElementById(`form-estacion-${estacionActual}`);
+    if (form && currentSolicitudId) {
+        const formData = new FormData(form);
+        // Iterar sobre los archivos seleccionados en este form
+        for (let [name, file] of formData.entries()) {
+            if (file && file.size > 0) {
+                const subidaData = new FormData();
+                subidaData.append('idSoli', currentSolicitudId);
+                subidaData.append('tipoDoc', name); // 'ACTA_NACIMIENTO', 'CV', etc.
+                subidaData.append('archivo', file);
+
+                try {
+                    const res = await fetch('http://localhost:4000/api/documentos', {
+                        method: 'POST',
+                        body: subidaData
+                    });
+                    
+                    if (!res.ok) {
+                        console.error(`Error al subir documento ${name}`);
+                    }
+                } catch (e) {
+                    console.error("Error en petición de subida:", e);
+                }
+            }
+        }
+    }
+    
+    if (boton) boton.disabled = false;
+    cambiarEstacion(nuevaEstacion);
 }
 
 /**
@@ -308,9 +459,34 @@ function verificarArchivosEstacion(estacion) {
 }
 
 /**
- * Concluye el proceso de registro mostrando alertas personalizadas por nivel
+ * Concluye el proceso de registro mostrando alertas personalizadas por nivel y enviando los últimos archivos
  */
-function finalizarProcesoEstaciones() {
+async function finalizarProcesoEstaciones() {
+    const btnFinalizar = document.getElementById('btn-finalizar');
+    if (btnFinalizar) btnFinalizar.disabled = true;
+
+    // Subir los últimos documentos (Estación 4)
+    const form = document.getElementById(`form-estacion-4`);
+    if (form && currentSolicitudId) {
+        const formData = new FormData(form);
+        for (let [name, file] of formData.entries()) {
+            if (file && file.size > 0) {
+                const subidaData = new FormData();
+                subidaData.append('idSoli', currentSolicitudId);
+                subidaData.append('tipoDoc', name);
+                subidaData.append('archivo', file);
+                try {
+                    await fetch('http://localhost:4000/api/documentos', {
+                        method: 'POST',
+                        body: subidaData
+                    });
+                } catch (e) {
+                    console.error("Error subiendo estación 4", e);
+                }
+            }
+        }
+    }
+
     if (nivelAcademicoSeleccionado === "Doctorado") {
         alert("¡Postulación a Doctorado Completada! Tus propuestas y notas de los profesores anónimos (P1, P2, P3) han sido enviadas a revisión.");
     } else {
@@ -323,6 +499,8 @@ function finalizarProcesoEstaciones() {
             alert("¡Felicidades! Tu documentación completa ha sido enviada con éxito al comité de admisiones del Posgrado FIE.");
         }
     }
+    
+    // Aquí idealmente actualizamos el estado en la base de datos a EN_REVISION si tuviéramos un endpoint
     switchView('inicio');
 }
 
@@ -393,11 +571,21 @@ function cerrarSesion() {
 
 // Función para regresar a la selección de Maestría/Doctorado sin reiniciar sesión
 function regresarAConvocatorias() {
+    const confirmacion = confirm("¿Estás seguro de que deseas volver? Si ya iniciaste un registro, podrías perder tu progreso actual.");
+    if (!confirmacion) return;
+
     // 1. Volvemos a mostrar el contenedor con las dos tarjetas originales
-    document.getElementById('seleccion-programa').style.display = 'flex'; // o 'block' dependiendo de tu estilo CSS
+    document.getElementById('seleccion-programa').style.display = 'flex'; 
 
     // 2. Ocultamos la lista detallada y el botón de regreso
     document.getElementById('lista-programas-abiertos').style.display = 'none';
+
+    // 3. Ocultar la pestaña de documentos si nos regresamos
+    const navDocumentos = document.getElementById('nav-documentos');
+    if (navDocumentos) {
+        navDocumentos.style.display = 'none';
+        navDocumentos.classList.add('hidden');
+    }
 }
 function toggleProfileMenu(event) {
     event.stopPropagation();
