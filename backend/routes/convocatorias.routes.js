@@ -4,7 +4,7 @@ const router = express.Router();
 const {
 
     obtenerConvocatorias,
-    obtenerConvocatorias,
+    obtenerConvocatoria,
     crearConvocatorias,
     actualizarConvocatorias,
     eliminarConvocatorias

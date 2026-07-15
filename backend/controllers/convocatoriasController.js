@@ -76,12 +76,12 @@ exports.crearConvocatorias = (req, res) => {
     db.query(
         sql,
         [
-            
-        nombre,
-        descripcion,
-        fecha_inicio,
-        fecha_fin,
-        estado
+
+            nombre,
+            descripcion,
+            fecha_inicio,
+            fecha_fin,
+            estado
 
         ],
         (err) => {
@@ -135,11 +135,11 @@ exports.actualizarConvocatorias = (req, res) => {
     db.query(
         sql,
         [
-        nombre,
-        descripcion,
-        fecha_inicio,
-        fecha_fin,
-        estado,
+            nombre,
+            descripcion,
+            fecha_inicio,
+            fecha_fin,
+            estado,
             id
         ],
         (err) => {

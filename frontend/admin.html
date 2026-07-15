@@ -18,7 +18,9 @@
 
     <!-- Sidebar from aspirante.html design -->
     <nav class="sidebar">
-        <h2><i class="fa-solid fa-bars-staggered"></i> POSGRADOS FIE</h2>
+        <h2><img src="css/umsnh-logo.png" alt="Logo"
+                style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; margin-right: 10px; vertical-align: middle;">
+            FIE ADMIN</h2>
 
         <div id="sidebarMenu">
             <a href="#" class="nav-link active" data-target="dashboard">
@@ -41,6 +43,9 @@
             </a>
             <a href="#" class="nav-link" data-target="documentos">
                 <i class="fa-solid fa-folder-open"></i> Documentos
+            </a>
+            <a href="#" class="nav-link" data-target="notificaciones">
+                <i class="fa-solid fa-bell"></i> Notificaciones
             </a>
             <a href="#" class="nav-link" data-target="reportes">
                 <i class="fa-solid fa-chart-bar"></i> Reportes
@@ -150,8 +155,7 @@
             <!-- OTRAS SECCIONES (Cascarones) -->
             <div id="seccion-posgrados" class="content-section d-none">
                 <div class="card mt-2 shadow-sm" style="flex:auto;">
-                    <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i>Módulo de
-                        Posgrados en construcción.</p>
+                    <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i> ola</p>
                 </div>
             </div>
 
@@ -197,22 +201,50 @@
 
         <div id="seccion-solicitudes" class="content-section d-none">
             <div class="card mt-2 shadow-sm" style="flex:auto;">
-                <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i>Módulo de
-                    Solicitudes en construcción.</p>
+                <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i>ola</p>
             </div>
         </div>
 
         <div id="seccion-documentos" class="content-section d-none">
             <div class="card mt-2 shadow-sm" style="flex:auto;">
-                <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i>Módulo de
-                    Documentos en construcción.</p>
+                <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i>ola</p>
+            </div>
+        </div>
+
+        <div id="seccion-notificaciones" class="content-section d-none">
+            <div class="card mt-2 shadow-sm" style="flex:auto;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0" style="color:#1a1f2c;"><i class="fa-solid fa-bell"></i> Gestión de Notificaciones
+                    </h5>
+                    <button class="btn btn-primary" style="width:auto; padding: 8px 15px;" data-bs-toggle="modal"
+                        data-bs-target="#modalNotificacion" onclick="limpiarFormularioNotificacion()">
+                        <i class="fa-solid fa-plus"></i> Nueva Notificación
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Título</th>
+                                <th>Mensaje</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaNotificaciones">
+                            <tr>
+                                <td colspan='5' class='text-center text-muted'>Cargando notificaciones...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <div id="seccion-reportes" class="content-section d-none">
             <div class="card mt-2 shadow-sm" style="flex:auto;">
-                <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i>Módulo de
-                    Reportes en construcción.</p>
+                <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i>ola</p>
             </div>
         </div>
 
@@ -408,6 +440,65 @@
                         <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Notificación -->
+    <div class="modal fade" id="modalNotificacion" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header d-flex justify-content-between align-items-center">
+                    <h5 class="modal-title" id="tituloModalNotificacion"><i class="fa-solid fa-bell"></i> Nueva
+                        Notificación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="formNotificacion">
+                        <input type="hidden" id="idNotificacionForm">
+
+                        <div class="mb-3">
+                            <label class="form-label">Título</label>
+                            <input type="text" id="notif_titulo" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mensaje</label>
+                            <textarea id="notif_mensaje" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Destino</label>
+                            <select id="notif_destino" class="form-select">
+                                <option value="">Seleccione</option>
+                                <option value="todos">Todos</option>
+                                <option value="aspirantes">Aspirantes</option>
+                                <option value="secretario">Secretaría</option>
+                                <option value="docentes">Docentes</option>
+                                <option value="coordinador">Coordinador</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Estado</label>
+                            <select id="notif_estado" class="form-select">
+                                <option value="1">Activa</option>
+                                <option value="0">Inactiva</option>
+                            </select>
+                        </div>
+
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-danger" id="btnEliminarNotificacion"
+                                style="display:none;" onclick="eliminarNotificacion()">
+                                <i class="fa-solid fa-trash"></i> Eliminar
+                            </button>
+                            <button type="submit" class="btn btn-primary" style="margin-left:auto;">
+                                <i class="fa-solid fa-floppy-disk"></i> Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
