@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarConvocatorias(); // Inicializar panel de convocatorias
     cargarPosgradosEnSelect();
     cargarAspirantes();
+    cargarNotificacionesAdmin(); // Inicializar panel de notificaciones
 
     // Router inicial: si no hay hash, lo ponemos en dashboard
     if (!window.location.hash) {
@@ -168,7 +169,7 @@ function cargarDashboard() {
 
 async function cargarUsuarios() {
     try {
-        const respuesta = await fetch("/api/usuario");
+        const respuesta = await fetch("http://localhost:4000/api/usuario");
         const usuarios = await respuesta.json();
 
         // Actualizar contador del dashboard
@@ -201,7 +202,7 @@ async function cargarUsuarios() {
 
 async function editarUsuario(id) {
     try {
-        const respuesta = await fetch(`/api/usuario/${id}`);
+        const respuesta = await fetch(`http://localhost:4000/api/usuario/${id}`);
         const usuario = await respuesta.json();
 
         if (!usuario) throw new Error("Usuario no encontrado");
@@ -250,11 +251,11 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
     const token = localStorage.getItem("token") || ""; // Por si requiere token más adelante
 
     try {
-        let url = "/api/usuario";
+        let url = "http://localhost:4000/api/usuario";
         let metodo = "POST";
 
         if (idUsuario && idUsuario.trim() !== "") {
-            url = `/api/usuario/${idUsuario}`;
+            url = `http://localhost:4000/api/usuario/${idUsuario}`;
             metodo = "PUT";
         }
 
@@ -301,7 +302,7 @@ async function eliminarUsuario(id) {
     const token = localStorage.getItem("token") || "";
 
     try {
-        const respuesta = await fetch(`/api/usuario/${id}`, {
+        const respuesta = await fetch(`http://localhost:4000/api/usuario/${id}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -337,7 +338,7 @@ async function cargarConvocatorias() {
     if (!contenedor) return;
 
     try {
-        const respuesta = await fetch("/api/convocatorias");
+        const respuesta = await fetch("http://localhost:4000/api/convocatorias");
 
         // Si el endpoint no existe o falla, detenemos el renderizado
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
@@ -390,7 +391,7 @@ async function cargarConvocatorias() {
 
 async function cargarPosgradosEnSelect() {
     try {
-        const respuesta = await fetch("/api/posgrado");
+        const respuesta = await fetch("http://localhost:4000/api/posgrado");
         if (!respuesta.ok) return;
         const posgrados = await respuesta.json();
         const select = document.getElementById("convocatoria_posgrado");
@@ -442,7 +443,7 @@ function agregarRequisitoUI(descripcion = "", obligatorio = true) {
 
 async function editarConvocatoria(id) {
     try {
-        const respuesta = await fetch(`/api/convocatorias/${id}`);
+        const respuesta = await fetch(`http://localhost:4000/api/convocatorias/${id}`);
         const conv = await respuesta.json();
 
         if (!conv) throw new Error("Convocatoria no encontrada");
@@ -506,11 +507,11 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
     const token = localStorage.getItem("token") || "";
 
     try {
-        let url = "/api/convocatorias";
+        let url = "http://localhost:4000/api/convocatorias";
         let metodo = "POST";
 
         if (idInput && idInput.trim() !== "") {
-            url = `/api/convocatorias/${idInput}`;
+            url = `http://localhost:4000/api/convocatorias/${idInput}`;
             metodo = "PUT";
         }
 
@@ -552,7 +553,7 @@ async function eliminarConvocatoria(id) {
     const token = localStorage.getItem("token") || "";
 
     try {
-        const respuesta = await fetch(`/api/convocatorias/${id}`, {
+        const respuesta = await fetch(`http://localhost:4000/api/convocatorias/${id}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -588,7 +589,7 @@ async function cargarAspirantes() {
     if (!tbody) return;
 
     try {
-        const respuesta = await fetch("/api/aspirante");
+        const respuesta = await fetch("http://localhost:4000/api/aspirante");
 
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
 
@@ -628,7 +629,7 @@ async function cargarAspirantes() {
 
 async function editarAspirante(id) {
     try {
-        const respuesta = await fetch(`/api/aspirante/${id}`);
+        const respuesta = await fetch(`http://localhost:4000/api/aspirante/${id}`);
         if (!respuesta.ok) throw new Error("Aspirante no encontrado");
 
         const aspirante = await respuesta.json();
@@ -685,7 +686,7 @@ document.getElementById("formAspirante")?.addEventListener("submit", async (e) =
     const token = localStorage.getItem("token") || "";
 
     try {
-        const respuesta = await fetch(`/api/aspirante/${id}`, {
+        const respuesta = await fetch(`http://localhost:4000/api/aspirante/${id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -710,3 +711,164 @@ document.getElementById("formAspirante")?.addEventListener("submit", async (e) =
         alert("Ocurrió un error en la conexión con el servidor.");
     }
 });
+
+// ==========================================
+// MÓDULO NOTIFICACIONES
+// ==========================================
+
+async function cargarNotificacionesAdmin() {
+    const tbody = document.getElementById("tablaNotificaciones");
+    if (!tbody) return;
+
+    try {
+        const respuesta = await fetch("http://localhost:4000/api/notificaciones"); // API futura
+        if (!respuesta.ok) throw new Error("Endpoint no disponible");
+
+        const notificaciones = await respuesta.json();
+        tbody.innerHTML = "";
+
+        if (!notificaciones || notificaciones.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='5' class='text-center text-muted'>No hay notificaciones registradas.</td></tr>";
+            return;
+        }
+
+        notificaciones.forEach(notif => {
+            const tr = document.createElement("tr");
+            tr.style.cursor = "pointer";
+            tr.onclick = () => editarNotificacion(notif.id);
+            tr.innerHTML = `
+                <td>${notif.id}</td>
+                <td>${notif.titulo}</td>
+                <td>${notif.mensaje.substring(0, 50)}...</td>
+                <td>${notif.fecha_creacion || 'N/A'}</td>
+                <td><span class="badge ${notif.estado === 'Activa' ? 'bg-success' : 'bg-secondary'}">${notif.estado || 'Activa'}</span></td>
+                <td><span class="badge ${notif.destino === 'Todos' ? 'bg-success' : 'bg-secondary'}">${notif.destino || 'Todos'}</span></td>
+                `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.warn("Error al cargar notificaciones (API no lista):", error);
+        tbody.innerHTML = "<tr><td colspan='5' class='text-center text-muted'>Esperando que se habilite la API de notificaciones...</td></tr>";
+    }
+}
+
+function limpiarFormularioNotificacion() {
+    const form = document.getElementById("formNotificacion");
+    if (form) form.reset();
+    document.getElementById("idNotificacionForm").value = "";
+    document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-bell"></i> Nueva Notificación';
+    document.getElementById("btnEliminarNotificacion").style.display = "none";
+}
+
+async function editarNotificacion(id) {
+    try {
+        const respuesta = await fetch(`http://localhost:4000/api/notificaciones/${id}`);
+        if (!respuesta.ok) throw new Error("Notificación no encontrada");
+
+        const notif = await respuesta.json();
+
+        document.getElementById("idNotificacionForm").value = notif.id;
+        document.getElementById("notif_titulo").value = notif.titulo || "";
+        document.getElementById("notif_mensaje").value = notif.mensaje || "";
+        document.getElementById("notif_estado").value = notif.estado || "Activa";
+        document.getElementById("notif_destino").value = notif.destino || "Todos";
+
+        document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Editar Notificación';
+
+        const btnEliminar = document.getElementById("btnEliminarNotificacion");
+        if (btnEliminar) {
+            btnEliminar.style.display = "inline-block";
+            btnEliminar.onclick = () => eliminarNotificacion(notif.id);
+        }
+
+        const modalElement = document.getElementById("modalNotificacion");
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modal.show();
+    } catch (error) {
+        console.warn("API de edición de notificaciones no lista:", error);
+        alert("La API para obtener la notificación aún no está habilitada.");
+    }
+}
+
+document.getElementById("formNotificacion")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const idInput = document.getElementById("idNotificacionForm").value;
+    const titulo = document.getElementById("notif_titulo").value;
+    const mensaje = document.getElementById("notif_mensaje").value;
+    const estado = document.getElementById("notif_estado").value;
+    const destino = document.getElementById("notif_destino").value;
+
+    const datosNotif = { titulo, mensaje, estado, destino };
+    const token = localStorage.getItem("token") || "";
+
+    try {
+        let url = "http://localhost:4000/api/notificaciones";
+        let metodo = "POST";
+
+        if (idInput && idInput.trim() !== "") {
+            url = `http://localhost:4000/api/notificaciones/${idInput}`;
+            metodo = "PUT";
+        }
+
+        const respuesta = await fetch(url, {
+            method: metodo,
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(datosNotif)
+        });
+
+        const resultado = await respuesta.json();
+
+        if (respuesta.ok && resultado.success !== false) {
+            alert(resultado.mensaje || "Notificación guardada con éxito");
+
+            const modalElement = document.getElementById("modalNotificacion");
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+
+            limpiarFormularioNotificacion();
+            cargarNotificacionesAdmin();
+        } else {
+            alert(resultado.mensaje || "Hubo un error al guardar la notificación.");
+        }
+    } catch (error) {
+        console.warn("API de guardar notificaciones no lista:", error);
+        alert("La conexión con la API de notificaciones falló. (Aún no implementada)");
+    }
+});
+
+async function eliminarNotificacion(id) {
+    if (!confirm(`¿Está seguro de eliminar la notificación con ID: ${id}?`)) return;
+
+    const token = localStorage.getItem("token") || "";
+
+    try {
+        const respuesta = await fetch(`http://localhost:4000/api/notificaciones/${id}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        const resultado = await respuesta.json();
+
+        if (respuesta.ok && resultado.success !== false) {
+            alert(resultado.mensaje || "Notificación eliminada con éxito.");
+
+            const modalElement = document.getElementById("modalNotificacion");
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+
+            cargarNotificacionesAdmin();
+        } else {
+            alert(resultado.mensaje || "No se pudo eliminar la notificación.");
+        }
+    } catch (error) {
+        console.warn("API de eliminar notificaciones no lista:", error);
+        alert("Ocurrió un error al intentar eliminar la notificación. (API no implementada)");
+    }
+}
+
