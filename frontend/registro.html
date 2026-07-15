@@ -23,10 +23,6 @@
 
             <!-- Formulario de captura -->
             <form id="formularioRegistro" onsubmit="enviarRegistro(event)">
-                <div class="form-group">
-                    <label for="reg-nombre">Nombre Completo</label>
-                    <input type="text" id="reg-nombre" placeholder="Ingresa tu nombre completo" required>
-                </div>
 
                 <div class="form-group">
                     <label for="reg-correo">Correo electrónico institucional</label>
@@ -59,7 +55,6 @@
         async function enviarRegistro(event) {
             event.preventDefault();
             // 1. OBTENER LOS TRES VALORES DESDE EL HTML (Te faltaba el nombre)
-            const nombre = document.getElementById('reg-nombre').value.trim(); // Asegúrate de que el id sea el de tu input de nombre completo
             const correo = document.getElementById('reg-correo').value.trim().toLowerCase();
             const password = document.getElementById('reg-password').value.trim();
 
@@ -76,8 +71,7 @@
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({
-                        nombre, // Ahora sí tiene valor real
+                    body: JSON.stringify({ // Ahora sí tiene valor real
                         correo,
                         password,
                         rol: "ASPIRANTE"
