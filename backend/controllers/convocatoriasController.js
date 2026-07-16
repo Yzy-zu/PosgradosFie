@@ -23,7 +23,7 @@ exports.obtenerConvocatorias = (req, res) => {
 };
 
 // Obtener una
-exports.obtenerConvocatorias = (req, res) => {
+exports.obtenerConvocatoria = (req, res) => {
 
     const { id } = req.params;
 
@@ -33,25 +33,20 @@ exports.obtenerConvocatorias = (req, res) => {
         (err, resultados) => {
 
             if (err) {
-
                 return res.status(500).json(err);
-
             }
 
             if (resultados.length === 0) {
-
                 return res.status(404).json({
                     success: false,
                     mensaje: 'Convocatoria no encontrada'
                 });
-
             }
 
             res.json(resultados[0]);
 
         }
     );
-
 };
 
 // Crear
