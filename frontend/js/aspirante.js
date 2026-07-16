@@ -6,8 +6,6 @@ let currentSolicitudId = null;
 
 // Comprobación de Sesión y Estado de Registro al inicializar la página
 document.addEventListener("DOMContentLoaded", async function () {
-    console.log("Sistema Frontend UMSNH-FIE inicializado.");
-
     const token = localStorage.getItem('token');
     const usuarioStr = localStorage.getItem('usuario');
     const programaElegido = localStorage.getItem('programaPendiente') || "Maestría";
@@ -20,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     const usuario = JSON.parse(usuarioStr);
     const saludo = document.getElementById('saludo-usuario');
-    
+
     // Obtener datos del aspirante real
     try {
         const resAspirantes = await fetch('http://localhost:4000/api/aspirante');
@@ -28,18 +26,18 @@ document.addEventListener("DOMContentLoaded", async function () {
             const listaAspirantes = await resAspirantes.json();
             // Buscar aspirante por idUsuario
             aspiranteData = listaAspirantes.find(a => a.idUsuario === usuario.id);
-            
+
             if (aspiranteData) {
                 if (saludo) saludo.innerText = `Hola Bienvenid@, ${aspiranteData.nombre} ${aspiranteData.primerApellido}`;
-                
+
                 // Actualizar menú de perfil
                 const lblNombre = document.getElementById('perfil-nombre');
                 const lblCorreo = document.getElementById('perfil-correo');
                 const lblTelefono = document.getElementById('perfil-telefono');
-                
-                if(lblNombre) lblNombre.innerText = `${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido}`;
-                if(lblCorreo) lblCorreo.innerText = aspiranteData.correo;
-                if(lblTelefono) lblTelefono.innerText = aspiranteData.telefono;
+
+                if (lblNombre) lblNombre.innerText = `${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido}`;
+                if (lblCorreo) lblCorreo.innerText = aspiranteData.correo;
+                if (lblTelefono) lblTelefono.innerText = aspiranteData.telefono;
             } else {
                 if (saludo) saludo.innerText = `Hola Bienvenid@, Aspirante`;
             }
@@ -97,7 +95,7 @@ async function cargarNotificaciones() {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
         });
-        
+
         if (res.ok) {
             const notificaciones = await res.json();
             if (!notificaciones || notificaciones.length === 0) {
@@ -107,7 +105,7 @@ async function cargarNotificaciones() {
                 notificaciones.forEach(notif => {
                     html += `
                     <div class="card" style="margin-bottom: 10px;">
-                        <p><strong><i class="fa-solid fa-bell" style="color: #8a1c24;"></i> ${notif.titulo || 'Notificación'}:</strong> ${notif.mensaje}</p>
+                        <p><strong><i class="fa-solid fa-bell" style="color: #8a1c24;"></i> ${notif.nombre}:</strong> ${notif.mensaje}</p>
                     </div>`;
                 });
                 contenedor.innerHTML = html;
@@ -118,7 +116,7 @@ async function cargarNotificaciones() {
         }
     } catch (e) {
         // Fallback por si la API aún no está implementada por el backend
-        console.warn("API de notificaciones no disponible:", e);
+        console.warn("Ocurrio un error al obtener notificaciones:", e);
         contenedor.innerHTML = '<div class="card"><p><strong><i class="fa-solid fa-triangle-exclamation" style="color: #e67e22;"></i> Sistema FIE:</strong> Recuerda verificar las fechas límite del calendario de admisiones. (Modo Offline)</p></div>';
     }
 }
@@ -176,14 +174,14 @@ async function activarModulosPostRegistro(nombrePrograma) {
                 const activas = convocatorias.filter(c => c.estado === 'Activa' && c.posgrado_tipo === nivel);
 
                 htmlConvocatorias = `<h3>Oferta Académica Desbloqueada: ${nivel === 'DOCTORADO' ? 'Doctorados' : 'Maestrías'} FIE</h3><br>`;
-                
+
                 if (activas.length === 0) {
                     htmlConvocatorias += `<p style="color: #555;">No hay convocatorias abiertas en este momento para este nivel.</p>`;
                 } else {
                     activas.forEach(c => {
                         // Formatear fechas
                         const fechaCierre = new Date(c.fecha_fin).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
-                        
+
                         htmlConvocatorias += `
                             <div class="convocatoria-item" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 4px;">
                                 <h4>${c.nombre}</h4>
@@ -202,7 +200,7 @@ async function activarModulosPostRegistro(nombrePrograma) {
             console.error("Error al obtener convocatorias:", error);
             htmlConvocatorias = `<p>Error de conexión al cargar convocatorias.</p>`;
         }
-        
+
         contenedorTarjetas.innerHTML = htmlConvocatorias;
     }
 
@@ -220,7 +218,7 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
         alert("No se pudo cargar la información del aspirante. Intente recargar.");
         return;
     }
-    
+
     // Crear Solicitud en la base de datos
     try {
         const respuestaSoli = await fetch('http://localhost:4000/api/solicitud/crear', {
@@ -233,7 +231,7 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
                 idConvocatoria: idConvocatoria
             })
         });
-        
+
         if (respuestaSoli.ok) {
             const dataSoli = await respuestaSoli.json();
             currentSolicitudId = dataSoli.idSolicitud;
@@ -361,7 +359,7 @@ async function avanzarEstacion(nuevaEstacion) {
                         method: 'POST',
                         body: subidaData
                     });
-                    
+
                     if (!res.ok) {
                         console.error(`Error al subir documento ${name}`);
                     }
@@ -371,7 +369,7 @@ async function avanzarEstacion(nuevaEstacion) {
             }
         }
     }
-    
+
     if (boton) boton.disabled = false;
     cambiarEstacion(nuevaEstacion);
 }
@@ -499,7 +497,7 @@ async function finalizarProcesoEstaciones() {
             alert("¡Felicidades! Tu documentación completa ha sido enviada con éxito al comité de admisiones del Posgrado FIE.");
         }
     }
-    
+
     // Aquí idealmente actualizamos el estado en la base de datos a EN_REVISION si tuviéramos un endpoint
     switchView('inicio');
 }
@@ -575,7 +573,7 @@ function regresarAConvocatorias() {
     if (!confirmacion) return;
 
     // 1. Volvemos a mostrar el contenedor con las dos tarjetas originales
-    document.getElementById('seleccion-programa').style.display = 'flex'; 
+    document.getElementById('seleccion-programa').style.display = 'flex';
 
     // 2. Ocultamos la lista detallada y el botón de regreso
     document.getElementById('lista-programas-abiertos').style.display = 'none';

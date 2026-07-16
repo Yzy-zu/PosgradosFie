@@ -12,7 +12,7 @@
 <body>
 
     <nav class="sidebar">
-       <h2><img src="css/umsnh-logo.png" alt="Logo"
+        <h2><img src="css/umsnh-logo.png" alt="Logo"
                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; margin-right: 10px; vertical-align: middle;">
             FIE ASPIRANTE</h2>
         <a id="nav-inicio" onclick="switchView('inicio')" class="active"><i class="fa-solid fa-house"></i> Inicio / Menú
@@ -43,8 +43,10 @@
                     <div class="profile-user-details">
                         <div class="user-role-badge"><i class="fa-solid fa-shield"></i> Aspirante</div>
                         <h4 class="user-full-name" id="perfil-nombre">Cargando...</h4>
-                        <p class="user-info-text"><i class="fa-regular fa-envelope"></i> <span id="perfil-correo">Cargando...</span></p>
-                        <p class="user-info-text"><i class="fa-solid fa-phone"></i> <span id="perfil-telefono">Cargando...</span></p>
+                        <p class="user-info-text"><i class="fa-regular fa-envelope"></i> <span
+                                id="perfil-correo">Cargando...</span></p>
+                        <p class="user-info-text"><i class="fa-solid fa-phone"></i> <span
+                                id="perfil-telefono">Cargando...</span></p>
                     </div>
                     <hr>
                     <!-- Acciones del Menú (Se removió "Ver mi estado") -->
@@ -183,19 +185,22 @@
                             style="display:none; border-color:#8a1c24; background-color:#fff9f9;">
                             <label style="color:#8a1c24; font-size:16px;"><i class="fa-solid fa-file-pdf"></i> Requisito
                                 Esencial: Tener Grado de Maestría Académica *</label>
-                            <p style="font-size:13px; color:#555; margin-bottom:10px;">El sistema detectó tu historial de
+                            <p style="font-size:13px; color:#555; margin-bottom:10px;">El sistema detectó tu historial
+                                de
                                 egreso de Maestría FIE. Tus documentos previos se han migrado automáticamente.</p>
-                            <input type="file" id="file-grado-maestria" accept=".pdf" onchange="verificarArchivosEstacion(0)">
+                            <input type="file" id="file-grado-maestria" accept=".pdf"
+                                onchange="verificarArchivosEstacion(0)">
                         </div>
 
                         <div class="costos-box" id="box-costos-desglose" style="margin-top:15px;">
                             <h4><i class="fa-solid fa-receipt"></i> Aranceles y Conceptos de Pago</h4>
-                            <div class="costo-linea"><span>Examen de Admisión:</span> <strong>$ 1,000.00 MXN</strong></div>
+                            <div class="costo-linea"><span>Examen de Admisión:</span> <strong>$ 1,000.00 MXN</strong>
+                            </div>
                         </div>
                         <br>
-                        <button type="button" class="btn-primary" id="btn-next-0" style="width: auto; padding: 12px 30px;"
-                            onclick="avanzarEstacion(1)">Confirmar y Continuar <i
-                                class="fa-solid fa-arrow-right"></i></button>
+                        <button type="button" class="btn-primary" id="btn-next-0"
+                            style="width: auto; padding: 12px 30px;" onclick="avanzarEstacion(1)">Confirmar y Continuar
+                            <i class="fa-solid fa-arrow-right"></i></button>
                     </form>
                 </div>
             </div>
@@ -207,36 +212,43 @@
                     <form id="form-estacion-1">
                         <div id="grid-maestria-1" class="file-grid">
                             <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Acta de Nacimiento
-                                    *</label><input type="file" id="file-acta" name="ACTA_NACIMIENTO" accept=".pdf" onchange="verificarArchivosEstacion(1)">
+                                    *</label><input type="file" id="file-acta" name="ACTA_NACIMIENTO" accept=".pdf"
+                                    onchange="verificarArchivosEstacion(1)">
                             </div>
                             <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Clave CURP
-                                    *</label><input type="file" id="file-curp" name="CURP" accept=".pdf" onchange="verificarArchivosEstacion(1)">
+                                    *</label><input type="file" id="file-curp" name="CURP" accept=".pdf"
+                                    onchange="verificarArchivosEstacion(1)">
                             </div>
-                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Identificación Oficial
-                                    (INE) *</label><input type="file" id="file-ine" name="COPIA_INE_U_OTRAS" accept=".pdf" onchange="verificarArchivosEstacion(1)">
+                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Identificación
+                                    Oficial
+                                    (INE) *</label><input type="file" id="file-ine" name="COPIA_INE_U_OTRAS"
+                                    accept=".pdf" onchange="verificarArchivosEstacion(1)">
                             </div>
                             <div class="file-box"><label><i class="fa-solid fa-image"></i> Fotografía Tamaño Infantil
-                                    *</label><input type="file" id="file-foto" name="FTO_INFANTIL" accept=".jpg,.jpeg,.png" onchange="verificarArchivosEstacion(1)">
+                                    *</label><input type="file" id="file-foto" name="FTO_INFANTIL"
+                                    accept=".jpg,.jpeg,.png" onchange="verificarArchivosEstacion(1)">
                             </div>
                         </div>
 
                         <div id="grid-doctorado-1" style="display:none;">
                             <p style="color:green; font-weight:bold; margin-bottom:15px;"><i
-                                    class="fa-solid fa-circle-check"></i> Requisitos de identidad validados y heredados de
+                                    class="fa-solid fa-circle-check"></i> Requisitos de identidad validados y heredados
+                                de
                                 tu expediente de maestría.</p>
                             <div class="file-box" style="max-width:400px; border-color:#8a1c24;">
                                 <label><i class="fa-solid fa-file-pdf"></i> Currículum Vítae (CV) Único Actualizado
                                     *</label>
-                                <input type="file" id="file-cv" name="CV" accept=".pdf" onchange="verificarArchivosEstacion(1)">
+                                <input type="file" id="file-cv" name="CV" accept=".pdf"
+                                    onchange="verificarArchivosEstacion(1)">
                             </div>
                         </div>
                         <br>
                         <div style="display:flex; gap:15px;">
                             <button type="button" class="btn-secondary" onclick="cambiarEstacion(0)"><i
                                     class="fa-solid fa-arrow-left"></i> Volver</button>
-                            <button type="button" class="btn-primary" id="btn-next-1" style="width:auto; padding:12px 30px;" disabled
-                                onclick="avanzarEstacion(2)">Siguiente Estación <i
-                                    class="fa-solid fa-arrow-right"></i></button>
+                            <button type="button" class="btn-primary" id="btn-next-1"
+                                style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(2)">Siguiente
+                                Estación <i class="fa-solid fa-arrow-right"></i></button>
                         </div>
                     </form>
                 </div>
@@ -248,30 +260,37 @@
                     </h3>
                     <form id="form-estacion-2">
                         <div id="grid-maestria-2" class="file-grid">
-                            <div class="file-box warning-border"><label><i class="fa-solid fa-file-arrow-up"></i> Título de
-                                    Licenciatura</label><input type="file" id="file-titulo" name="TITULO_LIC" accept=".pdf"
-                                    onchange="verificarArchivosEstacion(2)"></div>
-                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Certificado Oficial de
-                                    Calificaciones *</label><input type="file" id="file-certificado" name="OTRO" accept=".pdf"
-                                    onchange="verificarArchivosEstacion(2)"></div>
+                            <div class="file-box warning-border"><label><i class="fa-solid fa-file-arrow-up"></i> Título
+                                    de
+                                    Licenciatura</label><input type="file" id="file-titulo" name="TITULO_LIC"
+                                    accept=".pdf" onchange="verificarArchivosEstacion(2)"></div>
+                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Certificado Oficial
+                                    de
+                                    Calificaciones *</label><input type="file" id="file-certificado" name="OTRO"
+                                    accept=".pdf" onchange="verificarArchivosEstacion(2)"></div>
                         </div>
 
                         <div id="grid-doctorado-2" style="display:none;">
                             <div class="file-box" style="border-color:#8a1c24; margin-bottom:20px;">
-                                <label><i class="fa-solid fa-file-pdf"></i> Carga de Propuesta de Proyecto de Investigación
+                                <label><i class="fa-solid fa-file-pdf"></i> Carga de Propuesta de Proyecto de
+                                    Investigación
                                     *</label>
-                                <input type="file" id="file-propuesta" name="OTRO" accept=".pdf" onchange="verificarArchivosEstacion(2)">
+                                <input type="file" id="file-propuesta" name="OTRO" accept=".pdf"
+                                    onchange="verificarArchivosEstacion(2)">
                             </div>
                             <div class="retro-box">
                                 <h4><i class="fa-regular fa-comments"></i> Buzón de Evaluación y Retroalimentación de
                                     Propuesta</h4>
                                 <div class="comentario-profesor"><strong>Revisor P1:</strong> <span
-                                        style="color:#27ae60;"><i class="fa-solid fa-check"></i> Visto Bueno (Aprobado sin
+                                        style="color:#27ae60;"><i class="fa-solid fa-check"></i> Visto Bueno (Aprobado
+                                        sin
                                         cambios necesarios).</span></div>
-                                <div class="comentario-profesor"><strong>Revisor P2:</strong> <span>"Se recomienda delimitar
+                                <div class="comentario-profesor"><strong>Revisor P2:</strong> <span>"Se recomienda
+                                        delimitar
                                         con mayor claridad el alcance del segundo objetivo específico de
                                         automatización."</span></div>
-                                <div class="comentario-profesor"><strong>Revisor P3:</strong> <span>"Estructura metodológica
+                                <div class="comentario-profesor"><strong>Revisor P3:</strong> <span>"Estructura
+                                        metodológica
                                         adecuada. Sugiero enriquecer las referencias del estado del arte."</span></div>
                             </div>
                         </div>
@@ -279,9 +298,9 @@
                         <div style="display:flex; gap:15px;">
                             <button type="button" class="btn-secondary" onclick="cambiarEstacion(1)"><i
                                     class="fa-solid fa-arrow-left"></i> Volver</button>
-                            <button type="button" class="btn-primary" id="btn-next-2" style="width:auto; padding:12px 30px;" disabled
-                                onclick="avanzarEstacion(3)">Siguiente Estación <i
-                                    class="fa-solid fa-arrow-right"></i></button>
+                            <button type="button" class="btn-primary" id="btn-next-2"
+                                style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(3)">Siguiente
+                                Estación <i class="fa-solid fa-arrow-right"></i></button>
                         </div>
                     </form>
                 </div>
@@ -293,31 +312,36 @@
                     </h3>
                     <form id="form-estacion-3">
                         <div id="grid-maestria-3" class="file-grid">
-                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Carta 1 *</label><input
-                                    type="file" id="file-carta1" name="CARTA_RECOM" accept=".pdf" onchange="verificarArchivosEstacion(3)"></div>
-                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Carta 2 *</label><input
-                                    type="file" id="file-carta2" name="CARTA_RECOM" accept=".pdf" onchange="verificarArchivosEstacion(3)"></div>
-                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Carta 3 *</label><input
-                                    type="file" id="file-carta3" name="CARTA_RECOM" accept=".pdf" onchange="verificarArchivosEstacion(3)"></div>
+                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Carta 1
+                                    *</label><input type="file" id="file-carta1" name="CARTA_RECOM" accept=".pdf"
+                                    onchange="verificarArchivosEstacion(3)"></div>
+                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Carta 2
+                                    *</label><input type="file" id="file-carta2" name="CARTA_RECOM" accept=".pdf"
+                                    onchange="verificarArchivosEstacion(3)"></div>
+                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Carta 3
+                                    *</label><input type="file" id="file-carta3" name="CARTA_RECOM" accept=".pdf"
+                                    onchange="verificarArchivosEstacion(3)"></div>
                         </div>
 
                         <div id="grid-doctorado-3" style="display:none;">
                             <p style="color:green; font-weight:bold; margin-bottom:15px;"><i
-                                    class="fa-solid fa-circle-check"></i> Cartas de recomendación validadas en el expediente
+                                    class="fa-solid fa-circle-check"></i> Cartas de recomendación validadas en el
+                                expediente
                                 base.</p>
                             <div class="file-box" style="max-width:450px; border-color:#8a1c24;">
                                 <label><i class="fa-solid fa-certificate"></i> Constancia / Examen de Certificación de
                                     Idioma Oficial *</label>
-                                <input type="file" id="file-idioma" name="OTRO" accept=".pdf" onchange="verificarArchivosEstacion(3)">
+                                <input type="file" id="file-idioma" name="OTRO" accept=".pdf"
+                                    onchange="verificarArchivosEstacion(3)">
                             </div>
                         </div>
                         <br>
                         <div style="display:flex; gap:15px;">
                             <button type="button" class="btn-secondary" onclick="cambiarEstacion(2)"><i
                                     class="fa-solid fa-arrow-left"></i> Volver</button>
-                            <button type="button" class="btn-primary" id="btn-next-3" style="width:auto; padding:12px 30px;" disabled
-                                onclick="avanzarEstacion(4)">Siguiente Estación <i
-                                    class="fa-solid fa-arrow-right"></i></button>
+                            <button type="button" class="btn-primary" id="btn-next-3"
+                                style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(4)">Siguiente
+                                Estación <i class="fa-solid fa-arrow-right"></i></button>
                         </div>
                     </form>
                 </div>
@@ -329,9 +353,11 @@
                         General</h3>
                     <form id="form-estacion-4">
                         <div id="grid-maestria-4" class="file-box" style="max-width:400px;">
-                            <label><i class="fa-solid fa-file-arrow-up"></i> Constancia de Resultados Examen CENEVAL - EXANI
+                            <label><i class="fa-solid fa-file-arrow-up"></i> Constancia de Resultados Examen CENEVAL -
+                                EXANI
                                 III *</label>
-                            <input type="file" id="file-ceneval" name="OTRO" accept=".pdf" onchange="verificarArchivosEstacion(4)">
+                            <input type="file" id="file-ceneval" name="OTRO" accept=".pdf"
+                                onchange="verificarArchivosEstacion(4)">
                         </div>
 
                         <div id="grid-doctorado-4" style="display:none;">
@@ -341,7 +367,8 @@
                                     Admisión</h4>
                                 <p style="font-size:14px; margin: 5px 0;"><strong>Sínodo Asignado:</strong> 3 Profesores
                                     Investigadores del Núcleo de la FIE.</p>
-                                <p style="font-size:13px; color:#e67e22;"><strong>Nota de seguridad:</strong> Los nombres se
+                                <p style="font-size:13px; color:#e67e22;"><strong>Nota de seguridad:</strong> Los
+                                    nombres se
                                     mantendrán ocultos para asegurar la imparcialidad.</p>
                                 <hr style="margin:10px 0; border:0; border-top:1px solid #ddd;">
 
@@ -351,13 +378,16 @@
                                         style="color:#27ae60;"><i class="fa-solid fa-check"></i> Visto Bueno - Perfil de
                                         investigación idóneo.</span></div>
                                 <div class="comentario-profesor"><strong>Evaluador J2:</strong> <span>"Muestra excelente
-                                        dominio de sus líneas de generación de conocimiento. Proyecto viable."</span></div>
+                                        dominio de sus líneas de generación de conocimiento. Proyecto viable."</span>
+                                </div>
                                 <div class="comentario-profesor"><strong>Evaluador J3:</strong> <span>"Habilidades de
                                         comunicación científica sobresalientes en la defensa técnica."</span></div>
                             </div>
                             <br>
-                            <label style="display:flex; align-items:center; gap:10px; font-weight:bold; cursor:pointer;">
-                                <input type="checkbox" id="chk-entrevista" onchange="verificarArchivosEstacion(4)"> Confirmo
+                            <label
+                                style="display:flex; align-items:center; gap:10px; font-weight:bold; cursor:pointer;">
+                                <input type="checkbox" id="chk-entrevista" onchange="verificarArchivosEstacion(4)">
+                                Confirmo
                                 que mi entrevista formal con el sínodo ha concluido.
                             </label>
                         </div>
@@ -376,7 +406,7 @@
         </section>
 
         <section id="view-notificaciones" class="view-section">
-            <h2>Notificaciones o Mensajes</h2>
+            <h2>Notificaciones</h2>
             <div id="contenedor-notificaciones">
                 <div class="card">
                     <p><strong><i class="fa-solid fa-triangle-exclamation" style="color: #e67e22;"></i> Sistema
