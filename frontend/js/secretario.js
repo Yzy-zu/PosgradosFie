@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     console.log("Portal de Secretario Inicializado.");
 
     // Configurar el saludo de usuario personalizado
-    const usuarioLogueado = localStorage.getItem('usuarioLogueado') || "Secretario Académico";
+    const usuarioLogueado = sessionStorage.getItem('usuarioLogueado') || "Secretario Académico";
     const saludo = document.getElementById('saludo-usuario');
     if (saludo) {
         saludo.innerText = `Hola Bienvenid@, ${usuarioLogueado}`;
@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", async function() {
 
 async function cargarAspirantes() {
     try {
-        const token = localStorage.getItem("token") || "";
+        const token = sessionStorage.getItem("token") || "";
         const respuesta = await fetch('/api/aspirante', {
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -79,8 +79,8 @@ function switchView(viewId) {
  * Cierre de Sesión Limpiando Variables No Persistentes de Login
  */
 function cerrarSesion() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("usuarioLogueado");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("usuarioLogueado");
     window.location.href = "login.html";
 }
 
