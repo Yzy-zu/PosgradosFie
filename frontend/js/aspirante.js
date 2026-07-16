@@ -38,6 +38,25 @@ document.addEventListener("DOMContentLoaded", async function () {
                 if (lblNombre) lblNombre.innerText = `${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido}`;
                 if (lblCorreo) lblCorreo.innerText = aspiranteData.correo;
                 if (lblTelefono) lblTelefono.innerText = aspiranteData.telefono;
+
+                // --- RESTAURAR SESION DE SOLICITUD ---
+                try {
+                    const resSoli = await fetch(`http://localhost:4000/api/solicitud/activa/${aspiranteData.id}`);
+                    if (resSoli.ok) {
+                        const soliData = await resSoli.json();
+                        if (soliData.existe) {
+                            // Reanudamos la UI del usuario
+                            currentSolicitudId = soliData.idSolicitud;
+                            nivelAcademicoSeleccionado = soliData.nivel === 'DOCTORADO' ? 'Doctorado' : 'Maestría';
+                            prepararFlujoEstaciones(nivelAcademicoSeleccionado, soliData.idConvocatoria);
+                            return; // Salimos para no ejecutar el código de abajo
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error al buscar solicitud activa:", e);
+                }
+                // -------------------------------------
+
             } else {
                 if (saludo) saludo.innerText = `Hola Bienvenid@, Aspirante`;
             }
@@ -46,7 +65,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         console.error("Error obteniendo datos del aspirante:", e);
     }
 
-    // Activar módulos si venía de un redireccionamiento
+    // Activar módulos si venía de un redireccionamiento y no se reanudó nada arriba
     if (programaElegido) {
         activarModulosPostRegistro(programaElegido);
     }
@@ -236,6 +255,11 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
         if (respuestaSoli.ok) {
             const dataSoli = await respuestaSoli.json();
             currentSolicitudId = dataSoli.idSolicitud;
+            bloquearConvocatorias();
+        } else if (respuestaSoli.status === 409) {
+            const errData = await respuestaSoli.json();
+            alert(errData.mensaje);
+            return;
         } else {
             alert("Hubo un error al crear la solicitud en el servidor.");
             return;
@@ -570,8 +594,7 @@ function cerrarSesion() {
 
 // Función para regresar a la selección de Maestría/Doctorado sin reiniciar sesión
 function regresarAConvocatorias() {
-    const confirmacion = confirm("¿Estás seguro de que deseas volver? Si ya iniciaste un registro, podrías perder tu progreso actual.");
-    if (!confirmacion) return;
+
 
     // 1. Volvemos a mostrar el contenedor con las dos tarjetas originales
     document.getElementById('seleccion-programa').style.display = 'flex';
@@ -599,3 +622,49 @@ window.addEventListener('click', function () {
         dropdown.classList.remove('show');
     }
 });
+// --- NUEVAS FUNCIONES DE SEGURIDAD Y CANCELACION ---
+
+function bloquearConvocatorias() {
+    const seleccion = document.getElementById('seleccion-programa');
+    const lista = document.getElementById('lista-programas-abiertos');
+    const bloqueo = document.getElementById('bloqueo-convocatoria');
+
+    if (seleccion) seleccion.style.display = 'none';
+    if (lista) lista.style.display = 'none';
+    if (bloqueo) bloqueo.style.display = 'block';
+}
+
+async function cancelarSolicitudActual() {
+    if (!confirm("¿Estás seguro que deseas cancelar todo el progreso de esta solicitud? No se puede deshacer.")) return;
+    if (!currentSolicitudId) return;
+
+    try {
+        const res = await fetch(`http://localhost:4000/api/solicitud/cancelar/${currentSolicitudId}`, {
+            method: 'PUT'
+        });
+
+        if (res.ok) {
+            alert("Solicitud cancelada. Eres libre de iniciar una nueva.");
+            currentSolicitudId = null;
+            sessionStorage.removeItem('idConvocatoriaPendiente');
+            sessionStorage.removeItem('programaPendiente');
+
+            // Desbloquear la UI
+            const seleccion = document.getElementById('seleccion-programa');
+            const bloqueo = document.getElementById('bloqueo-convocatoria');
+            if (seleccion) seleccion.style.display = 'flex';
+            if (bloqueo) bloqueo.style.display = 'none';
+
+            // Ocultar sección de documentos
+            document.getElementById('nav-documentos').classList.add('hidden');
+
+            // Regresar a la vista de convocatorias
+            switchView('convocatorias');
+        } else {
+            alert("Hubo un error al cancelar la solicitud.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Error de red al intentar cancelar.");
+    }
+}
