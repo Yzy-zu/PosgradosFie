@@ -12,16 +12,20 @@ module.exports = (req, res, next) => {
     }
 
     try {
-        const verificado = jwt.verify(token, process.env.JWT_SECRET || 'clave_secreta_temporal');
+        const verificado = jwt.verify(
+            token,
+            process.env.JWT_SECRET || 'clave_secreta_temporal'
+        );
+
         req.usuario = verificado;
         next();
+
     } catch (error) {
-        res.status(403).json({
+
+        return res.status(403).json({
             success: false,
             mensaje: 'Token inválido o expirado.'
         });
+
     }
 };
-
-
-

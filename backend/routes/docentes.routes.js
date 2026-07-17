@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
 
+// Middlewares de protección
+const auth = require('../middlewares/auth');
+const validarRol = require('../middlewares/validarRol');
+
+// Controladores
 const {
     obtenerDocentes,
     obtenerDocente,
@@ -9,19 +14,49 @@ const {
     eliminarDocente
 } = require('../controllers/docenteController');
 
-// Obtener todos los docentes
-router.get('/', obtenerDocentes);
+// ==========================================
+// Rutas Protegidas de Docentes
+// ==========================================
 
-// Obtener un docente por ID
-router.get('/:id', obtenerDocente);
+// Obtener todos los docentes (Admin, Coordinador y Secretario pueden consultar la lista)
+router.get(
+    '/', 
+    auth, 
+    validarRol('ADMIN', 'COORDINADOR', 'SECRETARIO'), 
+    obtenerDocentes
+);
 
-// Crear un docente
-router.post('/', crearDocente);
+// Obtener un docente por ID (Admin, Coordinador, Secretario o el propio Docente)
+router.get(
+    '/:id', 
+    auth, 
+    validarRol('ADMIN', 'COORDINADOR', 'SECRETARIO', 'DOCENTE'), 
+    obtenerDocente
+);
 
-// Actualizar un docente
-router.put('/:id', actualizarDocente);
+// Crear un docente (Solo el Admin o el Coordinador pueden dar de alta profesores)
+router.post(
+    '/', 
+    auth, 
+    validarRol('ADMIN', 'COORDINADOR'), 
+    crearDocente
+);
 
-// Eliminar un docente
-router.delete('/:id', eliminarDocente);
+// Actualizar un docente (Admin, Coordinador o el mismo Docente para sus datos personales)
+router.put(
+    '/:id', 
+    auth, 
+    validarRol('ADMIN', 'COORDINADOR', 'DOCENTE'), 
+    actualizarDocente
+);
 
+// Eliminar un docente (Acción crítica: reservada estrictamente para el Administrador)
+router.delete(
+    '/:id', 
+    auth, 
+    validarRol('ADMIN'), 
+    eliminarDocente
+);
+
+module.exports = router;
 module.exports = router;

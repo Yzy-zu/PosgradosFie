@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
+
 const verificarToken = require('../middlewares/auth');
+const validarRol = require('../middlewares/validarRol');
 
 const {
     obtenerUsuarios,
@@ -10,13 +12,44 @@ const {
     eliminarUsuario
 } = require('../controllers/usuarioController');
 
-// PÚBLICAS: No llevan 'verificarToken' para que la tabla cargue libremente
-router.get('/', obtenerUsuarios);
-router.get('/:id', obtenerUsuario);
+// ==========================================
+// Rutas Protegidas de Usuarios
+// ==========================================
+router.get(
+    '/',
+    verificarToken,
+    validarRol('ADMIN', 'COORDINADOR'),
+    obtenerUsuarios
+);
 
-// PROTEGIDAS: Estas sí requieren que el frontend mande el token válido
-router.post('/', verificarToken, crearUsuario);
-router.put('/:id', verificarToken, actualizarUsuario);
-router.delete('/:id', verificarToken, eliminarUsuario);
+router.get(
+    '/:id',
+    verificarToken,
+    validarRol('ADMIN', 'COORDINADOR', 'SECRETARIO', 'DOCENTE', 'ASPIRANTE'),
+    obtenerUsuario
+);
+
+router.post(
+    '/',
+    verificarToken,
+    validarRol('ADMIN'),
+    crearUsuario
+);
+
+
+router.put(
+    '/:id',
+    verificarToken,
+    validarRol('ADMIN'),
+    actualizarUsuario
+);
+
+
+router.delete(
+    '/:id',
+    verificarToken,
+    validarRol('ADMIN'),
+    eliminarUsuario
+);
 
 module.exports = router;

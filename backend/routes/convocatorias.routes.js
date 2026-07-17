@@ -1,24 +1,53 @@
 const express = require('express');
 const router = express.Router();
 
-const {
+const auth = require('../middlewares/auth');
+const validarRol = require('../middlewares/validarRol');
 
+const {
     obtenerConvocatorias,
     obtenerConvocatoria,
     crearConvocatorias,
     actualizarConvocatorias,
     eliminarConvocatorias
-
 } = require('../controllers/convocatoriasController');
 
-router.get('/', obtenerConvocatorias);
+// Todos los usuarios autenticados pueden ver las convocatorias
+router.get(
+    '/',
+    auth,
+    obtenerConvocatorias
+);
 
-router.get('/:id', obtenerConvocatoria);
+// Todos los usuarios autenticados pueden ver una convocatoria
+router.get(
+    '/:id',
+    auth,
+    obtenerConvocatoria
+);
 
-router.post('/', crearConvocatorias);
+// Solo el ADMIN puede crear convocatorias
+router.post(
+    '/',
+    auth,
+    validarRol('ADMIN'),
+    crearConvocatorias
+);
 
-router.put('/:id', actualizarConvocatorias);
+// Solo el ADMIN puede actualizar convocatorias
+router.put(
+    '/:id',
+    auth,
+    validarRol('ADMIN'),
+    actualizarConvocatorias
+);
 
-router.delete('/:id', eliminarConvocatorias);
+// Solo el ADMIN puede eliminar convocatorias
+router.delete(
+    '/:id',
+    auth,
+    validarRol('ADMIN'),
+    eliminarConvocatorias
+);
 
 module.exports = router;
