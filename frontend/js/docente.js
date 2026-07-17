@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     console.log("Portal de Docente Inicializado.");
 
     // Configurar el saludo de usuario personalizado
-    const usuarioLogueado = localStorage.getItem('usuarioLogueado') || "Docente Evaluador";
+    const usuarioLogueado = sessionStorage.getItem('usuarioLogueado') || "Docente Evaluador";
     const saludo = document.getElementById('saludo-usuario');
     if (saludo) {
         saludo.innerText = `Hola Bienvenid@, ${usuarioLogueado}`;
@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", async function() {
 
 async function cargarAspirantesAPI() {
     try {
-        const token = localStorage.getItem("token") || "";
+        const token = sessionStorage.getItem("token") || "";
         const respuesta = await fetch('/api/aspirante', {
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -78,8 +78,8 @@ function switchView(viewId) {
  * Cierre de Sesión Limpiando Variables No Persistentes de Login
  */
 function cerrarSesion() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("usuarioLogueado");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("usuarioLogueado");
     window.location.href = "login.html";
 }
 
@@ -382,7 +382,7 @@ function aprobarDocumento(docId) {
     aspirantes[aspIndex].documentos[docIndex].note = ''; // Limpiar nota previa si existía
 
     // Guardar en almacenamiento local
-    localStorage.setItem("docenteAspirantes", JSON.stringify(aspirantes));
+    sessionStorage.setItem("docenteAspirantes", JSON.stringify(aspirantes));
 
     // Refrescar vistas
     actualizarEstadisticas();
@@ -441,7 +441,7 @@ function guardarRechazoDocumento() {
     aspirantes[aspIndex].documentos[docIndex].note = noteText;
 
     // Guardar en almacenamiento local
-    localStorage.setItem("docenteAspirantes", JSON.stringify(aspirantes));
+    sessionStorage.setItem("docenteAspirantes", JSON.stringify(aspirantes));
 
     // Cerrar modal
     cerrarModalRechazo();

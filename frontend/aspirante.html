@@ -105,6 +105,17 @@
         <section id="view-convocatorias" class="view-section">
             <h2>Convocatorias Disponibles</h2>
 
+            <!-- Bloqueo de Convocatoria -->
+            <div id="bloqueo-convocatoria"
+                style="display: none; text-align: center; padding: 40px; background: #f9f9f9; border-radius: 8px; border: 2px solid #ddd;">
+                <h3><i class="fa-solid fa-lock" style="color: #8a1c24;"></i> Proceso en Curso</h3>
+                <p>Actualmente tienes una solicitud de admisión en progreso. Por seguridad, no puedes iniciar otra
+                    solicitud hasta cancelar o concluir la actual.</p>
+                <button class="btn-primary" onclick="switchView('documentos')"
+                    style="margin-top: 15px; width: auto; padding: 10px 20px;"><i class="fa-solid fa-arrow-right"></i>
+                    Ir a mis Documentos</button>
+            </div>
+
             <!-- Contenedor 1: Selección inicial de tarjetas -->
             <div id="seleccion-programa" class="programas-container">
                 <div class="box-programa" onclick="seleccionarPrograma('Maestría en Ingeniería Eléctrica')">
@@ -131,7 +142,13 @@
 
         <section id="view-documentos" class="view-section">
             <h2 id="titulo-flujo-documentos">Seguimiento de Trámites y Requisitos de Ingreso</h2>
-            <p>Completa cada una de las estaciones requeridas para enviar tu postulación a revisión administrativa.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <p>Completa cada una de las estaciones requeridas para enviar tu postulación a revisión administrativa.
+                </p>
+                <button type="button" class="btn-secondary" onclick="cancelarSolicitudActual()"
+                    style="background-color: #c0392b; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 13px;"><i
+                        class="fa-solid fa-trash"></i> Cancelar Solicitud</button>
+            </div>
             <br>
 
             <div class="stepper-wrapper">

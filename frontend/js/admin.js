@@ -22,19 +22,19 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addEventListener("hashchange", activarSeccionPorHash);
 
 function validarSesion() {
-    const usuario = localStorage.getItem("usuario");
-    const token = localStorage.getItem("token");
+    const usuario = sessionStorage.getItem("usuario");
+    const token = sessionStorage.getItem("token");
 
     if (!usuario || !token) {
         alert("Sesión inválida o expirada. Por favor, inicie sesión.");
-        localStorage.clear();
+        sessionStorage.clear();
         window.location.href = "login.html";
         return;
     }
 }
 
 function mostrarAdministrador() {
-    let usuario = JSON.parse(localStorage.getItem("usuario"));
+    let usuario = JSON.parse(sessionStorage.getItem("usuario"));
     if (!usuario) return; // Si no hay usuario, validarSesion() ya se encargó de redirigir al login
 
     // Actualizar nombre en el header superior
@@ -145,7 +145,7 @@ function configurarNavegacion() {
 
 function cerrarSesion() {
     if (!confirm("¿Desea cerrar sesión?")) return;
-    localStorage.clear();
+    sessionStorage.clear();
     window.location.href = "login.html";
 }
 
@@ -247,7 +247,7 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
     const rol = document.getElementById("rol").value;
 
     const datosUsuario = { nombre, correo, password, rol };
-    const token = localStorage.getItem("token") || ""; // Por si requiere token más adelante
+    const token = sessionStorage.getItem("token") || ""; // Por si requiere token más adelante
 
     try {
         let url = "http://localhost:4000/api/usuario";
@@ -298,7 +298,7 @@ async function eliminarUsuario(id) {
         return;
     }
 
-    const token = localStorage.getItem("token") || "";
+    const token = sessionStorage.getItem("token") || "";
 
     try {
         const respuesta = await fetch(`http://localhost:4000/api/usuario/${id}`, {
@@ -417,6 +417,13 @@ function limpiarFormularioConvocatoria() {
     document.getElementById("contenedorRequisitos").innerHTML = ""; // Limpiar requisitos
 }
 
+function crearConvocatoria() {
+    limpiarFormularioConvocatoria();
+    const modalElement = document.getElementById("modalConvocatoria");
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    modal.show();
+}
+
 function agregarRequisitoUI(descripcion = "", obligatorio = true) {
     const contenedor = document.getElementById("contenedorRequisitos");
 
@@ -499,8 +506,8 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
         }
     });
 
-    const datosConvocatoria = { nombre, descripcion, fecha_inicio, fecha_fin, estado, requisitos };
-    const token = localStorage.getItem("token") || "";
+    const datosConvocatoria = { nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, requisitos };
+    const token = sessionStorage.getItem("token") || "";
 
     try {
         let url = "http://localhost:4000/api/convocatorias";
@@ -546,7 +553,7 @@ async function eliminarConvocatoria(id) {
         return;
     }
 
-    const token = localStorage.getItem("token") || "";
+    const token = sessionStorage.getItem("token") || "";
 
     try {
         const respuesta = await fetch(`http://localhost:4000/api/convocatorias/${id}`, {
@@ -678,8 +685,8 @@ document.getElementById("formAspirante")?.addEventListener("submit", async (e) =
         fechaNacimiento: document.getElementById("detalleAspFechaNac").value,
         direccion: document.getElementById("detalleAspDireccion").value
     };
-    
-    const token = localStorage.getItem("token") || "";
+
+    const token = sessionStorage.getItem("token") || "";
 
     try {
         const respuesta = await fetch(`http://localhost:4000/api/aspirante/${id}`, {
@@ -796,7 +803,7 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
     const destino = document.getElementById("notif_destino").value;
 
     const datosNotif = { nombre, mensaje, destino, activa };
-    const token = localStorage.getItem("token") || "";
+    const token = sessionStorage.getItem("token") || "";
 
     try {
         let url = "http://localhost:4000/api/notificaciones";
@@ -839,7 +846,7 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
 async function eliminarNotificacion(id) {
     if (!confirm(`¿Está seguro de eliminar la notificación con ID: ${id}?`)) return;
 
-    const token = localStorage.getItem("token") || "";
+    const token = sessionStorage.getItem("token") || "";
 
     try {
         const respuesta = await fetch(`http://localhost:4000/api/notificaciones/${id}`, {

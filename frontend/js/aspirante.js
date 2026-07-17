@@ -1,14 +1,14 @@
 // Variables globales
-let nivelAcademicoSeleccionado = "Maestría";
+let nivelAcademicoSeleccionado = null;
 let estacionActual = 0;
 let aspiranteData = null; // Almacenará los datos de la BD del aspirante
 let currentSolicitudId = null;
 
 // Comprobación de Sesión y Estado de Registro al inicializar la página
 document.addEventListener("DOMContentLoaded", async function () {
-    const token = localStorage.getItem('token');
-    const usuarioStr = localStorage.getItem('usuario');
-    const programaElegido = localStorage.getItem('programaPendiente') || "Maestría";
+    const token = sessionStorage.getItem('token');
+    const usuarioStr = sessionStorage.getItem('usuario');
+    const programaElegido = sessionStorage.getItem('programaPendiente');
 
     if (!token || !usuarioStr) {
         // Redirigir al login si se accede directamente a aspirante.html sin sesión
@@ -38,6 +38,25 @@ document.addEventListener("DOMContentLoaded", async function () {
                 if (lblNombre) lblNombre.innerText = `${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido}`;
                 if (lblCorreo) lblCorreo.innerText = aspiranteData.correo;
                 if (lblTelefono) lblTelefono.innerText = aspiranteData.telefono;
+
+                // --- RESTAURAR SESION DE SOLICITUD ---
+                try {
+                    const resSoli = await fetch(`http://localhost:4000/api/solicitud/activa/${aspiranteData.id}`);
+                    if (resSoli.ok) {
+                        const soliData = await resSoli.json();
+                        if (soliData.existe) {
+                            // Reanudamos la UI del usuario
+                            currentSolicitudId = soliData.idSolicitud;
+                            nivelAcademicoSeleccionado = soliData.nivel === 'DOCTORADO' ? 'Doctorado' : 'Maestría';
+                            prepararFlujoEstaciones(nivelAcademicoSeleccionado, soliData.idConvocatoria);
+                            return; // Salimos para no ejecutar el código de abajo
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error al buscar solicitud activa:", e);
+                }
+                // -------------------------------------
+
             } else {
                 if (saludo) saludo.innerText = `Hola Bienvenid@, Aspirante`;
             }
@@ -46,8 +65,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         console.error("Error obteniendo datos del aspirante:", e);
     }
 
-    // Activar módulos si venía de un redireccionamiento
-    activarModulosPostRegistro(programaElegido);
+    // Activar módulos si venía de un redireccionamiento y no se reanudó nada arriba
+    if (programaElegido) {
+        activarModulosPostRegistro(programaElegido);
+    }
 });
 
 /**
@@ -92,7 +113,7 @@ async function cargarNotificaciones() {
     try {
         const res = await fetch('http://localhost:4000/api/notificaciones', {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${sessionStorage.getItem('token')}`
             }
         });
 
@@ -125,21 +146,21 @@ async function cargarNotificaciones() {
  * Flujo: Al dar clic en Maestría o Doctorado desde el panel principal deslogueado
  */
 function seleccionarPrograma(nombrePrograma) {
-    const token = localStorage.getItem('token');
-    const usuario = localStorage.getItem('usuario');
+    const token = sessionStorage.getItem('token');
+    const usuario = sessionStorage.getItem('usuario');
 
     // SI NO HA INICIADO SESIÓN (Es un aspirante nuevo o sin credenciales activas)
     if (!token || !usuario) {
         alert(`Para postularte a la ${nombrePrograma} debes confirmar tus credenciales de registro. Redirigiendo...`);
 
         // Guardamos temporalmente qué programa seleccionó
-        localStorage.setItem('programaPendiente', nombrePrograma);
+        sessionStorage.setItem('programaPendiente', nombrePrograma);
 
         // Lo mandamos al formulario de registro limpio (registro.html)
         window.location.href = "registro.html";
     } else {
         // SI YA TIENE CUENTA E INICIÓ SESIÓN: Desbloquea y activa los módulos en el acto
-        localStorage.setItem('programaPendiente', nombrePrograma);
+        sessionStorage.setItem('programaPendiente', nombrePrograma);
         activarModulosPostRegistro(nombrePrograma);
     }
 }
@@ -171,10 +192,9 @@ async function activarModulosPostRegistro(nombrePrograma) {
             const respuesta = await fetch('/api/convocatorias');
             if (respuesta.ok) {
                 const convocatorias = await respuesta.json();
-                const activas = convocatorias.filter(c => c.estado === 'Activa' && c.posgrado_tipo === nivel);
+                const activas = convocatorias.filter(c => c.estado === 'Activa' && c.tipo === nivel);
 
                 htmlConvocatorias = `<h3>Oferta Académica Desbloqueada: ${nivel === 'DOCTORADO' ? 'Doctorados' : 'Maestrías'} FIE</h3><br>`;
-
                 if (activas.length === 0) {
                     htmlConvocatorias += `<p style="color: #555;">No hay convocatorias abiertas en este momento para este nivel.</p>`;
                 } else {
@@ -228,13 +248,18 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
             },
             body: JSON.stringify({
                 idAspi: aspiranteData.id,
-                idConvocatoria: idConvocatoria
+                idC: idConvocatoria
             })
         });
 
         if (respuestaSoli.ok) {
             const dataSoli = await respuestaSoli.json();
             currentSolicitudId = dataSoli.idSolicitud;
+            bloquearConvocatorias();
+        } else if (respuestaSoli.status === 409) {
+            const errData = await respuestaSoli.json();
+            alert(errData.mensaje);
+            return;
         } else {
             alert("Hubo un error al crear la solicitud en el servidor.");
             return;
@@ -245,7 +270,7 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
         return;
     }
 
-    if (idConvocatoria) localStorage.setItem('idConvocatoriaPendiente', idConvocatoria);
+    if (idConvocatoria) sessionStorage.setItem('idConvocatoriaPendiente', idConvocatoria);
     nivelAcademicoSeleccionado = nivel;
 
     // Mostrar pestaña de Documentos ahora que ya seleccionó convocatoria
@@ -563,14 +588,13 @@ function actualizarGraficaProceso() {
  * Limpieza de sesión total
  */
 function cerrarSesion() {
-    localStorage.clear();
+    sessionStorage.clear();
     window.location.href = 'login.html';
 }
 
 // Función para regresar a la selección de Maestría/Doctorado sin reiniciar sesión
 function regresarAConvocatorias() {
-    const confirmacion = confirm("¿Estás seguro de que deseas volver? Si ya iniciaste un registro, podrías perder tu progreso actual.");
-    if (!confirmacion) return;
+
 
     // 1. Volvemos a mostrar el contenedor con las dos tarjetas originales
     document.getElementById('seleccion-programa').style.display = 'flex';
@@ -598,3 +622,49 @@ window.addEventListener('click', function () {
         dropdown.classList.remove('show');
     }
 });
+// --- NUEVAS FUNCIONES DE SEGURIDAD Y CANCELACION ---
+
+function bloquearConvocatorias() {
+    const seleccion = document.getElementById('seleccion-programa');
+    const lista = document.getElementById('lista-programas-abiertos');
+    const bloqueo = document.getElementById('bloqueo-convocatoria');
+
+    if (seleccion) seleccion.style.display = 'none';
+    if (lista) lista.style.display = 'none';
+    if (bloqueo) bloqueo.style.display = 'block';
+}
+
+async function cancelarSolicitudActual() {
+    if (!confirm("¿Estás seguro que deseas cancelar todo el progreso de esta solicitud? No se puede deshacer.")) return;
+    if (!currentSolicitudId) return;
+
+    try {
+        const res = await fetch(`http://localhost:4000/api/solicitud/cancelar/${currentSolicitudId}`, {
+            method: 'PUT'
+        });
+
+        if (res.ok) {
+            alert("Solicitud cancelada. Eres libre de iniciar una nueva.");
+            currentSolicitudId = null;
+            sessionStorage.removeItem('idConvocatoriaPendiente');
+            sessionStorage.removeItem('programaPendiente');
+
+            // Desbloquear la UI
+            const seleccion = document.getElementById('seleccion-programa');
+            const bloqueo = document.getElementById('bloqueo-convocatoria');
+            if (seleccion) seleccion.style.display = 'flex';
+            if (bloqueo) bloqueo.style.display = 'none';
+
+            // Ocultar sección de documentos
+            document.getElementById('nav-documentos').classList.add('hidden');
+
+            // Regresar a la vista de convocatorias
+            switchView('convocatorias');
+        } else {
+            alert("Hubo un error al cancelar la solicitud.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Error de red al intentar cancelar.");
+    }
+}

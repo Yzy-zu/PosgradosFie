@@ -28,8 +28,8 @@ formulario.addEventListener("submit", async (e) => {
         }
 
         // Guardar token e información del usuario usando la variable 'datos'
-        localStorage.setItem("usuario", JSON.stringify(datos.usuario));
-        localStorage.setItem("token", datos.token);
+        sessionStorage.setItem("usuario", JSON.stringify(datos.usuario));
+        sessionStorage.setItem("token", datos.token);
 
         switch (datos.usuario.rol) {
             case "ADMIN":
