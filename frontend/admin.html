@@ -314,11 +314,10 @@
 
     <!-- Modal Convocatoria -->
     <div class="modal fade" id="modalConvocatoria" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header d-flex justify-content-between align-items-center">
-                    <h5 class="modal-title" id="tituloModalConvocatoria"><i class="fa-solid fa-bullhorn"></i> Nueva
-                        Convocatoria</h5>
+                    <h5 class="modal-title" id="tituloModalConvocatoria"><i class="fa-solid fa-bullhorn"></i> Nueva Convocatoria</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
@@ -326,63 +325,69 @@
                     <form id="formConvocatoria">
                         <input type="hidden" id="idConvocatoriaForm">
 
-                        <div class="mb-3">
-                            <label class="form-label">Posgrado</label>
-                            <select id="convocatoria_posgrado" class="form-select" required>
-                                <option value="">Seleccione un posgrado...</option>
-                            </select>
-                        </div>
+                        <div class="row">
+                            <!-- Lado Izquierdo: Detalles Básicos -->
+                            <div class="col-md-6 border-end pe-4">
+                                <h6 class="text-primary mb-3"><i class="fa-solid fa-circle-info"></i> Información General</h6>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-muted">Posgrado</label>
+                                    <select id="convocatoria_posgrado" class="form-select" required>
+                                        <option value="">Seleccione un posgrado...</option>
+                                    </select>
+                                </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Nombre de la Convocatoria</label>
-                            <input type="text" id="convocatoria_nombre" class="form-control" required>
-                        </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-muted">Nombre de la Convocatoria</label>
+                                    <input type="text" id="convocatoria_nombre" class="form-control" required>
+                                </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Descripción</label>
-                            <textarea id="convocatoria_descripcion" class="form-control" rows="3"></textarea>
-                        </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-muted">Descripción</label>
+                                    <textarea id="convocatoria_descripcion" class="form-control" rows="3"></textarea>
+                                </div>
 
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <label class="form-label">Fecha Inicio</label>
-                                <input type="date" id="convocatoria_fecha_inicio" class="form-control" required>
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold text-muted">Fecha Inicio</label>
+                                        <input type="date" id="convocatoria_fecha_inicio" class="form-control" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold text-muted">Fecha Fin</label>
+                                        <input type="date" id="convocatoria_fecha_fin" class="form-control" required>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-muted">Estado</label>
+                                    <select id="convocatoria_estado" class="form-select">
+                                        <option value="Borrador">Borrador</option>
+                                        <option value="Activa">Activa</option>
+                                        <option value="Evaluacion">Evaluación</option>
+                                        <option value="Cerrada">Cerrada</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="col-6">
-                                <label class="form-label">Fecha Fin</label>
-                                <input type="date" id="convocatoria_fecha_fin" class="form-control" required>
-                            </div>
-                        </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Estado</label>
-                            <select id="convocatoria_estado" class="form-select">
-                                <option value="Borrador">Borrador</option>
-                                <option value="Activa">Activa</option>
-                                <option value="Evaluacion">Evaluación</option>
-                                <option value="Cerrada">Cerrada</option>
-                            </select>
+                            <!-- Lado Derecho: Catálogo de Requisitos -->
+                            <div class="col-md-6 ps-4">
+                                <h6 class="text-primary mb-3"><i class="fa-solid fa-list-check"></i> Requisitos Solicitados</h6>
+                                <p class="text-muted small mb-3">Seleccione los requisitos que los aspirantes deberán cumplir. Marque la casilla de "Obligatorio" si el documento es indispensable.</p>
+                                
+                                <div id="contenedorRequisitos" class="p-3 bg-light border rounded" style="max-height: 450px; overflow-y: auto;">
+                                    <!-- Los requisitos dinámicos (Checkboxes) se insertarán aquí desde la API -->
+                                    <p class="text-center text-muted"><i class="fa-solid fa-spinner fa-spin"></i> Cargando catálogo...</p>
+                                </div>
+                            </div>
                         </div>
 
                         <hr class="my-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label mb-0 fw-bold" style="color: #2c3e50;">Requisitos
-                                Solicitados</label>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="agregarRequisitoUI()">
-                                <i class="fa-solid fa-plus"></i> Añadir Requisito
-                            </button>
-                        </div>
-                        <div id="contenedorRequisitos" class="mb-3">
-                            <!-- Los requisitos dinámicos se insertarán aquí -->
-                        </div>
-
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-danger" id="btnEliminarConvocatoria"
-                                style="display:none;" onclick="eliminarConvocatoria()">
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-danger" id="btnEliminarConvocatoria" style="display:none;" onclick="eliminarConvocatoria()">
                                 <i class="fa-solid fa-trash"></i> Eliminar
                             </button>
                             <button type="submit" class="btn btn-primary" style="margin-left:auto;">
-                                <i class="fa-solid fa-floppy-disk"></i> Guardar
+                                <i class="fa-solid fa-floppy-disk"></i> Guardar Convocatoria
                             </button>
                         </div>
                     </form>

@@ -27,6 +27,7 @@ app.use('/api/aspirante', require('./routes/aspirante.routes'));
 //app.use('/api/pagos', require('./routes/pagos.routes'));
 app.use('/api/solicitud', require('./routes/solicitud.routes'));
 app.use('/api/documentos', require('./routes/documentos.routes'));
+app.use('/api/requisitos', require('./routes/requisitos.routes'));
 
 
 

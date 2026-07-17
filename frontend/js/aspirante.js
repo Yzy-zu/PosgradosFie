@@ -39,16 +39,23 @@ document.addEventListener("DOMContentLoaded", async function () {
                 if (lblCorreo) lblCorreo.innerText = aspiranteData.correo;
                 if (lblTelefono) lblTelefono.innerText = aspiranteData.telefono;
 
-                // --- RESTAURAR SESION DE SOLICITUD ---
+                // Cargar modalidades de admisión dinámicas
+                cargarModalidadesAdmision();
+
+                // --- RESTAURAR SESION DE SOLICITUD (HIDRATACIÓN) ---
                 try {
                     const resSoli = await fetch(`http://localhost:4000/api/solicitud/activa/${aspiranteData.id}`);
                     if (resSoli.ok) {
                         const soliData = await resSoli.json();
                         if (soliData.existe) {
-                            // Reanudamos la UI del usuario
-                            currentSolicitudId = soliData.idSolicitud;
-                            nivelAcademicoSeleccionado = soliData.nivel === 'DOCTORADO' ? 'Doctorado' : 'Maestría';
-                            prepararFlujoEstaciones(nivelAcademicoSeleccionado, soliData.idConvocatoria);
+                            // Hidratamos la UI del usuario desde el Backend
+                            hidratarUI(soliData);
+                            // Set initial hash route if not set
+                            if (!window.location.hash) {
+                                window.location.hash = soliData.estacion_actual > 0 ? 'documentos' : 'inicio';
+                            }
+                            // Ocultamos el loader inicial si hubiera
+                            ocultarLoader();
                             return; // Salimos para no ejecutar el código de abajo
                         }
                     }
@@ -71,18 +78,40 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 });
 
+// ==== MANEJO DE ESTADO Y UX (GLOBAL LOADER) ====
+function mostrarLoader() {
+    const loader = document.getElementById('global-loader');
+    if (loader) loader.classList.add('active');
+}
+
+function ocultarLoader() {
+    const loader = document.getElementById('global-loader');
+    if (loader) loader.classList.remove('active');
+}
+
 /**
- * Control del cambio de paneles (Navegación lateral)
+ * Control del cambio de paneles (Navegación lateral con Hash Router)
  */
 function switchView(viewId) {
+    if (window.location.hash !== `#${viewId}`) {
+        window.location.hash = viewId;
+        return; // El evento onhashchange se encargará de hacer el render
+    }
+
     // Ocultar todas las secciones de contenido
     const sections = document.querySelectorAll('.view-section');
-    sections.forEach(sec => sec.style.display = 'none');
+    sections.forEach(sec => {
+        sec.style.display = 'none';
+        sec.classList.remove('fade-in');
+    });
 
-    // Mostrar la sección seleccionada
+    // Mostrar la sección seleccionada con fade-in
     const targetSection = document.getElementById(`view-${viewId}`);
     if (targetSection) {
         targetSection.style.display = 'block';
+        // Forzar un reflow para que la animación se reinicie
+        void targetSection.offsetWidth;
+        targetSection.classList.add('fade-in');
     }
 
     // Actualizar estados visuales en la barra de navegación lateral
@@ -99,6 +128,12 @@ function switchView(viewId) {
         cargarNotificaciones();
     }
 }
+
+// Router Event Listener
+window.addEventListener('hashchange', () => {
+    const hash = window.location.hash.replace('#', '') || 'inicio';
+    switchView(hash);
+});
 
 /**
  * Carga las notificaciones desde la API
@@ -296,8 +331,6 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
         // Cambiar paneles visibles dentro de las estaciones
         if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'none';
         if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'block';
-        if (document.getElementById('grid-maestria-1')) document.getElementById('grid-maestria-1').style.display = 'none';
-        if (document.getElementById('grid-doctorado-1')) document.getElementById('grid-doctorado-1').style.display = 'block';
         if (document.getElementById('grid-maestria-2')) document.getElementById('grid-maestria-2').style.display = 'none';
         if (document.getElementById('grid-doctorado-2')) document.getElementById('grid-doctorado-2').style.display = 'block';
         if (document.getElementById('grid-maestria-3')) document.getElementById('grid-maestria-3').style.display = 'none';
@@ -326,8 +359,6 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
 
         if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'block';
         if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'none';
-        if (document.getElementById('grid-maestria-1')) document.getElementById('grid-maestria-1').style.display = 'flex';
-        if (document.getElementById('grid-doctorado-1')) document.getElementById('grid-doctorado-1').style.display = 'none';
         if (document.getElementById('grid-maestria-2')) document.getElementById('grid-maestria-2').style.display = 'flex';
         if (document.getElementById('grid-doctorado-2')) document.getElementById('grid-doctorado-2').style.display = 'none';
         if (document.getElementById('grid-maestria-3')) document.getElementById('grid-maestria-3').style.display = 'flex';
@@ -339,6 +370,11 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
             document.getElementById('btn-next-0').disabled = false;
         }
         actualizarCostosAdmision();
+    }
+
+    // Cargar Requisitos Documentales para la estación 1 basados en la convocatoria
+    if (idConvocatoria) {
+        cargarRequisitosDocumentales(idConvocatoria);
     }
 
     // Redirigir a la vista de documentos
@@ -368,7 +404,28 @@ async function avanzarEstacion(nuevaEstacion) {
     const boton = document.getElementById(`btn-next-${estacionActual}`);
     if (boton) boton.disabled = true; // Deshabilitar temporalmente para evitar doble click
 
+    // Interceptar si es la estación 0 para guardar la modalidad de admisión
+    if (estacionActual === 0 && currentSolicitudId) {
+        const inputModalidad = document.querySelector('input[name="modalidad"]:checked');
+        if (inputModalidad) {
+            try {
+                const res = await fetch(`http://localhost:4000/api/solicitud/modalidad/${currentSolicitudId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tipoAdmision: inputModalidad.value })
+                });
+                if (!res.ok) {
+                    console.error("Error al guardar la modalidad en la base de datos.");
+                }
+            } catch (e) {
+                console.error("Error de conexión al guardar modalidad:", e);
+            }
+        }
+    }
+
     const form = document.getElementById(`form-estacion-${estacionActual}`);
+    mostrarLoader();
+
     if (form && currentSolicitudId) {
         const formData = new FormData(form);
         // Iterar sobre los archivos seleccionados en este form
@@ -376,7 +433,8 @@ async function avanzarEstacion(nuevaEstacion) {
             if (file && file.size > 0) {
                 const subidaData = new FormData();
                 subidaData.append('idSoli', currentSolicitudId);
-                subidaData.append('tipoDoc', name); // 'ACTA_NACIMIENTO', 'CV', etc.
+                // El name del input ahora es el idRequisito dinámico
+                subidaData.append('idRequisito', name); 
                 subidaData.append('archivo', file);
 
                 try {
@@ -395,38 +453,60 @@ async function avanzarEstacion(nuevaEstacion) {
         }
     }
 
+    // Guardar progreso (estacion_actual) en la base de datos
+    if (currentSolicitudId) {
+        try {
+            await fetch(`http://localhost:4000/api/solicitud/estacion/${currentSolicitudId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estacion_actual: nuevaEstacion })
+            });
+        } catch (e) {
+            console.error("Error al actualizar la estación en DB:", e);
+        }
+    }
+
+    ocultarLoader();
     if (boton) boton.disabled = false;
     cambiarEstacion(nuevaEstacion);
 }
 
 /**
- * Actualización Dinámica de Costos (Estación 0) según las capturas del portal
+ * Actualización Dinámica (Estación 0) - Muestra el botón de Detalles y pinta la tarjeta seleccionada
  */
 function actualizarCostosAdmision() {
+    const inputs = document.querySelectorAll('input[name="modalidad"]');
+    
+    inputs.forEach(input => {
+        const card = input.closest('.radio-card');
+        const strongText = card.querySelector('strong');
+        
+        if (input.checked) {
+            // Estilo seleccionado (sólido)
+            card.style.backgroundColor = '#8a1c24';
+            card.style.borderColor = '#8a1c24';
+            card.style.borderStyle = 'solid';
+            if (strongText) strongText.style.color = '#ffffff';
+        } else {
+            // Estilo normal (punteado)
+            card.style.backgroundColor = '#f8f9fa';
+            card.style.borderColor = '#8a1c24';
+            card.style.borderStyle = 'dashed';
+            if (strongText) strongText.style.color = '#8a1c24';
+        }
+    });
+
+    // Mostrar el contenedor de detalles de admisión
+    const detallesBox = document.getElementById('contenedor-detalles-admision');
+    if (detallesBox) {
+        detallesBox.style.display = 'block';
+    }
+}
+
+function mostrarDetallesAdmision() {
     const inputs = document.querySelector('input[name="modalidad"]:checked');
-    if (!inputs) return;
-
-    const seleccionada = inputs.value;
-    const costosBox = document.getElementById('box-costos-desglose');
-
-    if (!costosBox) return;
-
-    if (seleccionada === 'prope') {
-        costosBox.innerHTML = `
-            <h4>Aranceles y Conceptos de Pago (Maestría)</h4>
-            <div class="costo-linea"><span>Curso Propedéutico Obligatorio:</span> <strong>$ 2,800.00 MXN</strong></div>
-        `;
-    } else if (seleccionada === 'examen') {
-        costosBox.innerHTML = `
-            <h4>Aranceles y Conceptos de Pago (Maestría)</h4>
-            <div class="costo-linea"><span>Examen de Admisión General:</span> <strong>$ 1,000.00 MXN</strong></div>
-        `;
-    } else {
-        costosBox.innerHTML = `
-            <h4>Aranceles y Conceptos de Pago (Maestría)</h4>
-            <div class="costo-linea"><span style="color:#27ae60;">✓ Exención de Aranceles:</span> <strong>$ 0.00 MXN</strong></div>
-            <small style="color:#777; display:block; margin-top:5px;">El ingreso por promedio no genera cobro de curso propedéutico ni examen interno.</small>
-        `;
+    if (inputs) {
+        alert("Aquí irán los detalles (Costos, descripción, fechas) de la modalidad: " + inputs.value);
     }
 }
 
@@ -434,14 +514,27 @@ function actualizarCostosAdmision() {
  * Valida de forma dinámica los archivos requeridos dependiendo del posgrado seleccionado para habilitar botones
  */
 function verificarArchivosEstacion(estacion) {
+    if (estacion === 1) {
+        // Validación dinámica para la estación 1 (Aplica tanto para maestría como para doctorado)
+        const contenedor = document.getElementById('contenedor-requisitos-dinamicos');
+        if (contenedor) {
+            const inputsRequeridos = contenedor.querySelectorAll('input[type="file"][required]');
+            let allValid = true;
+            inputsRequeridos.forEach(input => {
+                if (input.files.length === 0) {
+                    allValid = false;
+                }
+            });
+            const btn = document.getElementById('btn-next-1');
+            if (btn) btn.disabled = !allValid;
+        }
+        return;
+    }
+
     if (nivelAcademicoSeleccionado === "Doctorado") {
         if (estacion === 0) {
             const grado = document.getElementById('file-grado-maestria').files.length > 0;
             document.getElementById('btn-next-0').disabled = !grado;
-        }
-        else if (estacion === 1) {
-            const cv = document.getElementById('file-cv').files.length > 0;
-            document.getElementById('btn-next-1').disabled = !cv;
         }
         else if (estacion === 2) {
             const propuesta = document.getElementById('file-propuesta').files.length > 0;
@@ -457,14 +550,7 @@ function verificarArchivosEstacion(estacion) {
         }
     } else {
         // Reglas de validación estándar de Maestría
-        if (estacion === 1) {
-            const acta = document.getElementById('file-acta').files.length > 0;
-            const curp = document.getElementById('file-curp').files.length > 0;
-            const ine = document.getElementById('file-ine').files.length > 0;
-            const foto = document.getElementById('file-foto').files.length > 0;
-            document.getElementById('btn-next-1').disabled = !(acta && curp && ine && foto);
-        }
-        else if (estacion === 2) {
+        if (estacion === 2) {
             const certificado = document.getElementById('file-certificado').files.length > 0;
             document.getElementById('btn-next-2').disabled = !certificado;
         }
@@ -667,4 +753,152 @@ async function cancelarSolicitudActual() {
         console.error(e);
         alert("Error de red al intentar cancelar.");
     }
+}
+
+async function cargarModalidadesAdmision() {
+    const contenedor = document.getElementById('opciones-admision-maestria');
+    if (!contenedor) return;
+
+    try {
+        const res = await fetch('http://localhost:4000/api/solicitud/modalidades');
+        if (res.ok) {
+            const modalidades = await res.json();
+            contenedor.innerHTML = '';
+            
+            modalidades.forEach((mod, index) => {
+                const titulo = mod.replace(/_/g, ' ').replace(/\w\S*/g, w => (w.replace(/^\w/, c => c.toUpperCase())));
+                const checkedStr = index === 0 ? 'checked' : '';
+                
+                contenedor.innerHTML += `
+                    <label class="radio-card" style="display:block; flex: 1 1 220px; min-width: 220px; position:relative; padding:20px; border-radius:10px; border:2px dashed #8a1c24; cursor:pointer; text-align:center; background-color:#f8f9fa; margin: 10px;">
+                        <input type="radio" name="modalidad" value="${mod}" ${checkedStr} onchange="actualizarCostosAdmision()" style="position:absolute; opacity:0; width:0; height:0;">
+                        <div class="radio-content" style="pointer-events:none;">
+                            <strong style="display:block; font-size:16px; color:#8a1c24; margin-bottom:5px;">${index + 1}. ${titulo}</strong>
+                        </div>
+                    </label>
+                `;
+            });
+            actualizarCostosAdmision();
+        } else {
+            contenedor.innerHTML = '<p style="color: red;">Error al cargar las modalidades de admisión.</p>';
+        }
+    } catch (e) {
+        console.error("Error cargando modalidades:", e);
+    }
+}
+
+
+async function cargarRequisitosDocumentales(idConvocatoria) {
+    const contenedor = document.getElementById('contenedor-requisitos-dinamicos');
+    if (!contenedor) return;
+
+    try {
+        const res = await fetch(`http://localhost:4000/api/convocatorias/${idConvocatoria}/requisitos`);
+        if (res.ok) {
+            const requisitos = await res.json();
+            contenedor.innerHTML = '';
+            
+            if (requisitos.length === 0) {
+                contenedor.innerHTML = '<p style="color: #666; font-style: italic;">No hay requisitos documentales configurados para esta convocatoria.</p>';
+                return;
+            }
+
+            requisitos.forEach(req => {
+                const isRequired = req.obligatorio ? '*' : '';
+                const requiredAttr = req.obligatorio ? 'required' : '';
+                
+                contenedor.innerHTML += `
+                    <div class="file-box">
+                        <label><i class="fa-solid fa-file-arrow-up"></i> ${req.descripcion} <span style="color:red;">${isRequired}</span></label>
+                        <input type="file" name="${req.id}" accept=".pdf" onchange="verificarArchivosEstacion(1)" ${requiredAttr}>
+                    </div>
+                `;
+            });
+            
+            // Re-ejecutar verificación en caso de que todo sea opcional
+            verificarArchivosEstacion(1);
+        } else {
+            contenedor.innerHTML = '<p style="color: red;">Error al cargar los requisitos de la convocatoria.</p>';
+        }
+    } catch (e) {
+        console.error("Error cargando requisitos:", e);
+        contenedor.innerHTML = '<p style="color: red;">Error de conexión al cargar requisitos.</p>';
+    }
+}
+
+/**
+ * Hidrata la UI con el progreso guardado en la base de datos (Backend como fuente de verdad)
+ */
+function hidratarUI(soliData) {
+    currentSolicitudId = soliData.idSolicitud || soliData.id;
+    nivelAcademicoSeleccionado = soliData.nivel === 'DOCTORADO' ? 'Doctorado' : 'Maestría';
+    const estacionGuardada = soliData.estacion_actual || 0;
+
+    // Desbloquear navegación
+    bloquearConvocatorias();
+    const navDocumentos = document.getElementById('nav-documentos');
+    if (navDocumentos) {
+        navDocumentos.style.display = 'block';
+        navDocumentos.classList.remove('hidden');
+    }
+
+    // Configurar paneles según el nivel
+    configurarPanelesNivel(nivelAcademicoSeleccionado, soliData.idConvocatoria);
+
+    // Mover a la estación donde se quedó
+    if (estacionGuardada > 0) {
+        cambiarEstacion(estacionGuardada);
+    }
+}
+
+/**
+ * Extrae la lógica de pintar paneles para reusarla sin llamar a /crear
+ */
+function configurarPanelesNivel(nivel, idConvocatoria) {
+    if (idConvocatoria) sessionStorage.setItem('idConvocatoriaPendiente', idConvocatoria);
+
+    const titulo = document.getElementById('titulo-flujo-documentos');
+    const boxCostos = document.getElementById('box-costos-desglose');
+
+    if (nivel === "Doctorado") {
+        if (titulo) titulo.innerText = "Continuidad de Expediente Académico: Doctorado FIE";
+        if (document.getElementById('lbl-step-1')) document.getElementById('lbl-step-1').innerText = "CV (Heredado)";
+        if (document.getElementById('lbl-step-2')) document.getElementById('lbl-step-2').innerText = "Propuesta Proyecto";
+        if (document.getElementById('lbl-step-3')) document.getElementById('lbl-step-3').innerText = "Idioma / Cartas";
+        if (document.getElementById('lbl-step-4')) document.getElementById('lbl-step-4').innerText = "Entrevista Sínodo";
+
+        if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'none';
+        if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'block';
+        if (document.getElementById('grid-maestria-2')) document.getElementById('grid-maestria-2').style.display = 'none';
+        if (document.getElementById('grid-doctorado-2')) document.getElementById('grid-doctorado-2').style.display = 'block';
+        if (document.getElementById('grid-maestria-3')) document.getElementById('grid-maestria-3').style.display = 'none';
+        if (document.getElementById('grid-doctorado-3')) document.getElementById('grid-doctorado-3').style.display = 'block';
+        if (document.getElementById('grid-maestria-4')) document.getElementById('grid-maestria-4').style.display = 'none';
+        if (document.getElementById('grid-doctorado-4')) document.getElementById('grid-doctorado-4').style.display = 'block';
+
+        if (boxCostos) {
+            boxCostos.innerHTML = `<h4>Aranceles y Conceptos de Pago (Doctorado)</h4><div class="costo-linea"><span style="color:#27ae60;">✓ Exención por Continuidad FIE:</span> <strong>$ 0.00 MXN</strong></div><small style="color:#777;">Al ser egresado directo del posgrado FIE, los derechos de examen interno quedan exentos.</small>`;
+        }
+        if (document.getElementById('btn-next-0')) document.getElementById('btn-next-0').disabled = true;
+    } else {
+        if (titulo) titulo.innerText = "Seguimiento de Trámites y Requisitos de Ingreso";
+        if (document.getElementById('lbl-step-1')) document.getElementById('lbl-step-1').innerText = "Personales";
+        if (document.getElementById('lbl-step-2')) document.getElementById('lbl-step-2').innerText = "Académicos";
+        if (document.getElementById('lbl-step-3')) document.getElementById('lbl-step-3').innerText = "Cartas";
+        if (document.getElementById('lbl-step-4')) document.getElementById('lbl-step-4').innerText = "CENEVAL";
+
+        if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'block';
+        if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'none';
+        if (document.getElementById('grid-maestria-2')) document.getElementById('grid-maestria-2').style.display = 'flex';
+        if (document.getElementById('grid-doctorado-2')) document.getElementById('grid-doctorado-2').style.display = 'none';
+        if (document.getElementById('grid-maestria-3')) document.getElementById('grid-maestria-3').style.display = 'flex';
+        if (document.getElementById('grid-doctorado-3')) document.getElementById('grid-doctorado-3').style.display = 'none';
+        if (document.getElementById('grid-maestria-4')) document.getElementById('grid-maestria-4').style.display = 'block';
+        if (document.getElementById('grid-doctorado-4')) document.getElementById('grid-doctorado-4').style.display = 'none';
+
+        if (document.getElementById('btn-next-0')) document.getElementById('btn-next-0').disabled = false;
+        actualizarCostosAdmision();
+    }
+
+    if (idConvocatoria) cargarRequisitosDocumentales(idConvocatoria);
 }

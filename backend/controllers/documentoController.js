@@ -5,12 +5,13 @@ const db = require('../database/db');
 // =======================
 const subirDocumento = (req, res) => {
 
-    const { idSoli, tipoDoc } = req.body;
+    // Soporte de compatibilidad: Extraemos idRequisito (nuevo) o tipoDoc (viejo)
+    const { idSoli, idRequisito, tipoDoc } = req.body;
 
-    // Validar campos
-    if (!idSoli || !tipoDoc) {
+    // Validar campos básicos
+    if (!idSoli || (!idRequisito && !tipoDoc)) {
         return res.status(400).json({
-            mensaje: "Todos los campos son obligatorios."
+            mensaje: "Faltan campos obligatorios para guardar el documento."
         });
     }
 
@@ -27,8 +28,7 @@ const subirDocumento = (req, res) => {
         [idSoli],
         (err, solicitud) => {
 
-            if (err)
-                return res.status(500).json(err);
+            if (err) return res.status(500).json(err);
 
             if (solicitud.length === 0) {
                 return res.status(404).json({
@@ -36,33 +36,42 @@ const subirDocumento = (req, res) => {
                 });
             }
 
-            // Guardar documento
-            db.query(
-                `INSERT INTO documento
-                (idSoli, tipoDoc, rutaArchivo)
-                VALUES (?, ?, ?)`,
-                [
-                    idSoli,
-                    tipoDoc,
-                    req.file.filename
-                ],
-                (err, resultado) => {
-
-                    if (err)
-                        return res.status(500).json(err);
-
-                    res.status(201).json({
-                        mensaje: "Documento registrado correctamente.",
-                        idDocumento: resultado.insertId
-                    });
-
-                }
-            );
-
+            if (idRequisito) {
+                // FLUJO NUEVO: Guardar documento en la NUEVA tabla solicitud_documentos
+                db.query(
+                    `INSERT INTO solicitud_documentos
+                    (idSolicitud, idRequisito, rutaArchivo, estadoValidacion)
+                    VALUES (?, ?, ?, 'PENDIENTE')`,
+                    [idSoli, idRequisito, req.file.filename],
+                    (err, resultado) => {
+                        if (err) {
+                            console.error("Error al guardar documento (nuevo):", err);
+                            return res.status(500).json(err);
+                        }
+                        res.status(201).json({ mensaje: "Documento registrado correctamente.", idDocumento: resultado.insertId });
+                    }
+                );
+            } else {
+                // FLUJO VIEJO (Compatibilidad): Guardar documento en la vieja tabla
+                db.query(
+                    `INSERT INTO documento
+                    (idSoli, tipoDoc, rutaArchivo)
+                    VALUES (?, ?, ?)`,
+                    [idSoli, tipoDoc, req.file.filename],
+                    (err, resultado) => {
+                        if (err) {
+                            console.error("Error al guardar documento (viejo):", err);
+                            return res.status(500).json(err);
+                        }
+                        res.status(201).json({ mensaje: "Documento registrado correctamente.", idDocumento: resultado.insertId });
+                    }
+                );
+            }
         }
     );
-
 };
+
+
 
 // =======================
 // Obtener todos

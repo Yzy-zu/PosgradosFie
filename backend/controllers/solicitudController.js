@@ -99,7 +99,7 @@ const getSolicitudActiva = (req, res) => {
     const { idAspi } = req.params;
 
     const query = `
-        SELECT s.id AS idSolicitud, s.idConvocatoria, c.tipo AS nivel 
+        SELECT s.*, c.tipo AS nivel 
         FROM solicitud s 
         JOIN convocatorias c ON s.idConvocatoria = c.id 
         WHERE s.idAspi = ? AND s.estado IN ('PENDIENTE', 'EN_REVISION') 
@@ -138,8 +138,71 @@ const cancelarSolicitud = (req, res) => {
     );
 };
 
+// Obtener las modalidades de admisión desde el ENUM de la BD
+const getModalidades = (req, res) => {
+    db.query("SHOW COLUMNS FROM solicitud LIKE 'tipoAdmision'", (err, resultado) => {
+        if (err) {
+            console.error("Error obteniendo modalidades:", err);
+            return res.status(500).json(err);
+        }
+
+        if (resultado.length > 0) {
+            const enumStr = resultado[0].Type;
+            // Extraer valores entre comillas simples: enum('EXAMEN_ADMISION','CURSO_PROPEDEUTICO')
+            const matches = enumStr.match(/'([^']+)'/g);
+            if (matches) {
+                const opciones = matches.map(m => m.replace(/'/g, ''));
+                return res.status(200).json(opciones);
+            }
+        }
+        
+        return res.status(404).json({ mensaje: "No se encontraron modalidades." });
+    });
+};
+
+// Actualizar la modalidad seleccionada
+const actualizarModalidad = (req, res) => {
+    const { id } = req.params;
+    const { tipoAdmision } = req.body;
+
+    if (!tipoAdmision) {
+        return res.status(400).json({ mensaje: "El tipo de admisión es requerido." });
+    }
+
+    db.query(
+        "UPDATE solicitud SET tipoAdmision = ? WHERE id = ?",
+        [tipoAdmision, id],
+        (err, resultado) => {
+            if (err) return res.status(500).json(err);
+            return res.status(200).json({ mensaje: "Modalidad actualizada correctamente." });
+        }
+    );
+};
+
+// Actualizar la estación actual de una solicitud
+const actualizarEstacion = (req, res) => {
+    const { id } = req.params;
+    const { estacion_actual } = req.body;
+
+    if (estacion_actual === undefined) {
+        return res.status(400).json({ mensaje: "Falta estacion_actual" });
+    }
+
+    db.query(
+        "UPDATE solicitud SET estacion_actual = ? WHERE id = ?",
+        [estacion_actual, id],
+        (err) => {
+            if (err) return res.status(500).json(err);
+            res.json({ mensaje: "Estación actualizada correctamente" });
+        }
+    );
+};
+
 module.exports = {
     crearSolicitud,
     getSolicitudActiva,
-    cancelarSolicitud
+    cancelarSolicitud,
+    getModalidades,
+    actualizarModalidad,
+    actualizarEstacion
 };

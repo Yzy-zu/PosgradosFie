@@ -7,13 +7,16 @@ const {
     obtenerConvocatoria,
     crearConvocatorias,
     actualizarConvocatorias,
-    eliminarConvocatorias
+    eliminarConvocatorias,
+    obtenerRequisitosConvocatoria
 
 } = require('../controllers/convocatoriasController');
 
 router.get('/', obtenerConvocatorias);
 
 router.get('/:id', obtenerConvocatoria);
+
+router.get('/:id/requisitos', obtenerRequisitosConvocatoria);
 
 router.post('/', crearConvocatorias);
 

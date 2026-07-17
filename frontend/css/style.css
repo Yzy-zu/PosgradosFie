@@ -280,39 +280,46 @@ body {
 /* Opciones de Modalidad (Radio Cards) */
 .modalidad-opciones {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 15px;
     margin-bottom: 25px;
+    width: 100%;
 }
 
 .radio-card {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    background: #fdfdfd;
-    border: 1px solid #ddd;
-    padding: 15px;
-    border-radius: 6px;
+    display: block;
+    position: relative;
+    background-color: #f8f9fa; /* Fondo suave */
+    border: 2px dashed #8a1c24; /* Borde punteado guinda */
+    border-radius: 12px;
+    padding: 30px 20px;
+    text-align: center;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background-color 0.3s, border-color 0.3s;
+    flex: 1 1 220px; /* Crece, se encoge y tiene base de 220px */
 }
 
 .radio-card:hover {
-    background: #f5f5f5;
+    background-color: #f1e9ea;
+}
+
+.radio-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 
 .radio-content {
-    display: flex;
-    flex-direction: column;
+    display: block;
+    pointer-events: none;
 }
 
 .radio-content strong {
-    color: #1a1f2c;
-}
-
-.radio-content span {
-    font-size: 13px;
-    color: #666;
+    color: #8a1c24;
+    font-size: 16px;
+    margin-bottom: 10px;
+    display: block;
 }
 
 /* Cuadro de costos */
@@ -1165,4 +1172,51 @@ body {
     color: #555;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
     white-space: pre-line;
+}
+/* Animaciones y Global Loader (UX) */
+.fade-in {
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Loader Global Overlay */
+#global-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#global-loader.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #8a1c24; /* Guinda */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

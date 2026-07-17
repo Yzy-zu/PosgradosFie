@@ -11,19 +11,21 @@
 
 <body>
 
+    <!-- Global Loader (UX) -->
+    <div id="global-loader">
+        <div class="spinner"></div>
+        <p style="color:#333; font-weight:bold; font-size:16px;">Cargando información, por favor espera...</p>
+    </div>
+
     <nav class="sidebar">
         <h2><img src="css/umsnh-logo.png" alt="Logo"
                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; margin-right: 10px; vertical-align: middle;">
             FIE ASPIRANTE</h2>
-        <a id="nav-inicio" onclick="switchView('inicio')" class="active"><i class="fa-solid fa-house"></i> Inicio / Menú
-            Principal</a>
-        <a id="nav-proceso" onclick="switchView('proceso')"><i class="fa-solid fa-chart-pie"></i> Vista de Proceso</a>
-        <a id="nav-convocatorias" onclick="switchView('convocatorias')"><i class="fa-solid fa-bullhorn"></i>
-            Convocatorias</a>
-        <a id="nav-documentos" onclick="switchView('documentos')" class="hidden"><i
-                class="fa-solid fa-file-invoice-dollar"></i> Documentos y Pagos</a>
-        <a id="nav-notificaciones" onclick="switchView('notificaciones')"><i class="fa-solid fa-bell"></i>
-            Notificaciones</a>
+        <a id="nav-inicio" href="#inicio" class="active"><i class="fa-solid fa-house"></i> Inicio / Menú Principal</a>
+        <a id="nav-proceso" href="#proceso"><i class="fa-solid fa-chart-pie"></i> Vista de Proceso</a>
+        <a id="nav-convocatorias" href="#convocatorias"><i class="fa-solid fa-bullhorn"></i> Convocatorias</a>
+        <a id="nav-documentos" href="#documentos" class="hidden"><i class="fa-solid fa-file-invoice-dollar"></i> Documentos y Pagos</a>
+        <a id="nav-notificaciones" href="#notificaciones"><i class="fa-solid fa-bell"></i> Notificaciones</a>
     </nav>
 
     <main class="main-content">
@@ -171,30 +173,7 @@
                         modalidad de ingreso:</p>
 
                     <div id="opciones-admision-maestria" class="modalidad-opciones">
-                        <label class="radio-card">
-                            <input type="radio" name="modalidad" value="examen" checked
-                                onchange="actualizarCostosAdmision()">
-                            <div class="radio-content"><strong>1. Examen de Admisión</strong><span>Examen escrito sobre
-                                    temas comunes y específicos.</span></div>
-                        </label>
-                        <label class="radio-card">
-                            <input type="radio" name="modalidad" value="prope" onchange="actualizarCostosAdmision()">
-                            <div class="radio-content"><strong>2. Curso Propedéutico</strong><span>Cursar y aprobar el
-                                    bloque académico asignado.</span></div>
-                        </label>
-                        <label class="radio-card">
-                            <input type="radio" name="modalidad" value="promedio-fie"
-                                onchange="actualizarCostosAdmision()">
-                            <div class="radio-content"><strong>3. Ingreso por Promedio (Egresados
-                                    FIE)</strong><span>Mínimo de 8.0 general en su tira de materias.</span></div>
-                        </label>
-                        <label class="radio-card">
-                            <input type="radio" name="modalidad" value="examen-especial"
-                                onchange="actualizarCostosAdmision()">
-                            <div class="radio-content"><strong>4. Examen de Conocimientos Especiales
-                                    (EXA-FIE)</strong><span>Evaluación directa aprobada por el Comité Técnico del
-                                    Posgrado.</span></div>
-                        </label>
+                        <!-- Las opciones de admisión se inyectan dinámicamente desde el backend -->
                     </div>
 
                     <form id="form-estacion-0">
@@ -209,10 +188,11 @@
                                 onchange="verificarArchivosEstacion(0)">
                         </div>
 
-                        <div class="costos-box" id="box-costos-desglose" style="margin-top:15px;">
-                            <h4><i class="fa-solid fa-receipt"></i> Aranceles y Conceptos de Pago</h4>
-                            <div class="costo-linea"><span>Examen de Admisión:</span> <strong>$ 1,000.00 MXN</strong>
-                            </div>
+                        <!-- Botón para ver más detalles, que será implementado en el futuro -->
+                        <div id="contenedor-detalles-admision" style="margin-top: 10px; display: none;">
+                            <button type="button" class="btn-secondary" style="font-size: 13px;" onclick="mostrarDetallesAdmision()">
+                                <i class="fa-solid fa-circle-info"></i> Más Detalles de esta Modalidad
+                            </button>
                         </div>
                         <br>
                         <button type="button" class="btn-primary" id="btn-next-0"
@@ -224,40 +204,11 @@
 
             <div id="panel-estacion-1" class="station-panel">
                 <div class="card">
-                    <h3><i class="fa-solid fa-address-card" style="color:#8a1c24;"></i> Estación 1: Documentación de
-                        Identidad</h3>
+                    <h3><i class="fa-solid fa-address-card" style="color:#8a1c24;"></i> Estación 1: Requisitos Documentales</h3>
+                    <p style="margin-bottom: 15px; color: #555;">Sube los documentos solicitados por la convocatoria en formato PDF (excepto fotografía, si aplica). Los campos con asterisco (*) son obligatorios.</p>
                     <form id="form-estacion-1">
-                        <div id="grid-maestria-1" class="file-grid">
-                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Acta de Nacimiento
-                                    *</label><input type="file" id="file-acta" name="ACTA_NACIMIENTO" accept=".pdf"
-                                    onchange="verificarArchivosEstacion(1)">
-                            </div>
-                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Clave CURP
-                                    *</label><input type="file" id="file-curp" name="CURP" accept=".pdf"
-                                    onchange="verificarArchivosEstacion(1)">
-                            </div>
-                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Identificación
-                                    Oficial
-                                    (INE) *</label><input type="file" id="file-ine" name="COPIA_INE_U_OTRAS"
-                                    accept=".pdf" onchange="verificarArchivosEstacion(1)">
-                            </div>
-                            <div class="file-box"><label><i class="fa-solid fa-image"></i> Fotografía Tamaño Infantil
-                                    *</label><input type="file" id="file-foto" name="FTO_INFANTIL"
-                                    accept=".jpg,.jpeg,.png" onchange="verificarArchivosEstacion(1)">
-                            </div>
-                        </div>
-
-                        <div id="grid-doctorado-1" style="display:none;">
-                            <p style="color:green; font-weight:bold; margin-bottom:15px;"><i
-                                    class="fa-solid fa-circle-check"></i> Requisitos de identidad validados y heredados
-                                de
-                                tu expediente de maestría.</p>
-                            <div class="file-box" style="max-width:400px; border-color:#8a1c24;">
-                                <label><i class="fa-solid fa-file-pdf"></i> Currículum Vítae (CV) Único Actualizado
-                                    *</label>
-                                <input type="file" id="file-cv" name="CV" accept=".pdf"
-                                    onchange="verificarArchivosEstacion(1)">
-                            </div>
+                        <div id="contenedor-requisitos-dinamicos" class="file-grid">
+                            <!-- Los requisitos se inyectan dinámicamente desde el backend -->
                         </div>
                         <br>
                         <div style="display:flex; gap:15px;">
