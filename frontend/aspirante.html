@@ -154,15 +154,10 @@
             <br>
 
             <div class="stepper-wrapper">
-                <div class="step-node active" id="node-0">0<span class="step-label">Admisión / Grado</span></div>
-                <div class="step-node" id="node-1">1<span class="step-label" id="lbl-step-1">Personales / CV</span>
-                </div>
-                <div class="step-node" id="node-2">2<span class="step-label" id="lbl-step-2">Académicos /
-                        Proyecto</span></div>
-                <div class="step-node" id="node-3">3<span class="step-label" id="lbl-step-3">Cartas / Idioma</span>
-                </div>
-                <div class="step-node" id="node-4">4<span class="step-label" id="lbl-step-4">CENEVAL / Entrevista</span>
-                </div>
+                <div class="step-node active" id="node-0">0<span class="step-label">Admisión</span></div>
+                <div class="step-node" id="node-1">1<span class="step-label" id="lbl-step-1">Identidad y Generales</span></div>
+                <div class="step-node" id="node-2">2<span class="step-label" id="lbl-step-2">Académicos</span></div>
+                <div class="step-node" id="node-3">3<span class="step-label" id="lbl-step-3">Evaluación</span></div>
             </div>
 
             <div id="panel-estacion-0" class="station-panel active-panel">
@@ -204,19 +199,16 @@
 
             <div id="panel-estacion-1" class="station-panel">
                 <div class="card">
-                    <h3><i class="fa-solid fa-address-card" style="color:#8a1c24;"></i> Estación 1: Requisitos Documentales</h3>
-                    <p style="margin-bottom: 15px; color: #555;">Sube los documentos solicitados por la convocatoria en formato PDF (excepto fotografía, si aplica). Los campos con asterisco (*) son obligatorios.</p>
+                    <h3><i class="fa-solid fa-address-card" style="color:#8a1c24;"></i> Estación 1: Identidad y Datos Generales</h3>
+                    <p style="margin-bottom: 15px; color: #555;">Sube los documentos oficiales de identificación y datos generales. Los campos con asterisco (*) son obligatorios.</p>
                     <form id="form-estacion-1">
-                        <div id="contenedor-requisitos-dinamicos" class="file-grid">
-                            <!-- Los requisitos se inyectan dinámicamente desde el backend -->
+                        <div id="grid-dinamico-identidad" class="file-grid">
+                            <!-- Los requisitos de IDENTIDAD y GENERAL se inyectan aquí -->
                         </div>
                         <br>
                         <div style="display:flex; gap:15px;">
-                            <button type="button" class="btn-secondary" onclick="cambiarEstacion(0)"><i
-                                    class="fa-solid fa-arrow-left"></i> Volver</button>
-                            <button type="button" class="btn-primary" id="btn-next-1"
-                                style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(2)">Siguiente
-                                Estación <i class="fa-solid fa-arrow-right"></i></button>
+                            <button type="button" class="btn-secondary" onclick="cambiarEstacion(0)"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+                            <button type="button" class="btn-primary" id="btn-next-1" style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(2)">Siguiente Estación <i class="fa-solid fa-arrow-right"></i></button>
                         </div>
                     </form>
                 </div>
@@ -224,51 +216,16 @@
 
             <div id="panel-estacion-2" class="station-panel">
                 <div class="card">
-                    <h3><i class="fa-solid fa-user-tie" style="color:#8a1c24;"></i> Estación 2: Antecedentes Académicos
-                    </h3>
+                    <h3><i class="fa-solid fa-user-tie" style="color:#8a1c24;"></i> Estación 2: Antecedentes Académicos</h3>
+                    <p style="margin-bottom: 15px; color: #555;">Carga tus títulos, certificados e historial académico oficial.</p>
                     <form id="form-estacion-2">
-                        <div id="grid-maestria-2" class="file-grid">
-                            <div class="file-box warning-border"><label><i class="fa-solid fa-file-arrow-up"></i> Título
-                                    de
-                                    Licenciatura</label><input type="file" id="file-titulo" name="TITULO_LIC"
-                                    accept=".pdf" onchange="verificarArchivosEstacion(2)"></div>
-                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Certificado Oficial
-                                    de
-                                    Calificaciones *</label><input type="file" id="file-certificado" name="OTRO"
-                                    accept=".pdf" onchange="verificarArchivosEstacion(2)"></div>
-                        </div>
-
-                        <div id="grid-doctorado-2" style="display:none;">
-                            <div class="file-box" style="border-color:#8a1c24; margin-bottom:20px;">
-                                <label><i class="fa-solid fa-file-pdf"></i> Carga de Propuesta de Proyecto de
-                                    Investigación
-                                    *</label>
-                                <input type="file" id="file-propuesta" name="OTRO" accept=".pdf"
-                                    onchange="verificarArchivosEstacion(2)">
-                            </div>
-                            <div class="retro-box">
-                                <h4><i class="fa-regular fa-comments"></i> Buzón de Evaluación y Retroalimentación de
-                                    Propuesta</h4>
-                                <div class="comentario-profesor"><strong>Revisor P1:</strong> <span
-                                        style="color:#27ae60;"><i class="fa-solid fa-check"></i> Visto Bueno (Aprobado
-                                        sin
-                                        cambios necesarios).</span></div>
-                                <div class="comentario-profesor"><strong>Revisor P2:</strong> <span>"Se recomienda
-                                        delimitar
-                                        con mayor claridad el alcance del segundo objetivo específico de
-                                        automatización."</span></div>
-                                <div class="comentario-profesor"><strong>Revisor P3:</strong> <span>"Estructura
-                                        metodológica
-                                        adecuada. Sugiero enriquecer las referencias del estado del arte."</span></div>
-                            </div>
+                        <div id="grid-dinamico-academico" class="file-grid">
+                            <!-- Los requisitos ACADEMICOS se inyectan aquí -->
                         </div>
                         <br>
                         <div style="display:flex; gap:15px;">
-                            <button type="button" class="btn-secondary" onclick="cambiarEstacion(1)"><i
-                                    class="fa-solid fa-arrow-left"></i> Volver</button>
-                            <button type="button" class="btn-primary" id="btn-next-2"
-                                style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(3)">Siguiente
-                                Estación <i class="fa-solid fa-arrow-right"></i></button>
+                            <button type="button" class="btn-secondary" onclick="cambiarEstacion(1)"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+                            <button type="button" class="btn-primary" id="btn-next-2" style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(3)">Siguiente Estación <i class="fa-solid fa-arrow-right"></i></button>
                         </div>
                     </form>
                 </div>
@@ -276,97 +233,16 @@
 
             <div id="panel-estacion-3" class="station-panel">
                 <div class="card">
-                    <h3><i class="fa-solid fa-language" style="color:#8a1c24;"></i> Estación 3: Examen TOEFL - Ingles
-                    </h3>
+                    <h3><i class="fa-solid fa-square-poll-vertical" style="color:#8a1c24;"></i> Estación 3: Evaluación y Cartas</h3>
+                    <p style="margin-bottom: 15px; color: #555;">Sube los resultados de tus certificaciones, exámenes y cartas de recomendación.</p>
                     <form id="form-estacion-3">
-                        <div id="grid-maestria-3" class="file-grid">
-                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Carta 1
-                                    *</label><input type="file" id="file-carta1" name="CARTA_RECOM" accept=".pdf"
-                                    onchange="verificarArchivosEstacion(3)"></div>
-                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Carta 2
-                                    *</label><input type="file" id="file-carta2" name="CARTA_RECOM" accept=".pdf"
-                                    onchange="verificarArchivosEstacion(3)"></div>
-                            <div class="file-box"><label><i class="fa-solid fa-file-arrow-up"></i> Carta 3
-                                    *</label><input type="file" id="file-carta3" name="CARTA_RECOM" accept=".pdf"
-                                    onchange="verificarArchivosEstacion(3)"></div>
-                        </div>
-
-                        <div id="grid-doctorado-3" style="display:none;">
-                            <p style="color:green; font-weight:bold; margin-bottom:15px;"><i
-                                    class="fa-solid fa-circle-check"></i> Cartas de recomendación validadas en el
-                                expediente
-                                base.</p>
-                            <div class="file-box" style="max-width:450px; border-color:#8a1c24;">
-                                <label><i class="fa-solid fa-certificate"></i> Constancia / Examen de Certificación de
-                                    Idioma Oficial *</label>
-                                <input type="file" id="file-idioma" name="OTRO" accept=".pdf"
-                                    onchange="verificarArchivosEstacion(3)">
-                            </div>
+                        <div id="grid-dinamico-evaluacion" class="file-grid">
+                            <!-- Los requisitos de EVALUACION se inyectan aquí -->
                         </div>
                         <br>
                         <div style="display:flex; gap:15px;">
-                            <button type="button" class="btn-secondary" onclick="cambiarEstacion(2)"><i
-                                    class="fa-solid fa-arrow-left"></i> Volver</button>
-                            <button type="button" class="btn-primary" id="btn-next-3"
-                                style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(4)">Siguiente
-                                Estación <i class="fa-solid fa-arrow-right"></i></button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div id="panel-estacion-4" class="station-panel">
-                <div class="card">
-                    <h3><i class="fa-solid fa-square-poll-vertical" style="color:#8a1c24;"></i> Estación 4: Evaluación
-                        General</h3>
-                    <form id="form-estacion-4">
-                        <div id="grid-maestria-4" class="file-box" style="max-width:400px;">
-                            <label><i class="fa-solid fa-file-arrow-up"></i> Constancia de Resultados Examen CENEVAL -
-                                EXANI
-                                III *</label>
-                            <input type="file" id="file-ceneval" name="OTRO" accept=".pdf"
-                                onchange="verificarArchivosEstacion(4)">
-                        </div>
-
-                        <div id="grid-doctorado-4" style="display:none;">
-                            <div class="entrevista-status-box"
-                                style="background:#f4f6f7; padding:15px; border-radius:6px; border-left:5px solid #2980b9;">
-                                <h4><i class="fa-regular fa-calendar-days"></i> Estatus de Agenda para Entrevista de
-                                    Admisión</h4>
-                                <p style="font-size:14px; margin: 5px 0;"><strong>Sínodo Asignado:</strong> 3 Profesores
-                                    Investigadores del Núcleo de la FIE.</p>
-                                <p style="font-size:13px; color:#e67e22;"><strong>Nota de seguridad:</strong> Los
-                                    nombres se
-                                    mantendrán ocultos para asegurar la imparcialidad.</p>
-                                <hr style="margin:10px 0; border:0; border-top:1px solid #ddd;">
-
-                                <h5 style="margin-bottom:5px; font-size:14px; color:#333;">Dictámenes y notas del Sínodo
-                                    Evaluador:</h5>
-                                <div class="comentario-profesor"><strong>Evaluador J1:</strong> <span
-                                        style="color:#27ae60;"><i class="fa-solid fa-check"></i> Visto Bueno - Perfil de
-                                        investigación idóneo.</span></div>
-                                <div class="comentario-profesor"><strong>Evaluador J2:</strong> <span>"Muestra excelente
-                                        dominio de sus líneas de generación de conocimiento. Proyecto viable."</span>
-                                </div>
-                                <div class="comentario-profesor"><strong>Evaluador J3:</strong> <span>"Habilidades de
-                                        comunicación científica sobresalientes en la defensa técnica."</span></div>
-                            </div>
-                            <br>
-                            <label
-                                style="display:flex; align-items:center; gap:10px; font-weight:bold; cursor:pointer;">
-                                <input type="checkbox" id="chk-entrevista" onchange="verificarArchivosEstacion(4)">
-                                Confirmo
-                                que mi entrevista formal con el sínodo ha concluido.
-                            </label>
-                        </div>
-                        <br>
-                        <div style="display:flex; gap:15px;">
-                            <button type="button" class="btn-secondary" onclick="cambiarEstacion(3)"><i
-                                    class="fa-solid fa-arrow-left"></i> Volver</button>
-                            <button type="button" class="btn-primary" id="btn-finalizar"
-                                style="width:auto; padding:12px 30px; background-color:#27ae60;" disabled
-                                onclick="finalizarProcesoEstaciones()">Concluir y Enviar Expediente <i
-                                    class="fa-solid fa-paper-plane"></i></button>
+                            <button type="button" class="btn-secondary" onclick="cambiarEstacion(2)"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+                            <button type="button" class="btn-primary" id="btn-finalizar" style="width:auto; padding:12px 30px; background-color:#27ae60;" disabled onclick="finalizarProcesoEstaciones()">Concluir y Enviar Expediente <i class="fa-solid fa-paper-plane"></i></button>
                         </div>
                     </form>
                 </div>

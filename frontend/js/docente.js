@@ -50,19 +50,40 @@ async function cargarAspirantesAPI() {
     }
 }
 
+function mostrarLoader() {
+    const loader = document.getElementById("global-loader");
+    if (loader) loader.style.display = "flex";
+}
+
+function ocultarLoader() {
+    const loader = document.getElementById("global-loader");
+    if (loader) loader.style.display = "none";
+}
+
 /**
  * Control de Navegación Lateral (Cambio de Secciones)
  */
 function switchView(viewId) {
-    // Ocultar todas las secciones
-    const sections = document.querySelectorAll('.view-section');
-    sections.forEach(sec => sec.style.display = 'none');
+    mostrarLoader();
 
-    // Mostrar sección de destino
+    // Ocultar todas las secciones y quitar fade-in
+    const sections = document.querySelectorAll('.view-section');
+    sections.forEach(sec => {
+        sec.style.display = 'none';
+        sec.classList.remove('fade-in');
+    });
+
+    // Mostrar sección de destino con fade-in
     const targetSection = document.getElementById(`view-${viewId}`);
     if (targetSection) {
         targetSection.style.display = 'block';
+        void targetSection.offsetWidth; // Trigger reflow
+        targetSection.classList.add('fade-in');
     }
+    
+    setTimeout(() => {
+        ocultarLoader();
+    }, 300);
 
     // Actualizar clase activa en enlaces de navegación
     const navLinks = document.querySelectorAll('.sidebar a');

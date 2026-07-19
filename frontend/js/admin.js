@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarPosgradosEnSelect();
     cargarAspirantes();
     cargarNotificacionesAdmin(); // Inicializar panel de notificaciones
+    cargarCatalogoRequisitosUI(); // Inicializar catálogo de requisitos
 
     // Router inicial: si no hay hash, lo ponemos en dashboard
     if (!window.location.hash) {
@@ -90,9 +91,23 @@ function configurarBotones() {
     });
 }
 
+function mostrarLoader() {
+    const loader = document.getElementById("global-loader");
+    if (loader) loader.style.display = "flex";
+}
+
+function ocultarLoader() {
+    const loader = document.getElementById("global-loader");
+    if (loader) loader.style.display = "none";
+}
+
 function activarSeccionPorHash() {
+    mostrarLoader();
     const hash = window.location.hash.replace("#", "");
-    if (!hash) return;
+    if (!hash) {
+        ocultarLoader();
+        return;
+    }
 
     const enlaces = document.querySelectorAll("#sidebarMenu .nav-link");
     const secciones = document.querySelectorAll(".content-section");
@@ -102,8 +117,11 @@ function activarSeccionPorHash() {
     // Remover estado activo de todos los enlaces en el menú
     enlaces.forEach(link => link.classList.remove("active"));
 
-    // Ocultar todas las secciones del contenido
-    secciones.forEach(sec => sec.classList.add("d-none"));
+    // Ocultar todas las secciones del contenido y quitar fade-in
+    secciones.forEach(sec => {
+        sec.classList.add("d-none");
+        sec.classList.remove("fade-in");
+    });
 
     // Activar el enlace correspondiente
     const enlaceActivo = document.querySelector(`#sidebarMenu .nav-link[data-target="${hash}"]`);
@@ -123,11 +141,17 @@ function activarSeccionPorHash() {
         }
     }
 
-    // Mostrar la sección correspondiente en el HTML
+    // Mostrar la sección correspondiente en el HTML con fade-in
     const seccionMostrar = document.getElementById(`seccion-${hash}`);
     if (seccionMostrar) {
         seccionMostrar.classList.remove("d-none");
+        void seccionMostrar.offsetWidth; // Trigger reflow for animation
+        seccionMostrar.classList.add("fade-in");
     }
+    
+    setTimeout(() => {
+        ocultarLoader();
+    }, 300); // Simulate brief loading for smooth transition
 }
 
 function configurarNavegacion() {
@@ -169,7 +193,7 @@ function cargarDashboard() {
 
 async function cargarUsuarios() {
     try {
-        const respuesta = await fetch("http://localhost:4000/api/usuario");
+        const respuesta = await fetch("/api/usuario");
         const usuarios = await respuesta.json();
 
         // Actualizar contador del dashboard
@@ -202,7 +226,7 @@ async function cargarUsuarios() {
 
 async function editarUsuario(id) {
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/usuario/${id}`);
+        const respuesta = await fetch(`/api/usuario/${id}`);
         const usuario = await respuesta.json();
 
         if (!usuario) throw new Error("Usuario no encontrado");
@@ -251,11 +275,11 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
     const token = sessionStorage.getItem("token") || ""; // Por si requiere token más adelante
 
     try {
-        let url = "http://localhost:4000/api/usuario";
+        let url = "/api/usuario";
         let metodo = "POST";
 
         if (idUsuario && idUsuario.trim() !== "") {
-            url = `http://localhost:4000/api/usuario/${idUsuario}`;
+            url = `/api/usuario/${idUsuario}`;
             metodo = "PUT";
         }
 
@@ -302,7 +326,7 @@ async function eliminarUsuario(id) {
     const token = sessionStorage.getItem("token") || "";
 
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/usuario/${id}`, {
+        const respuesta = await fetch(`/api/usuario/${id}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -338,7 +362,7 @@ async function cargarConvocatorias() {
     if (!contenedor) return;
 
     try {
-        const respuesta = await fetch("http://localhost:4000/api/convocatorias");
+        const respuesta = await fetch("/api/convocatorias");
 
         // Si el endpoint no existe o falla, detenemos el renderizado
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
@@ -391,7 +415,7 @@ async function cargarConvocatorias() {
 
 async function cargarPosgradosEnSelect() {
     try {
-        const respuesta = await fetch("http://localhost:4000/api/posgrado");
+        const respuesta = await fetch("/api/posgrado");
         if (!respuesta.ok) return;
         const posgrados = await respuesta.json();
         const select = document.getElementById("convocatoria_posgrado");
@@ -416,7 +440,14 @@ function limpiarFormularioConvocatoria() {
     document.getElementById("convocatoria_posgrado").value = "";
     document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-bullhorn"></i> Nueva Convocatoria';
     document.getElementById("btnEliminarConvocatoria").style.display = "none";
-    document.getElementById("contenedorRequisitos").innerHTML = ""; // Limpiar requisitos
+    
+    // Desmarcar todos los checkboxes del catálogo
+    const checkboxes = document.querySelectorAll("#contenedorRequisitos .req-checkbox");
+    checkboxes.forEach(cb => {
+        cb.checked = false;
+        const oblCb = document.getElementById(`obligatorio_${cb.value}`);
+        if(oblCb) oblCb.checked = false;
+    });
 }
 
 function crearConvocatoria() {
@@ -426,48 +457,81 @@ function crearConvocatoria() {
     modal.show();
 }
 
-function agregarRequisitoUI(descripcion = "", obligatorio = true) {
+async function cargarCatalogoRequisitosUI() {
     const contenedor = document.getElementById("contenedorRequisitos");
-
-    const div = document.createElement("div");
-    div.className = "input-group mb-2 requisito-item";
-
-    const checkedHtml = obligatorio ? "checked" : "";
-
-    div.innerHTML = `
-        <input type="text" class="form-control req-descripcion" placeholder="Descripción del requisito..." value="${descripcion}" required>
-        <div class="input-group-text bg-light">
-            <input class="form-check-input mt-0 req-obligatorio" type="checkbox" ${checkedHtml} title="¿Obligatorio?">
-            <label class="ms-1 mb-0 text-muted" style="font-size:0.8rem; cursor:pointer;" onclick="this.previousElementSibling.click()">Obligatorio</label>
-        </div>
-        <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()" title="Eliminar requisito">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
-    `;
-
-    contenedor.appendChild(div);
+    if (!contenedor) return;
+    
+    try {
+        const respuesta = await fetch("/api/requisitos");
+        if (!respuesta.ok) throw new Error("No se pudo cargar el catálogo de requisitos");
+        
+        const requisitos = await respuesta.json();
+        contenedor.innerHTML = "";
+        
+        if (requisitos.length === 0) {
+            contenedor.innerHTML = "<p class='text-muted'>No hay requisitos en el catálogo.</p>";
+            return;
+        }
+        
+        requisitos.forEach(req => {
+            const div = document.createElement("div");
+            div.className = "d-flex justify-content-between align-items-center mb-2 p-2 border rounded bg-white";
+            
+            div.innerHTML = `
+                <div class="form-check mb-0">
+                    <input class="form-check-input req-checkbox" type="checkbox" value="${req.id}" id="req_${req.id}">
+                    <label class="form-check-label text-dark" for="req_${req.id}" style="cursor:pointer;">
+                        ${req.nombre}
+                    </label>
+                </div>
+                <div class="form-check form-switch mb-0" style="margin-left: 10px;">
+                    <input class="form-check-input req-obligatorio" type="checkbox" id="obligatorio_${req.id}">
+                    <label class="form-check-label small text-muted" for="obligatorio_${req.id}" style="cursor:pointer;">Obligatorio</label>
+                </div>
+            `;
+            
+            contenedor.appendChild(div);
+        });
+        
+    } catch (error) {
+        console.error("Error al cargar el catálogo:", error);
+        contenedor.innerHTML = "<p class='text-danger'>Error al cargar requisitos.</p>";
+    }
 }
 
 async function editarConvocatoria(id) {
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/convocatorias/${id}`);
+        const respuesta = await fetch(`/api/convocatorias/${id}`);
         const conv = await respuesta.json();
 
         if (!conv) throw new Error("Convocatoria no encontrada");
 
+        // Limpiar selecciones primero
+        limpiarFormularioConvocatoria();
         document.getElementById("idConvocatoriaForm").value = conv.id;
         document.getElementById("convocatoria_posgrado").value = conv.posgrado_id || "";
         document.getElementById("convocatoria_nombre").value = conv.nombre || "";
         document.getElementById("convocatoria_descripcion").value = conv.descripcion || "";
-        document.getElementById("convocatoria_fecha_inicio").value = conv.fecha_inicio || "";
-        document.getElementById("convocatoria_fecha_fin").value = conv.fecha_fin || "";
+        document.getElementById("convocatoria_fecha_inicio").value = conv.fecha_inicio ? conv.fecha_inicio.split('T')[0] : "";
+        document.getElementById("convocatoria_fecha_fin").value = conv.fecha_fin ? conv.fecha_fin.split('T')[0] : "";
         document.getElementById("convocatoria_estado").value = conv.estado || "Borrador";
 
-        // Cargar requisitos dinámicos
-        const contenedor = document.getElementById("contenedorRequisitos");
-        contenedor.innerHTML = "";
-        if (conv.requisitos && Array.isArray(conv.requisitos)) {
-            conv.requisitos.forEach(req => agregarRequisitoUI(req.descripcion, req.obligatorio));
+        // Cargar requisitos desde tabla pivote
+        try {
+            const reqRes = await fetch(`/api/convocatorias/${id}/requisitos`);
+            if (reqRes.ok) {
+                const requisitosAsignados = await reqRes.json();
+                requisitosAsignados.forEach(req => {
+                    const cb = document.getElementById(`req_${req.catalogo_id}`);
+                    const oblCb = document.getElementById(`obligatorio_${req.catalogo_id}`);
+                    if (cb) {
+                        cb.checked = true;
+                        if (oblCb) oblCb.checked = req.obligatorio === 1;
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("Error al cargar requisitos de la convocatoria", e);
         }
 
         document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Editar Convocatoria';
@@ -499,26 +563,27 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
     const fecha_fin = document.getElementById("convocatoria_fecha_fin").value;
     const estado = document.getElementById("convocatoria_estado").value;
 
-    // Recopilar requisitos del DOM
-    const reqItems = document.querySelectorAll("#contenedorRequisitos .requisito-item");
+    // Recopilar requisitos del DOM (los checkboxes marcados)
+    const checkboxes = document.querySelectorAll("#contenedorRequisitos .req-checkbox:checked");
     const requisitos = [];
-    reqItems.forEach(item => {
-        const desc = item.querySelector(".req-descripcion").value;
-        const oblig = item.querySelector(".req-obligatorio").checked;
-        if (desc.trim() !== "") {
-            requisitos.push({ descripcion: desc.trim(), obligatorio: oblig });
-        }
+    checkboxes.forEach(cb => {
+        const idReq = cb.value;
+        const oblCb = document.getElementById(`obligatorio_${idReq}`);
+        requisitos.push({
+            id: idReq,
+            obligatorio: oblCb ? oblCb.checked : false
+        });
     });
 
     const datosConvocatoria = { nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, requisitos };
     const token = sessionStorage.getItem("token") || "";
 
     try {
-        let url = "http://localhost:4000/api/convocatorias";
+        let url = "/api/convocatorias";
         let metodo = "POST";
 
         if (idInput && idInput.trim() !== "") {
-            url = `http://localhost:4000/api/convocatorias/${idInput}`;
+            url = `/api/convocatorias/${idInput}`;
             metodo = "PUT";
         }
 
@@ -560,7 +625,7 @@ async function eliminarConvocatoria(id) {
     const token = sessionStorage.getItem("token") || "";
 
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/convocatorias/${id}`, {
+        const respuesta = await fetch(`/api/convocatorias/${id}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -596,7 +661,7 @@ async function cargarAspirantes() {
     if (!tbody) return;
 
     try {
-        const respuesta = await fetch("http://localhost:4000/api/aspirante");
+        const respuesta = await fetch("/api/aspirante");
 
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
 
@@ -636,7 +701,7 @@ async function cargarAspirantes() {
 
 async function editarAspirante(id) {
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/aspirante/${id}`);
+        const respuesta = await fetch(`/api/aspirante/${id}`);
         if (!respuesta.ok) throw new Error("Aspirante no encontrado");
 
         const aspirante = await respuesta.json();
@@ -693,7 +758,7 @@ document.getElementById("formAspirante")?.addEventListener("submit", async (e) =
     const token = sessionStorage.getItem("token") || "";
 
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/aspirante/${id}`, {
+        const respuesta = await fetch(`/api/aspirante/${id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -728,7 +793,7 @@ async function cargarNotificacionesAdmin() {
     if (!tbody) return;
 
     try {
-        const respuesta = await fetch("http://localhost:4000/api/notificaciones"); // API futura
+        const respuesta = await fetch("/api/notificaciones"); // API futura
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
 
         const notificaciones = await respuesta.json();
@@ -769,7 +834,7 @@ function limpiarFormularioNotificacion() {
 
 async function editarNotificacion(id) {
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/notificaciones/${id}`);
+        const respuesta = await fetch(`/api/notificaciones/${id}`);
         if (!respuesta.ok) throw new Error("Notificación no encontrada");
 
         const notif = await respuesta.json();
@@ -810,11 +875,11 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
     const token = sessionStorage.getItem("token") || "";
 
     try {
-        let url = "http://localhost:4000/api/notificaciones";
+        let url = "/api/notificaciones";
         let metodo = "POST";
 
         if (idInput && idInput.trim() !== "") {
-            url = `http://localhost:4000/api/notificaciones/${idInput}`;
+            url = `/api/notificaciones/${idInput}`;
             metodo = "PUT";
         }
 
@@ -853,7 +918,7 @@ async function eliminarNotificacion(id) {
     const token = sessionStorage.getItem("token") || "";
 
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/notificaciones/${id}`, {
+        const respuesta = await fetch(`/api/notificaciones/${id}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`

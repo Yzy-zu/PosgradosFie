@@ -399,14 +399,39 @@ body {
     margin-top: 10px;
     font-size: 12px;
     color: #8a1c24;
-    font-weight: bold;
-    pointer-events: none;
-    background-color: #ffffff;
-    padding: 6px 12px;
+    background: #f2dede;
+    padding: 5px 10px;
     border-radius: 20px;
     border: 1px solid #ebccd1;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
+
+.file-box.file-selected {
+    background-color: #e8f5e9;
+    border-color: #2e7d32;
+}
+
+.file-box.file-selected label i {
+    color: #2e7d32;
+}
+
+.file-box.file-selected::after {
+    display: none;
+}
+
+.file-name-display {
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #2e7d32;
+    background: #c8e6c9;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid #a5d6a7;
+    display: inline-block;
+    word-break: break-all;
+}
+
 
 .file-box.warning-border {
     border-color: #e67e22;

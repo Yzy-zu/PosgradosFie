@@ -5,7 +5,7 @@ require('dotenv').config();
 require('./database/db');
 
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
 app.use(cors({
     origin: '*',
@@ -16,6 +16,8 @@ app.use(cors({
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, '../frontend')));
+// Servir la carpeta de uploads de manera estática
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/usuario', require('./routes/usuario.routes'));
 app.use('/api/posgrado', require('./routes/posgrado.routes'));
