@@ -1,22 +1,24 @@
 const mysql = require('mysql2');
 
-const db = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'fie',
-    password: process.env.DB_PASSWORD || 'fie',
-    database: process.env.DB_NAME || 'posgrado',
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
 });
 
-db.getConnection((err, connection) => {
+// Test de conexión inicial (solo para log de arranque)
+pool.getConnection((err, connection) => {
     if (err) {
-        console.error('Error al conectar a la base de datos:', err);
+        console.error('Error al conectar a la base de datos:', err.message);
         return;
     }
     console.log('Base de datos conectada (Pool)');
     connection.release();
 });
 
-module.exports = db;
+// Exportar el pool con soporte de promises para async/await
+module.exports = pool.promise();

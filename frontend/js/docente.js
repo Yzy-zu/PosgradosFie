@@ -50,16 +50,6 @@ async function cargarAspirantesAPI() {
     }
 }
 
-function mostrarLoader() {
-    const loader = document.getElementById("global-loader");
-    if (loader) loader.style.display = "flex";
-}
-
-function ocultarLoader() {
-    const loader = document.getElementById("global-loader");
-    if (loader) loader.style.display = "none";
-}
-
 /**
  * Control de Navegación Lateral (Cambio de Secciones)
  */
@@ -98,26 +88,7 @@ function switchView(viewId) {
 /**
  * Cierre de Sesión Limpiando Variables No Persistentes de Login
  */
-function cerrarSesion() {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("usuarioLogueado");
-    window.location.href = "login.html";
-}
 
-// Función para abrir/cerrar el menú desplegable del perfil
-function toggleProfileMenu(event) {
-    event.stopPropagation(); // Evita que se cierre inmediatamente al hacer click
-    const dropdown = document.getElementById('profile-dropdown');
-    dropdown.classList.toggle('show');
-}
-
-// Cerrar el menú si se hace click fuera de él en la pantalla
-window.addEventListener('click', function() {
-    const dropdown = document.getElementById('profile-dropdown');
-    if (dropdown && dropdown.classList.contains('show')) {
-        dropdown.classList.remove('show');
-    }
-});
 
 /**
  * Calcula Contadores Estadísticos y Redibuja Gráfica de Avance

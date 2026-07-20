@@ -72,34 +72,10 @@ function configurarBotones() {
         });
     }
 
-    // Lógica para el menú desplegable del perfil (antes estaba en el HTML)
-    const profileContainer = document.getElementById('profile-container');
-    if (profileContainer) {
-        profileContainer.addEventListener('click', function (event) {
-            event.stopPropagation();
-            const dropdown = document.getElementById('profile-dropdown');
-            if (dropdown) dropdown.classList.toggle('show');
-        });
-    }
 
-    // Cierra el menú desplegable si se hace clic fuera de él
-    window.addEventListener('click', function () {
-        const dropdown = document.getElementById('profile-dropdown');
-        if (dropdown && dropdown.classList.contains('show')) {
-            dropdown.classList.remove('show');
-        }
-    });
 }
 
-function mostrarLoader() {
-    const loader = document.getElementById("global-loader");
-    if (loader) loader.style.display = "flex";
-}
 
-function ocultarLoader() {
-    const loader = document.getElementById("global-loader");
-    if (loader) loader.style.display = "none";
-}
 
 function activarSeccionPorHash() {
     mostrarLoader();
@@ -168,11 +144,7 @@ function configurarNavegacion() {
     });
 }
 
-function cerrarSesion() {
-    if (!confirm("¿Desea cerrar sesión?")) return;
-    sessionStorage.clear();
-    window.location.href = "login.html";
-}
+
 
 function cargarDashboard() {
     // Inicializar contadores en 0 hasta que existan las APIs correspondientes
@@ -522,8 +494,8 @@ async function editarConvocatoria(id) {
             if (reqRes.ok) {
                 const requisitosAsignados = await reqRes.json();
                 requisitosAsignados.forEach(req => {
-                    const cb = document.getElementById(`req_${req.catalogo_id}`);
-                    const oblCb = document.getElementById(`obligatorio_${req.catalogo_id}`);
+                    const cb = document.getElementById(`req_${req.id}`);
+                    const oblCb = document.getElementById(`obligatorio_${req.id}`);
                     if (cb) {
                         cb.checked = true;
                         if (oblCb) oblCb.checked = req.obligatorio === 1;

@@ -1,3 +1,8 @@
 node_modules/
 backend/.env
 .env
+uploads/
+*.log
+.DS_Store
+.vscode/
+.idea/

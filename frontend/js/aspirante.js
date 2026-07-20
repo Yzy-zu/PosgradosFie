@@ -91,16 +91,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 });
 
-// ==== MANEJO DE ESTADO Y UX (GLOBAL LOADER) ====
-function mostrarLoader() {
-    const loader = document.getElementById('global-loader');
-    if (loader) loader.classList.add('active');
-}
 
-function ocultarLoader() {
-    const loader = document.getElementById('global-loader');
-    if (loader) loader.classList.remove('active');
-}
 
 /**
  * Control del cambio de paneles (Navegación lateral con Hash Router)
@@ -110,6 +101,8 @@ function switchView(viewId) {
         window.location.hash = viewId;
         return; // El evento onhashchange se encargará de hacer el render
     }
+
+    mostrarLoader();
 
     // Ocultar todas las secciones de contenido
     const sections = document.querySelectorAll('.view-section');
@@ -140,6 +133,10 @@ function switchView(viewId) {
     if (viewId === 'notificaciones') {
         cargarNotificaciones();
     }
+
+    setTimeout(() => {
+        ocultarLoader();
+    }, 300);
 }
 
 // Router Event Listener
@@ -551,16 +548,52 @@ function verificarArchivosEstacion(estacion) {
                     allValid = false;
                 }
             });
+            
+            // Si es estación 3, también validar el checkbox legal
+            if (estacion === 3) {
+                const chkProtesta = document.getElementById('chk-protesta');
+                if (chkProtesta && !chkProtesta.checked) {
+                    allValid = false;
+                }
+            }
+            
             const btn = document.getElementById(btnId);
             if (btn) btn.disabled = !allValid;
         }
     }
 }
 
+// Bloquear toda la UI de carga cuando el expediente esté bajo revisión
+function bloquearInterfazPorRevision() {
+    // 1. Mostrar banner y ocultar encabezado normal
+    const banner = document.getElementById('banner-revision');
+    const encabezado = document.getElementById('encabezado-documentos');
+    if (banner) banner.style.display = 'block';
+    if (encabezado) encabezado.style.display = 'none';
+
+    // 2. Ocultar el stepper
+    const stepper = document.querySelector('.stepper-wrapper');
+    if (stepper) stepper.style.display = 'none';
+
+    // 3. Deshabilitar todos los inputs de archivo
+    document.querySelectorAll('input[type="file"]').forEach(input => input.disabled = true);
+    
+    // 4. Ocultar checkbox legal
+    const protesta = document.getElementById('protesta-legal');
+    if (protesta) protesta.style.display = 'none';
+
+    // 5. Ocultar todos los botones de avance/retroceso/finalizar en los forms
+    document.querySelectorAll('.station-panel form button').forEach(btn => btn.style.display = 'none');
+}
+
 /**
  * Concluye el proceso de registro mostrando alertas personalizadas por nivel y enviando los últimos archivos
  */
 async function finalizarProcesoEstaciones() {
+    if (!confirm("¿Estás seguro de enviar tu expediente a revisión? Una vez enviado no podrás modificar ni borrar documentos.")) {
+        return;
+    }
+
     const btnFinalizar = document.getElementById('btn-finalizar');
     if (btnFinalizar) btnFinalizar.disabled = true;
 
@@ -590,28 +623,23 @@ async function finalizarProcesoEstaciones() {
             }
         }
 
-        // Guardar progreso finalizado en la base de datos (Estación 4 = COMPLETADO)
+        // Llamar al endpoint de EN_REVISION para bloquear el expediente
         try {
-            await fetch(`/api/solicitud/estacion/${currentSolicitudId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ estacion_actual: 4 })
+            await fetch(`/api/solicitud/enviar/${currentSolicitudId}`, {
+                method: 'PUT'
             });
+            // Activar bloqueo de interfaz sin recargar
+            bloquearInterfazPorRevision();
         } catch (e) {
-            console.error("Error al actualizar la estación en DB:", e);
+            console.error("Error al enviar expediente a revisión en DB:", e);
         }
     }
 
     ocultarLoader();
-
-    if (nivelAcademicoSeleccionado === "Doctorado") {
-        alert("¡Expediente de Doctorado Integrado con Éxito! Tu documentación ha sido enviada al comité de admisiones.");
-    } else {
-        alert("¡Felicidades! Tu expediente completo ha sido enviado con éxito al comité de admisiones del Posgrado FIE.");
-    }
-
-    // Aquí idealmente actualizamos el estado en la base de datos a EN_REVISION si tuviéramos un endpoint
-    switchView('inicio');
+    alert("¡Felicidades! Tu expediente completo ha sido enviado con éxito al comité de admisiones. Revisa tu vista de proceso para ver actualizaciones.");
+    
+    // Lo redirigimos a la vista de proceso en lugar de inicio
+    switchView('proceso');
 }
 
 // Base de datos local simulada para el estatus de los documentos del alumno
@@ -671,13 +699,7 @@ function actualizarGraficaProceso() {
     }
 }
 
-/**
- * Limpieza de sesión total
- */
-function cerrarSesion() {
-    sessionStorage.clear();
-    window.location.href = 'login.html';
-}
+
 
 // Función para regresar a la selección de Maestría/Doctorado sin reiniciar sesión
 function regresarAConvocatorias() {
@@ -696,19 +718,7 @@ function regresarAConvocatorias() {
         navDocumentos.classList.add('hidden');
     }
 }
-function toggleProfileMenu(event) {
-    event.stopPropagation();
-    const dropdown = document.getElementById('profile-dropdown');
-    dropdown.classList.toggle('show');
-}
 
-// Cierra el menú si se hace clic fuera de él
-window.addEventListener('click', function () {
-    const dropdown = document.getElementById('profile-dropdown');
-    if (dropdown && dropdown.classList.contains('show')) {
-        dropdown.classList.remove('show');
-    }
-});
 // --- NUEVAS FUNCIONES DE SEGURIDAD Y CANCELACION ---
 
 function bloquearConvocatorias() {
@@ -790,9 +800,6 @@ async function cargarModalidadesAdmision() {
 
 
 async function cargarRequisitosDocumentales(idConvocatoria) {
-    const contenedor = document.getElementById('contenedor-requisitos-dinamicos');
-    if (!contenedor) return;
-
     try {
         const res = await fetch(`/api/convocatorias/${idConvocatoria}/requisitos`);
         if (res.ok) {
@@ -835,11 +842,12 @@ async function cargarRequisitosDocumentales(idConvocatoria) {
             verificarArchivosEstacion(2);
             verificarArchivosEstacion(3);
         } else {
-            contenedor.innerHTML = '<p style="color: red;">Error al cargar los requisitos de la convocatoria.</p>';
+            console.error('Error al cargar los requisitos de la convocatoria.');
+            alert('Error al cargar los requisitos de la convocatoria.');
         }
     } catch (e) {
         console.error("Error cargando requisitos:", e);
-        contenedor.innerHTML = '<p style="color: red;">Error de conexión al cargar requisitos.</p>';
+        alert('Error de conexión al cargar requisitos.');
     }
 }
 
@@ -865,6 +873,11 @@ function hidratarUI(soliData) {
     // Mover a la estación donde se quedó
     if (estacionGuardada > 0) {
         cambiarEstacion(Math.min(estacionGuardada, 3));
+    }
+
+    // Bloquear si está en revisión
+    if (soliData.estado === 'EN_REVISION') {
+        bloquearInterfazPorRevision();
     }
 }
 

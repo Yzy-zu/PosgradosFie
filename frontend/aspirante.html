@@ -2,6 +2,8 @@
 <html lang="es">
 
 <head>
+    <script src="js/authInterceptor.js"></script>
+    <script src="js/utils.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestión - Posgrado FIE</title>
@@ -144,10 +146,17 @@
 
         <section id="view-documentos" class="view-section">
             <h2 id="titulo-flujo-documentos">Seguimiento de Trámites y Requisitos de Ingreso</h2>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            
+            <!-- Banner de Revisión -->
+            <div id="banner-revision" style="display: none; background: #e8f4fd; border: 1px solid #b6d4fe; color: #084298; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                <h3><i class="fa-solid fa-lock"></i> Expediente Bajo Revisión</h3>
+                <p>Tu solicitud ha sido enviada exitosamente al Comité de Admisiones. Ya no es posible modificar ni eliminar los documentos adjuntos. Si se requiere alguna corrección, serás notificado en la sección de notificaciones.</p>
+            </div>
+
+            <div id="encabezado-documentos" style="display: flex; justify-content: space-between; align-items: center;">
                 <p>Completa cada una de las estaciones requeridas para enviar tu postulación a revisión administrativa.
                 </p>
-                <button type="button" class="btn-secondary" onclick="cancelarSolicitudActual()"
+                <button type="button" id="btn-cancelar-solicitud" class="btn-secondary" onclick="cancelarSolicitudActual()"
                     style="background-color: #c0392b; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 13px;"><i
                         class="fa-solid fa-trash"></i> Cancelar Solicitud</button>
             </div>
@@ -239,8 +248,15 @@
                         <div id="grid-dinamico-evaluacion" class="file-grid">
                             <!-- Los requisitos de EVALUACION se inyectan aquí -->
                         </div>
+
+                        <div id="protesta-legal" style="background: #f9f9f9; padding: 15px; border-left: 4px solid #f39c12; margin: 20px 0; font-size: 13px;">
+                            <label style="display:flex; align-items:start; gap:10px; cursor:pointer;">
+                                <input type="checkbox" id="chk-protesta" style="margin-top:3px;" onchange="verificarArchivosEstacion(3)">
+                                <span><strong>Bajo protesta de decir verdad</strong>, declaro que la información y documentación proporcionada es auténtica y verídica. Entiendo que al enviar este expediente no podré modificarlo después.</span>
+                            </label>
+                        </div>
                         <br>
-                        <div style="display:flex; gap:15px;">
+                        <div id="botones-estacion-3" style="display:flex; gap:15px;">
                             <button type="button" class="btn-secondary" onclick="cambiarEstacion(2)"><i class="fa-solid fa-arrow-left"></i> Volver</button>
                             <button type="button" class="btn-primary" id="btn-finalizar" style="width:auto; padding:12px 30px; background-color:#27ae60;" disabled onclick="finalizarProcesoEstaciones()">Concluir y Enviar Expediente <i class="fa-solid fa-paper-plane"></i></button>
                         </div>

@@ -1,19 +1,16 @@
 const db = require('../database/db');
 
-exports.obtenerPosgrados = (req, res) => {
+// Obtener todos los posgrados
+const obtenerPosgrados = async (req, res) => {
+    try {
+        const [resultados] = await db.query('SELECT * FROM posgrado');
+        return res.json(resultados);
+    } catch (error) {
+        console.error('Error en obtenerPosgrados:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al obtener posgrados' });
+    }
+};
 
-    const sql = 'SELECT * FROM posgrado';
-
-    db.query(sql, (err, result) => {
-
-      if (err) {
-            return res.status(500).json({
-                error: err
-            });
-        }
-
-        res.json(result);
-
-    });
-
+module.exports = {
+    obtenerPosgrados
 };

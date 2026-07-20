@@ -1,174 +1,98 @@
 const db = require('../database/db');
 
-// =======================
 // Subir documento
-// =======================
-const subirDocumento = (req, res) => {
+const subirDocumento = async (req, res) => {
+    try {
+        const { idSoli, idRequisito, tipoDoc } = req.body;
 
-    // Soporte de compatibilidad: Extraemos idRequisito (nuevo) o tipoDoc (viejo)
-    const { idSoli, idRequisito, tipoDoc } = req.body;
+        if (!idSoli || (!idRequisito && !tipoDoc)) {
+            return res.status(400).json({ mensaje: 'Faltan campos obligatorios para guardar el documento.' });
+        }
 
-    // Validar campos básicos
-    if (!idSoli || (!idRequisito && !tipoDoc)) {
-        return res.status(400).json({
-            mensaje: "Faltan campos obligatorios para guardar el documento."
-        });
+        if (!req.file) {
+            return res.status(400).json({ mensaje: 'Debe seleccionar un archivo.' });
+        }
+
+        // Verificar que exista la solicitud
+        const [solicitud] = await db.query('SELECT id FROM solicitud WHERE id = ?', [idSoli]);
+        if (solicitud.length === 0) {
+            return res.status(404).json({ mensaje: 'La solicitud no existe.' });
+        }
+
+        if (idRequisito) {
+            // Flujo nuevo: tabla solicitud_documentos
+            const [resultado] = await db.query(
+                `INSERT INTO solicitud_documentos (idSolicitud, idRequisito, rutaArchivo, estadoValidacion)
+                 VALUES (?, ?, ?, 'PENDIENTE')`,
+                [idSoli, idRequisito, req.file.filename]
+            );
+            return res.status(201).json({ mensaje: 'Documento registrado correctamente.', idDocumento: resultado.insertId });
+        } else {
+            // Flujo viejo (compatibilidad): tabla documento
+            const [resultado] = await db.query(
+                'INSERT INTO documento (idSoli, tipoDoc, rutaArchivo) VALUES (?, ?, ?)',
+                [idSoli, tipoDoc, req.file.filename]
+            );
+            return res.status(201).json({ mensaje: 'Documento registrado correctamente.', idDocumento: resultado.insertId });
+        }
+    } catch (error) {
+        console.error('Error en subirDocumento:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
     }
+};
 
-    // Validar archivo
-    if (!req.file) {
-        return res.status(400).json({
-            mensaje: "Debe seleccionar un archivo."
-        });
+// Obtener todos los documentos
+const obtenerDocumentos = async (req, res) => {
+    try {
+        const [resultados] = await db.query('SELECT * FROM documento');
+        return res.json(resultados);
+    } catch (error) {
+        console.error('Error en obtenerDocumentos:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al obtener documentos.' });
     }
-
-    // Verificar que exista la solicitud
-    db.query(
-        "SELECT * FROM solicitud WHERE id = ?",
-        [idSoli],
-        (err, solicitud) => {
-
-            if (err) return res.status(500).json(err);
-
-            if (solicitud.length === 0) {
-                return res.status(404).json({
-                    mensaje: "La solicitud no existe."
-                });
-            }
-
-            if (idRequisito) {
-                // FLUJO NUEVO: Guardar documento en la NUEVA tabla solicitud_documentos
-                db.query(
-                    `INSERT INTO solicitud_documentos
-                    (idSolicitud, idRequisito, rutaArchivo, estadoValidacion)
-                    VALUES (?, ?, ?, 'PENDIENTE')`,
-                    [idSoli, idRequisito, req.file.filename],
-                    (err, resultado) => {
-                        if (err) {
-                            console.error("Error al guardar documento (nuevo):", err);
-                            return res.status(500).json(err);
-                        }
-                        res.status(201).json({ mensaje: "Documento registrado correctamente.", idDocumento: resultado.insertId });
-                    }
-                );
-            } else {
-                // FLUJO VIEJO (Compatibilidad): Guardar documento en la vieja tabla
-                db.query(
-                    `INSERT INTO documento
-                    (idSoli, tipoDoc, rutaArchivo)
-                    VALUES (?, ?, ?)`,
-                    [idSoli, tipoDoc, req.file.filename],
-                    (err, resultado) => {
-                        if (err) {
-                            console.error("Error al guardar documento (viejo):", err);
-                            return res.status(500).json(err);
-                        }
-                        res.status(201).json({ mensaje: "Documento registrado correctamente.", idDocumento: resultado.insertId });
-                    }
-                );
-            }
-        }
-    );
 };
 
+// Obtener un documento por ID
+const obtenerDocumento = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [resultado] = await db.query('SELECT * FROM documento WHERE id = ?', [id]);
 
-
-// =======================
-// Obtener todos
-// =======================
-const obtenerDocumentos = (req, res) => {
-
-    db.query(
-        "SELECT * FROM documento",
-        (err, resultados) => {
-
-            if (err)
-                return res.status(500).json(err);
-
-            res.json(resultados);
-
+        if (resultado.length === 0) {
+            return res.status(404).json({ mensaje: 'Documento no encontrado.' });
         }
-    );
 
+        return res.json(resultado[0]);
+    } catch (error) {
+        console.error('Error en obtenerDocumento:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al obtener documento.' });
+    }
 };
 
-// =======================
-// Obtener uno
-// =======================
-const obtenerDocumento = (req, res) => {
+// Actualizar estado de documento
+const actualizarDocumento = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { estadoDoc } = req.body;
 
-    const { id } = req.params;
-
-    db.query(
-        "SELECT * FROM documento WHERE id = ?",
-        [id],
-        (err, resultado) => {
-
-            if (err)
-                return res.status(500).json(err);
-
-            if (resultado.length === 0) {
-
-                return res.status(404).json({
-                    mensaje: "Documento no encontrado."
-                });
-
-            }
-
-            res.json(resultado[0]);
-
-        }
-    );
-
+        await db.query('UPDATE documento SET estadoDoc = ? WHERE id = ?', [estadoDoc, id]);
+        return res.json({ mensaje: 'Documento actualizado correctamente.' });
+    } catch (error) {
+        console.error('Error en actualizarDocumento:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al actualizar documento.' });
+    }
 };
 
-// =======================
-// Actualizar documento
-// =======================
-const actualizarDocumento = (req, res) => {
-
-    const { id } = req.params;
-    const { estadoDoc } = req.body;
-
-    db.query(
-        "UPDATE documento SET estadoDoc = ? WHERE id = ?",
-        [estadoDoc, id],
-        (err) => {
-
-            if (err)
-                return res.status(500).json(err);
-
-            res.json({
-                mensaje: "Documento actualizado correctamente."
-            });
-
-        }
-    );
-
-};
-
-// =======================
 // Eliminar documento
-// =======================
-const eliminarDocumento = (req, res) => {
-
-    const { id } = req.params;
-
-    db.query(
-        "DELETE FROM documento WHERE id = ?",
-        [id],
-        (err) => {
-
-            if (err)
-                return res.status(500).json(err);
-
-            res.json({
-                mensaje: "Documento eliminado correctamente."
-            });
-
-        }
-    );
-
+const eliminarDocumento = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query('DELETE FROM documento WHERE id = ?', [id]);
+        return res.json({ mensaje: 'Documento eliminado correctamente.' });
+    } catch (error) {
+        console.error('Error en eliminarDocumento:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al eliminar documento.' });
+    }
 };
 
 module.exports = {

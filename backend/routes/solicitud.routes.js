@@ -7,7 +7,8 @@ const {
     cancelarSolicitud,
     getModalidades,
     actualizarModalidad,
-    actualizarEstacion
+    actualizarEstacion,
+    enviarExpediente
 } = require('../controllers/solicitudController');
 
 router.post('/crear', crearSolicitud);
@@ -16,5 +17,6 @@ router.put('/cancelar/:id', cancelarSolicitud);
 router.get('/modalidades', getModalidades);
 router.put('/modalidad/:id', actualizarModalidad);
 router.put('/estacion/:id', actualizarEstacion);
+router.put('/enviar/:id', enviarExpediente);
 
 module.exports = router;

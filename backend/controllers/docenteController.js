@@ -1,194 +1,84 @@
 const db = require('../database/db');
 
-// ==============================
 // Obtener todos los docentes
-// ==============================
-
-exports.obtenerDocentes = (req, res) => {
-
-    const sql = 'SELECT * FROM docente';
-
-    db.query(sql, (err, resultados) => {
-
-        if (err) {
-
-            console.error(err);
-
-            return res.status(500).json({
-                success: false,
-                mensaje: 'Error al obtener docentes'
-            });
-
-        }
-
-        res.json(resultados);
-
-    });
-
+const obtenerDocentes = async (req, res) => {
+    try {
+        const [resultados] = await db.query('SELECT * FROM docente');
+        return res.json(resultados);
+    } catch (error) {
+        console.error('Error en obtenerDocentes:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al obtener docentes' });
+    }
 };
 
-// ==============================
-// Obtener un docente
-// ==============================
-
-exports.obtenerDocente = (req, res) => {
-
-    const { id } = req.params;
-
-    const sql = 'SELECT * FROM docente WHERE idDocente = ?';
-
-    db.query(sql, [id], (err, resultados) => {
-
-        if (err) {
-
-            console.error(err);
-
-            return res.status(500).json({
-                success: false,
-                mensaje: 'Error al obtener docente'
-            });
-
-        }
+// Obtener un docente por ID
+const obtenerDocente = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [resultados] = await db.query('SELECT * FROM docente WHERE idDocente = ?', [id]);
 
         if (resultados.length === 0) {
-
-            return res.status(404).json({
-                success: false,
-                mensaje: 'Docente no encontrado'
-            });
-
+            return res.status(404).json({ success: false, mensaje: 'Docente no encontrado' });
         }
 
-        res.json(resultados[0]);
-
-    });
-
+        return res.json(resultados[0]);
+    } catch (error) {
+        console.error('Error en obtenerDocente:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al obtener docente' });
+    }
 };
 
-// ==============================
 // Crear docente
-// ==============================
+const crearDocente = async (req, res) => {
+    try {
+        const { nombre, correo, telefono, especialidad } = req.body;
 
-exports.crearDocente = (req, res) => {
+        await db.query(
+            'INSERT INTO docente (nombre, correo, telefono, especialidad) VALUES (?, ?, ?, ?)',
+            [nombre, correo, telefono, especialidad]
+        );
 
-    const {
-        nombre,
-        correo,
-        telefono,
-        especialidad
-    } = req.body;
-
-    const sql = `
-        INSERT INTO docente
-        (nombre, correo, telefono, especialidad)
-        VALUES (?, ?, ?, ?)
-    `;
-
-    db.query(
-        sql,
-        [nombre, correo, telefono, especialidad],
-        (err) => {
-
-            if (err) {
-
-                console.error(err);
-
-                return res.status(500).json({
-                    success: false,
-                    mensaje: 'Error al crear docente'
-                });
-
-            }
-
-            res.json({
-                success: true,
-                mensaje: 'Docente creado correctamente'
-            });
-
-        }
-    );
-
+        return res.json({ success: true, mensaje: 'Docente creado correctamente' });
+    } catch (error) {
+        console.error('Error en crearDocente:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al crear docente' });
+    }
 };
 
-// ==============================
 // Actualizar docente
-// ==============================
+const actualizarDocente = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nombre, correo, telefono, especialidad } = req.body;
 
-exports.actualizarDocente = (req, res) => {
+        await db.query(
+            'UPDATE docente SET nombre = ?, correo = ?, telefono = ?, especialidad = ? WHERE idDocente = ?',
+            [nombre, correo, telefono, especialidad, id]
+        );
 
-    const { id } = req.params;
-
-    const {
-        nombre,
-        correo,
-        telefono,
-        especialidad
-    } = req.body;
-
-    const sql = `
-        UPDATE docente
-        SET
-            nombre = ?,
-            correo = ?,
-            telefono = ?,
-            especialidad = ?
-        WHERE idDocente = ?
-    `;
-
-    db.query(
-        sql,
-        [nombre, correo, telefono, especialidad, id],
-        (err) => {
-
-            if (err) {
-
-                console.error(err);
-
-                return res.status(500).json({
-                    success: false,
-                    mensaje: 'Error al actualizar docente'
-                });
-
-            }
-
-            res.json({
-                success: true,
-                mensaje: 'Docente actualizado correctamente'
-            });
-
-        }
-    );
-
+        return res.json({ success: true, mensaje: 'Docente actualizado correctamente' });
+    } catch (error) {
+        console.error('Error en actualizarDocente:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al actualizar docente' });
+    }
 };
 
-// ==============================
 // Eliminar docente
-// ==============================
+const eliminarDocente = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query('DELETE FROM docente WHERE idDocente = ?', [id]);
+        return res.json({ success: true, mensaje: 'Docente eliminado correctamente' });
+    } catch (error) {
+        console.error('Error en eliminarDocente:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al eliminar docente' });
+    }
+};
 
-exports.eliminarDocente = (req, res) => {
-
-    const { id } = req.params;
-
-    const sql = 'DELETE FROM docente WHERE idDocente = ?';
-
-    db.query(sql, [id], (err) => {
-
-        if (err) {
-
-            console.error(err);
-
-            return res.status(500).json({
-                success: false,
-                mensaje: 'Error al eliminar docente'
-            });
-
-        }
-
-        res.json({
-            success: true,
-            mensaje: 'Docente eliminado correctamente'
-        });
-
-    });
-
+module.exports = {
+    obtenerDocentes,
+    obtenerDocente,
+    crearDocente,
+    actualizarDocente,
+    eliminarDocente
 };
