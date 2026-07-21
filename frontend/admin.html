@@ -452,37 +452,9 @@
                             </div>
                         </div>
 
-<<<<<<< HEAD
-                        <div class="mb-3">
-                            <label class="form-label">Correo</label>
-                            <input type="email" id="correo" class="form-control" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Contraseña</label>
-                            <input type="password" id="password" class="form-control">
-                            <small class="text-muted d-block mt-1">Dejar en blanco si está editando y no desea
-                                cambiarla.</small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Rol</label>
-                            <select id="rol" class="form-select">
-                                <option value="ADMIN">ADMIN</option>
-                                <option value="COORDINADOR">COORDINADOR</option>
-                                <option value="SECRETARIO">SECRETARIO</option>
-                                <option value="ASPIRANTE">ASPIRANTE</option>
-                                <option value="DOCENTE">DOCENTE</option>
-                            </select>
-                        </div>
-
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-danger" id="btnEliminarUsuario" style="display:none;" onclick="eliminarUsuario(document.getElementById('idUsuarioForm').value)">
-=======
                         <div class="d-flex justify-content-between mt-4 border-top pt-3">
                             <button type="button" class="btn btn-danger" id="btnEliminarUsuario" style="display:none;"
                                 onclick="eliminarUsuario(document.getElementById('idUsuarioForm').value)">
->>>>>>> f189e26c04451d95cd26cc87c59b8873d5b6bb20
                                 <i class="fa-solid fa-trash"></i> Eliminar
                             </button>
                             <button type="submit" class="btn-primary" style="margin-left:auto; width: auto; padding: 8px 15px;">
@@ -587,122 +559,6 @@
     </div>
 
 
-<<<<<<< HEAD
-                    <div class="modal-body">
-                        <input type="hidden" id="detalleAspId">
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label fw-bold text-muted">Nombre</label>
-                                <input type="text" id="detalleAspNombre" class="form-control" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label fw-bold text-muted">Primer Apellido</label>
-                                <input type="text" id="detalleAspPrimerApellido" class="form-control" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label fw-bold text-muted">Segundo Apellido</label>
-                                <input type="text" id="detalleAspSegundoApellido" class="form-control">
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold text-muted">CURP</label>
-                                <input type="text" id="detalleAspCurp" class="form-control">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold text-muted">Correo</label>
-                                <input type="email" id="detalleAspCorreo" class="form-control" required>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold text-muted">Teléfono</label>
-                                <input type="text" id="detalleAspTelefono" class="form-control">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold text-muted">Fecha de Nacimiento</label>
-                                <input type="date" id="detalleAspFechaNac" class="form-control">
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-12 mb-3">
-                                <label class="form-label fw-bold text-muted">Dirección</label>
-                                <input type="text" id="detalleAspDireccion" class="form-control">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Notificación -->
-    <div class="modal fade" id="modalNotificacion" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header d-flex justify-content-between align-items-center">
-                    <h5 class="modal-title" id="tituloModalNotificacion"><i class="fa-solid fa-bell"></i> Nueva
-                        Notificación</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body">
-                    <form id="formNotificacion">
-                        <input type="hidden" id="idNotificacionForm">
-
-                        <div class="mb-3">
-                            <label class="form-label">Título</label>
-                            <input type="text" id="notif_titulo" class="form-control" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Mensaje</label>
-                            <textarea id="notif_mensaje" class="form-control" rows="3" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Destino</label>
-                            <select id="notif_destino" class="form-select">
-                                <option value="">Seleccione</option>
-                                <option value="todos">Todos</option>
-                                <option value="aspirantes">Aspirantes</option>
-                                <option value="secretario">Secretaría</option>
-                                <option value="docentes">Docentes</option>
-                                <option value="coordinador">Coordinador</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Estado</label>
-                            <select id="notif_estado" class="form-select">
-                                <option value="1">Activa</option>
-                                <option value="0">Inactiva</option>
-                            </select>
-                        </div>
-
-
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-danger" id="btnEliminarNotificacion"
-                                style="display:none;" onclick="eliminarNotificacion()">
-                                <i class="fa-solid fa-trash"></i> Eliminar
-                            </button>
-                            <button type="submit" class="btn btn-primary" style="margin-left:auto;">
-                                <i class="fa-solid fa-floppy-disk"></i> Guardar
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-=======
->>>>>>> f189e26c04451d95cd26cc87c59b8873d5b6bb20
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
