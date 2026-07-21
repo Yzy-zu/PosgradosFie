@@ -124,7 +124,7 @@ function activarSeccionPorHash() {
         void seccionMostrar.offsetWidth; // Trigger reflow for animation
         seccionMostrar.classList.add("fade-in");
     }
-    
+
     setTimeout(() => {
         ocultarLoader();
     }, 300); // Simulate brief loading for smooth transition
@@ -167,11 +167,9 @@ async function cargarUsuarios() {
     try {
         const respuesta = await fetch("/api/usuario");
         const usuarios = await respuesta.json();
-
         // Actualizar contador del dashboard
         const totalUsuarios = document.getElementById("totalUsuarios");
         if (totalUsuarios) totalUsuarios.textContent = usuarios.length || 0;
-
         const tbody = document.getElementById("tablaUsuarios");
         if (!tbody) return;
         tbody.innerHTML = "";
@@ -184,10 +182,9 @@ async function cargarUsuarios() {
 
             fila.innerHTML = `
                 <td>${usuario.id}</td>
-                <td>${usuario.nombre || 'Sin nombre'}</td>
                 <td>${usuario.correo}</td>
                 <td>${usuario.rol || 'Usuario'}</td>
-                <td><span class="badge bg-success">${usuario.estado || 'Activo'}</span></td>
+                <td><span class="badge bg-success">${usuario.activo ? 'Activo' : 'Inactivo'}</span></td>
             `;
             tbody.appendChild(fila);
         });
@@ -200,6 +197,7 @@ async function editarUsuario(id) {
     try {
         const respuesta = await fetch(`/api/usuario/${id}`);
         const usuario = await respuesta.json();
+        console.log(usuario)
 
         if (!usuario) throw new Error("Usuario no encontrado");
 
@@ -207,21 +205,37 @@ async function editarUsuario(id) {
         if (inputId) inputId.value = usuario.id;
 
         const inputNombre = document.getElementById("nombre");
-        if (inputNombre) inputNombre.value = usuario.nombre || "";
+        if (inputNombre) inputNombre.value = usuario.nombre;
 
         const inputCorreo = document.getElementById("correo");
-        if (inputCorreo) inputCorreo.value = usuario.correo || "";
+        if (inputCorreo) inputCorreo.value = usuario.correo;
 
         const inputRol = document.getElementById("rol");
-        if (inputRol) inputRol.value = usuario.rol || "ADMIN";
+        if (inputRol) inputRol.value = usuario.rol;
 
         const inputPassword = document.getElementById("password");
         if (inputPassword) inputPassword.value = "";
+        const inputEstado = document.getElementById("activo");
+        if (inputEstado) inputEstado.value = `${usuario.activo ? '1' : '0'}`;
 
         document.querySelector("#modalUsuario .modal-title").innerHTML = '<i class="fa-solid fa-user-pen"></i> Editar Usuario';
 
         const btnEliminar = document.getElementById("btnEliminarUsuario");
         if (btnEliminar) btnEliminar.style.display = "inline-block";
+
+        // Renderizar los detalles extra y esconder/mostrar el contenedor
+        renderizarCamposRol(usuario.rol, usuario.detalles || {});
+        const contDetalles = document.getElementById("detallesExtendidos");
+        const modalDialog = document.getElementById("dialogUsuario");
+        if (contDetalles) {
+            contDetalles.style.width = "0px";
+            contDetalles.style.opacity = "0";
+            contDetalles.style.padding = "0";
+        }
+        if (modalDialog) modalDialog.style.maxWidth = "500px";
+        
+        const btnTog = document.getElementById("btnToggleDetalles");
+        if (btnTog) btnTog.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Ver detalles específicos del rol';
 
         const modalElement = document.getElementById("modalUsuario");
         const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
@@ -233,18 +247,156 @@ async function editarUsuario(id) {
     }
 }
 
+// Renderizar campos según el rol
+function renderizarCamposRol(rol, detalles = {}) {
+    const contenedorBtn = document.getElementById("contenedorBtnDetalles");
+    const contenedorDetalles = document.getElementById("detallesExtendidos");
+    
+    let html = "";
+    if (rol === "ASPIRANTE") {
+        html = `
+            <h6 class="text-primary mb-3"><i class="fa-solid fa-user-graduate"></i> Detalles de Aspirante</h6>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label class="form-label small">Nombre</label><input type="text" id="det_nombre" class="form-control form-control-sm" value="${detalles.nombre || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Primer Apellido</label><input type="text" id="det_primerApellido" class="form-control form-control-sm" value="${detalles.primerApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" value="${detalles.segundoApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">CURP</label><input type="text" id="det_curp" class="form-control form-control-sm" value="${detalles.curp || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Teléfono</label><input type="text" id="det_telefono" class="form-control form-control-sm" value="${detalles.telefono || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Fecha Nacimiento</label><input type="date" id="det_fechaNacimiento" class="form-control form-control-sm" value="${detalles.fechaNacimiento ? detalles.fechaNacimiento.split('T')[0] : ''}"></div>
+                <div class="col-md-12 mb-2"><label class="form-label small">Dirección</label><input type="text" id="det_direccion" class="form-control form-control-sm" value="${detalles.direccion || ''}"></div>
+            </div>
+        `;
+        contenedorBtn.style.display = "block";
+    } else if (rol === "DOCENTE") {
+        html = `
+            <h6 class="text-primary mb-3"><i class="fa-solid fa-chalkboard-user"></i> Detalles de Docente</h6>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label class="form-label small">Nombre</label><input type="text" id="det_nombre" class="form-control form-control-sm" value="${detalles.nombre || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Primer Apellido</label><input type="text" id="det_primerApellido" class="form-control form-control-sm" value="${detalles.primerApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" value="${detalles.segundoApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Cargo</label><input type="text" id="det_cargo" class="form-control form-control-sm" value="${detalles.cargo || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Especialidad</label><input type="text" id="det_especialidad" class="form-control form-control-sm" value="${detalles.especialidad || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Cubículo</label><input type="text" id="det_cubiculo" class="form-control form-control-sm" value="${detalles.cubiculo || ''}"></div>
+            </div>
+        `;
+        contenedorBtn.style.display = "block";
+    } else if (rol === "SECRETARIO") {
+        html = `
+            <h6 class="text-primary mb-3"><i class="fa-solid fa-user-tie"></i> Detalles de Secretario</h6>
+            <div class="row">
+                <div class="col-md-6 mb-2"><label class="form-label small">Área</label><input type="text" id="det_area" class="form-control form-control-sm" value="${detalles.area || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small">Extensión</label><input type="text" id="det_extension" class="form-control form-control-sm" value="${detalles.extension || ''}"></div>
+            </div>
+        `;
+        contenedorBtn.style.display = "block";
+    } else {
+        html = "";
+        contenedorBtn.style.display = "none";
+        
+        contenedorDetalles.style.width = "0px";
+        contenedorDetalles.style.opacity = "0";
+        contenedorDetalles.style.padding = "0";
+        const modalDialog = document.getElementById("dialogUsuario");
+        if (modalDialog) modalDialog.style.maxWidth = "500px";
+    }
+    
+    // Envolver en un div de ancho fijo para que no haga wrap al colapsar (y evitar altura extra en el flex row)
+    if (html !== "") {
+        html = `<div style="width: 560px;">${html}</div>`;
+    }
+    contenedorDetalles.innerHTML = html;
+}
+
+// Escuchar cambios en el selector de rol
+document.getElementById("rol")?.addEventListener("change", function(e) {
+    renderizarCamposRol(e.target.value);
+});
+
+// Funcionalidad para animación de detalles
+function toggleDetallesUsuario() {
+    const contenedor = document.getElementById("detallesExtendidos");
+    const modalDialog = document.getElementById("dialogUsuario");
+    const btn = document.getElementById("btnToggleDetalles");
+    
+    if (contenedor.style.width !== "0px" && contenedor.style.width !== "") {
+        contenedor.style.width = "0px";
+        contenedor.style.opacity = "0";
+        contenedor.style.padding = "0";
+        if (modalDialog) modalDialog.style.maxWidth = "500px";
+        btn.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Ver detalles específicos del rol';
+    } else {
+        contenedor.style.width = "600px";
+        contenedor.style.opacity = "1";
+        contenedor.style.padding = "1rem";
+        if (modalDialog) modalDialog.style.maxWidth = "1100px";
+        btn.innerHTML = '<i class="fa-solid fa-chevron-left"></i> Ocultar detalles específicos';
+    }
+}
+
+// Reset del modal al abrirlo para "Nuevo Usuario"
+document.getElementById("modalUsuario")?.addEventListener('show.bs.modal', function (event) {
+    const isEdit = document.getElementById("idUsuarioForm").value !== "";
+    // Si no tiene ID asignado (se abrió por el botón de + Nuevo)
+    if (!isEdit && !event.relatedTarget?.closest('.btn-sm')) {
+        document.getElementById("formUsuario").reset();
+        document.getElementById("idUsuarioForm").value = "";
+        document.querySelector("#modalUsuario .modal-title").innerHTML = '<i class="fa-solid fa-user-plus"></i> Nuevo Usuario';
+        const btnElim = document.getElementById("btnEliminarUsuario");
+        if (btnElim) btnElim.style.display = "none";
+        renderizarCamposRol(document.getElementById("rol").value);
+        const contDetalles = document.getElementById("detallesExtendidos");
+        const modalDialog = document.getElementById("dialogUsuario");
+        if (contDetalles) {
+            contDetalles.style.width = "0px";
+            contDetalles.style.opacity = "0";
+            contDetalles.style.padding = "0";
+        }
+        if (modalDialog) modalDialog.style.maxWidth = "500px";
+        
+        const btnTog = document.getElementById("btnToggleDetalles");
+        if (btnTog) btnTog.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Ver detalles específicos del rol';
+    }
+});
+
 document.getElementById("formUsuario").addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const idInput = document.getElementById("idUsuarioForm");
     const idUsuario = idInput ? idInput.value : "";
-    const nombre = document.getElementById("nombre").value;
     const correo = document.getElementById("correo").value;
     const password = document.getElementById("password").value;
     const rol = document.getElementById("rol").value;
+    const activo = document.getElementById("activo").value;
 
-    const datosUsuario = { nombre, correo, password, rol };
-    const token = sessionStorage.getItem("token") || ""; // Por si requiere token más adelante
+    let detalles = null;
+    if (rol === "ASPIRANTE") {
+        detalles = {
+            nombre: document.getElementById("det_nombre")?.value,
+            primerApellido: document.getElementById("det_primerApellido")?.value,
+            segundoApellido: document.getElementById("det_segundoApellido")?.value,
+            curp: document.getElementById("det_curp")?.value,
+            telefono: document.getElementById("det_telefono")?.value,
+            fechaNacimiento: document.getElementById("det_fechaNacimiento")?.value,
+            direccion: document.getElementById("det_direccion")?.value
+        };
+    } else if (rol === "DOCENTE") {
+        detalles = {
+            nombre: document.getElementById("det_nombre")?.value,
+            primerApellido: document.getElementById("det_primerApellido")?.value,
+            segundoApellido: document.getElementById("det_segundoApellido")?.value,
+            cargo: document.getElementById("det_cargo")?.value,
+            especialidad: document.getElementById("det_especialidad")?.value,
+            cubiculo: document.getElementById("det_cubiculo")?.value
+        };
+    } else if (rol === "SECRETARIO") {
+        detalles = {
+            area: document.getElementById("det_area")?.value,
+            extension: document.getElementById("det_extension")?.value
+        };
+    }
+
+    const datosUsuario = { correo, password, rol, activo, detalles };
+    const token = sessionStorage.getItem("token"); // Por si requiere token más adelante
 
     try {
         let url = "/api/usuario";
@@ -412,13 +564,13 @@ function limpiarFormularioConvocatoria() {
     document.getElementById("convocatoria_posgrado").value = "";
     document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-bullhorn"></i> Nueva Convocatoria';
     document.getElementById("btnEliminarConvocatoria").style.display = "none";
-    
+
     // Desmarcar todos los checkboxes del catálogo
     const checkboxes = document.querySelectorAll("#contenedorRequisitos .req-checkbox");
     checkboxes.forEach(cb => {
         cb.checked = false;
         const oblCb = document.getElementById(`obligatorio_${cb.value}`);
-        if(oblCb) oblCb.checked = false;
+        if (oblCb) oblCb.checked = false;
     });
 }
 
@@ -432,23 +584,23 @@ function crearConvocatoria() {
 async function cargarCatalogoRequisitosUI() {
     const contenedor = document.getElementById("contenedorRequisitos");
     if (!contenedor) return;
-    
+
     try {
         const respuesta = await fetch("/api/requisitos");
         if (!respuesta.ok) throw new Error("No se pudo cargar el catálogo de requisitos");
-        
+
         const requisitos = await respuesta.json();
         contenedor.innerHTML = "";
-        
+
         if (requisitos.length === 0) {
             contenedor.innerHTML = "<p class='text-muted'>No hay requisitos en el catálogo.</p>";
             return;
         }
-        
+
         requisitos.forEach(req => {
             const div = document.createElement("div");
             div.className = "d-flex justify-content-between align-items-center mb-2 p-2 border rounded bg-white";
-            
+
             div.innerHTML = `
                 <div class="form-check mb-0">
                     <input class="form-check-input req-checkbox" type="checkbox" value="${req.id}" id="req_${req.id}">
@@ -461,10 +613,10 @@ async function cargarCatalogoRequisitosUI() {
                     <label class="form-check-label small text-muted" for="obligatorio_${req.id}" style="cursor:pointer;">Obligatorio</label>
                 </div>
             `;
-            
+
             contenedor.appendChild(div);
         });
-        
+
     } catch (error) {
         console.error("Error al cargar el catálogo:", error);
         contenedor.innerHTML = "<p class='text-danger'>Error al cargar requisitos.</p>";
@@ -638,8 +790,6 @@ async function cargarAspirantes() {
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
 
         const aspirantes = await respuesta.json();
-        console.log(aspirantes)
-
         if (totalAspirantes) {
             totalAspirantes.textContent = aspirantes.length || 0;
         }
@@ -657,7 +807,7 @@ async function cargarAspirantes() {
             const nombreCompleto = `${aspirante.nombre || ''} ${aspirante.primerApellido || ''} ${aspirante.segundoApellido || ''}`.trim();
 
             tr.style.cursor = "pointer";
-            tr.onclick = () => editarAspirante(aspirante.id);
+            tr.onclick = () => verExpedienteAspirante(aspirante.id);
             tr.innerHTML = `
                 <td>${nombreCompleto || 'Sin nombre'}</td>
                 <td>${aspirante.correo || 'Sin correo'}</td>
@@ -671,45 +821,123 @@ async function cargarAspirantes() {
     }
 }
 
-async function editarAspirante(id) {
+async function verExpedienteAspirante(id) {
     try {
-        const respuesta = await fetch(`/api/aspirante/${id}`);
+        const respuesta = await fetch(`/api/aspirante/${id}/expediente`);
         if (!respuesta.ok) throw new Error("Aspirante no encontrado");
 
-        const aspirante = await respuesta.json();
+        const expediente = await respuesta.json();
+        const perfil = expediente.perfil;
+        const solicitudes = expediente.solicitudes || [];
 
-        // Llenar el modal
-        document.getElementById("detalleAspId").value = aspirante.id || "";
-        document.getElementById("detalleAspNombre").value = aspirante.nombre || "";
-        document.getElementById("detalleAspPrimerApellido").value = aspirante.primerApellido || "";
-        document.getElementById("detalleAspSegundoApellido").value = aspirante.segundoApellido || "";
-        document.getElementById("detalleAspCurp").value = aspirante.curp || "";
-        document.getElementById("detalleAspCorreo").value = aspirante.correo || "";
-        document.getElementById("detalleAspTelefono").value = aspirante.telefono || "";
-
-        // Formatear la fecha si existe
-        let fechaFormat = "";
-        if (aspirante.fechaNacimiento) {
-            const d = new Date(aspirante.fechaNacimiento);
-            if (!isNaN(d.getTime())) {
-                fechaFormat = d.toISOString().split('T')[0];
-            } else {
-                fechaFormat = aspirante.fechaNacimiento;
-            }
+        // Llenar el perfil resumido
+        const nombreCompleto = `${perfil.nombre || ''} ${perfil.primerApellido || ''} ${perfil.segundoApellido || ''}`.trim();
+        document.getElementById("perfil_nombreCompleto").textContent = nombreCompleto;
+        document.getElementById("perfil_correo").textContent = perfil.correo || "Sin correo";
+        
+        document.getElementById("perfil_curp").textContent = perfil.curp || "N/A";
+        document.getElementById("perfil_telefono").textContent = perfil.telefono || "N/A";
+        
+        let fechaNac = "N/A";
+        if (perfil.fechaNacimiento) {
+            fechaNac = new Date(perfil.fechaNacimiento).toLocaleDateString();
         }
-        document.getElementById("detalleAspFechaNac").value = fechaFormat;
+        document.getElementById("perfil_nacimiento").textContent = fechaNac;
+        document.getElementById("perfil_direccion").textContent = perfil.direccion || "N/A";
+        
+        const badgeEstado = document.getElementById("perfil_estado");
+        if (perfil.activo) {
+            badgeEstado.className = "badge bg-success mb-4";
+            badgeEstado.textContent = "Usuario Activo";
+        } else {
+            badgeEstado.className = "badge bg-danger mb-4";
+            badgeEstado.textContent = "Usuario Inactivo";
+        }
 
-        document.getElementById("detalleAspDireccion").value = aspirante.direccion || "";
+        // Llenar las solicitudes
+        const contSolicitudes = document.getElementById("contenedorSolicitudes");
+        contSolicitudes.innerHTML = ""; // Limpiar
 
-        // Mostrar modal
-        const modalElement = document.getElementById("modalAspirante");
-        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
-        modal.show();
+        if (solicitudes.length === 0) {
+            contSolicitudes.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fa-solid fa-inbox text-muted fs-1 mb-2"></i>
+                    <p class="text-muted">El aspirante aún no ha iniciado ningún proceso de admisión.</p>
+                </div>
+            `;
+        } else {
+            solicitudes.forEach(sol => {
+                let colorBadge = "bg-secondary";
+                if (sol.estado === "APROBADO") colorBadge = "bg-success";
+                else if (sol.estado === "RECHAZADO") colorBadge = "bg-danger";
+                else if (sol.estado === "EN_REVISION") colorBadge = "bg-info text-dark";
+                else if (sol.estado === "PENDIENTE") colorBadge = "bg-warning text-dark";
+
+                const d = new Date(sol.creadoEn).toLocaleDateString();
+
+                // Armar la lista de documentos
+                let htmlDocs = "";
+                if (sol.documentos && sol.documentos.length > 0) {
+                    htmlDocs = `<div class="mt-3"><h6 class="small fw-bold text-muted border-bottom pb-1 mb-2">Documentos Adjuntos:</h6><ul class="list-group list-group-flush border rounded">`;
+                    sol.documentos.forEach(doc => {
+                        let colorDoc = "text-secondary";
+                        let iconoDoc = "fa-clock";
+                        if(doc.estadoValidacion === "APROBADO") { colorDoc = "text-success"; iconoDoc = "fa-check-circle"; }
+                        else if(doc.estadoValidacion === "RECHAZADO") { colorDoc = "text-danger"; iconoDoc = "fa-times-circle"; }
+                        else if(doc.estadoValidacion === "PENDIENTE") { colorDoc = "text-warning"; iconoDoc = "fa-clock"; }
+
+                        htmlDocs += `
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                                <div>
+                                    <i class="fa-solid fa-file-pdf text-danger me-2"></i>
+                                    <span class="small">${doc.requisitoNombre}</span>
+                                </div>
+                                <div>
+                                    <span class="badge bg-light ${colorDoc} border me-2" title="Estado: ${doc.estadoValidacion}">
+                                        <i class="fa-solid ${iconoDoc}"></i> ${doc.estadoValidacion}
+                                    </span>
+                                    <a href="/uploads/${doc.rutaArchivo}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;">
+                                        Ver <i class="fa-solid fa-up-right-from-square ms-1"></i>
+                                    </a>
+                                </div>
+                            </li>
+                        `;
+                    });
+                    htmlDocs += `</ul></div>`;
+                } else {
+                    htmlDocs = `<div class="mt-3"><p class="text-muted small"><i class="fa-solid fa-folder-minus"></i> No se han adjuntado documentos aún.</p></div>`;
+                }
+
+                contSolicitudes.innerHTML += `
+                    <div class="card border-0 shadow-sm mb-4 bg-light">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h5 class="card-title text-primary fw-bold mb-1">${sol.convocatoriaNombre}</h5>
+                                    <h6 class="card-subtitle text-muted small"><i class="fa-regular fa-calendar me-1"></i> Iniciado el: ${d} &nbsp;|&nbsp; <i class="fa-solid fa-graduation-cap me-1"></i> ${sol.tipoAdmision}</h6>
+                                </div>
+                                <span class="badge ${colorBadge} fs-6 px-3 py-2 rounded-pill">${sol.estado}</span>
+                            </div>
+                            ${htmlDocs}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Intercambiar vistas
+        document.getElementById("vistaTablaAspirantes").classList.add("d-none");
+        document.getElementById("vistaPerfilAspirante").classList.remove("d-none");
 
     } catch (error) {
-        console.error("Error al cargar detalles del aspirante:", error);
-        alert("Ocurrió un error al cargar los detalles del aspirante.");
+        console.error("Error al cargar expediente:", error);
+        alert("No se pudo cargar el expediente del aspirante.");
     }
+}
+
+function cerrarExpedienteAspirante() {
+    document.getElementById("vistaPerfilAspirante").classList.add("d-none");
+    document.getElementById("vistaTablaAspirantes").classList.remove("d-none");
 }
 
 document.getElementById("formAspirante")?.addEventListener("submit", async (e) => {

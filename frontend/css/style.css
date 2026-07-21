@@ -1245,3 +1245,7 @@ body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* Animación de detalles de usuario */
+.expand-container { max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out, margin 0.4s ease-in-out; margin-top: 0; }
+.expand-container.expanded { max-height: 800px; opacity: 1; margin-top: 15px; }

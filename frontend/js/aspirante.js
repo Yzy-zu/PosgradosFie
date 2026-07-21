@@ -575,15 +575,14 @@ function bloquearInterfazPorRevision() {
     const stepper = document.querySelector('.stepper-wrapper');
     if (stepper) stepper.style.display = 'none';
 
-    // 3. Deshabilitar todos los inputs de archivo
-    document.querySelectorAll('input[type="file"]').forEach(input => input.disabled = true);
-    
-    // 4. Ocultar checkbox legal
-    const protesta = document.getElementById('protesta-legal');
-    if (protesta) protesta.style.display = 'none';
+    // 3. Ocultar todos los paneles de estación de documentos
+    document.querySelectorAll('.station-panel').forEach(panel => {
+        panel.style.display = 'none';
+    });
 
-    // 5. Ocultar todos los botones de avance/retroceso/finalizar en los forms
-    document.querySelectorAll('.station-panel form button').forEach(btn => btn.style.display = 'none');
+    // 4. Asegurarse de ocultar panel 0 (Admisión general) si existe, u ocultar sus inputs
+    const panel0 = document.getElementById('panel-estacion-0');
+    if (panel0) panel0.style.display = 'none';
 }
 
 /**

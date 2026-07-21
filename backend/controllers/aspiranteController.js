@@ -107,8 +107,65 @@ const obtenerAspirantePorId = async (req, res) => {
     }
 };
 
+const obtenerExpediente = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 1. Info del aspirante + correo de usuario
+        const queryAspirante = `
+            SELECT a.*, u.correo, u.activo 
+            FROM aspirante a 
+            JOIN usuario u ON a.idUsuario = u.id 
+            WHERE a.id = ?
+        `;
+        const [resAspirante] = await db.query(queryAspirante, [id]);
+        if (resAspirante.length === 0) {
+            return res.status(404).json({ success: false, mensaje: 'Aspirante no encontrado' });
+        }
+        
+        let expediente = {
+            perfil: resAspirante[0],
+            solicitudes: []
+        };
+
+        // 2. Historial de solicitudes (convocatorias)
+        const querySolicitudes = `
+            SELECT s.id as idSolicitud, s.estado, s.creadoEn, s.tipoAdmision, c.nombre as convocatoriaNombre, c.posgrado_id
+            FROM solicitud s
+            JOIN convocatorias c ON s.idConvocatoria = c.id
+            WHERE s.idAspi = ?
+            ORDER BY s.creadoEn DESC
+        `;
+        const [solicitudes] = await db.query(querySolicitudes, [id]);
+        
+        if (solicitudes.length > 0) {
+            const idsSolicitudes = solicitudes.map(s => s.idSolicitud);
+            
+            // 3. Documentos por solicitud
+            const queryDocs = `
+                SELECT sd.idSolicitud, sd.rutaArchivo, sd.estadoValidacion, cr.nombre as requisitoNombre
+                FROM solicitud_documentos sd
+                JOIN catalogo_requisitos cr ON sd.idRequisito = cr.id
+                WHERE sd.idSolicitud IN (?)
+            `;
+            const [documentos] = await db.query(queryDocs, [idsSolicitudes]);
+            
+            expediente.solicitudes = solicitudes.map(sol => {
+                sol.documentos = documentos.filter(doc => doc.idSolicitud === sol.idSolicitud);
+                return sol;
+            });
+        }
+
+        return res.status(200).json(expediente);
+    } catch (error) {
+        console.error('Error en obtenerExpediente:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error en el servidor' });
+    }
+};
+
 module.exports = {
     registrarAspirante,
     obtenerAspirantes,
-    obtenerAspirantePorId
+    obtenerAspirantePorId,
+    obtenerExpediente
 };
