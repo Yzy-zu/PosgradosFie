@@ -256,14 +256,40 @@ function renderizarCamposRol(rol, detalles = {}) {
     if (rol === "ASPIRANTE") {
         html = `
             <h6 class="text-primary mb-3"><i class="fa-solid fa-user-graduate"></i> Detalles de Aspirante</h6>
-            <div class="row">
+            <div class="row" style="max-height: 400px; overflow-y: auto; overflow-x: hidden;">
                 <div class="col-md-4 mb-2"><label class="form-label small">Nombre</label><input type="text" id="det_nombre" class="form-control form-control-sm" value="${detalles.nombre || ''}"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small">Primer Apellido</label><input type="text" id="det_primerApellido" class="form-control form-control-sm" value="${detalles.primerApellido || ''}"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small">Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" value="${detalles.segundoApellido || ''}"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small">CURP</label><input type="text" id="det_curp" class="form-control form-control-sm" value="${detalles.curp || ''}"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small">Teléfono</label><input type="text" id="det_telefono" class="form-control form-control-sm" value="${detalles.telefono || ''}"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small">Fecha Nacimiento</label><input type="date" id="det_fechaNacimiento" class="form-control form-control-sm" value="${detalles.fechaNacimiento ? detalles.fechaNacimiento.split('T')[0] : ''}"></div>
-                <div class="col-md-12 mb-2"><label class="form-label small">Dirección</label><input type="text" id="det_direccion" class="form-control form-control-sm" value="${detalles.direccion || ''}"></div>
+                <div class="col-md-4 mb-2">
+                    <label class="form-label small">Estado Civil</label>
+                    <select id="det_estadoCivil" class="form-select form-select-sm">
+                        <option value="SOLTERO" ${detalles.estadoCivil === 'SOLTERO' ? 'selected' : ''}>SOLTERO</option>
+                        <option value="CASADO" ${detalles.estadoCivil === 'CASADO' ? 'selected' : ''}>CASADO</option>
+                        <option value="UNION_LIBRE" ${detalles.estadoCivil === 'UNION_LIBRE' ? 'selected' : ''}>UNIÓN LIBRE</option>
+                        <option value="DIVORCIADO" ${detalles.estadoCivil === 'DIVORCIADO' ? 'selected' : ''}>DIVORCIADO</option>
+                        <option value="SEPARADO" ${detalles.estadoCivil === 'SEPARADO' ? 'selected' : ''}>SEPARADO</option>
+                        <option value="VIUDO" ${detalles.estadoCivil === 'VIUDO' ? 'selected' : ''}>VIUDO</option>
+                    </select>
+                </div>
+                <div class="col-md-8 mb-2"><label class="form-label small">Dirección</label><input type="text" id="det_direccion" class="form-control form-control-sm" value="${detalles.direccion || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Código Postal</label><input type="number" id="det_direccionPostal" class="form-control form-control-sm" value="${detalles.direccionPostal || ''}"></div>
+                
+                <h6 class="text-secondary mt-3 mb-2 w-100 border-bottom pb-1"><i class="fa-solid fa-graduation-cap"></i> Antecedentes Académicos</h6>
+                <div class="col-md-6 mb-2"><label class="form-label small">Licenciatura</label><input type="text" id="det_licenciatura" class="form-control form-control-sm" value="${detalles.licenciatura || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small">Institución (Licenciatura)</label><input type="text" id="det_institucionLicenciatura" class="form-control form-control-sm" value="${detalles.institucionLicenciatura || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Fecha de Egreso</label><input type="date" id="det_fechaEgreso" class="form-control form-control-sm" value="${detalles.fechaEgreso ? detalles.fechaEgreso.split('T')[0] : ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Fecha de Titulación</label><input type="date" id="det_fechaTitulacion" class="form-control form-control-sm" value="${detalles.fechaTitulacion ? detalles.fechaTitulacion.split('T')[0] : ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Promedio</label><input type="number" step="0.01" id="det_promedio" class="form-control form-control-sm" value="${detalles.promedio || ''}"></div>
+                <div class="col-md-12 mb-2"><label class="form-label small">Otros Estudios</label><input type="text" id="det_otrosEstudios" class="form-control form-control-sm" value="${detalles.otrosEstudios || ''}"></div>
+
+                <h6 class="text-secondary mt-3 mb-2 w-100 border-bottom pb-1"><i class="fa-solid fa-briefcase"></i> Ocupación</h6>
+                <div class="col-md-6 mb-2"><label class="form-label small">Ocupación Actual</label><input type="text" id="det_ocupacion" class="form-control form-control-sm" value="${detalles.ocupacion || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small">Teléfono (Ocupación)</label><input type="text" id="det_telefonoOcupacion" class="form-control form-control-sm" value="${detalles.telefonoOcupacion || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small">Ciudad (Ocupación)</label><input type="text" id="det_ciudadOcupacion" class="form-control form-control-sm" value="${detalles.ciudadOcupacion || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small">Estado (Ocupación)</label><input type="text" id="det_estadoOcupacion" class="form-control form-control-sm" value="${detalles.estadoOcupacion || ''}"></div>
             </div>
         `;
         contenedorBtn.style.display = "block";
@@ -377,7 +403,19 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
             curp: document.getElementById("det_curp")?.value,
             telefono: document.getElementById("det_telefono")?.value,
             fechaNacimiento: document.getElementById("det_fechaNacimiento")?.value,
-            direccion: document.getElementById("det_direccion")?.value
+            estadoCivil: document.getElementById("det_estadoCivil")?.value || 'SOLTERO',
+            direccion: document.getElementById("det_direccion")?.value,
+            direccionPostal: document.getElementById("det_direccionPostal")?.value,
+            licenciatura: document.getElementById("det_licenciatura")?.value,
+            institucionLicenciatura: document.getElementById("det_institucionLicenciatura")?.value,
+            fechaEgreso: document.getElementById("det_fechaEgreso")?.value,
+            fechaTitulacion: document.getElementById("det_fechaTitulacion")?.value,
+            promedio: document.getElementById("det_promedio")?.value,
+            otrosEstudios: document.getElementById("det_otrosEstudios")?.value,
+            ocupacion: document.getElementById("det_ocupacion")?.value,
+            telefonoOcupacion: document.getElementById("det_telefonoOcupacion")?.value,
+            ciudadOcupacion: document.getElementById("det_ciudadOcupacion")?.value,
+            estadoOcupacion: document.getElementById("det_estadoOcupacion")?.value
         };
     } else if (rol === "DOCENTE") {
         detalles = {
@@ -558,12 +596,41 @@ async function cargarPosgradosEnSelect() {
     }
 }
 
+function toggleCamposPorTipo() {
+    const tipo = document.getElementById("convocatoria_tipo").value;
+    const grupoEntrevistas = document.getElementById("grupo_entrevistas");
+    const grupoAcademicas = document.getElementById("grupo_fechas_academicas");
+
+    if (tipo === "MAESTRIA") {
+        // Ocultar entrevistas y limpiar
+        if (grupoEntrevistas) grupoEntrevistas.style.display = "none";
+        document.getElementById("convocatoria_fechaEntrevistaInicio").value = "";
+        document.getElementById("convocatoria_fechaEntrevistaFin").value = "";
+        
+        // Mostrar académicas
+        if (grupoAcademicas) grupoAcademicas.style.display = "block";
+    } else if (tipo === "DOCTORADO") {
+        // Mostrar entrevistas
+        if (grupoEntrevistas) grupoEntrevistas.style.display = "flex"; // row display flex by default in BS
+
+        // Ocultar académicas y limpiar
+        if (grupoAcademicas) grupoAcademicas.style.display = "none";
+        document.getElementById("convocatoria_inicioCurso").value = "";
+        document.getElementById("convocatoria_finCurso").value = "";
+        document.getElementById("convocatoria_inicioExamen").value = "";
+        document.getElementById("convocatoria_finExamen").value = "";
+    }
+}
+
+document.getElementById("convocatoria_tipo")?.addEventListener("change", toggleCamposPorTipo);
+
 function limpiarFormularioConvocatoria() {
     document.getElementById("formConvocatoria").reset();
     document.getElementById("idConvocatoriaForm").value = "";
     document.getElementById("convocatoria_posgrado").value = "";
     document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-bullhorn"></i> Nueva Convocatoria';
     document.getElementById("btnEliminarConvocatoria").style.display = "none";
+    toggleCamposPorTipo();
 
     // Desmarcar todos los checkboxes del catálogo
     const checkboxes = document.querySelectorAll("#contenedorRequisitos .req-checkbox");
@@ -634,11 +701,26 @@ async function editarConvocatoria(id) {
         limpiarFormularioConvocatoria();
         document.getElementById("idConvocatoriaForm").value = conv.id;
         document.getElementById("convocatoria_posgrado").value = conv.posgrado_id || "";
+        document.getElementById("convocatoria_tipo").value = conv.tipo || "MAESTRIA";
         document.getElementById("convocatoria_nombre").value = conv.nombre || "";
         document.getElementById("convocatoria_descripcion").value = conv.descripcion || "";
+        document.getElementById("convocatoria_estado").value = conv.estado || "Borrador";
+        document.getElementById("convocatoria_modalidad").value = conv.modalidad || "Escolarizada";
+        document.getElementById("convocatoria_duracion").value = conv.duracion || "";
+        
         document.getElementById("convocatoria_fecha_inicio").value = conv.fecha_inicio ? conv.fecha_inicio.split('T')[0] : "";
         document.getElementById("convocatoria_fecha_fin").value = conv.fecha_fin ? conv.fecha_fin.split('T')[0] : "";
-        document.getElementById("convocatoria_estado").value = conv.estado || "Borrador";
+        document.getElementById("convocatoria_fechaInicioDocumentos").value = conv.fechaInicioDocumentos ? conv.fechaInicioDocumentos.split('T')[0] : "";
+        document.getElementById("convocatoria_fechaFinDocumentos").value = conv.fechaFinDocumentos ? conv.fechaFinDocumentos.split('T')[0] : "";
+        document.getElementById("convocatoria_fechaEntrevistaInicio").value = conv.fechaEntrevistaInicio ? conv.fechaEntrevistaInicio.split('T')[0] : "";
+        document.getElementById("convocatoria_fechaEntrevistaFin").value = conv.fechaEntrevistaFin ? conv.fechaEntrevistaFin.split('T')[0] : "";
+        document.getElementById("convocatoria_fechaInicioEscolar").value = conv.fechaInicioEscolar ? conv.fechaInicioEscolar.split('T')[0] : "";
+        document.getElementById("convocatoria_fechaResultados").value = conv.fechaResultados ? conv.fechaResultados.split('T')[0] : "";
+        
+        document.getElementById("convocatoria_inicioCurso").value = conv.inicioCurso ? conv.inicioCurso.split('T')[0] : "";
+        document.getElementById("convocatoria_finCurso").value = conv.finCurso ? conv.finCurso.split('T')[0] : "";
+        document.getElementById("convocatoria_inicioExamen").value = conv.inicioExamen ? conv.inicioExamen.split('T')[0] : "";
+        document.getElementById("convocatoria_finExamen").value = conv.finExamen ? conv.finExamen.split('T')[0] : "";
 
         // Cargar requisitos desde tabla pivote
         try {
@@ -657,6 +739,8 @@ async function editarConvocatoria(id) {
         } catch (e) {
             console.error("Error al cargar requisitos de la convocatoria", e);
         }
+
+        toggleCamposPorTipo();
 
         document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Editar Convocatoria';
 
@@ -681,11 +765,26 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
 
     const idInput = document.getElementById("idConvocatoriaForm").value;
     const posgrado_id = document.getElementById("convocatoria_posgrado").value;
+    const tipo = document.getElementById("convocatoria_tipo").value;
     const nombre = document.getElementById("convocatoria_nombre").value;
     const descripcion = document.getElementById("convocatoria_descripcion").value;
+    const estado = document.getElementById("convocatoria_estado").value;
+    const modalidad = document.getElementById("convocatoria_modalidad").value;
+    const duracion = document.getElementById("convocatoria_duracion").value;
+
     const fecha_inicio = document.getElementById("convocatoria_fecha_inicio").value;
     const fecha_fin = document.getElementById("convocatoria_fecha_fin").value;
-    const estado = document.getElementById("convocatoria_estado").value;
+    const fechaInicioDocumentos = document.getElementById("convocatoria_fechaInicioDocumentos").value;
+    const fechaFinDocumentos = document.getElementById("convocatoria_fechaFinDocumentos").value;
+    const fechaEntrevistaInicio = document.getElementById("convocatoria_fechaEntrevistaInicio").value;
+    const fechaEntrevistaFin = document.getElementById("convocatoria_fechaEntrevistaFin").value;
+    const fechaInicioEscolar = document.getElementById("convocatoria_fechaInicioEscolar").value;
+    const fechaResultados = document.getElementById("convocatoria_fechaResultados").value;
+
+    const inicioCurso = document.getElementById("convocatoria_inicioCurso").value;
+    const finCurso = document.getElementById("convocatoria_finCurso").value;
+    const inicioExamen = document.getElementById("convocatoria_inicioExamen").value;
+    const finExamen = document.getElementById("convocatoria_finExamen").value;
 
     // Recopilar requisitos del DOM (los checkboxes marcados)
     const checkboxes = document.querySelectorAll("#contenedorRequisitos .req-checkbox:checked");
@@ -699,7 +798,7 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
         });
     });
 
-    const datosConvocatoria = { nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, requisitos };
+    const datosConvocatoria = { nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, tipo, modalidad, duracion, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, inicioCurso, finCurso, inicioExamen, finExamen, requisitos };
     const token = sessionStorage.getItem("token") || "";
 
     try {

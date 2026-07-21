@@ -249,13 +249,17 @@
 
                                 <div class="text-start">
                                     <p class="mb-2"><i class="fa-solid fa-id-card text-secondary me-2"></i>
-                                        <strong>CURP:</strong> <span id="perfil_curp"></span></p>
+                                        <strong>CURP:</strong> <span id="perfil_curp"></span>
+                                    </p>
                                     <p class="mb-2"><i class="fa-solid fa-phone text-secondary me-2"></i>
-                                        <strong>Teléfono:</strong> <span id="perfil_telefono"></span></p>
+                                        <strong>Teléfono:</strong> <span id="perfil_telefono"></span>
+                                    </p>
                                     <p class="mb-2"><i class="fa-solid fa-calendar text-secondary me-2"></i>
-                                        <strong>Nacimiento:</strong> <span id="perfil_nacimiento"></span></p>
+                                        <strong>Nacimiento:</strong> <span id="perfil_nacimiento"></span>
+                                    </p>
                                     <p class="mb-0"><i class="fa-solid fa-location-dot text-secondary me-2"></i>
-                                        <strong>Dirección:</strong> <span id="perfil_direccion"></span></p>
+                                        <strong>Dirección:</strong> <span id="perfil_direccion"></span>
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -295,8 +299,10 @@
         <div id="seccion-notificaciones" class="content-section d-none">
             <div class="card mt-2 shadow-sm" style="flex:auto;">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0" style="color:#1a1f2c;"><i class="fa-solid fa-bell"></i> Gestión de Notificaciones</h5>
-                    <button class="btn btn-primary" style="width:auto; padding: 8px 15px;" data-bs-toggle="modal" data-bs-target="#modalNotificacion" onclick="limpiarFormularioNotificacion()">
+                    <h5 class="mb-0" style="color:#1a1f2c;"><i class="fa-solid fa-bell"></i> Gestión de Notificaciones
+                    </h5>
+                    <button class="btn btn-primary" style="width:auto; padding: 8px 15px;" data-bs-toggle="modal"
+                        data-bs-target="#modalNotificacion" onclick="limpiarFormularioNotificacion()">
                         <i class="fa-solid fa-plus"></i> Nueva Notificación
                     </button>
                 </div>
@@ -350,9 +356,10 @@
                             <input type="text" class="form-control" id="notif_titulo" placeholder="Título" required>
                             <label for="notif_titulo">Título de la Notificación</label>
                         </div>
-                        
+
                         <div class="form-floating mb-4">
-                            <textarea class="form-control" id="notif_mensaje" placeholder="Mensaje" style="height: 120px" required></textarea>
+                            <textarea class="form-control" id="notif_mensaje" placeholder="Mensaje"
+                                style="height: 120px" required></textarea>
                             <label for="notif_mensaje">Cuerpo del Mensaje</label>
                         </div>
 
@@ -382,7 +389,9 @@
                         </div>
 
                         <div class="d-flex justify-content-between pt-3 border-top">
-                            <button type="button" class="btn btn-outline-danger" id="btnEliminarNotificacion" style="display:none;" onclick="eliminarNotificacion(document.getElementById('idNotificacionForm').value)">
+                            <button type="button" class="btn btn-outline-danger" id="btnEliminarNotificacion"
+                                style="display:none;"
+                                onclick="eliminarNotificacion(document.getElementById('idNotificacionForm').value)">
                                 <i class="fa-solid fa-trash-can"></i> Eliminar
                             </button>
                             <button type="submit" class="btn btn-primary px-4" style="margin-left:auto;">
@@ -488,46 +497,90 @@
 
                         <div class="row">
                             <!-- Lado Izquierdo: Detalles Básicos -->
-                            <div class="col-md-6 border-end pe-4">
+                            <div class="col-md-6 border-end pe-4" style="max-height: 550px; overflow-y: auto; overflow-x: hidden;">
                                 <h6 class="text-primary mb-3"><i class="fa-solid fa-circle-info"></i> Información
                                     General</h6>
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold text-muted">Posgrado</label>
-                                    <select id="convocatoria_posgrado" class="form-select" required>
-                                        <option value="">Seleccione un posgrado...</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold text-muted">Nombre de la Convocatoria</label>
-                                    <input type="text" id="convocatoria_nombre" class="form-control" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold text-muted">Descripción</label>
-                                    <textarea id="convocatoria_descripcion" class="form-control" rows="3"></textarea>
-                                </div>
-
-                                <div class="row mb-3">
-                                    <div class="col-6">
-                                        <label class="form-label fw-bold text-muted">Fecha Inicio</label>
-                                        <input type="date" id="convocatoria_fecha_inicio" class="form-control" required>
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-muted small">Posgrado</label>
+                                        <select id="convocatoria_posgrado" class="form-select form-select-sm" required>
+                                            <option value="">Seleccione un posgrado...</option>
+                                        </select>
                                     </div>
-                                    <div class="col-6">
-                                        <label class="form-label fw-bold text-muted">Fecha Fin</label>
-                                        <input type="date" id="convocatoria_fecha_fin" class="form-control" required>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-muted small">Tipo</label>
+                                        <select id="convocatoria_tipo" class="form-select form-select-sm" required>
+                                            <option value="MAESTRIA">MAESTRIA</option>
+                                            <option value="DOCTORADO">DOCTORADO</option>
+                                        </select>
                                     </div>
                                 </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold text-muted">Estado</label>
-                                    <select id="convocatoria_estado" class="form-select">
-                                        <option value="Borrador">Borrador</option>
-                                        <option value="Activa">Activa</option>
-                                        <option value="Evaluacion">Evaluación</option>
-                                        <option value="Cerrada">Cerrada</option>
-                                    </select>
+                                <div class="mb-2">
+                                    <label class="form-label fw-bold text-muted small">Nombre de la Convocatoria</label>
+                                    <input type="text" id="convocatoria_nombre" class="form-control form-control-sm" required>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label fw-bold text-muted small">Descripción</label>
+                                    <textarea id="convocatoria_descripcion" class="form-control form-control-sm" rows="2"></textarea>
+                                </div>
+
+                                <div class="row mb-2">
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold text-muted small">Estado</label>
+                                        <select id="convocatoria_estado" class="form-select form-select-sm">
+                                            <option value="Borrador">Borrador</option>
+                                            <option value="Activa">Activa</option>
+                                            <option value="Evaluacion">Evaluación</option>
+                                            <option value="Cerrada">Cerrada</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold text-muted small">Modalidad</label>
+                                        <select id="convocatoria_modalidad" class="form-select form-select-sm">
+                                            <option value="Escolarizada">Escolarizada</option>
+                                            <option value="En linea">En línea</option>
+                                            <option value="Mixta">Mixta</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold text-muted small">Duración (meses)</label>
+                                        <input type="number" id="convocatoria_duracion" class="form-control form-control-sm" required>
+                                    </div>
+                                </div>
+
+                                <h6 class="text-secondary mt-3 mb-2 border-bottom pb-1 small"><i class="fa-regular fa-calendar"></i> Fechas Principales</h6>
+                                <div class="row mb-2">
+                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Fecha Inicio</label><input type="date" id="convocatoria_fecha_inicio" class="form-control form-control-sm" required></div>
+                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Fecha Fin</label><input type="date" id="convocatoria_fecha_fin" class="form-control form-control-sm" required></div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio Documentos</label><input type="date" id="convocatoria_fechaInicioDocumentos" class="form-control form-control-sm" required></div>
+                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Fin Documentos</label><input type="date" id="convocatoria_fechaFinDocumentos" class="form-control form-control-sm" required></div>
+                                </div>
+                                <div class="row mb-2" id="grupo_entrevistas">
+                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio Entrevistas</label><input type="date" id="convocatoria_fechaEntrevistaInicio" class="form-control form-control-sm"></div>
+                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Fin Entrevistas</label><input type="date" id="convocatoria_fechaEntrevistaFin" class="form-control form-control-sm"></div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio Escolar</label><input type="date" id="convocatoria_fechaInicioEscolar" class="form-control form-control-sm" required></div>
+                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Resultados</label><input type="date" id="convocatoria_fechaResultados" class="form-control form-control-sm" required></div>
+                                </div>
+
+                                <div id="grupo_fechas_academicas">
+                                    <h6 class="text-secondary mt-3 mb-2 border-bottom pb-1 small"><i class="fa-solid fa-graduation-cap"></i> Fechas Académicas (Propedéutico y Examen)</h6>
+                                    <div class="row mb-2">
+                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio Curso</label><input type="date" id="convocatoria_inicioCurso" class="form-control form-control-sm"></div>
+                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Fin Curso</label><input type="date" id="convocatoria_finCurso" class="form-control form-control-sm"></div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio Examen</label><input type="date" id="convocatoria_inicioExamen" class="form-control form-control-sm"></div>
+                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Fin Examen</label><input type="date" id="convocatoria_finExamen" class="form-control form-control-sm"></div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -539,7 +592,7 @@
                                     cumplir. Marque la casilla de "Obligatorio" si el documento es indispensable.</p>
 
                                 <div id="contenedorRequisitos" class="p-3 bg-light border rounded"
-                                    style="max-height: 280px; overflow-y: auto;">
+                                    style="max-height: 400px; overflow-y: auto;">
                                     <!-- Los requisitos dinámicos (Checkboxes) se insertarán aquí desde la API -->
                                     <p class="text-center text-muted"><i class="fa-solid fa-spinner fa-spin"></i>
                                         Cargando catálogo...</p>
