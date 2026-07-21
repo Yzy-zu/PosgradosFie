@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     // Obtener datos del aspirante real
     try {
-        const resAspirantes = await fetch('http://localhost:4000/api/aspirante');
+        const resAspirantes = await fetch('/api/aspirante');
         if (resAspirantes.ok) {
             const listaAspirantes = await resAspirantes.json();
             // Buscar aspirante por idUsuario
@@ -39,16 +39,28 @@ document.addEventListener("DOMContentLoaded", async function () {
                 if (lblCorreo) lblCorreo.innerText = aspiranteData.correo;
                 if (lblTelefono) lblTelefono.innerText = aspiranteData.telefono;
 
-                // --- RESTAURAR SESION DE SOLICITUD ---
+                // Cargar modalidades de admisión dinámicas
+                cargarModalidadesAdmision();
+
+                // --- RESTAURAR SESION DE SOLICITUD (HIDRATACIÓN) ---
                 try {
-                    const resSoli = await fetch(`http://localhost:4000/api/solicitud/activa/${aspiranteData.id}`);
+                    const resSoli = await fetch(`/api/solicitud/activa/${aspiranteData.id}`);
                     if (resSoli.ok) {
                         const soliData = await resSoli.json();
                         if (soliData.existe) {
-                            // Reanudamos la UI del usuario
-                            currentSolicitudId = soliData.idSolicitud;
-                            nivelAcademicoSeleccionado = soliData.nivel === 'DOCTORADO' ? 'Doctorado' : 'Maestría';
-                            prepararFlujoEstaciones(nivelAcademicoSeleccionado, soliData.idConvocatoria);
+                            // Hidratamos la UI del usuario desde el Backend
+                            hidratarUI(soliData);
+                            
+                            // Render initial route
+                            const currentHash = window.location.hash.replace('#', '');
+                            if (!currentHash) {
+                                window.location.hash = soliData.estacion_actual > 0 ? 'documentos' : 'inicio';
+                            } else {
+                                switchView(currentHash);
+                            }
+                            
+                            // Ocultamos el loader inicial si hubiera
+                            ocultarLoader();
                             return; // Salimos para no ejecutar el código de abajo
                         }
                     }
@@ -69,20 +81,43 @@ document.addEventListener("DOMContentLoaded", async function () {
     if (programaElegido) {
         activarModulosPostRegistro(programaElegido);
     }
+
+    // Render initial route if not handled by hydration return
+    const fallbackHash = window.location.hash.replace('#', '');
+    if (!fallbackHash) {
+        window.location.hash = 'inicio';
+    } else {
+        switchView(fallbackHash);
+    }
 });
 
+
+
 /**
- * Control del cambio de paneles (Navegación lateral)
+ * Control del cambio de paneles (Navegación lateral con Hash Router)
  */
 function switchView(viewId) {
+    if (window.location.hash !== `#${viewId}`) {
+        window.location.hash = viewId;
+        return; // El evento onhashchange se encargará de hacer el render
+    }
+
+    mostrarLoader();
+
     // Ocultar todas las secciones de contenido
     const sections = document.querySelectorAll('.view-section');
-    sections.forEach(sec => sec.style.display = 'none');
+    sections.forEach(sec => {
+        sec.style.display = 'none';
+        sec.classList.remove('fade-in');
+    });
 
-    // Mostrar la sección seleccionada
+    // Mostrar la sección seleccionada con fade-in
     const targetSection = document.getElementById(`view-${viewId}`);
     if (targetSection) {
         targetSection.style.display = 'block';
+        // Forzar un reflow para que la animación se reinicie
+        void targetSection.offsetWidth;
+        targetSection.classList.add('fade-in');
     }
 
     // Actualizar estados visuales en la barra de navegación lateral
@@ -98,7 +133,17 @@ function switchView(viewId) {
     if (viewId === 'notificaciones') {
         cargarNotificaciones();
     }
+
+    setTimeout(() => {
+        ocultarLoader();
+    }, 300);
 }
+
+// Router Event Listener
+window.addEventListener('hashchange', () => {
+    const hash = window.location.hash.replace('#', '') || 'inicio';
+    switchView(hash);
+});
 
 /**
  * Carga las notificaciones desde la API
@@ -111,7 +156,7 @@ async function cargarNotificaciones() {
     contenedor.innerHTML = '<div class="card"><p>Cargando notificaciones...</p></div>';
 
     try {
-        const res = await fetch('http://localhost:4000/api/notificaciones', {
+        const res = await fetch('/api/notificaciones?destino=aspirantes', {
             headers: {
                 'Authorization': `Bearer ${sessionStorage.getItem('token')}`
             }
@@ -120,13 +165,30 @@ async function cargarNotificaciones() {
         if (res.ok) {
             const notificaciones = await res.json();
             if (!notificaciones || notificaciones.length === 0) {
-                contenedor.innerHTML = '<div class="card"><p>No tienes notificaciones nuevas.</p></div>';
+                contenedor.innerHTML = '<div class="card" style="grid-column: 1 / -1; text-align: center; color: #7f8c8d;"><p>No tienes notificaciones nuevas.</p></div>';
             } else {
                 let html = '';
                 notificaciones.forEach(notif => {
+                    // Extraer un resumen del mensaje (máximo 60 caracteres)
+                    let resumen = notif.mensaje.length > 60 ? notif.mensaje.substring(0, 60) + '...' : notif.mensaje;
+                    
+                    // Escapar comillas dobles o simples para que no rompa el onclick (mejorando la inyección de data)
+                    const notifStr = encodeURIComponent(JSON.stringify(notif));
+
                     html += `
-                    <div class="card" style="margin-bottom: 10px;">
-                        <p><strong><i class="fa-solid fa-bell" style="color: #8a1c24;"></i> ${notif.nombre}:</strong> ${notif.mensaje}</p>
+                    <div class="card notif-card" style="cursor: pointer; position: relative; padding: 25px 20px; text-align: center; border-top: 4px solid #3498db; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-height: 180px;" onclick="abrirNotificacion('${notifStr}')" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 2px 10px rgba(0,0,0,0.05)';">
+                        
+                        <div>
+                            <div style="width: 50px; height: 50px; background: #e8f4fd; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px auto;">
+                                <i class="fa-solid fa-envelope" style="color: #3498db; font-size: 20px;"></i>
+                            </div>
+                            <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">${notif.nombre}</h4>
+                            <p style="color: #7f8c8d; font-size: 13px; margin: 0; line-height: 1.4;">${resumen}</p>
+                        </div>
+
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 12px; color: #bdc3c7;">
+                            <i class="fa-solid fa-magnifying-glass-plus"></i> Clic para leer completo
+                        </div>
                     </div>`;
                 });
                 contenedor.innerHTML = html;
@@ -138,7 +200,26 @@ async function cargarNotificaciones() {
     } catch (e) {
         // Fallback por si la API aún no está implementada por el backend
         console.warn("Ocurrio un error al obtener notificaciones:", e);
-        contenedor.innerHTML = '<div class="card"><p><strong><i class="fa-solid fa-triangle-exclamation" style="color: #e67e22;"></i> Sistema FIE:</strong> Recuerda verificar las fechas límite del calendario de admisiones. (Modo Offline)</p></div>';
+        contenedor.innerHTML = '<div class="card" style="grid-column: 1 / -1;"><p><strong><i class="fa-solid fa-triangle-exclamation" style="color: #e67e22;"></i> Sistema FIE:</strong> Recuerda verificar las fechas límite del calendario de admisiones. (Modo Offline)</p></div>';
+    }
+}
+
+/**
+ * Muestra el modal con la notificación completa
+ */
+function abrirNotificacion(notifDataEnc) {
+    try {
+        const notif = JSON.parse(decodeURIComponent(notifDataEnc));
+        document.getElementById('modal-notif-titulo').innerText = notif.nombre || 'Aviso';
+        document.getElementById('modal-notif-cuerpo').innerText = notif.mensaje || '';
+        
+        // Formatear si tuviéramos fecha
+        document.getElementById('modal-notif-fecha').innerHTML = `<i class="fa-regular fa-clock"></i> Notificación del Sistema`;
+
+        const modal = document.getElementById('modal-notificacion');
+        if(modal) modal.style.display = 'flex';
+    } catch (error) {
+        console.error("Error al abrir notificación", error);
     }
 }
 
@@ -151,13 +232,17 @@ function seleccionarPrograma(nombrePrograma) {
 
     // SI NO HA INICIADO SESIÓN (Es un aspirante nuevo o sin credenciales activas)
     if (!token || !usuario) {
-        alert(`Para postularte a la ${nombrePrograma} debes confirmar tus credenciales de registro. Redirigiendo...`);
-
-        // Guardamos temporalmente qué programa seleccionó
-        sessionStorage.setItem('programaPendiente', nombrePrograma);
-
-        // Lo mandamos al formulario de registro limpio (registro.html)
-        window.location.href = "registro.html";
+        Swal.fire({
+            title: 'Atención',
+            text: `Para postularte a la ${nombrePrograma} debes confirmar tus credenciales de registro. Redirigiendo...`,
+            icon: 'info',
+            confirmButtonColor: 'var(--color-info)'
+        }).then(() => {
+            // Guardamos temporalmente qué programa seleccionó
+            sessionStorage.setItem('programaPendiente', nombrePrograma);
+            // Lo mandamos al formulario de registro limpio (registro.html)
+            window.location.href = "registro.html";
+        });
     } else {
         // SI YA TIENE CUENTA E INICIÓ SESIÓN: Desbloquea y activa los módulos en el acto
         sessionStorage.setItem('programaPendiente', nombrePrograma);
@@ -235,13 +320,13 @@ async function activarModulosPostRegistro(nombrePrograma) {
  */
 async function prepararFlujoEstaciones(nivel, idConvocatoria) {
     if (!aspiranteData) {
-        alert("No se pudo cargar la información del aspirante. Intente recargar.");
+        Swal.fire('Error', 'No se pudo cargar la información del aspirante. Intente recargar.', 'error');
         return;
     }
 
     // Crear Solicitud en la base de datos
     try {
-        const respuestaSoli = await fetch('http://localhost:4000/api/solicitud/crear', {
+        const respuestaSoli = await fetch('/api/solicitud/crear', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -258,15 +343,15 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
             bloquearConvocatorias();
         } else if (respuestaSoli.status === 409) {
             const errData = await respuestaSoli.json();
-            alert(errData.mensaje);
+            Swal.fire('Aviso', errData.mensaje, 'warning');
             return;
         } else {
-            alert("Hubo un error al crear la solicitud en el servidor.");
+            Swal.fire('Error', 'Hubo un error al crear la solicitud en el servidor.', 'error');
             return;
         }
     } catch (e) {
         console.error(e);
-        alert("Fallo de conexión al crear solicitud.");
+        Swal.fire('Error', 'Fallo de conexión al crear solicitud.', 'error');
         return;
     }
 
@@ -296,8 +381,6 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
         // Cambiar paneles visibles dentro de las estaciones
         if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'none';
         if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'block';
-        if (document.getElementById('grid-maestria-1')) document.getElementById('grid-maestria-1').style.display = 'none';
-        if (document.getElementById('grid-doctorado-1')) document.getElementById('grid-doctorado-1').style.display = 'block';
         if (document.getElementById('grid-maestria-2')) document.getElementById('grid-maestria-2').style.display = 'none';
         if (document.getElementById('grid-doctorado-2')) document.getElementById('grid-doctorado-2').style.display = 'block';
         if (document.getElementById('grid-maestria-3')) document.getElementById('grid-maestria-3').style.display = 'none';
@@ -326,8 +409,6 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
 
         if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'block';
         if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'none';
-        if (document.getElementById('grid-maestria-1')) document.getElementById('grid-maestria-1').style.display = 'flex';
-        if (document.getElementById('grid-doctorado-1')) document.getElementById('grid-doctorado-1').style.display = 'none';
         if (document.getElementById('grid-maestria-2')) document.getElementById('grid-maestria-2').style.display = 'flex';
         if (document.getElementById('grid-doctorado-2')) document.getElementById('grid-doctorado-2').style.display = 'none';
         if (document.getElementById('grid-maestria-3')) document.getElementById('grid-maestria-3').style.display = 'flex';
@@ -339,6 +420,11 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
             document.getElementById('btn-next-0').disabled = false;
         }
         actualizarCostosAdmision();
+    }
+
+    // Cargar Requisitos Documentales para la estación 1 basados en la convocatoria
+    if (idConvocatoria) {
+        cargarRequisitosDocumentales(idConvocatoria);
     }
 
     // Redirigir a la vista de documentos
@@ -368,7 +454,28 @@ async function avanzarEstacion(nuevaEstacion) {
     const boton = document.getElementById(`btn-next-${estacionActual}`);
     if (boton) boton.disabled = true; // Deshabilitar temporalmente para evitar doble click
 
+    // Interceptar si es la estación 0 para guardar la modalidad de admisión
+    if (estacionActual === 0 && currentSolicitudId) {
+        const inputModalidad = document.querySelector('input[name="modalidad"]:checked');
+        if (inputModalidad) {
+            try {
+                const res = await fetch(`/api/solicitud/modalidad/${currentSolicitudId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tipoAdmision: inputModalidad.value })
+                });
+                if (!res.ok) {
+                    console.error("Error al guardar la modalidad en la base de datos.");
+                }
+            } catch (e) {
+                console.error("Error de conexión al guardar modalidad:", e);
+            }
+        }
+    }
+
     const form = document.getElementById(`form-estacion-${estacionActual}`);
+    mostrarLoader();
+
     if (form && currentSolicitudId) {
         const formData = new FormData(form);
         // Iterar sobre los archivos seleccionados en este form
@@ -376,11 +483,12 @@ async function avanzarEstacion(nuevaEstacion) {
             if (file && file.size > 0) {
                 const subidaData = new FormData();
                 subidaData.append('idSoli', currentSolicitudId);
-                subidaData.append('tipoDoc', name); // 'ACTA_NACIMIENTO', 'CV', etc.
+                // El name del input ahora es el idRequisito dinámico
+                subidaData.append('idRequisito', name); 
                 subidaData.append('archivo', file);
 
                 try {
-                    const res = await fetch('http://localhost:4000/api/documentos', {
+                    const res = await fetch('/api/documentos', {
                         method: 'POST',
                         body: subidaData
                     });
@@ -395,136 +503,206 @@ async function avanzarEstacion(nuevaEstacion) {
         }
     }
 
+    // Guardar progreso (estacion_actual) en la base de datos
+    if (currentSolicitudId) {
+        try {
+            await fetch(`/api/solicitud/estacion/${currentSolicitudId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estacion_actual: nuevaEstacion })
+            });
+        } catch (e) {
+            console.error("Error al actualizar la estación en DB:", e);
+        }
+    }
+
+    ocultarLoader();
     if (boton) boton.disabled = false;
     cambiarEstacion(nuevaEstacion);
 }
 
 /**
- * Actualización Dinámica de Costos (Estación 0) según las capturas del portal
+ * Actualización Dinámica (Estación 0) - Muestra el botón de Detalles y pinta la tarjeta seleccionada
  */
 function actualizarCostosAdmision() {
+    const inputs = document.querySelectorAll('input[name="modalidad"]');
+    
+    inputs.forEach(input => {
+        const card = input.closest('.radio-card');
+        const strongText = card.querySelector('strong');
+        
+        if (input.checked) {
+            // Estilo seleccionado (sólido)
+            card.style.backgroundColor = '#8a1c24';
+            card.style.borderColor = '#8a1c24';
+            card.style.borderStyle = 'solid';
+            if (strongText) strongText.style.color = '#ffffff';
+        } else {
+            // Estilo normal (punteado)
+            card.style.backgroundColor = '#f8f9fa';
+            card.style.borderColor = '#8a1c24';
+            card.style.borderStyle = 'dashed';
+            if (strongText) strongText.style.color = '#8a1c24';
+        }
+    });
+
+    // Mostrar el contenedor de detalles de admisión
+    const detallesBox = document.getElementById('contenedor-detalles-admision');
+    if (detallesBox) {
+        detallesBox.style.display = 'block';
+    }
+}
+
+function mostrarDetallesAdmision() {
     const inputs = document.querySelector('input[name="modalidad"]:checked');
-    if (!inputs) return;
-
-    const seleccionada = inputs.value;
-    const costosBox = document.getElementById('box-costos-desglose');
-
-    if (!costosBox) return;
-
-    if (seleccionada === 'prope') {
-        costosBox.innerHTML = `
-            <h4>Aranceles y Conceptos de Pago (Maestría)</h4>
-            <div class="costo-linea"><span>Curso Propedéutico Obligatorio:</span> <strong>$ 2,800.00 MXN</strong></div>
-        `;
-    } else if (seleccionada === 'examen') {
-        costosBox.innerHTML = `
-            <h4>Aranceles y Conceptos de Pago (Maestría)</h4>
-            <div class="costo-linea"><span>Examen de Admisión General:</span> <strong>$ 1,000.00 MXN</strong></div>
-        `;
-    } else {
-        costosBox.innerHTML = `
-            <h4>Aranceles y Conceptos de Pago (Maestría)</h4>
-            <div class="costo-linea"><span style="color:#27ae60;">✓ Exención de Aranceles:</span> <strong>$ 0.00 MXN</strong></div>
-            <small style="color:#777; display:block; margin-top:5px;">El ingreso por promedio no genera cobro de curso propedéutico ni examen interno.</small>
-        `;
+    if (inputs) {
+        alert("Aquí irán los detalles (Costos, descripción, fechas) de la modalidad: " + inputs.value);
     }
 }
 
 /**
- * Valida de forma dinámica los archivos requeridos dependiendo del posgrado seleccionado para habilitar botones
+ * Valida de forma dinámica los archivos requeridos para habilitar el botón final
  */
 function verificarArchivosEstacion(estacion) {
-    if (nivelAcademicoSeleccionado === "Doctorado") {
-        if (estacion === 0) {
+    if (estacion === 0) {
+        if (nivelAcademicoSeleccionado === "Doctorado") {
             const grado = document.getElementById('file-grado-maestria').files.length > 0;
             document.getElementById('btn-next-0').disabled = !grado;
         }
-        else if (estacion === 1) {
-            const cv = document.getElementById('file-cv').files.length > 0;
-            document.getElementById('btn-next-1').disabled = !cv;
-        }
-        else if (estacion === 2) {
-            const propuesta = document.getElementById('file-propuesta').files.length > 0;
-            document.getElementById('btn-next-2').disabled = !propuesta;
-        }
-        else if (estacion === 3) {
-            const idioma = document.getElementById('file-idioma').files.length > 0;
-            document.getElementById('btn-next-3').disabled = !idioma;
-        }
-        else if (estacion === 4) {
-            const entrevistaCheck = document.getElementById('chk-entrevista').checked;
-            document.getElementById('btn-finalizar').disabled = !entrevistaCheck;
-        }
-    } else {
-        // Reglas de validación estándar de Maestría
-        if (estacion === 1) {
-            const acta = document.getElementById('file-acta').files.length > 0;
-            const curp = document.getElementById('file-curp').files.length > 0;
-            const ine = document.getElementById('file-ine').files.length > 0;
-            const foto = document.getElementById('file-foto').files.length > 0;
-            document.getElementById('btn-next-1').disabled = !(acta && curp && ine && foto);
-        }
-        else if (estacion === 2) {
-            const certificado = document.getElementById('file-certificado').files.length > 0;
-            document.getElementById('btn-next-2').disabled = !certificado;
-        }
-        else if (estacion === 3) {
-            const c1 = document.getElementById('file-carta1').files.length > 0;
-            const c2 = document.getElementById('file-carta2').files.length > 0;
-            const c3 = document.getElementById('file-carta3').files.length > 0;
-            document.getElementById('btn-next-3').disabled = !(c1 && c2 && c3);
-        }
-        else if (estacion === 4) {
-            const ceneval = document.getElementById('file-ceneval').files.length > 0;
-            document.getElementById('btn-finalizar').disabled = !ceneval;
+        return;
+    }
+
+    if (estacion >= 1 && estacion <= 3) {
+        let containerId = '';
+        let btnId = '';
+        if (estacion === 1) { containerId = 'grid-dinamico-identidad'; btnId = 'btn-next-1'; }
+        else if (estacion === 2) { containerId = 'grid-dinamico-academico'; btnId = 'btn-next-2'; }
+        else if (estacion === 3) { containerId = 'grid-dinamico-evaluacion'; btnId = 'btn-finalizar'; }
+
+        const contenedor = document.getElementById(containerId);
+        if (contenedor) {
+            const inputsRequeridos = contenedor.querySelectorAll('input[type="file"][required]');
+            let allValid = true;
+            inputsRequeridos.forEach(input => {
+                if (input.files.length === 0) {
+                    allValid = false;
+                }
+            });
+            
+            // Si es estación 3, también validar el checkbox legal
+            if (estacion === 3) {
+                const chkProtesta = document.getElementById('chk-protesta');
+                if (chkProtesta && !chkProtesta.checked) {
+                    allValid = false;
+                }
+            }
+            
+            const btn = document.getElementById(btnId);
+            if (btn) btn.disabled = !allValid;
         }
     }
+}
+
+// Bloquear toda la UI de carga cuando el expediente esté bajo revisión
+function bloquearInterfazPorRevision() {
+    // 1. Mostrar banner y ocultar encabezado normal
+    const banner = document.getElementById('banner-revision');
+    const encabezado = document.getElementById('encabezado-documentos');
+    if (banner) banner.style.display = 'block';
+    if (encabezado) encabezado.style.display = 'none';
+
+    // 2. Ocultar el stepper
+    const stepper = document.querySelector('.stepper-wrapper');
+    if (stepper) stepper.style.display = 'none';
+
+    // 3. Ocultar todos los paneles de estación de documentos
+    document.querySelectorAll('.station-panel').forEach(panel => {
+        panel.style.display = 'none';
+    });
+
+    // 4. Asegurarse de ocultar panel 0 (Admisión general) si existe, u ocultar sus inputs
+    const panel0 = document.getElementById('panel-estacion-0');
+    if (panel0) panel0.style.display = 'none';
 }
 
 /**
  * Concluye el proceso de registro mostrando alertas personalizadas por nivel y enviando los últimos archivos
  */
 async function finalizarProcesoEstaciones() {
+    const confirmacion = await Swal.fire({
+        title: 'Enviar Expediente',
+        text: "¿Estás seguro de enviar tu expediente a revisión? Una vez enviado no podrás modificar ni borrar documentos.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--color-success)',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, enviar a revisión',
+        cancelButtonText: 'Aún no'
+    });
+
+    if (!confirmacion.isConfirmed) {
+        return;
+    }
+
     const btnFinalizar = document.getElementById('btn-finalizar');
     if (btnFinalizar) btnFinalizar.disabled = true;
 
-    // Subir los últimos documentos (Estación 4)
-    const form = document.getElementById(`form-estacion-4`);
+    mostrarLoader();
+
+    // Subir todos los documentos de la estación 3 (Última Estación)
+    const form = document.getElementById(`form-estacion-3`);
     if (form && currentSolicitudId) {
         const formData = new FormData(form);
         for (let [name, file] of formData.entries()) {
             if (file && file.size > 0) {
                 const subidaData = new FormData();
                 subidaData.append('idSoli', currentSolicitudId);
-                subidaData.append('tipoDoc', name);
+                subidaData.append('idRequisito', name);
                 subidaData.append('archivo', file);
                 try {
-                    await fetch('http://localhost:4000/api/documentos', {
+                    const res = await fetch('/api/documentos', {
                         method: 'POST',
                         body: subidaData
                     });
+                    if (!res.ok) {
+                        console.error(`Error al subir documento ID Requisito: ${name}`);
+                    }
                 } catch (e) {
-                    console.error("Error subiendo estación 4", e);
+                    console.error("Error subiendo estación 3", e);
                 }
             }
         }
-    }
 
-    if (nivelAcademicoSeleccionado === "Doctorado") {
-        alert("¡Postulación a Doctorado Completada! Tus propuestas y notas de los profesores anónimos (P1, P2, P3) han sido enviadas a revisión.");
-    } else {
-        const fileTituloInput = document.getElementById('file-titulo');
-        const tieneTitulo = fileTituloInput ? fileTituloInput.files.length > 0 : false;
-
-        if (!tieneTitulo) {
-            alert("¡Expediente Recibido con Éxito! Se ha detectado tu Título como PENDIENTE. Dispones de un periodo de prorroga institucional de 2 a 6 meses para cargar dicho documento.");
-        } else {
-            alert("¡Felicidades! Tu documentación completa ha sido enviada con éxito al comité de admisiones del Posgrado FIE.");
+        // Llamar al endpoint de EN_REVISION para bloquear el expediente
+        try {
+            await fetch(`/api/solicitud/enviar/${currentSolicitudId}`, {
+                method: 'PUT'
+            });
+            // Activar bloqueo de interfaz sin recargar
+            Swal.fire({
+                title: '¡Felicidades!',
+                text: 'Tu expediente completo ha sido enviado con éxito al comité de admisiones. Revisa tu vista de proceso para ver actualizaciones.',
+                icon: 'success',
+                confirmButtonColor: 'var(--color-success)'
+            });
+            
+            // Forzar recarga de UI a EN_REVISION
+            const soliRes = await fetch(`/api/solicitud/${currentSolicitudId}`);
+            if (soliRes.ok) {
+                const soliData = await soliRes.json();
+                if (soliData.estado === 'EN_REVISION') {
+                    bloquearInterfazPorRevision();
+                }
+            }
+        } catch (e) {
+            console.error("Error al enviar expediente a revisión en DB:", e);
         }
     }
 
-    // Aquí idealmente actualizamos el estado en la base de datos a EN_REVISION si tuviéramos un endpoint
-    switchView('inicio');
+    ocultarLoader();
+    
+    // Lo redirigimos a la vista de proceso en lugar de inicio
+    switchView('proceso');
 }
 
 // Base de datos local simulada para el estatus de los documentos del alumno
@@ -584,13 +762,7 @@ function actualizarGraficaProceso() {
     }
 }
 
-/**
- * Limpieza de sesión total
- */
-function cerrarSesion() {
-    sessionStorage.clear();
-    window.location.href = 'login.html';
-}
+
 
 // Función para regresar a la selección de Maestría/Doctorado sin reiniciar sesión
 function regresarAConvocatorias() {
@@ -609,19 +781,7 @@ function regresarAConvocatorias() {
         navDocumentos.classList.add('hidden');
     }
 }
-function toggleProfileMenu(event) {
-    event.stopPropagation();
-    const dropdown = document.getElementById('profile-dropdown');
-    dropdown.classList.toggle('show');
-}
 
-// Cierra el menú si se hace clic fuera de él
-window.addEventListener('click', function () {
-    const dropdown = document.getElementById('profile-dropdown');
-    if (dropdown && dropdown.classList.contains('show')) {
-        dropdown.classList.remove('show');
-    }
-});
 // --- NUEVAS FUNCIONES DE SEGURIDAD Y CANCELACION ---
 
 function bloquearConvocatorias() {
@@ -635,16 +795,27 @@ function bloquearConvocatorias() {
 }
 
 async function cancelarSolicitudActual() {
-    if (!confirm("¿Estás seguro que deseas cancelar todo el progreso de esta solicitud? No se puede deshacer.")) return;
+    const confirmacion = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Deseas cancelar todo el progreso de esta solicitud? No se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--color-danger)',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, cancelar solicitud',
+        cancelButtonText: 'No, mantenerla'
+    });
+    
+    if (!confirmacion.isConfirmed) return;
     if (!currentSolicitudId) return;
 
     try {
-        const res = await fetch(`http://localhost:4000/api/solicitud/cancelar/${currentSolicitudId}`, {
+        const res = await fetch(`/api/solicitud/cancelar/${currentSolicitudId}`, {
             method: 'PUT'
         });
 
         if (res.ok) {
-            alert("Solicitud cancelada. Eres libre de iniciar una nueva.");
+            Swal.fire('Cancelada', 'Solicitud cancelada. Eres libre de iniciar una nueva.', 'success');
             currentSolicitudId = null;
             sessionStorage.removeItem('idConvocatoriaPendiente');
             sessionStorage.removeItem('programaPendiente');
@@ -668,3 +839,189 @@ async function cancelarSolicitudActual() {
         alert("Error de red al intentar cancelar.");
     }
 }
+
+async function cargarModalidadesAdmision() {
+    const contenedor = document.getElementById('opciones-admision-maestria');
+    if (!contenedor) return;
+
+    try {
+        const res = await fetch('/api/solicitud/modalidades');
+        if (res.ok) {
+            const modalidades = await res.json();
+            contenedor.innerHTML = '';
+            
+            modalidades.forEach((mod, index) => {
+                const titulo = mod.replace(/_/g, ' ').replace(/\w\S*/g, w => (w.replace(/^\w/, c => c.toUpperCase())));
+                const checkedStr = index === 0 ? 'checked' : '';
+                
+                contenedor.innerHTML += `
+                    <label class="radio-card" style="display:block; flex: 1 1 220px; min-width: 220px; position:relative; padding:20px; border-radius:10px; border:2px dashed #8a1c24; cursor:pointer; text-align:center; background-color:#f8f9fa; margin: 10px;">
+                        <input type="radio" name="modalidad" value="${mod}" ${checkedStr} onchange="actualizarCostosAdmision()" style="position:absolute; opacity:0; width:0; height:0;">
+                        <div class="radio-content" style="pointer-events:none;">
+                            <strong style="display:block; font-size:16px; color:#8a1c24; margin-bottom:5px;">${index + 1}. ${titulo}</strong>
+                        </div>
+                    </label>
+                `;
+            });
+            actualizarCostosAdmision();
+        } else {
+            contenedor.innerHTML = '<p style="color: red;">Error al cargar las modalidades de admisión.</p>';
+        }
+    } catch (e) {
+        console.error("Error cargando modalidades:", e);
+    }
+}
+
+
+async function cargarRequisitosDocumentales(idConvocatoria) {
+    try {
+        const res = await fetch(`/api/convocatorias/${idConvocatoria}/requisitos`);
+        if (res.ok) {
+            const requisitos = await res.json();
+            const gridIdentidad = document.getElementById('grid-dinamico-identidad');
+            const gridAcademico = document.getElementById('grid-dinamico-academico');
+            const gridEvaluacion = document.getElementById('grid-dinamico-evaluacion');
+            
+            if (gridIdentidad) gridIdentidad.innerHTML = '';
+            if (gridAcademico) gridAcademico.innerHTML = '';
+            if (gridEvaluacion) gridEvaluacion.innerHTML = '';
+            
+            if (requisitos.length === 0) {
+                if (gridIdentidad) gridIdentidad.innerHTML = '<p style="color: #666; font-style: italic;">No hay requisitos configurados.</p>';
+                return;
+            }
+
+            requisitos.forEach(req => {
+                const isRequired = req.obligatorio ? '*' : '';
+                const requiredAttr = req.obligatorio ? 'required' : '';
+                
+                const htmlReq = `
+                    <div class="file-box">
+                        <label><i class="fa-solid fa-file-arrow-up"></i> ${req.descripcion} <span style="color:red;">${isRequired}</span></label>
+                        <input type="file" name="${req.id}" accept=".pdf" onchange="verificarArchivosEstacion(estacionActual)" ${requiredAttr}>
+                    </div>
+                `;
+
+                if (req.categoria === 'IDENTIDAD' || req.categoria === 'GENERAL') {
+                    if (gridIdentidad) gridIdentidad.innerHTML += htmlReq;
+                } else if (req.categoria === 'ACADEMICO') {
+                    if (gridAcademico) gridAcademico.innerHTML += htmlReq;
+                } else if (req.categoria === 'EVALUACION') {
+                    if (gridEvaluacion) gridEvaluacion.innerHTML += htmlReq;
+                }
+            });
+            
+            // Re-ejecutar verificación en caso de que todo sea opcional
+            verificarArchivosEstacion(1);
+            verificarArchivosEstacion(2);
+            verificarArchivosEstacion(3);
+        } else {
+            console.error('Error al cargar los requisitos de la convocatoria.');
+            alert('Error al cargar los requisitos de la convocatoria.');
+        }
+    } catch (e) {
+        console.error("Error cargando requisitos:", e);
+        alert('Error de conexión al cargar requisitos.');
+    }
+}
+
+/**
+ * Hidrata la UI con el progreso guardado en la base de datos (Backend como fuente de verdad)
+ */
+function hidratarUI(soliData) {
+    currentSolicitudId = soliData.idSolicitud || soliData.id;
+    nivelAcademicoSeleccionado = soliData.nivel === 'DOCTORADO' ? 'Doctorado' : 'Maestría';
+    const estacionGuardada = soliData.estacion_actual || 0;
+
+    // Desbloquear navegación
+    bloquearConvocatorias();
+    const navDocumentos = document.getElementById('nav-documentos');
+    if (navDocumentos) {
+        navDocumentos.style.display = 'block';
+        navDocumentos.classList.remove('hidden');
+    }
+
+    // Configurar paneles según el nivel
+    configurarPanelesNivel(nivelAcademicoSeleccionado, soliData.idConvocatoria);
+
+    // Mover a la estación donde se quedó
+    if (estacionGuardada > 0) {
+        cambiarEstacion(Math.min(estacionGuardada, 3));
+    }
+
+    // Bloquear si está en revisión
+    if (soliData.estado === 'EN_REVISION') {
+        bloquearInterfazPorRevision();
+    }
+}
+
+/**
+ * Extrae la lógica de pintar paneles para reusarla sin llamar a /crear
+ */
+function configurarPanelesNivel(nivel, idConvocatoria) {
+    if (idConvocatoria) sessionStorage.setItem('idConvocatoriaPendiente', idConvocatoria);
+
+    const titulo = document.getElementById('titulo-flujo-documentos');
+    const boxCostos = document.getElementById('box-costos-desglose');
+
+    if (nivel === "Doctorado") {
+        if (titulo) titulo.innerText = "Integración de Expediente: Doctorado FIE";
+        if (document.getElementById('lbl-step-1')) document.getElementById('lbl-step-1').innerText = "Identidad y Generales";
+        if (document.getElementById('lbl-step-2')) document.getElementById('lbl-step-2').innerText = "Académicos";
+        if (document.getElementById('lbl-step-3')) document.getElementById('lbl-step-3').innerText = "Evaluación / Cartas";
+
+        if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'none';
+        if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'block';
+
+        if (boxCostos) {
+            boxCostos.innerHTML = `<h4>Aranceles y Conceptos de Pago (Doctorado)</h4><div class="costo-linea"><span style="color:#27ae60;">✓ Exención por Continuidad FIE:</span> <strong>$ 0.00 MXN</strong></div><small style="color:#777;">Al ser egresado directo del posgrado FIE, los derechos de examen interno quedan exentos.</small>`;
+        }
+        if (document.getElementById('btn-next-0')) document.getElementById('btn-next-0').disabled = true;
+    } else {
+        if (titulo) titulo.innerText = "Integración de Expediente: Maestría FIE";
+        if (document.getElementById('lbl-step-1')) document.getElementById('lbl-step-1').innerText = "Identidad y Generales";
+        if (document.getElementById('lbl-step-2')) document.getElementById('lbl-step-2').innerText = "Académicos";
+        if (document.getElementById('lbl-step-3')) document.getElementById('lbl-step-3').innerText = "Evaluación / Cartas";
+
+        if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'none';
+        if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'block';
+
+        if (boxCostos) {
+            boxCostos.innerHTML = `<h4>Aranceles y Conceptos de Pago (Maestría)</h4><div class="costo-linea"><span>Examen de Admisión Institucional:</span> <strong>$ 1,200.00 MXN</strong></div><div class="costo-linea"><span>Curso Propedéutico:</span> <strong>$ 2,500.00 MXN</strong></div>`;
+        }
+        if (document.getElementById('btn-next-0')) document.getElementById('btn-next-0').disabled = false;
+        actualizarCostosAdmision();
+    }
+
+    if (idConvocatoria) cargarRequisitosDocumentales(idConvocatoria);
+}
+
+// ==== MANEJO DE UI PARA INPUTS DE ARCHIVOS ====
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.type === 'file') {
+        const fileBox = e.target.closest('.file-box');
+        if (fileBox) {
+            const files = e.target.files;
+            
+            // Eliminar nombre de archivo previo si existe
+            const existingDisplay = fileBox.querySelector('.file-name-display');
+            if (existingDisplay) {
+                existingDisplay.remove();
+            }
+
+            if (files && files.length > 0) {
+                const fileName = files[0].name;
+                
+                // Crear el elemento para mostrar el nombre
+                const displayDiv = document.createElement('div');
+                displayDiv.className = 'file-name-display';
+                displayDiv.innerHTML = `<i class="fa-solid fa-file-pdf"></i> ${fileName}`;
+                
+                fileBox.appendChild(displayDiv);
+                fileBox.classList.add('file-selected');
+            } else {
+                fileBox.classList.remove('file-selected');
+            }
+        }
+    }
+});

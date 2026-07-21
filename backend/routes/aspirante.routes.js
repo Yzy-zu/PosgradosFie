@@ -9,7 +9,8 @@ const validarRol = require('../middlewares/validarRol');
 const {
     registrarAspirante,
     obtenerAspirantes,
-    obtenerAspirantePorId
+    obtenerAspirantePorId,
+    obtenerExpediente
 } = require('../controllers/aspiranteController');
 
 // ==========================================
@@ -18,20 +19,8 @@ const {
 
 // Registro público: Cualquier persona externa puede crear su cuenta de aspirante
 router.post('/registro', registrarAspirante);
-
-// Obtener todos los aspirantes (Solo el Admin y el Coordinador gestionan la lista completa)
-router.get(
-    '/',
-    verificarToken,
-    validarRol('ADMIN', 'COORDINADOR'),
-    obtenerAspirantes
-);
-
-router.get(
-    '/:id',
-    verificarToken,
-    validarRol('ADMIN', 'COORDINADOR', 'SECRETARIO', 'ASPIRANTE'),
-    obtenerAspirantePorId
-);
+router.get('/', obtenerAspirantes);
+router.get('/:id', obtenerAspirantePorId);
+router.get('/:id/expediente', obtenerExpediente);
 
 module.exports = router;

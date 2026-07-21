@@ -54,15 +54,26 @@ async function cargarAspirantesAPI() {
  * Control de Navegación Lateral (Cambio de Secciones)
  */
 function switchView(viewId) {
-    // Ocultar todas las secciones
-    const sections = document.querySelectorAll('.view-section');
-    sections.forEach(sec => sec.style.display = 'none');
+    mostrarLoader();
 
-    // Mostrar sección de destino
+    // Ocultar todas las secciones y quitar fade-in
+    const sections = document.querySelectorAll('.view-section');
+    sections.forEach(sec => {
+        sec.style.display = 'none';
+        sec.classList.remove('fade-in');
+    });
+
+    // Mostrar sección de destino con fade-in
     const targetSection = document.getElementById(`view-${viewId}`);
     if (targetSection) {
         targetSection.style.display = 'block';
+        void targetSection.offsetWidth; // Trigger reflow
+        targetSection.classList.add('fade-in');
     }
+    
+    setTimeout(() => {
+        ocultarLoader();
+    }, 300);
 
     // Actualizar clase activa en enlaces de navegación
     const navLinks = document.querySelectorAll('.sidebar a');
@@ -77,26 +88,7 @@ function switchView(viewId) {
 /**
  * Cierre de Sesión Limpiando Variables No Persistentes de Login
  */
-function cerrarSesion() {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("usuarioLogueado");
-    window.location.href = "login.html";
-}
 
-// Función para abrir/cerrar el menú desplegable del perfil
-function toggleProfileMenu(event) {
-    event.stopPropagation(); // Evita que se cierre inmediatamente al hacer click
-    const dropdown = document.getElementById('profile-dropdown');
-    dropdown.classList.toggle('show');
-}
-
-// Cerrar el menú si se hace click fuera de él en la pantalla
-window.addEventListener('click', function() {
-    const dropdown = document.getElementById('profile-dropdown');
-    if (dropdown && dropdown.classList.contains('show')) {
-        dropdown.classList.remove('show');
-    }
-});
 
 /**
  * Calcula Contadores Estadísticos y Redibuja Gráfica de Avance

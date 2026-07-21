@@ -10,36 +10,19 @@ const validarSolicitud = require('../middlewares/validarSolicitud');
 const {
     crearSolicitud,
     getSolicitudActiva,
-    cancelarSolicitud
+    cancelarSolicitud,
+    getModalidades,
+    actualizarModalidad,
+    actualizarEstacion,
+    enviarExpediente
 } = require('../controllers/solicitudController');
 
-// ==========================================
-// Rutas de Solicitudes
-// ==========================================
-
-// Crear una solicitud: Solo un ASPIRANTE puede iniciar su trámite, pasando por la validación de datos
-router.post(
-    '/crear',
-    verificarToken,
-    validarRol('ASPIRANTE'),
-    validarSolicitud,
-    crearSolicitud
-);
-
-// Obtener la solicitud activa de un aspirante por su ID
-router.get(
-    '/activa/:idAspi',
-    verificarToken,
-    validarRol('ADMIN', 'COORDINADOR', 'SECRETARIO', 'ASPIRANTE'),
-    getSolicitudActiva
-);
-
-// Cancelar una solicitud: El ASPIRANTE puede desistir de su trámite, o un ADMIN/COORDINADOR puede cancelarla por reglamento
-router.put(
-    '/cancelar/:id',
-    verificarToken,
-    validarRol('ADMIN', 'COORDINADOR', 'ASPIRANTE'),
-    cancelarSolicitud
-);
+router.post('/crear', crearSolicitud);
+router.get('/activa/:idAspi', getSolicitudActiva);
+router.put('/cancelar/:id', cancelarSolicitud);
+router.get('/modalidades', getModalidades);
+router.put('/modalidad/:id', actualizarModalidad);
+router.put('/estacion/:id', actualizarEstacion);
+router.put('/enviar/:id', enviarExpediente);
 
 module.exports = router;

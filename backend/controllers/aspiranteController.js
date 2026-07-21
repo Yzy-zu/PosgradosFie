@@ -1,295 +1,171 @@
 const db = require('../database/db');
 const bcrypt = require('bcrypt');
 
+// Registrar aspirante (con usuario asociado)
 const registrarAspirante = async (req, res) => {
-
     try {
-
         const {
-            nombre,
-            primerApellido,
-            segundoApellido,
-            curp,
-            correo,
-            telefono,
-            fechaNacimiento,
-            direccion,
-            password,
-            rfc
+            nombre, primerApellido, segundoApellido, curp,
+            correo, telefono, fechaNacimiento, direccion, password, rfc
         } = req.body;
 
-        // ============================
-        // VALIDACIONES
-        // ============================
-
-        if (
-            !nombre ||
-            !primerApellido ||
-            !curp ||
-            !correo ||
-            !telefono ||
-            !fechaNacimiento ||
-            !direccion ||
-            !password ||
-            !rfc
-        ) {
-
-            return res.status(400).json({
-                mensaje: "Todos los campos son obligatorios."
-            });
-
+        // Validaciones de campos obligatorios
+        if (!nombre || !primerApellido || !curp || !correo || !telefono || !fechaNacimiento || !direccion || !password || !rfc) {
+            return res.status(400).json({ mensaje: 'Todos los campos son obligatorios.' });
         }
 
-        // ============================
-        // VALIDAR CORREO
-        // ============================
-
+        // Validar formato de correo
         const correoRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
         if (!correoRegex.test(correo)) {
-
-            return res.status(400).json({
-                mensaje: "Correo inválido."
-            });
-
+            return res.status(400).json({ mensaje: 'Correo inválido.' });
         }
 
-        // ============================
-        // VALIDAR CURP
-        // ============================
-
+        // Validar CURP (18 caracteres)
         if (curp.length !== 18) {
-
-            return res.status(400).json({
-                mensaje: "La CURP debe tener 18 caracteres."
-            });
-
+            return res.status(400).json({ mensaje: 'La CURP debe tener 18 caracteres.' });
         }
 
-        // ============================
-        // VALIDAR TELÉFONO
-        // ============================
-
+        // Validar teléfono (10 dígitos)
         if (!/^\d{10}$/.test(telefono)) {
-
-            return res.status(400).json({
-                mensaje: "El teléfono debe tener 10 dígitos."
-            });
-
+            return res.status(400).json({ mensaje: 'El teléfono debe tener 10 dígitos.' });
         }
 
-        // ============================
-        // VALIDAR CONTRASEÑA
-        // ============================
-
+        // Validar contraseña (mínimo 8 caracteres)
         if (password.length < 8) {
-
-            return res.status(400).json({
-                mensaje: "La contraseña debe tener mínimo 8 caracteres."
-            });
-
+            return res.status(400).json({ mensaje: 'La contraseña debe tener mínimo 8 caracteres.' });
         }
 
-        // ============================
-        // BUSCAR CORREO
-        // ============================
+        // Verificar correo duplicado
+        const [resultadoCorreo] = await db.query('SELECT id FROM usuario WHERE correo = ?', [correo]);
+        if (resultadoCorreo.length > 0) {
+            return res.status(409).json({ mensaje: 'El correo ya está registrado.' });
+        }
 
-        db.query(
-            "SELECT * FROM usuario WHERE correo = ?",
-            [correo],
-            async (err, resultadoCorreo) => {
+        // Verificar CURP duplicado
+        const [resultadoCurp] = await db.query('SELECT id FROM aspirante WHERE curp = ?', [curp]);
+        if (resultadoCurp.length > 0) {
+            return res.status(409).json({ mensaje: 'La CURP ya está registrada.' });
+        }
 
-                if (err) {
+        // Verificar RFC duplicado (antes era fire-and-forget, ahora se espera correctamente)
+        const [resultadoRfc] = await db.query('SELECT id FROM aspirante WHERE rfc = ?', [rfc]);
+        if (resultadoRfc.length > 0) {
+            return res.status(409).json({ mensaje: 'El RFC ya está registrado.' });
+        }
 
-                    return res.status(500).json(err);
+        // Encriptar contraseña
+        const passwordHash = await bcrypt.hash(password, 10);
 
-                }
-
-                if (resultadoCorreo.length > 0) {
-
-                    return res.status(409).json({
-                        mensaje: "El correo ya está registrado."
-                    });
-
-                }
-
-                // ============================
-                // BUSCAR CURP
-                // ============================
-
-                db.query(
-                    "SELECT * FROM aspirante WHERE curp = ?",
-                    [curp],
-                    async (err, resultadoCurp) => {
-
-                        if (err) {
-
-                            return res.status(500).json(err);
-
-                        }
-
-                        if (resultadoCurp.length > 0) {
-
-                            return res.status(409).json({
-                                mensaje: "La CURP ya está registrada."
-                            });
-
-                        }
-
-                        //=================================
-                        //BUSCAR RFC
-                        //==================================
-                        db.query(
-                            "SELECT * FROM aspirante WHERE rfc=?",
-                            [rfc],
-                            async (err,resultadorfc) =>{
-                                if(err){
-                                    return res.status(500).json(err);
-                                }
-                                if(resultadorfc.length >0){
-                                    return res.status(409).json({
-                                        mensaje: "La RFC ya esta registrada"
-                                    })
-                                }
-                            }
-
-                        )
-
-                        // ============================
-                        // ENCRIPTAR CONTRASEÑA
-                        // ============================
-
-                        const passwordHash = await bcrypt.hash(password, 10);
-
-                        // ============================
-                        // INSERTAR USUARIO
-                        // ============================
-
-                        db.query(
-
-                            "INSERT INTO usuario(correo,password,rol) VALUES(?,?,?)",
-
-                            [correo, passwordHash, "aspirante"],
-
-                            (err, resultadoUsuario) => {
-
-                                if (err) {
-
-                                    return res.status(500).json(err);
-
-                                }
-
-                                const idUsuario = resultadoUsuario.insertId;
-
-                                // ============================
-                                // INSERTAR ASPIRANTE
-                                // ============================
-
-                                db.query(
-
-                                    `INSERT INTO aspirante
-                                    (nombre,
-                                    primerApellido,
-                                    segundoApellido,
-                                    curp,
-                                    correo,
-                                    telefono,
-                                    fechaNacimiento,
-                                    direccion,
-                                    rfc,
-                                    idUsuario)
-
-                                    VALUES(?,?,?,?,?,?,?,?,?,?)`,
-
-                                    [
-                                        nombre,
-                                        primerApellido,
-                                        segundoApellido,
-                                        curp,
-                                        correo,
-                                        telefono,
-                                        fechaNacimiento,
-                                        direccion,
-                                        rfc,
-                                        idUsuario
-                                    ],
-
-                                    (err) => {
-
-                                        if (err) {
-
-                                            return res.status(500).json(err);
-
-                                        }
-
-                                        return res.status(201).json({
-
-                                            mensaje: "Aspirante registrado correctamente."
-
-                                        });
-
-                                    }
-
-                                );
-
-                            }
-
-                        );
-
-                    }
-
-                );
-
-            }
-
+        // Insertar usuario
+        const [resultadoUsuario] = await db.query(
+            'INSERT INTO usuario(correo, password, rol) VALUES(?, ?, ?)',
+            [correo, passwordHash, 'aspirante']
         );
 
+        const idUsuario = resultadoUsuario.insertId;
+
+        // Insertar aspirante
+        await db.query(
+            `INSERT INTO aspirante
+            (nombre, primerApellido, segundoApellido, curp, correo, telefono, fechaNacimiento, direccion, rfc, idUsuario)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [nombre, primerApellido, segundoApellido, curp, correo, telefono, fechaNacimiento, direccion, rfc, idUsuario]
+        );
+
+        return res.status(201).json({ mensaje: 'Aspirante registrado correctamente.' });
     } catch (error) {
-
-        return res.status(500).json(error);
-
+        console.error('Error en registrarAspirante:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
     }
-
 };
 
+// Obtener todos los aspirantes
 const obtenerAspirantes = async (req, res) => {
     try {
-        db.query("SELECT * FROM aspirante", (err, resultados) => {
-            if (err) {
-                console.error("Error al obtener aspirantes:", err);
-                return res.status(500).json({ success: false, mensaje: "Error en el servidor" });
-            }
-            return res.status(200).json(resultados);
-        });
+        const [resultados] = await db.query('SELECT * FROM aspirante');
+        return res.status(200).json(resultados);
     } catch (error) {
-        console.error("Error en obtenerAspirantes:", error);
-        return res.status(500).json({ success: false, mensaje: "Error en el servidor" });
+        console.error('Error en obtenerAspirantes:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error en el servidor' });
     }
 };
 
+// Obtener aspirante por ID
 const obtenerAspirantePorId = async (req, res) => {
     try {
         const { id } = req.params;
-        db.query("SELECT * FROM aspirante WHERE id = ?", [id], (err, resultados) => {
-            if (err) {
-                console.error("Error al obtener aspirante:", err);
-                return res.status(500).json({ success: false, mensaje: "Error en el servidor" });
-            }
-            
-            if (resultados.length === 0) {
-                return res.status(404).json({ success: false, mensaje: "Aspirante no encontrado" });
-            }
-            
-            return res.status(200).json(resultados[0]);
-        });
+        const [resultados] = await db.query('SELECT * FROM aspirante WHERE id = ?', [id]);
+
+        if (resultados.length === 0) {
+            return res.status(404).json({ success: false, mensaje: 'Aspirante no encontrado' });
+        }
+
+        return res.status(200).json(resultados[0]);
     } catch (error) {
-        console.error("Error en obtenerAspirantePorId:", error);
-        return res.status(500).json({ success: false, mensaje: "Error en el servidor" });
+        console.error('Error en obtenerAspirantePorId:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error en el servidor' });
+    }
+};
+
+const obtenerExpediente = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 1. Info del aspirante + correo de usuario
+        const queryAspirante = `
+            SELECT a.*, u.correo, u.activo 
+            FROM aspirante a 
+            JOIN usuario u ON a.idUsuario = u.id 
+            WHERE a.id = ?
+        `;
+        const [resAspirante] = await db.query(queryAspirante, [id]);
+        if (resAspirante.length === 0) {
+            return res.status(404).json({ success: false, mensaje: 'Aspirante no encontrado' });
+        }
+        
+        let expediente = {
+            perfil: resAspirante[0],
+            solicitudes: []
+        };
+
+        // 2. Historial de solicitudes (convocatorias)
+        const querySolicitudes = `
+            SELECT s.id as idSolicitud, s.estado, s.creadoEn, s.tipoAdmision, c.nombre as convocatoriaNombre, c.posgrado_id
+            FROM solicitud s
+            JOIN convocatorias c ON s.idConvocatoria = c.id
+            WHERE s.idAspi = ?
+            ORDER BY s.creadoEn DESC
+        `;
+        const [solicitudes] = await db.query(querySolicitudes, [id]);
+        
+        if (solicitudes.length > 0) {
+            const idsSolicitudes = solicitudes.map(s => s.idSolicitud);
+            
+            // 3. Documentos por solicitud
+            const queryDocs = `
+                SELECT sd.idSolicitud, sd.rutaArchivo, sd.estadoValidacion, cr.nombre as requisitoNombre
+                FROM solicitud_documentos sd
+                JOIN catalogo_requisitos cr ON sd.idRequisito = cr.id
+                WHERE sd.idSolicitud IN (?)
+            `;
+            const [documentos] = await db.query(queryDocs, [idsSolicitudes]);
+            
+            expediente.solicitudes = solicitudes.map(sol => {
+                sol.documentos = documentos.filter(doc => doc.idSolicitud === sol.idSolicitud);
+                return sol;
+            });
+        }
+
+        return res.status(200).json(expediente);
+    } catch (error) {
+        console.error('Error en obtenerExpediente:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error en el servidor' });
     }
 };
 
 module.exports = {
     registrarAspirante,
     obtenerAspirantes,
-    obtenerAspirantePorId
+    obtenerAspirantePorId,
+    obtenerExpediente
 };

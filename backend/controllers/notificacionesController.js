@@ -1,172 +1,97 @@
 const db = require('../database/db');
 
 // Obtener todas las notificaciones
-exports.obtenerNotificaciones = (req, res) => {
-
-    const sql = 'SELECT * FROM notificaciones';
-
-    db.query(sql, (err, resultados) => {
-
-        if (err) {
-            console.error(err);
-
-            return res.status(500).json({
-                success: false,
-                mensaje: 'Error al obtener las notificaciones'
-            });
+const obtenerNotificaciones = async (req, res) => {
+    try {
+        const { destino } = req.query;
+        let query = 'SELECT * FROM notificaciones';
+        let params = [];
+        
+        if (destino) {
+            query += ' WHERE destino = ? OR destino = "todos"';
+            params.push(destino);
         }
-
-        res.json(resultados);
-
-    });
-
+        
+        const [resultados] = await db.query(query, params);
+        return res.json(resultados);
+    } catch (error) {
+        console.error('Error en obtenerNotificaciones:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al obtener las notificaciones' });
+    }
 };
 
-// Obtener una notificación
-exports.obtenerNotificacion = (req, res) => {
+// Obtener una notificación por ID
+const obtenerNotificacion = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [resultados] = await db.query('SELECT * FROM notificaciones WHERE id = ?', [id]);
 
-    const { id } = req.params;
-
-    db.query(
-        'SELECT * FROM notificaciones WHERE id = ?',
-        [id],
-        (err, resultados) => {
-
-            if (err) {
-                console.error(err);
-
-                return res.status(500).json({
-                    success: false,
-                    mensaje: 'Error al obtener la notificación'
-                });
-            }
-
-            if (resultados.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    mensaje: 'Notificación no encontrada'
-                });
-            }
-
-            res.json(resultados[0]);
-
+        if (resultados.length === 0) {
+            return res.status(404).json({ success: false, mensaje: 'Notificación no encontrada' });
         }
-    );
 
+        return res.json(resultados[0]);
+    } catch (error) {
+        console.error('Error en obtenerNotificacion:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al obtener la notificación' });
+    }
 };
 
 // Crear notificación
-exports.crearNotificacion = (req, res) => {
+const crearNotificacion = async (req, res) => {
+    try {
+        const { nombre, mensaje, destino, activa } = req.body;
 
-    const {
-        nombre,
-        mensaje,
-        destino,
-        activa
-    } = req.body;
+        const [resultado] = await db.query(
+            'INSERT INTO notificaciones (nombre, mensaje, destino, activa) VALUES (?, ?, ?, ?)',
+            [nombre, mensaje, destino, activa]
+        );
 
-    const sql = `
-        INSERT INTO notificaciones
-        (nombre, mensaje, destino, activa)
-        VALUES (?, ?, ?, ?)
-    `;
-
-    db.query(
-        sql,
-        [nombre, mensaje, destino, activa],
-        (err, resultado) => {
-
-            if (err) {
-                console.error(err);
-
-                return res.status(500).json({
-                    success: false,
-                    mensaje: 'Error al crear la notificación'
-                });
-            }
-
-            res.json({
-                success: true,
-                mensaje: 'Notificación creada correctamente',
-                id: resultado.insertId
-            });
-
-        }
-    );
-
+        return res.json({
+            success: true,
+            mensaje: 'Notificación creada correctamente',
+            id: resultado.insertId
+        });
+    } catch (error) {
+        console.error('Error en crearNotificacion:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al crear la notificación' });
+    }
 };
 
 // Actualizar notificación
-exports.actualizarNotificacion = (req, res) => {
+const actualizarNotificacion = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nombre, mensaje, destino, activa } = req.body;
 
-    const { id } = req.params;
+        await db.query(
+            'UPDATE notificaciones SET nombre = ?, mensaje = ?, destino = ?, activa = ? WHERE id = ?',
+            [nombre, mensaje, destino, activa, id]
+        );
 
-    const {
-        nombre,
-        mensaje,
-        destino,
-        activa
-    } = req.body;
-
-    const sql = `
-        UPDATE notificaciones
-        SET
-            nombre = ?,
-            mensaje = ?,
-            destino = ?,
-            activa = ?
-        WHERE id = ?
-    `;
-
-    db.query(
-        sql,
-        [nombre, mensaje, destino, activa, id],
-        (err) => {
-
-            if (err) {
-                console.error(err);
-
-                return res.status(500).json({
-                    success: false,
-                    mensaje: 'Error al actualizar la notificación'
-                });
-            }
-
-            res.json({
-                success: true,
-                mensaje: 'Notificación actualizada correctamente'
-            });
-
-        }
-    );
-
+        return res.json({ success: true, mensaje: 'Notificación actualizada correctamente' });
+    } catch (error) {
+        console.error('Error en actualizarNotificacion:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al actualizar la notificación' });
+    }
 };
 
 // Eliminar notificación
-exports.eliminarNotificacion = (req, res) => {
+const eliminarNotificacion = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query('DELETE FROM notificaciones WHERE id = ?', [id]);
+        return res.json({ success: true, mensaje: 'Notificación eliminada correctamente' });
+    } catch (error) {
+        console.error('Error en eliminarNotificacion:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al eliminar la notificación' });
+    }
+};
 
-    const { id } = req.params;
-
-    db.query(
-        'DELETE FROM notificaciones WHERE id = ?',
-        [id],
-        (err) => {
-
-            if (err) {
-                console.error(err);
-
-                return res.status(500).json({
-                    success: false,
-                    mensaje: 'Error al eliminar la notificación'
-                });
-            }
-
-            res.json({
-                success: true,
-                mensaje: 'Notificación eliminada correctamente'
-            });
-
-        }
-    );
-
+module.exports = {
+    obtenerNotificaciones,
+    obtenerNotificacion,
+    crearNotificacion,
+    actualizarNotificacion,
+    eliminarNotificacion
 };

@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarConvocatorias(); // Inicializar panel de convocatorias
     cargarAspirantes();
     cargarNotificacionesAdmin(); // Inicializar panel de notificaciones
+    cargarCatalogoRequisitosUI(); // Inicializar catálogo de requisitos
 
     // Router inicial: si no hay hash, lo ponemos en dashboard
     if (!window.location.hash) {
@@ -70,28 +71,18 @@ function configurarBotones() {
         });
     }
 
-    // Lógica para el menú desplegable del perfil (antes estaba en el HTML)
-    const profileContainer = document.getElementById('profile-container');
-    if (profileContainer) {
-        profileContainer.addEventListener('click', function (event) {
-            event.stopPropagation();
-            const dropdown = document.getElementById('profile-dropdown');
-            if (dropdown) dropdown.classList.toggle('show');
-        });
-    }
 
-    // Cierra el menú desplegable si se hace clic fuera de él
-    window.addEventListener('click', function () {
-        const dropdown = document.getElementById('profile-dropdown');
-        if (dropdown && dropdown.classList.contains('show')) {
-            dropdown.classList.remove('show');
-        }
-    });
 }
 
+
+
 function activarSeccionPorHash() {
+    mostrarLoader();
     const hash = window.location.hash.replace("#", "");
-    if (!hash) return;
+    if (!hash) {
+        ocultarLoader();
+        return;
+    }
 
     const enlaces = document.querySelectorAll("#sidebarMenu .nav-link");
     const secciones = document.querySelectorAll(".content-section");
@@ -101,8 +92,11 @@ function activarSeccionPorHash() {
     // Remover estado activo de todos los enlaces en el menú
     enlaces.forEach(link => link.classList.remove("active"));
 
-    // Ocultar todas las secciones del contenido
-    secciones.forEach(sec => sec.classList.add("d-none"));
+    // Ocultar todas las secciones del contenido y quitar fade-in
+    secciones.forEach(sec => {
+        sec.classList.add("d-none");
+        sec.classList.remove("fade-in");
+    });
 
     // Activar el enlace correspondiente
     const enlaceActivo = document.querySelector(`#sidebarMenu .nav-link[data-target="${hash}"]`);
@@ -122,11 +116,17 @@ function activarSeccionPorHash() {
         }
     }
 
-    // Mostrar la sección correspondiente en el HTML
+    // Mostrar la sección correspondiente en el HTML con fade-in
     const seccionMostrar = document.getElementById(`seccion-${hash}`);
     if (seccionMostrar) {
         seccionMostrar.classList.remove("d-none");
+        void seccionMostrar.offsetWidth; // Trigger reflow for animation
+        seccionMostrar.classList.add("fade-in");
     }
+
+    setTimeout(() => {
+        ocultarLoader();
+    }, 300); // Simulate brief loading for smooth transition
 }
 
 function configurarNavegacion() {
@@ -143,11 +143,7 @@ function configurarNavegacion() {
     });
 }
 
-function cerrarSesion() {
-    if (!confirm("¿Desea cerrar sesión?")) return;
-    sessionStorage.clear();
-    window.location.href = "login.html";
-}
+
 
 function cargarDashboard() {
     // Inicializar contadores en 0 hasta que existan las APIs correspondientes
@@ -168,13 +164,11 @@ function cargarDashboard() {
 
 async function cargarUsuarios() {
     try {
-        const respuesta = await fetch("http://localhost:4000/api/usuario");
+        const respuesta = await fetch("/api/usuario");
         const usuarios = await respuesta.json();
-
         // Actualizar contador del dashboard
         const totalUsuarios = document.getElementById("totalUsuarios");
         if (totalUsuarios) totalUsuarios.textContent = usuarios.length || 0;
-
         const tbody = document.getElementById("tablaUsuarios");
         if (!tbody) return;
         tbody.innerHTML = "";
@@ -187,10 +181,9 @@ async function cargarUsuarios() {
 
             fila.innerHTML = `
                 <td>${usuario.id}</td>
-                <td>${usuario.nombre || 'Sin nombre'}</td>
                 <td>${usuario.correo}</td>
                 <td>${usuario.rol || 'Usuario'}</td>
-                <td><span class="badge bg-success">${usuario.estado || 'Activo'}</span></td>
+                <td><span class="badge bg-success">${usuario.activo ? 'Activo' : 'Inactivo'}</span></td>
             `;
             tbody.appendChild(fila);
         });
@@ -201,8 +194,9 @@ async function cargarUsuarios() {
 
 async function editarUsuario(id) {
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/usuario/${id}`);
+        const respuesta = await fetch(`/api/usuario/${id}`);
         const usuario = await respuesta.json();
+        console.log(usuario)
 
         if (!usuario) throw new Error("Usuario no encontrado");
 
@@ -210,21 +204,37 @@ async function editarUsuario(id) {
         if (inputId) inputId.value = usuario.id;
 
         const inputNombre = document.getElementById("nombre");
-        if (inputNombre) inputNombre.value = usuario.nombre || "";
+        if (inputNombre) inputNombre.value = usuario.nombre;
 
         const inputCorreo = document.getElementById("correo");
-        if (inputCorreo) inputCorreo.value = usuario.correo || "";
+        if (inputCorreo) inputCorreo.value = usuario.correo;
 
         const inputRol = document.getElementById("rol");
-        if (inputRol) inputRol.value = usuario.rol || "ADMIN";
+        if (inputRol) inputRol.value = usuario.rol;
 
         const inputPassword = document.getElementById("password");
         if (inputPassword) inputPassword.value = "";
+        const inputEstado = document.getElementById("activo");
+        if (inputEstado) inputEstado.value = `${usuario.activo ? '1' : '0'}`;
 
         document.querySelector("#modalUsuario .modal-title").innerHTML = '<i class="fa-solid fa-user-pen"></i> Editar Usuario';
 
         const btnEliminar = document.getElementById("btnEliminarUsuario");
         if (btnEliminar) btnEliminar.style.display = "inline-block";
+
+        // Renderizar los detalles extra y esconder/mostrar el contenedor
+        renderizarCamposRol(usuario.rol, usuario.detalles || {});
+        const contDetalles = document.getElementById("detallesExtendidos");
+        const modalDialog = document.getElementById("dialogUsuario");
+        if (contDetalles) {
+            contDetalles.style.width = "0px";
+            contDetalles.style.opacity = "0";
+            contDetalles.style.padding = "0";
+        }
+        if (modalDialog) modalDialog.style.maxWidth = "500px";
+        
+        const btnTog = document.getElementById("btnToggleDetalles");
+        if (btnTog) btnTog.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Ver detalles específicos del rol';
 
         const modalElement = document.getElementById("modalUsuario");
         const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
@@ -236,25 +246,163 @@ async function editarUsuario(id) {
     }
 }
 
+// Renderizar campos según el rol
+function renderizarCamposRol(rol, detalles = {}) {
+    const contenedorBtn = document.getElementById("contenedorBtnDetalles");
+    const contenedorDetalles = document.getElementById("detallesExtendidos");
+    
+    let html = "";
+    if (rol === "ASPIRANTE") {
+        html = `
+            <h6 class="text-primary mb-3"><i class="fa-solid fa-user-graduate"></i> Detalles de Aspirante</h6>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label class="form-label small">Nombre</label><input type="text" id="det_nombre" class="form-control form-control-sm" value="${detalles.nombre || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Primer Apellido</label><input type="text" id="det_primerApellido" class="form-control form-control-sm" value="${detalles.primerApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" value="${detalles.segundoApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">CURP</label><input type="text" id="det_curp" class="form-control form-control-sm" value="${detalles.curp || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Teléfono</label><input type="text" id="det_telefono" class="form-control form-control-sm" value="${detalles.telefono || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Fecha Nacimiento</label><input type="date" id="det_fechaNacimiento" class="form-control form-control-sm" value="${detalles.fechaNacimiento ? detalles.fechaNacimiento.split('T')[0] : ''}"></div>
+                <div class="col-md-12 mb-2"><label class="form-label small">Dirección</label><input type="text" id="det_direccion" class="form-control form-control-sm" value="${detalles.direccion || ''}"></div>
+            </div>
+        `;
+        contenedorBtn.style.display = "block";
+    } else if (rol === "DOCENTE") {
+        html = `
+            <h6 class="text-primary mb-3"><i class="fa-solid fa-chalkboard-user"></i> Detalles de Docente</h6>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label class="form-label small">Nombre</label><input type="text" id="det_nombre" class="form-control form-control-sm" value="${detalles.nombre || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Primer Apellido</label><input type="text" id="det_primerApellido" class="form-control form-control-sm" value="${detalles.primerApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" value="${detalles.segundoApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Cargo</label><input type="text" id="det_cargo" class="form-control form-control-sm" value="${detalles.cargo || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Especialidad</label><input type="text" id="det_especialidad" class="form-control form-control-sm" value="${detalles.especialidad || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Cubículo</label><input type="text" id="det_cubiculo" class="form-control form-control-sm" value="${detalles.cubiculo || ''}"></div>
+            </div>
+        `;
+        contenedorBtn.style.display = "block";
+    } else if (rol === "SECRETARIO") {
+        html = `
+            <h6 class="text-primary mb-3"><i class="fa-solid fa-user-tie"></i> Detalles de Secretario</h6>
+            <div class="row">
+                <div class="col-md-6 mb-2"><label class="form-label small">Área</label><input type="text" id="det_area" class="form-control form-control-sm" value="${detalles.area || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small">Extensión</label><input type="text" id="det_extension" class="form-control form-control-sm" value="${detalles.extension || ''}"></div>
+            </div>
+        `;
+        contenedorBtn.style.display = "block";
+    } else {
+        html = "";
+        contenedorBtn.style.display = "none";
+        
+        contenedorDetalles.style.width = "0px";
+        contenedorDetalles.style.opacity = "0";
+        contenedorDetalles.style.padding = "0";
+        const modalDialog = document.getElementById("dialogUsuario");
+        if (modalDialog) modalDialog.style.maxWidth = "500px";
+    }
+    
+    // Envolver en un div de ancho fijo para que no haga wrap al colapsar (y evitar altura extra en el flex row)
+    if (html !== "") {
+        html = `<div style="width: 560px;">${html}</div>`;
+    }
+    contenedorDetalles.innerHTML = html;
+}
+
+// Escuchar cambios en el selector de rol
+document.getElementById("rol")?.addEventListener("change", function(e) {
+    renderizarCamposRol(e.target.value);
+});
+
+// Funcionalidad para animación de detalles
+function toggleDetallesUsuario() {
+    const contenedor = document.getElementById("detallesExtendidos");
+    const modalDialog = document.getElementById("dialogUsuario");
+    const btn = document.getElementById("btnToggleDetalles");
+    
+    if (contenedor.style.width !== "0px" && contenedor.style.width !== "") {
+        contenedor.style.width = "0px";
+        contenedor.style.opacity = "0";
+        contenedor.style.padding = "0";
+        if (modalDialog) modalDialog.style.maxWidth = "500px";
+        btn.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Ver detalles específicos del rol';
+    } else {
+        contenedor.style.width = "600px";
+        contenedor.style.opacity = "1";
+        contenedor.style.padding = "1rem";
+        if (modalDialog) modalDialog.style.maxWidth = "1100px";
+        btn.innerHTML = '<i class="fa-solid fa-chevron-left"></i> Ocultar detalles específicos';
+    }
+}
+
+// Reset del modal al abrirlo para "Nuevo Usuario"
+document.getElementById("modalUsuario")?.addEventListener('show.bs.modal', function (event) {
+    const isEdit = document.getElementById("idUsuarioForm").value !== "";
+    // Si no tiene ID asignado (se abrió por el botón de + Nuevo)
+    if (!isEdit && !event.relatedTarget?.closest('.btn-sm')) {
+        document.getElementById("formUsuario").reset();
+        document.getElementById("idUsuarioForm").value = "";
+        document.querySelector("#modalUsuario .modal-title").innerHTML = '<i class="fa-solid fa-user-plus"></i> Nuevo Usuario';
+        const btnElim = document.getElementById("btnEliminarUsuario");
+        if (btnElim) btnElim.style.display = "none";
+        renderizarCamposRol(document.getElementById("rol").value);
+        const contDetalles = document.getElementById("detallesExtendidos");
+        const modalDialog = document.getElementById("dialogUsuario");
+        if (contDetalles) {
+            contDetalles.style.width = "0px";
+            contDetalles.style.opacity = "0";
+            contDetalles.style.padding = "0";
+        }
+        if (modalDialog) modalDialog.style.maxWidth = "500px";
+        
+        const btnTog = document.getElementById("btnToggleDetalles");
+        if (btnTog) btnTog.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Ver detalles específicos del rol';
+    }
+});
+
 document.getElementById("formUsuario").addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const idInput = document.getElementById("idUsuarioForm");
     const idUsuario = idInput ? idInput.value : "";
-    const nombre = document.getElementById("nombre").value;
     const correo = document.getElementById("correo").value;
     const password = document.getElementById("password").value;
     const rol = document.getElementById("rol").value;
+    const activo = document.getElementById("activo").value;
 
-    const datosUsuario = { nombre, correo, password, rol };
-    const token = sessionStorage.getItem("token") || ""; // Por si requiere token más adelante
+    let detalles = null;
+    if (rol === "ASPIRANTE") {
+        detalles = {
+            nombre: document.getElementById("det_nombre")?.value,
+            primerApellido: document.getElementById("det_primerApellido")?.value,
+            segundoApellido: document.getElementById("det_segundoApellido")?.value,
+            curp: document.getElementById("det_curp")?.value,
+            telefono: document.getElementById("det_telefono")?.value,
+            fechaNacimiento: document.getElementById("det_fechaNacimiento")?.value,
+            direccion: document.getElementById("det_direccion")?.value
+        };
+    } else if (rol === "DOCENTE") {
+        detalles = {
+            nombre: document.getElementById("det_nombre")?.value,
+            primerApellido: document.getElementById("det_primerApellido")?.value,
+            segundoApellido: document.getElementById("det_segundoApellido")?.value,
+            cargo: document.getElementById("det_cargo")?.value,
+            especialidad: document.getElementById("det_especialidad")?.value,
+            cubiculo: document.getElementById("det_cubiculo")?.value
+        };
+    } else if (rol === "SECRETARIO") {
+        detalles = {
+            area: document.getElementById("det_area")?.value,
+            extension: document.getElementById("det_extension")?.value
+        };
+    }
+
+    const datosUsuario = { correo, password, rol, activo, detalles };
+    const token = sessionStorage.getItem("token"); // Por si requiere token más adelante
 
     try {
-        let url = "http://localhost:4000/api/usuario";
+        let url = "/api/usuario";
         let metodo = "POST";
 
         if (idUsuario && idUsuario.trim() !== "") {
-            url = `http://localhost:4000/api/usuario/${idUsuario}`;
+            url = `/api/usuario/${idUsuario}`;
             metodo = "PUT";
         }
 
@@ -301,7 +449,7 @@ async function eliminarUsuario(id) {
     const token = sessionStorage.getItem("token") || "";
 
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/usuario/${id}`, {
+        const respuesta = await fetch(`/api/usuario/${id}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -337,7 +485,7 @@ async function cargarConvocatorias() {
     if (!contenedor) return;
 
     try {
-        const respuesta = await fetch("http://localhost:4000/api/convocatorias");
+        const respuesta = await fetch("/api/convocatorias");
 
         // Si el endpoint no existe o falla, detenemos el renderizado
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
@@ -390,7 +538,7 @@ async function cargarConvocatorias() {
 
 async function cargarPosgradosEnSelect() {
     try {
-        const respuesta = await fetch("http://localhost:4000/api/posgrado");
+        const respuesta = await fetch("/api/posgrado");
         if (!respuesta.ok) return;
         const posgrados = await respuesta.json();
         const select = document.getElementById("convocatoria_posgrado");
@@ -414,7 +562,14 @@ function limpiarFormularioConvocatoria() {
     document.getElementById("idConvocatoriaForm").value = "";
     document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-bullhorn"></i> Nueva Convocatoria';
     document.getElementById("btnEliminarConvocatoria").style.display = "none";
-    document.getElementById("contenedorRequisitos").innerHTML = ""; // Limpiar requisitos
+
+    // Desmarcar todos los checkboxes del catálogo
+    const checkboxes = document.querySelectorAll("#contenedorRequisitos .req-checkbox");
+    checkboxes.forEach(cb => {
+        cb.checked = false;
+        const oblCb = document.getElementById(`obligatorio_${cb.value}`);
+        if (oblCb) oblCb.checked = false;
+    });
 }
 
 function crearConvocatoria() {
@@ -424,47 +579,80 @@ function crearConvocatoria() {
     modal.show();
 }
 
-function agregarRequisitoUI(descripcion = "", obligatorio = true) {
+async function cargarCatalogoRequisitosUI() {
     const contenedor = document.getElementById("contenedorRequisitos");
+    if (!contenedor) return;
 
-    const div = document.createElement("div");
-    div.className = "input-group mb-2 requisito-item";
+    try {
+        const respuesta = await fetch("/api/requisitos");
+        if (!respuesta.ok) throw new Error("No se pudo cargar el catálogo de requisitos");
 
-    const checkedHtml = obligatorio ? "checked" : "";
+        const requisitos = await respuesta.json();
+        contenedor.innerHTML = "";
 
-    div.innerHTML = `
-        <input type="text" class="form-control req-descripcion" placeholder="Descripción del requisito..." value="${descripcion}" required>
-        <div class="input-group-text bg-light">
-            <input class="form-check-input mt-0 req-obligatorio" type="checkbox" ${checkedHtml} title="¿Obligatorio?">
-            <label class="ms-1 mb-0 text-muted" style="font-size:0.8rem; cursor:pointer;" onclick="this.previousElementSibling.click()">Obligatorio</label>
-        </div>
-        <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()" title="Eliminar requisito">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
-    `;
+        if (requisitos.length === 0) {
+            contenedor.innerHTML = "<p class='text-muted'>No hay requisitos en el catálogo.</p>";
+            return;
+        }
 
-    contenedor.appendChild(div);
+        requisitos.forEach(req => {
+            const div = document.createElement("div");
+            div.className = "d-flex justify-content-between align-items-center mb-2 p-2 border rounded bg-white";
+
+            div.innerHTML = `
+                <div class="form-check mb-0">
+                    <input class="form-check-input req-checkbox" type="checkbox" value="${req.id}" id="req_${req.id}">
+                    <label class="form-check-label text-dark" for="req_${req.id}" style="cursor:pointer;">
+                        ${req.nombre}
+                    </label>
+                </div>
+                <div class="form-check form-switch mb-0" style="margin-left: 10px;">
+                    <input class="form-check-input req-obligatorio" type="checkbox" id="obligatorio_${req.id}">
+                    <label class="form-check-label small text-muted" for="obligatorio_${req.id}" style="cursor:pointer;">Obligatorio</label>
+                </div>
+            `;
+
+            contenedor.appendChild(div);
+        });
+
+    } catch (error) {
+        console.error("Error al cargar el catálogo:", error);
+        contenedor.innerHTML = "<p class='text-danger'>Error al cargar requisitos.</p>";
+    }
 }
 
 async function editarConvocatoria(id) {
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/convocatorias/${id}`);
+        const respuesta = await fetch(`/api/convocatorias/${id}`);
         const conv = await respuesta.json();
 
         if (!conv) throw new Error("Convocatoria no encontrada");
 
+        // Limpiar selecciones primero
+        limpiarFormularioConvocatoria();
         document.getElementById("idConvocatoriaForm").value = conv.id;
         document.getElementById("convocatoria_nombre").value = conv.nombre || "";
         document.getElementById("convocatoria_descripcion").value = conv.descripcion || "";
-        document.getElementById("convocatoria_fecha_inicio").value = conv.fecha_inicio || "";
-        document.getElementById("convocatoria_fecha_fin").value = conv.fecha_fin || "";
+        document.getElementById("convocatoria_fecha_inicio").value = conv.fecha_inicio ? conv.fecha_inicio.split('T')[0] : "";
+        document.getElementById("convocatoria_fecha_fin").value = conv.fecha_fin ? conv.fecha_fin.split('T')[0] : "";
         document.getElementById("convocatoria_estado").value = conv.estado || "Borrador";
 
-        // Cargar requisitos dinámicos
-        const contenedor = document.getElementById("contenedorRequisitos");
-        contenedor.innerHTML = "";
-        if (conv.requisitos && Array.isArray(conv.requisitos)) {
-            conv.requisitos.forEach(req => agregarRequisitoUI(req.descripcion, req.obligatorio));
+        // Cargar requisitos desde tabla pivote
+        try {
+            const reqRes = await fetch(`/api/convocatorias/${id}/requisitos`);
+            if (reqRes.ok) {
+                const requisitosAsignados = await reqRes.json();
+                requisitosAsignados.forEach(req => {
+                    const cb = document.getElementById(`req_${req.id}`);
+                    const oblCb = document.getElementById(`obligatorio_${req.id}`);
+                    if (cb) {
+                        cb.checked = true;
+                        if (oblCb) oblCb.checked = req.obligatorio === 1;
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("Error al cargar requisitos de la convocatoria", e);
         }
 
         document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Editar Convocatoria';
@@ -495,26 +683,27 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
     const fecha_fin = document.getElementById("convocatoria_fecha_fin").value;
     const estado = document.getElementById("convocatoria_estado").value;
 
-    // Recopilar requisitos del DOM
-    const reqItems = document.querySelectorAll("#contenedorRequisitos .requisito-item");
+    // Recopilar requisitos del DOM (los checkboxes marcados)
+    const checkboxes = document.querySelectorAll("#contenedorRequisitos .req-checkbox:checked");
     const requisitos = [];
-    reqItems.forEach(item => {
-        const desc = item.querySelector(".req-descripcion").value;
-        const oblig = item.querySelector(".req-obligatorio").checked;
-        if (desc.trim() !== "") {
-            requisitos.push({ descripcion: desc.trim(), obligatorio: oblig });
-        }
+    checkboxes.forEach(cb => {
+        const idReq = cb.value;
+        const oblCb = document.getElementById(`obligatorio_${idReq}`);
+        requisitos.push({
+            id: idReq,
+            obligatorio: oblCb ? oblCb.checked : false
+        });
     });
 
     const datosConvocatoria = { nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, requisitos };
     const token = sessionStorage.getItem("token") || "";
 
     try {
-        let url = "http://localhost:4000/api/convocatorias";
+        let url = "/api/convocatorias";
         let metodo = "POST";
 
         if (idInput && idInput.trim() !== "") {
-            url = `http://localhost:4000/api/convocatorias/${idInput}`;
+            url = `/api/convocatorias/${idInput}`;
             metodo = "PUT";
         }
 
@@ -556,7 +745,7 @@ async function eliminarConvocatoria(id) {
     const token = sessionStorage.getItem("token") || "";
 
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/convocatorias/${id}`, {
+        const respuesta = await fetch(`/api/convocatorias/${id}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -592,13 +781,11 @@ async function cargarAspirantes() {
     if (!tbody) return;
 
     try {
-        const respuesta = await fetch("http://localhost:4000/api/aspirante");
+        const respuesta = await fetch("/api/aspirante");
 
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
 
         const aspirantes = await respuesta.json();
-        console.log(aspirantes)
-
         if (totalAspirantes) {
             totalAspirantes.textContent = aspirantes.length || 0;
         }
@@ -616,7 +803,7 @@ async function cargarAspirantes() {
             const nombreCompleto = `${aspirante.nombre || ''} ${aspirante.primerApellido || ''} ${aspirante.segundoApellido || ''}`.trim();
 
             tr.style.cursor = "pointer";
-            tr.onclick = () => editarAspirante(aspirante.id);
+            tr.onclick = () => verExpedienteAspirante(aspirante.id);
             tr.innerHTML = `
                 <td>${nombreCompleto || 'Sin nombre'}</td>
                 <td>${aspirante.correo || 'Sin correo'}</td>
@@ -630,45 +817,123 @@ async function cargarAspirantes() {
     }
 }
 
-async function editarAspirante(id) {
+async function verExpedienteAspirante(id) {
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/aspirante/${id}`);
+        const respuesta = await fetch(`/api/aspirante/${id}/expediente`);
         if (!respuesta.ok) throw new Error("Aspirante no encontrado");
 
-        const aspirante = await respuesta.json();
+        const expediente = await respuesta.json();
+        const perfil = expediente.perfil;
+        const solicitudes = expediente.solicitudes || [];
 
-        // Llenar el modal
-        document.getElementById("detalleAspId").value = aspirante.id || "";
-        document.getElementById("detalleAspNombre").value = aspirante.nombre || "";
-        document.getElementById("detalleAspPrimerApellido").value = aspirante.primerApellido || "";
-        document.getElementById("detalleAspSegundoApellido").value = aspirante.segundoApellido || "";
-        document.getElementById("detalleAspCurp").value = aspirante.curp || "";
-        document.getElementById("detalleAspCorreo").value = aspirante.correo || "";
-        document.getElementById("detalleAspTelefono").value = aspirante.telefono || "";
-
-        // Formatear la fecha si existe
-        let fechaFormat = "";
-        if (aspirante.fechaNacimiento) {
-            const d = new Date(aspirante.fechaNacimiento);
-            if (!isNaN(d.getTime())) {
-                fechaFormat = d.toISOString().split('T')[0];
-            } else {
-                fechaFormat = aspirante.fechaNacimiento;
-            }
+        // Llenar el perfil resumido
+        const nombreCompleto = `${perfil.nombre || ''} ${perfil.primerApellido || ''} ${perfil.segundoApellido || ''}`.trim();
+        document.getElementById("perfil_nombreCompleto").textContent = nombreCompleto;
+        document.getElementById("perfil_correo").textContent = perfil.correo || "Sin correo";
+        
+        document.getElementById("perfil_curp").textContent = perfil.curp || "N/A";
+        document.getElementById("perfil_telefono").textContent = perfil.telefono || "N/A";
+        
+        let fechaNac = "N/A";
+        if (perfil.fechaNacimiento) {
+            fechaNac = new Date(perfil.fechaNacimiento).toLocaleDateString();
         }
-        document.getElementById("detalleAspFechaNac").value = fechaFormat;
+        document.getElementById("perfil_nacimiento").textContent = fechaNac;
+        document.getElementById("perfil_direccion").textContent = perfil.direccion || "N/A";
+        
+        const badgeEstado = document.getElementById("perfil_estado");
+        if (perfil.activo) {
+            badgeEstado.className = "badge bg-success mb-4";
+            badgeEstado.textContent = "Usuario Activo";
+        } else {
+            badgeEstado.className = "badge bg-danger mb-4";
+            badgeEstado.textContent = "Usuario Inactivo";
+        }
 
-        document.getElementById("detalleAspDireccion").value = aspirante.direccion || "";
+        // Llenar las solicitudes
+        const contSolicitudes = document.getElementById("contenedorSolicitudes");
+        contSolicitudes.innerHTML = ""; // Limpiar
 
-        // Mostrar modal
-        const modalElement = document.getElementById("modalAspirante");
-        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
-        modal.show();
+        if (solicitudes.length === 0) {
+            contSolicitudes.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fa-solid fa-inbox text-muted fs-1 mb-2"></i>
+                    <p class="text-muted">El aspirante aún no ha iniciado ningún proceso de admisión.</p>
+                </div>
+            `;
+        } else {
+            solicitudes.forEach(sol => {
+                let colorBadge = "bg-secondary";
+                if (sol.estado === "APROBADO") colorBadge = "bg-success";
+                else if (sol.estado === "RECHAZADO") colorBadge = "bg-danger";
+                else if (sol.estado === "EN_REVISION") colorBadge = "bg-info text-dark";
+                else if (sol.estado === "PENDIENTE") colorBadge = "bg-warning text-dark";
+
+                const d = new Date(sol.creadoEn).toLocaleDateString();
+
+                // Armar la lista de documentos
+                let htmlDocs = "";
+                if (sol.documentos && sol.documentos.length > 0) {
+                    htmlDocs = `<div class="mt-3"><h6 class="small fw-bold text-muted border-bottom pb-1 mb-2">Documentos Adjuntos:</h6><ul class="list-group list-group-flush border rounded">`;
+                    sol.documentos.forEach(doc => {
+                        let colorDoc = "text-secondary";
+                        let iconoDoc = "fa-clock";
+                        if(doc.estadoValidacion === "APROBADO") { colorDoc = "text-success"; iconoDoc = "fa-check-circle"; }
+                        else if(doc.estadoValidacion === "RECHAZADO") { colorDoc = "text-danger"; iconoDoc = "fa-times-circle"; }
+                        else if(doc.estadoValidacion === "PENDIENTE") { colorDoc = "text-warning"; iconoDoc = "fa-clock"; }
+
+                        htmlDocs += `
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                                <div>
+                                    <i class="fa-solid fa-file-pdf text-danger me-2"></i>
+                                    <span class="small">${doc.requisitoNombre}</span>
+                                </div>
+                                <div>
+                                    <span class="badge bg-light ${colorDoc} border me-2" title="Estado: ${doc.estadoValidacion}">
+                                        <i class="fa-solid ${iconoDoc}"></i> ${doc.estadoValidacion}
+                                    </span>
+                                    <a href="/uploads/${doc.rutaArchivo}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;">
+                                        Ver <i class="fa-solid fa-up-right-from-square ms-1"></i>
+                                    </a>
+                                </div>
+                            </li>
+                        `;
+                    });
+                    htmlDocs += `</ul></div>`;
+                } else {
+                    htmlDocs = `<div class="mt-3"><p class="text-muted small"><i class="fa-solid fa-folder-minus"></i> No se han adjuntado documentos aún.</p></div>`;
+                }
+
+                contSolicitudes.innerHTML += `
+                    <div class="card border-0 shadow-sm mb-4 bg-light">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h5 class="card-title text-primary fw-bold mb-1">${sol.convocatoriaNombre}</h5>
+                                    <h6 class="card-subtitle text-muted small"><i class="fa-regular fa-calendar me-1"></i> Iniciado el: ${d} &nbsp;|&nbsp; <i class="fa-solid fa-graduation-cap me-1"></i> ${sol.tipoAdmision}</h6>
+                                </div>
+                                <span class="badge ${colorBadge} fs-6 px-3 py-2 rounded-pill">${sol.estado}</span>
+                            </div>
+                            ${htmlDocs}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Intercambiar vistas
+        document.getElementById("vistaTablaAspirantes").classList.add("d-none");
+        document.getElementById("vistaPerfilAspirante").classList.remove("d-none");
 
     } catch (error) {
-        console.error("Error al cargar detalles del aspirante:", error);
-        alert("Ocurrió un error al cargar los detalles del aspirante.");
+        console.error("Error al cargar expediente:", error);
+        alert("No se pudo cargar el expediente del aspirante.");
     }
+}
+
+function cerrarExpedienteAspirante() {
+    document.getElementById("vistaPerfilAspirante").classList.add("d-none");
+    document.getElementById("vistaTablaAspirantes").classList.remove("d-none");
 }
 
 document.getElementById("formAspirante")?.addEventListener("submit", async (e) => {
@@ -689,7 +954,7 @@ document.getElementById("formAspirante")?.addEventListener("submit", async (e) =
     const token = sessionStorage.getItem("token") || "";
 
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/aspirante/${id}`, {
+        const respuesta = await fetch(`/api/aspirante/${id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -720,38 +985,62 @@ document.getElementById("formAspirante")?.addEventListener("submit", async (e) =
 // ==========================================
 
 async function cargarNotificacionesAdmin() {
-    const tbody = document.getElementById("tablaNotificaciones");
-    if (!tbody) return;
+    const contenedor = document.getElementById("tablaNotificaciones");
+    if (!contenedor) return;
 
     try {
-        const respuesta = await fetch("http://localhost:4000/api/notificaciones"); // API futura
+        const respuesta = await fetch("/api/notificaciones");
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
 
         const notificaciones = await respuesta.json();
-        tbody.innerHTML = "";
+        contenedor.innerHTML = "";
 
         if (!notificaciones || notificaciones.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='5' class='text-center text-muted'>No hay notificaciones registradas.</td></tr>";
+            contenedor.innerHTML = `<tr><td colspan='4' class='text-center text-muted py-5'>
+                <i class="fa-solid fa-inbox fs-2 mb-3 opacity-25"></i>
+                <p class="mb-0">No hay notificaciones registradas.</p>
+            </td></tr>`;
             return;
         }
 
         notificaciones.forEach(notif => {
             const tr = document.createElement("tr");
-            tr.style.cursor = "pointer";
-            tr.onclick = () => editarNotificacion(notif.id);
+            
+            // Etiqueta de destino y estado
+            let destinoIcon = 'fa-users';
+            let destinoText = notif.destino || 'todos';
+            let destinoBg = 'bg-primary bg-opacity-10 text-primary';
+            
+            if(destinoText === 'aspirantes') { destinoIcon = 'fa-graduation-cap'; destinoBg = 'bg-info bg-opacity-10 text-info'; }
+            if(destinoText === 'docentes') { destinoIcon = 'fa-chalkboard-user'; destinoBg = 'bg-warning bg-opacity-10 text-warning'; }
+            if(destinoText === 'secretario') { destinoIcon = 'fa-file-signature'; destinoBg = 'bg-success bg-opacity-10 text-success'; }
+            
+            let estadoClass = notif.activa == 1 || notif.activa === 'true' || notif.activa === true ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger';
+            let estadoText = notif.activa == 1 || notif.activa === 'true' || notif.activa === true ? 'Activa' : 'Inactiva';
+
             tr.innerHTML = `
                 <td>${notif.id}</td>
-                <td>${notif.nombre}</td>
-                <td>${notif.mensaje.substring(0, 50)}...</td>
-                <td>${notif.fecha_creacion || 'N/A'}</td>
-                <td><span class="badge ${notif.activa === 'true' ? 'bg-success' : 'bg-secondary'}">${notif.activa || 'true'}</span></td>
-                <td><span class="badge ${notif.destino === 'Todos' ? 'bg-success' : 'bg-secondary'}">${notif.destino || 'Todos'}</span></td>
-                `;
-            tbody.appendChild(tr);
+                <td><span class="fw-bold text-dark">${notif.nombre}</span></td>
+                <td><span class="text-muted small d-inline-block text-truncate" style="max-width: 250px;">${notif.mensaje}</span></td>
+                <td><span class="badge rounded-pill px-3 py-2 ${destinoBg}"><i class="fa-solid ${destinoIcon} me-1"></i> ${destinoText}</span></td>
+                <td><span class="badge rounded-pill px-3 py-2 ${estadoClass}">${estadoText}</span></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary shadow-sm me-1" onclick="editarNotificacion(${notif.id})" title="Editar">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger shadow-sm" onclick="eliminarNotificacion(${notif.id})" title="Eliminar">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            contenedor.appendChild(tr);
         });
     } catch (error) {
         console.warn("Error al cargar notificaciones (API no lista):", error);
-        tbody.innerHTML = "<tr><td colspan='5' class='text-center text-muted'>Esperando que se habilite la API de notificaciones...</td></tr>";
+        contenedor.innerHTML = `<tr><td colspan='4' class='text-center text-muted py-5'>
+                <i class="fa-solid fa-plug-circle-exclamation fs-2 mb-3 opacity-25"></i>
+                <p class="mb-0">Esperando conexión con el backend...</p>
+            </td></tr>`;
     }
 }
 
@@ -759,13 +1048,13 @@ function limpiarFormularioNotificacion() {
     const form = document.getElementById("formNotificacion");
     if (form) form.reset();
     document.getElementById("idNotificacionForm").value = "";
-    document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-bell"></i> Nueva Notificación';
+    document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-bell text-primary me-2"></i> Nueva Notificación';
     document.getElementById("btnEliminarNotificacion").style.display = "none";
 }
 
 async function editarNotificacion(id) {
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/notificaciones/${id}`);
+        const respuesta = await fetch(`/api/notificaciones/${id}`);
         if (!respuesta.ok) throw new Error("Notificación no encontrada");
 
         const notif = await respuesta.json();
@@ -773,23 +1062,24 @@ async function editarNotificacion(id) {
         document.getElementById("idNotificacionForm").value = notif.id;
         document.getElementById("notif_titulo").value = notif.nombre || "";
         document.getElementById("notif_mensaje").value = notif.mensaje || "";
-        document.getElementById("notif_destino").value = notif.destino || "Todos";
-        document.getElementById("notif_estado").value = notif.activa || "Activa";
+        document.getElementById("notif_destino").value = notif.destino || "todos";
+        document.getElementById("notif_estado").value = (notif.activa == 1 || notif.activa === 'true' || notif.activa === true) ? "1" : "0";
 
-        document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Editar Notificación';
+        document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-pen-to-square text-warning me-2"></i> Editar Notificación';
 
         const btnEliminar = document.getElementById("btnEliminarNotificacion");
         if (btnEliminar) {
             btnEliminar.style.display = "inline-block";
-            btnEliminar.onclick = () => eliminarNotificacion(notif.id);
         }
 
+        // Abrir el Modal de Bootstrap
         const modalElement = document.getElementById("modalNotificacion");
         const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
         modal.show();
+
     } catch (error) {
         console.warn("API de edición de notificaciones no lista:", error);
-        alert("La API para obtener la notificación aún no está habilitada.");
+        Swal.fire('Error', 'La API para obtener la notificación falló.', 'error');
     }
 }
 
@@ -806,11 +1096,11 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
     const token = sessionStorage.getItem("token") || "";
 
     try {
-        let url = "http://localhost:4000/api/notificaciones";
+        let url = "/api/notificaciones";
         let metodo = "POST";
 
         if (idInput && idInput.trim() !== "") {
-            url = `http://localhost:4000/api/notificaciones/${idInput}`;
+            url = `/api/notificaciones/${idInput}`;
             metodo = "PUT";
         }
 
@@ -826,30 +1116,49 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
         const resultado = await respuesta.json();
 
         if (respuesta.ok && resultado.success !== false) {
-            alert(resultado.mensaje || "Notificación guardada con éxito");
-
-            const modalElement = document.getElementById("modalNotificacion");
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            if (modal) modal.hide();
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: resultado.mensaje || 'Notificación guardada',
+                showConfirmButton: false,
+                timer: 3000
+            });
 
             limpiarFormularioNotificacion();
             cargarNotificacionesAdmin();
+
+            // Cerrar el modal
+            const modalElement = document.getElementById('modalNotificacion');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if(modal) modal.hide();
         } else {
-            alert(resultado.mensaje || "Hubo un error al guardar la notificación.");
+            Swal.fire('Error', resultado.mensaje || 'No se pudo guardar.', 'error');
         }
     } catch (error) {
         console.warn("API de guardar notificaciones no lista:", error);
-        alert("La conexión con la API de notificaciones falló. (Aún no implementada)");
+        Swal.fire('Error de red', 'La conexión falló.', 'error');
     }
 });
 
 async function eliminarNotificacion(id) {
-    if (!confirm(`¿Está seguro de eliminar la notificación con ID: ${id}?`)) return;
+    const confirmacion = await Swal.fire({
+        title: '¿Eliminar Aviso?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+    
+    if (!confirmacion.isConfirmed) return;
 
     const token = sessionStorage.getItem("token") || "";
 
     try {
-        const respuesta = await fetch(`http://localhost:4000/api/notificaciones/${id}`, {
+        const respuesta = await fetch(`/api/notificaciones/${id}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -859,15 +1168,17 @@ async function eliminarNotificacion(id) {
         const resultado = await respuesta.json();
 
         if (respuesta.ok && resultado.success !== false) {
-            alert(resultado.mensaje || "Notificación eliminada con éxito.");
-
-            const modalElement = document.getElementById("modalNotificacion");
+            Swal.fire('Eliminado', 'Notificación eliminada.', 'success');
+            
+            // Cerrar modal si está abierto (ya que el botón de eliminar también vive allí)
+            const modalElement = document.getElementById('modalNotificacion');
             const modal = bootstrap.Modal.getInstance(modalElement);
-            if (modal) modal.hide();
+            if(modal) modal.hide();
 
+            limpiarFormularioNotificacion();
             cargarNotificacionesAdmin();
         } else {
-            alert(resultado.mensaje || "No se pudo eliminar la notificación.");
+            Swal.fire('Error', resultado.mensaje || "No se pudo eliminar.", 'error');
         }
     } catch (error) {
         console.warn("API de eliminar notificaciones no lista:", error);

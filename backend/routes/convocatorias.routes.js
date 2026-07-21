@@ -9,7 +9,9 @@ const {
     obtenerConvocatoria,
     crearConvocatorias,
     actualizarConvocatorias,
-    eliminarConvocatorias
+    eliminarConvocatorias,
+    obtenerRequisitosConvocatoria
+
 } = require('../controllers/convocatoriasController');
 
 // Todos los usuarios autenticados pueden ver las convocatorias
@@ -26,13 +28,9 @@ router.get(
     obtenerConvocatoria
 );
 
-// Solo el ADMIN puede crear convocatorias
-router.post(
-    '/',
-    auth,
-    validarRol('ADMIN'),
-    crearConvocatorias
-);
+router.get('/:id/requisitos', obtenerRequisitosConvocatoria);
+
+router.post('/', crearConvocatorias);
 
 // Solo el ADMIN puede actualizar convocatorias
 router.put(

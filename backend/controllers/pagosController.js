@@ -1,191 +1,84 @@
 const db = require('../database/db');
 
-// Obtener todos
-exports.obtenerPagos = (req, res) => {
-
-    db.query('SELECT * FROM pagos', (err, resultados) => {
-
-        if (err) {
-            console.error(err);
-
-            return res.status(500).json({
-                success: false,
-                mensaje: 'Error al obtener pagos'
-            });
-        }
-
-        res.json(resultados);
-
-    });
-
+// Obtener todos los pagos
+const obtenerPagos = async (req, res) => {
+    try {
+        const [resultados] = await db.query('SELECT * FROM pagos');
+        return res.json(resultados);
+    } catch (error) {
+        console.error('Error en obtenerPagos:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al obtener pagos' });
+    }
 };
 
-// Obtener uno
-exports.obtenerPago = (req, res) => {
+// Obtener un pago por ID
+const obtenerPago = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [resultados] = await db.query('SELECT * FROM pagos WHERE id=?', [id]);
 
-    const { id } = req.params;
-
-    db.query(
-        'SELECT * FROM pagos WHERE id=?',
-        [id],
-        (err, resultados) => {
-
-            if (err) {
-
-                return res.status(500).json(err);
-
-            }
-
-            if (resultados.length === 0) {
-
-                return res.status(404).json({
-                    success: false,
-                    mensaje: 'Pago no encontrado'
-                });
-
-            }
-
-            res.json(resultados[0]);
-
+        if (resultados.length === 0) {
+            return res.status(404).json({ success: false, mensaje: 'Pago no encontrado' });
         }
-    );
 
+        return res.json(resultados[0]);
+    } catch (error) {
+        console.error('Error en obtenerPago:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al obtener pago' });
+    }
 };
 
-// Crear
-exports.crearPago = (req, res) => {
+// Crear pago
+const crearPago = async (req, res) => {
+    try {
+        const { idSoli, monto, referencia, estado } = req.body;
 
-    const {
+        await db.query(
+            'INSERT INTO pagos (idSoli, monto, referencia, estado) VALUES (?, ?, ?, ?)',
+            [idSoli, monto, referencia, estado]
+        );
 
-        idSoli,
-        monto,
-        referencia,
-        estado
-
-    } = req.body;
-
-    db.query(
-
-        `INSERT INTO pagos
-        (idSoli,monto,referencia,estado)
-        VALUES (?,?,?,?)`,
-
-        [
-
-            idSoli,
-            monto,
-            referencia,
-            estado
-
-        ],
-
-        (err) => {
-
-            if (err) {
-
-                console.error(err);
-
-                return res.status(500).json(err);
-
-            }
-
-            res.json({
-
-                success: true,
-                mensaje: 'Pago registrado correctamente'
-
-            });
-
-        }
-
-    );
-
+        return res.json({ success: true, mensaje: 'Pago registrado correctamente' });
+    } catch (error) {
+        console.error('Error en crearPago:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al registrar pago' });
+    }
 };
 
-// Actualizar
-exports.actualizarPago = (req, res) => {
+// Actualizar pago
+const actualizarPago = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { idSoli, monto, referencia, estado } = req.body;
 
-    const { id } = req.params;
+        await db.query(
+            'UPDATE pagos SET idSoli=?, monto=?, referencia=?, estado=? WHERE id=?',
+            [idSoli, monto, referencia, estado, id]
+        );
 
-    const {
-
-        idSoli,
-        monto,
-        referencia,
-        estado
-
-    } = req.body;
-
-    db.query(
-
-        `UPDATE pagos SET
-
-        idSoli=?,
-        monto=?,
-        referencia=?,
-        estado=?
-
-        WHERE id=?`,
-
-        [
-
-            idSoli,
-            monto,
-            referencia,
-            estado,
-            id
-
-        ],
-
-        (err) => {
-
-            if (err) {
-
-                return res.status(500).json(err);
-
-            }
-
-            res.json({
-
-                success: true,
-                mensaje: 'Pago actualizado'
-
-            });
-
-        }
-
-    );
-
+        return res.json({ success: true, mensaje: 'Pago actualizado' });
+    } catch (error) {
+        console.error('Error en actualizarPago:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al actualizar pago' });
+    }
 };
 
-// Eliminar
-exports.eliminarPago = (req, res) => {
+// Eliminar pago
+const eliminarPago = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query('DELETE FROM pagos WHERE id=?', [id]);
+        return res.json({ success: true, mensaje: 'Pago eliminado' });
+    } catch (error) {
+        console.error('Error en eliminarPago:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al eliminar pago' });
+    }
+};
 
-    const { id } = req.params;
-
-    db.query(
-
-        'DELETE FROM pagos WHERE id=?',
-
-        [id],
-
-        (err) => {
-
-            if (err) {
-
-                return res.status(500).json(err);
-
-            }
-
-            res.json({
-
-                success: true,
-                mensaje: 'Pago eliminado'
-
-            });
-
-        }
-
-    );
-
+module.exports = {
+    obtenerPagos,
+    obtenerPago,
+    crearPago,
+    actualizarPago,
+    eliminarPago
 };
