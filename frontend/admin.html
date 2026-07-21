@@ -10,9 +10,13 @@
 
     <!-- Bootstrap for modals and tables -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome from aspirante.html -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <!-- Style CSS from aspirante.html -->
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -291,27 +295,26 @@
         <div id="seccion-notificaciones" class="content-section d-none">
             <div class="card mt-2 shadow-sm" style="flex:auto;">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0" style="color:#1a1f2c;"><i class="fa-solid fa-bell"></i> Gestión de Notificaciones
-                    </h5>
-                    <button class="btn btn-primary" style="width:auto; padding: 8px 15px;" data-bs-toggle="modal"
-                        data-bs-target="#modalNotificacion" onclick="limpiarFormularioNotificacion()">
+                    <h5 class="mb-0" style="color:#1a1f2c;"><i class="fa-solid fa-bell"></i> Gestión de Notificaciones</h5>
+                    <button class="btn btn-primary" style="width:auto; padding: 8px 15px;" data-bs-toggle="modal" data-bs-target="#modalNotificacion" onclick="limpiarFormularioNotificacion()">
                         <i class="fa-solid fa-plus"></i> Nueva Notificación
                     </button>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle">
+                    <table class="table table-striped table-hover align-middle mt-3">
                         <thead class="table-light">
                             <tr>
                                 <th>ID</th>
                                 <th>Título</th>
                                 <th>Mensaje</th>
-                                <th>Fecha</th>
+                                <th>Destino</th>
                                 <th>Estado</th>
+                                <th class="text-end">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tablaNotificaciones">
                             <tr>
-                                <td colspan='5' class='text-center text-muted'>Cargando notificaciones...</td>
+                                <td colspan='6' class='text-center text-muted py-3'>Cargando notificaciones...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -328,6 +331,69 @@
         </div>
 
     </main>
+
+    <!-- Modal Notificación (Conservador pero Modernizado con Bootstrap 5) -->
+    <div class="modal fade" id="modalNotificacion" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content shadow">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold" id="tituloModalNotificacion" style="color:var(--color-primary);">
+                        <i class="fa-solid fa-bell text-primary me-2"></i> Nueva Notificación
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="formNotificacion">
+                        <input type="hidden" id="idNotificacionForm">
+
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="notif_titulo" placeholder="Título" required>
+                            <label for="notif_titulo">Título de la Notificación</label>
+                        </div>
+                        
+                        <div class="form-floating mb-4">
+                            <textarea class="form-control" id="notif_mensaje" placeholder="Mensaje" style="height: 120px" required></textarea>
+                            <label for="notif_mensaje">Cuerpo del Mensaje</label>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="notif_destino" required>
+                                        <option value="">Seleccione...</option>
+                                        <option value="todos">Todos los Usuarios</option>
+                                        <option value="aspirantes">Aspirantes</option>
+                                        <option value="secretario">Secretaría</option>
+                                        <option value="docentes">Docentes</option>
+                                        <option value="coordinador">Coordinador</option>
+                                    </select>
+                                    <label for="notif_destino">Público Destino</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="notif_estado">
+                                        <option value="1">Activa (Visible)</option>
+                                        <option value="0">Inactiva (Oculta)</option>
+                                    </select>
+                                    <label for="notif_estado">Estado Inicial</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <button type="button" class="btn btn-outline-danger" id="btnEliminarNotificacion" style="display:none;" onclick="eliminarNotificacion(document.getElementById('idNotificacionForm').value)">
+                                <i class="fa-solid fa-trash-can"></i> Eliminar
+                            </button>
+                            <button type="submit" class="btn btn-primary px-4" style="margin-left:auto;">
+                                <i class="fa-solid fa-floppy-disk me-2"></i> Guardar Notificación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal Nuevo Usuario -->
     <div class="modal fade" id="modalUsuario" tabindex="-1" aria-hidden="true">
@@ -497,64 +563,7 @@
         </div>
     </div>
 
-    <!-- Modal Notificación -->
-    <div class="modal fade" id="modalNotificacion" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header d-flex justify-content-between align-items-center">
-                    <h5 class="modal-title" id="tituloModalNotificacion"><i class="fa-solid fa-bell"></i> Nueva
-                        Notificación</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
 
-                <div class="modal-body">
-                    <form id="formNotificacion">
-                        <input type="hidden" id="idNotificacionForm">
-
-                        <div class="mb-3">
-                            <label class="form-label">Título</label>
-                            <input type="text" id="notif_titulo" class="form-control" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Mensaje</label>
-                            <textarea id="notif_mensaje" class="form-control" rows="3" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Destino</label>
-                            <select id="notif_destino" class="form-select">
-                                <option value="">Seleccione</option>
-                                <option value="todos">Todos</option>
-                                <option value="aspirantes">Aspirantes</option>
-                                <option value="secretario">Secretaría</option>
-                                <option value="docentes">Docentes</option>
-                                <option value="coordinador">Coordinador</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Estado</label>
-                            <select id="notif_estado" class="form-select">
-                                <option value="1">Activa</option>
-                                <option value="0">Inactiva</option>
-                            </select>
-                        </div>
-
-
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-danger" id="btnEliminarNotificacion"
-                                style="display:none;" onclick="eliminarNotificacion()">
-                                <i class="fa-solid fa-trash"></i> Eliminar
-                            </button>
-                            <button type="submit" class="btn btn-primary" style="margin-left:auto;">
-                                <i class="fa-solid fa-floppy-disk"></i> Guardar
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>

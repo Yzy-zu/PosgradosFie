@@ -232,13 +232,17 @@ function seleccionarPrograma(nombrePrograma) {
 
     // SI NO HA INICIADO SESIÓN (Es un aspirante nuevo o sin credenciales activas)
     if (!token || !usuario) {
-        alert(`Para postularte a la ${nombrePrograma} debes confirmar tus credenciales de registro. Redirigiendo...`);
-
-        // Guardamos temporalmente qué programa seleccionó
-        sessionStorage.setItem('programaPendiente', nombrePrograma);
-
-        // Lo mandamos al formulario de registro limpio (registro.html)
-        window.location.href = "registro.html";
+        Swal.fire({
+            title: 'Atención',
+            text: `Para postularte a la ${nombrePrograma} debes confirmar tus credenciales de registro. Redirigiendo...`,
+            icon: 'info',
+            confirmButtonColor: 'var(--color-info)'
+        }).then(() => {
+            // Guardamos temporalmente qué programa seleccionó
+            sessionStorage.setItem('programaPendiente', nombrePrograma);
+            // Lo mandamos al formulario de registro limpio (registro.html)
+            window.location.href = "registro.html";
+        });
     } else {
         // SI YA TIENE CUENTA E INICIÓ SESIÓN: Desbloquea y activa los módulos en el acto
         sessionStorage.setItem('programaPendiente', nombrePrograma);
@@ -316,7 +320,7 @@ async function activarModulosPostRegistro(nombrePrograma) {
  */
 async function prepararFlujoEstaciones(nivel, idConvocatoria) {
     if (!aspiranteData) {
-        alert("No se pudo cargar la información del aspirante. Intente recargar.");
+        Swal.fire('Error', 'No se pudo cargar la información del aspirante. Intente recargar.', 'error');
         return;
     }
 
@@ -339,15 +343,15 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
             bloquearConvocatorias();
         } else if (respuestaSoli.status === 409) {
             const errData = await respuestaSoli.json();
-            alert(errData.mensaje);
+            Swal.fire('Aviso', errData.mensaje, 'warning');
             return;
         } else {
-            alert("Hubo un error al crear la solicitud en el servidor.");
+            Swal.fire('Error', 'Hubo un error al crear la solicitud en el servidor.', 'error');
             return;
         }
     } catch (e) {
         console.error(e);
-        alert("Fallo de conexión al crear solicitud.");
+        Swal.fire('Error', 'Fallo de conexión al crear solicitud.', 'error');
         return;
     }
 
@@ -625,7 +629,18 @@ function bloquearInterfazPorRevision() {
  * Concluye el proceso de registro mostrando alertas personalizadas por nivel y enviando los últimos archivos
  */
 async function finalizarProcesoEstaciones() {
-    if (!confirm("¿Estás seguro de enviar tu expediente a revisión? Una vez enviado no podrás modificar ni borrar documentos.")) {
+    const confirmacion = await Swal.fire({
+        title: 'Enviar Expediente',
+        text: "¿Estás seguro de enviar tu expediente a revisión? Una vez enviado no podrás modificar ni borrar documentos.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--color-success)',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, enviar a revisión',
+        cancelButtonText: 'Aún no'
+    });
+
+    if (!confirmacion.isConfirmed) {
         return;
     }
 
@@ -664,14 +679,27 @@ async function finalizarProcesoEstaciones() {
                 method: 'PUT'
             });
             // Activar bloqueo de interfaz sin recargar
-            bloquearInterfazPorRevision();
+            Swal.fire({
+                title: '¡Felicidades!',
+                text: 'Tu expediente completo ha sido enviado con éxito al comité de admisiones. Revisa tu vista de proceso para ver actualizaciones.',
+                icon: 'success',
+                confirmButtonColor: 'var(--color-success)'
+            });
+            
+            // Forzar recarga de UI a EN_REVISION
+            const soliRes = await fetch(`/api/solicitud/${currentSolicitudId}`);
+            if (soliRes.ok) {
+                const soliData = await soliRes.json();
+                if (soliData.estado === 'EN_REVISION') {
+                    bloquearInterfazPorRevision();
+                }
+            }
         } catch (e) {
             console.error("Error al enviar expediente a revisión en DB:", e);
         }
     }
 
     ocultarLoader();
-    alert("¡Felicidades! Tu expediente completo ha sido enviado con éxito al comité de admisiones. Revisa tu vista de proceso para ver actualizaciones.");
     
     // Lo redirigimos a la vista de proceso en lugar de inicio
     switchView('proceso');
@@ -767,7 +795,18 @@ function bloquearConvocatorias() {
 }
 
 async function cancelarSolicitudActual() {
-    if (!confirm("¿Estás seguro que deseas cancelar todo el progreso de esta solicitud? No se puede deshacer.")) return;
+    const confirmacion = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Deseas cancelar todo el progreso de esta solicitud? No se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--color-danger)',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, cancelar solicitud',
+        cancelButtonText: 'No, mantenerla'
+    });
+    
+    if (!confirmacion.isConfirmed) return;
     if (!currentSolicitudId) return;
 
     try {
@@ -776,7 +815,7 @@ async function cancelarSolicitudActual() {
         });
 
         if (res.ok) {
-            alert("Solicitud cancelada. Eres libre de iniciar una nueva.");
+            Swal.fire('Cancelada', 'Solicitud cancelada. Eres libre de iniciar una nueva.', 'success');
             currentSolicitudId = null;
             sessionStorage.removeItem('idConvocatoriaPendiente');
             sessionStorage.removeItem('programaPendiente');

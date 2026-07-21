@@ -989,38 +989,62 @@ document.getElementById("formAspirante")?.addEventListener("submit", async (e) =
 // ==========================================
 
 async function cargarNotificacionesAdmin() {
-    const tbody = document.getElementById("tablaNotificaciones");
-    if (!tbody) return;
+    const contenedor = document.getElementById("tablaNotificaciones");
+    if (!contenedor) return;
 
     try {
-        const respuesta = await fetch("/api/notificaciones"); // API futura
+        const respuesta = await fetch("/api/notificaciones");
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
 
         const notificaciones = await respuesta.json();
-        tbody.innerHTML = "";
+        contenedor.innerHTML = "";
 
         if (!notificaciones || notificaciones.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='5' class='text-center text-muted'>No hay notificaciones registradas.</td></tr>";
+            contenedor.innerHTML = `<tr><td colspan='4' class='text-center text-muted py-5'>
+                <i class="fa-solid fa-inbox fs-2 mb-3 opacity-25"></i>
+                <p class="mb-0">No hay notificaciones registradas.</p>
+            </td></tr>`;
             return;
         }
 
         notificaciones.forEach(notif => {
             const tr = document.createElement("tr");
-            tr.style.cursor = "pointer";
-            tr.onclick = () => editarNotificacion(notif.id);
+            
+            // Etiqueta de destino y estado
+            let destinoIcon = 'fa-users';
+            let destinoText = notif.destino || 'todos';
+            let destinoBg = 'bg-primary bg-opacity-10 text-primary';
+            
+            if(destinoText === 'aspirantes') { destinoIcon = 'fa-graduation-cap'; destinoBg = 'bg-info bg-opacity-10 text-info'; }
+            if(destinoText === 'docentes') { destinoIcon = 'fa-chalkboard-user'; destinoBg = 'bg-warning bg-opacity-10 text-warning'; }
+            if(destinoText === 'secretario') { destinoIcon = 'fa-file-signature'; destinoBg = 'bg-success bg-opacity-10 text-success'; }
+            
+            let estadoClass = notif.activa == 1 || notif.activa === 'true' || notif.activa === true ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger';
+            let estadoText = notif.activa == 1 || notif.activa === 'true' || notif.activa === true ? 'Activa' : 'Inactiva';
+
             tr.innerHTML = `
                 <td>${notif.id}</td>
-                <td>${notif.nombre}</td>
-                <td>${notif.mensaje.substring(0, 50)}...</td>
-                <td>${notif.fecha_creacion || 'N/A'}</td>
-                <td><span class="badge ${notif.activa === 'true' ? 'bg-success' : 'bg-secondary'}">${notif.activa || 'true'}</span></td>
-                <td><span class="badge ${notif.destino === 'Todos' ? 'bg-success' : 'bg-secondary'}">${notif.destino || 'Todos'}</span></td>
-                `;
-            tbody.appendChild(tr);
+                <td><span class="fw-bold text-dark">${notif.nombre}</span></td>
+                <td><span class="text-muted small d-inline-block text-truncate" style="max-width: 250px;">${notif.mensaje}</span></td>
+                <td><span class="badge rounded-pill px-3 py-2 ${destinoBg}"><i class="fa-solid ${destinoIcon} me-1"></i> ${destinoText}</span></td>
+                <td><span class="badge rounded-pill px-3 py-2 ${estadoClass}">${estadoText}</span></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary shadow-sm me-1" onclick="editarNotificacion(${notif.id})" title="Editar">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger shadow-sm" onclick="eliminarNotificacion(${notif.id})" title="Eliminar">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            contenedor.appendChild(tr);
         });
     } catch (error) {
         console.warn("Error al cargar notificaciones (API no lista):", error);
-        tbody.innerHTML = "<tr><td colspan='5' class='text-center text-muted'>Esperando que se habilite la API de notificaciones...</td></tr>";
+        contenedor.innerHTML = `<tr><td colspan='4' class='text-center text-muted py-5'>
+                <i class="fa-solid fa-plug-circle-exclamation fs-2 mb-3 opacity-25"></i>
+                <p class="mb-0">Esperando conexión con el backend...</p>
+            </td></tr>`;
     }
 }
 
@@ -1028,7 +1052,7 @@ function limpiarFormularioNotificacion() {
     const form = document.getElementById("formNotificacion");
     if (form) form.reset();
     document.getElementById("idNotificacionForm").value = "";
-    document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-bell"></i> Nueva Notificación';
+    document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-bell text-primary me-2"></i> Nueva Notificación';
     document.getElementById("btnEliminarNotificacion").style.display = "none";
 }
 
@@ -1042,23 +1066,24 @@ async function editarNotificacion(id) {
         document.getElementById("idNotificacionForm").value = notif.id;
         document.getElementById("notif_titulo").value = notif.nombre || "";
         document.getElementById("notif_mensaje").value = notif.mensaje || "";
-        document.getElementById("notif_destino").value = notif.destino || "Todos";
-        document.getElementById("notif_estado").value = notif.activa || "Activa";
+        document.getElementById("notif_destino").value = notif.destino || "todos";
+        document.getElementById("notif_estado").value = (notif.activa == 1 || notif.activa === 'true' || notif.activa === true) ? "1" : "0";
 
-        document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Editar Notificación';
+        document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-pen-to-square text-warning me-2"></i> Editar Notificación';
 
         const btnEliminar = document.getElementById("btnEliminarNotificacion");
         if (btnEliminar) {
             btnEliminar.style.display = "inline-block";
-            btnEliminar.onclick = () => eliminarNotificacion(notif.id);
         }
 
+        // Abrir el Modal de Bootstrap
         const modalElement = document.getElementById("modalNotificacion");
         const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
         modal.show();
+
     } catch (error) {
         console.warn("API de edición de notificaciones no lista:", error);
-        alert("La API para obtener la notificación aún no está habilitada.");
+        Swal.fire('Error', 'La API para obtener la notificación falló.', 'error');
     }
 }
 
@@ -1095,25 +1120,44 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
         const resultado = await respuesta.json();
 
         if (respuesta.ok && resultado.success !== false) {
-            alert(resultado.mensaje || "Notificación guardada con éxito");
-
-            const modalElement = document.getElementById("modalNotificacion");
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            if (modal) modal.hide();
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: resultado.mensaje || 'Notificación guardada',
+                showConfirmButton: false,
+                timer: 3000
+            });
 
             limpiarFormularioNotificacion();
             cargarNotificacionesAdmin();
+
+            // Cerrar el modal
+            const modalElement = document.getElementById('modalNotificacion');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if(modal) modal.hide();
         } else {
-            alert(resultado.mensaje || "Hubo un error al guardar la notificación.");
+            Swal.fire('Error', resultado.mensaje || 'No se pudo guardar.', 'error');
         }
     } catch (error) {
         console.warn("API de guardar notificaciones no lista:", error);
-        alert("La conexión con la API de notificaciones falló. (Aún no implementada)");
+        Swal.fire('Error de red', 'La conexión falló.', 'error');
     }
 });
 
 async function eliminarNotificacion(id) {
-    if (!confirm(`¿Está seguro de eliminar la notificación con ID: ${id}?`)) return;
+    const confirmacion = await Swal.fire({
+        title: '¿Eliminar Aviso?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+    
+    if (!confirmacion.isConfirmed) return;
 
     const token = sessionStorage.getItem("token") || "";
 
@@ -1128,15 +1172,17 @@ async function eliminarNotificacion(id) {
         const resultado = await respuesta.json();
 
         if (respuesta.ok && resultado.success !== false) {
-            alert(resultado.mensaje || "Notificación eliminada con éxito.");
-
-            const modalElement = document.getElementById("modalNotificacion");
+            Swal.fire('Eliminado', 'Notificación eliminada.', 'success');
+            
+            // Cerrar modal si está abierto (ya que el botón de eliminar también vive allí)
+            const modalElement = document.getElementById('modalNotificacion');
             const modal = bootstrap.Modal.getInstance(modalElement);
-            if (modal) modal.hide();
+            if(modal) modal.hide();
 
+            limpiarFormularioNotificacion();
             cargarNotificacionesAdmin();
         } else {
-            alert(resultado.mensaje || "No se pudo eliminar la notificación.");
+            Swal.fire('Error', resultado.mensaje || "No se pudo eliminar.", 'error');
         }
     } catch (error) {
         console.warn("API de eliminar notificaciones no lista:", error);

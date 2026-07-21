@@ -7,8 +7,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestión - Posgrado FIE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <!-- SweetAlert2 para modales modernos -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -149,20 +154,19 @@
             <h2 id="titulo-flujo-documentos">Seguimiento de Trámites y Requisitos de Ingreso</h2>
 
             <!-- Banner de Revisión -->
-            <div id="banner-revision"
-                style="display: none; background: #e8f4fd; border: 10px solid #b6d4fe; color: #084298; padding: 50px; border-radius: 30px; margin-top: 100px; text-align: center;">
+            <div id="banner-revision" class="banner-revision">
                 <h3><i class="fa-solid fa-lock"></i> Expediente Bajo Revisión</h3>
                 <p>Tu solicitud ha sido enviada exitosamente al Comité de Admisiones. Ya no es posible modificar ni
                     eliminar los documentos adjuntos. Si se requiere alguna corrección, serás notificado en la sección
                     de notificaciones.</p>
             </div>
 
-            <div id="encabezado-documentos" style="display: flex; justify-content: space-between; align-items: center;">
+            <div id="encabezado-documentos" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <p>Completa cada una de las estaciones requeridas para enviar tu postulación a revisión administrativa.
                 </p>
-                <button type="button" id="btn-cancelar-solicitud" class="btn-secondary"
+                <button type="button" id="btn-cancelar-solicitud" class="btn-primary"
                     onclick="cancelarSolicitudActual()"
-                    style="background-color: #c0392b; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 13px;"><i
+                    style="background-color: var(--color-danger); border: none;"><i
                         class="fa-solid fa-trash"></i> Cancelar Solicitud</button>
             </div>
             <br>
@@ -268,8 +272,7 @@
                             <!-- Los requisitos de EVALUACION se inyectan aquí -->
                         </div>
 
-                        <div id="protesta-legal"
-                            style="background: #f9f9f9; padding: 15px; border-left: 4px solid #f39c12; margin: 20px 0; font-size: 13px;">
+                        <div id="protesta-legal" class="protesta-box">
                             <label style="display:flex; align-items:start; gap:10px; cursor:pointer;">
                                 <input type="checkbox" id="chk-protesta" style="margin-top:3px;"
                                     onchange="verificarArchivosEstacion(3)">
@@ -283,7 +286,7 @@
                             <button type="button" class="btn-secondary" onclick="cambiarEstacion(2)"><i
                                     class="fa-solid fa-arrow-left"></i> Volver</button>
                             <button type="button" class="btn-primary" id="btn-finalizar"
-                                style="width:auto; padding:12px 30px; background-color:#27ae60;" disabled
+                                style="width:auto; padding:12px 30px; background-color: var(--color-success);" disabled
                                 onclick="finalizarProcesoEstaciones()">Concluir y Enviar Expediente <i
                                     class="fa-solid fa-paper-plane"></i></button>
                         </div>
@@ -309,18 +312,18 @@
         </section>
 
         <!-- Modal de Lectura de Notificación -->
-        <div id="modal-notificacion" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; align-items: center; justify-content: center;">
-            <div style="background: white; width: 90%; max-width: 500px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: popIn 0.3s ease-out;">
-                <div style="background: #1a1f2c; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div id="modal-notificacion" class="modal-overlay-modern">
+            <div class="modal-content-modern">
+                <div style="background: var(--color-primary); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0; font-size: 18px; display: flex; align-items: center; gap: 10px;">
-                        <i class="fa-solid fa-envelope-open-text" style="color: #3498db;"></i>
+                        <i class="fa-solid fa-envelope-open-text" style="color: var(--color-info);"></i>
                         <span id="modal-notif-titulo">Título de Notificación</span>
                     </h3>
-                    <button onclick="document.getElementById('modal-notificacion').style.display = 'none'" style="background: none; border: none; color: white; cursor: pointer; font-size: 20px;"><i class="fa-solid fa-times"></i></button>
+                    <button onclick="document.getElementById('modal-notificacion').style.display = 'none'" style="background: none; border: none; color: white; cursor: pointer; font-size: 20px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"><i class="fa-solid fa-times"></i></button>
                 </div>
-                <div style="padding: 30px; line-height: 1.6; color: #444; font-size: 15px;">
+                <div style="padding: 30px; line-height: 1.6; color: var(--color-text); font-size: 15px;">
                     <p id="modal-notif-cuerpo">Cuerpo del mensaje...</p>
-                    <div style="margin-top: 30px; text-align: right; font-size: 12px; color: #999;" id="modal-notif-fecha">
+                    <div style="margin-top: 30px; text-align: right; font-size: 12px; color: #94a3b8;" id="modal-notif-fecha">
                         Recibido
                     </div>
                 </div>
