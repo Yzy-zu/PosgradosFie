@@ -11,50 +11,21 @@ const obtenerConvocatorias = async (req, res) => {
     }
 };
 
-<<<<<<< HEAD
-// Obtener una
-exports.obtenerConvocatoria = (req, res) => {
-
-    const { id } = req.params;
-
-    db.query(
-        'SELECT * FROM convocatorias WHERE id = ?',
-        [id],
-        (err, resultados) => {
-
-            if (err) {
-                return res.status(500).json(err);
-            }
-
-            if (resultados.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    mensaje: 'Convocatoria no encontrada'
-                });
-            }
-
-            res.json(resultados[0]);
-=======
 // Obtener una convocatoria por ID
 const obtenerConvocatoria = async (req, res) => {
     try {
         const { id } = req.params;
         const [resultados] = await db.query('SELECT * FROM convocatorias WHERE id = ?', [id]);
->>>>>>> f189e26c04451d95cd26cc87c59b8873d5b6bb20
 
         if (resultados.length === 0) {
             return res.status(404).json({ success: false, mensaje: 'Convocatoria no encontrada' });
         }
-<<<<<<< HEAD
-    );
-=======
 
         return res.json(resultados[0]);
     } catch (error) {
         console.error('Error en obtenerConvocatoria:', error);
         return res.status(500).json({ success: false, mensaje: 'Error al obtener convocatoria' });
     }
->>>>>>> f189e26c04451d95cd26cc87c59b8873d5b6bb20
 };
 
 // Crear convocatoria con requisitos
