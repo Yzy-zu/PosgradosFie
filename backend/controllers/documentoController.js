@@ -13,10 +13,15 @@ const subirDocumento = async (req, res) => {
             return res.status(400).json({ mensaje: 'Debe seleccionar un archivo.' });
         }
 
-        // Verificar que exista la solicitud
-        const [solicitud] = await db.query('SELECT id FROM solicitud WHERE id = ?', [idSoli]);
+        // Verificar que exista la solicitud y su estado actual
+        const [solicitud] = await db.query('SELECT id, estado FROM solicitud WHERE id = ?', [idSoli]);
         if (solicitud.length === 0) {
             return res.status(404).json({ mensaje: 'La solicitud no existe.' });
+        }
+
+        // Validación de Seguridad: Sólo se pueden subir archivos si la solicitud está PENDIENTE
+        if (solicitud[0].estado !== 'PENDIENTE') {
+            return res.status(403).json({ mensaje: 'Acceso Denegado: La solicitud está en revisión o ya fue procesada, no puedes alterar sus documentos.' });
         }
 
         if (idRequisito) {

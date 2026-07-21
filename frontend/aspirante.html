@@ -112,7 +112,7 @@
 
             <!-- Bloqueo de Convocatoria -->
             <div id="bloqueo-convocatoria"
-                style="display: none; text-align: center; padding: 40px; background: #f9f9f9; border-radius: 8px; border: 2px solid #ddd;">
+                style="display: none; text-align: center; padding: 40px; background: #f9f9f9; border-radius: 8px; border: 2px solid #ddd; margin-top: 120px">
                 <h3><i class="fa-solid fa-lock" style="color: #8a1c24;"></i> Proceso en Curso</h3>
                 <p>Actualmente tienes una solicitud de admisión en progreso. Por seguridad, no puedes iniciar otra
                     solicitud hasta cancelar o concluir la actual.</p>
@@ -293,14 +293,40 @@
         </section>
 
         <section id="view-notificaciones" class="view-section">
-            <h2>Notificaciones</h2>
-            <div id="contenedor-notificaciones">
-                <div class="card">
-                    <p><strong><i class="fa-solid fa-triangle-exclamation" style="color: #e67e22;"></i> Sistema
-                            FIE:</strong> Recuerda verificar las fechas límite del calendario de admisiones.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Bandeja de Notificaciones</h2>
+                <span class="badge" style="background:#2980b9; color:white; padding:5px 15px; border-radius:15px; font-weight:bold;">Tus Avisos</span>
+            </div>
+            
+            <!-- Contenedor en Grid para las Notificaciones tipo cuadro -->
+            <div id="contenedor-notificaciones" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                <!-- Las notificaciones se inyectan aquí en JS -->
+                <div class="card" style="text-align: center; padding: 40px; color: #7f8c8d; grid-column: 1 / -1;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i>
+                    <p>Cargando bandeja de entrada...</p>
                 </div>
             </div>
         </section>
+
+        <!-- Modal de Lectura de Notificación -->
+        <div id="modal-notificacion" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; align-items: center; justify-content: center;">
+            <div style="background: white; width: 90%; max-width: 500px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: popIn 0.3s ease-out;">
+                <div style="background: #1a1f2c; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0; font-size: 18px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fa-solid fa-envelope-open-text" style="color: #3498db;"></i>
+                        <span id="modal-notif-titulo">Título de Notificación</span>
+                    </h3>
+                    <button onclick="document.getElementById('modal-notificacion').style.display = 'none'" style="background: none; border: none; color: white; cursor: pointer; font-size: 20px;"><i class="fa-solid fa-times"></i></button>
+                </div>
+                <div style="padding: 30px; line-height: 1.6; color: #444; font-size: 15px;">
+                    <p id="modal-notif-cuerpo">Cuerpo del mensaje...</p>
+                    <div style="margin-top: 30px; text-align: right; font-size: 12px; color: #999;" id="modal-notif-fecha">
+                        Recibido
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <script src="js/aspirante.js"></script>

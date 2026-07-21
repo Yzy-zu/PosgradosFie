@@ -3,7 +3,16 @@ const db = require('../database/db');
 // Obtener todas las notificaciones
 const obtenerNotificaciones = async (req, res) => {
     try {
-        const [resultados] = await db.query('SELECT * FROM notificaciones');
+        const { destino } = req.query;
+        let query = 'SELECT * FROM notificaciones';
+        let params = [];
+        
+        if (destino) {
+            query += ' WHERE destino = ? OR destino = "todos"';
+            params.push(destino);
+        }
+        
+        const [resultados] = await db.query(query, params);
         return res.json(resultados);
     } catch (error) {
         console.error('Error en obtenerNotificaciones:', error);

@@ -156,7 +156,7 @@ async function cargarNotificaciones() {
     contenedor.innerHTML = '<div class="card"><p>Cargando notificaciones...</p></div>';
 
     try {
-        const res = await fetch('/api/notificaciones', {
+        const res = await fetch('/api/notificaciones?destino=aspirantes', {
             headers: {
                 'Authorization': `Bearer ${sessionStorage.getItem('token')}`
             }
@@ -165,13 +165,30 @@ async function cargarNotificaciones() {
         if (res.ok) {
             const notificaciones = await res.json();
             if (!notificaciones || notificaciones.length === 0) {
-                contenedor.innerHTML = '<div class="card"><p>No tienes notificaciones nuevas.</p></div>';
+                contenedor.innerHTML = '<div class="card" style="grid-column: 1 / -1; text-align: center; color: #7f8c8d;"><p>No tienes notificaciones nuevas.</p></div>';
             } else {
                 let html = '';
                 notificaciones.forEach(notif => {
+                    // Extraer un resumen del mensaje (máximo 60 caracteres)
+                    let resumen = notif.mensaje.length > 60 ? notif.mensaje.substring(0, 60) + '...' : notif.mensaje;
+                    
+                    // Escapar comillas dobles o simples para que no rompa el onclick (mejorando la inyección de data)
+                    const notifStr = encodeURIComponent(JSON.stringify(notif));
+
                     html += `
-                    <div class="card" style="margin-bottom: 10px;">
-                        <p><strong><i class="fa-solid fa-bell" style="color: #8a1c24;"></i> ${notif.nombre}:</strong> ${notif.mensaje}</p>
+                    <div class="card notif-card" style="cursor: pointer; position: relative; padding: 25px 20px; text-align: center; border-top: 4px solid #3498db; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-height: 180px;" onclick="abrirNotificacion('${notifStr}')" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 2px 10px rgba(0,0,0,0.05)';">
+                        
+                        <div>
+                            <div style="width: 50px; height: 50px; background: #e8f4fd; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px auto;">
+                                <i class="fa-solid fa-envelope" style="color: #3498db; font-size: 20px;"></i>
+                            </div>
+                            <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">${notif.nombre}</h4>
+                            <p style="color: #7f8c8d; font-size: 13px; margin: 0; line-height: 1.4;">${resumen}</p>
+                        </div>
+
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 12px; color: #bdc3c7;">
+                            <i class="fa-solid fa-magnifying-glass-plus"></i> Clic para leer completo
+                        </div>
                     </div>`;
                 });
                 contenedor.innerHTML = html;
@@ -183,7 +200,26 @@ async function cargarNotificaciones() {
     } catch (e) {
         // Fallback por si la API aún no está implementada por el backend
         console.warn("Ocurrio un error al obtener notificaciones:", e);
-        contenedor.innerHTML = '<div class="card"><p><strong><i class="fa-solid fa-triangle-exclamation" style="color: #e67e22;"></i> Sistema FIE:</strong> Recuerda verificar las fechas límite del calendario de admisiones. (Modo Offline)</p></div>';
+        contenedor.innerHTML = '<div class="card" style="grid-column: 1 / -1;"><p><strong><i class="fa-solid fa-triangle-exclamation" style="color: #e67e22;"></i> Sistema FIE:</strong> Recuerda verificar las fechas límite del calendario de admisiones. (Modo Offline)</p></div>';
+    }
+}
+
+/**
+ * Muestra el modal con la notificación completa
+ */
+function abrirNotificacion(notifDataEnc) {
+    try {
+        const notif = JSON.parse(decodeURIComponent(notifDataEnc));
+        document.getElementById('modal-notif-titulo').innerText = notif.nombre || 'Aviso';
+        document.getElementById('modal-notif-cuerpo').innerText = notif.mensaje || '';
+        
+        // Formatear si tuviéramos fecha
+        document.getElementById('modal-notif-fecha').innerHTML = `<i class="fa-regular fa-clock"></i> Notificación del Sistema`;
+
+        const modal = document.getElementById('modal-notificacion');
+        if(modal) modal.style.display = 'flex';
+    } catch (error) {
+        console.error("Error al abrir notificación", error);
     }
 }
 
