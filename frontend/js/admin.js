@@ -233,7 +233,7 @@ async function editarUsuario(id) {
             contDetalles.style.padding = "0";
         }
         if (modalDialog) modalDialog.style.maxWidth = "500px";
-        
+
         const btnTog = document.getElementById("btnToggleDetalles");
         if (btnTog) btnTog.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Ver detalles específicos del rol';
 
@@ -251,7 +251,7 @@ async function editarUsuario(id) {
 function renderizarCamposRol(rol, detalles = {}) {
     const contenedorBtn = document.getElementById("contenedorBtnDetalles");
     const contenedorDetalles = document.getElementById("detallesExtendidos");
-    
+
     let html = "";
     if (rol === "ASPIRANTE") {
         html = `
@@ -318,14 +318,14 @@ function renderizarCamposRol(rol, detalles = {}) {
     } else {
         html = "";
         contenedorBtn.style.display = "none";
-        
+
         contenedorDetalles.style.width = "0px";
         contenedorDetalles.style.opacity = "0";
         contenedorDetalles.style.padding = "0";
         const modalDialog = document.getElementById("dialogUsuario");
         if (modalDialog) modalDialog.style.maxWidth = "500px";
     }
-    
+
     // Envolver en un div de ancho fijo para que no haga wrap al colapsar (y evitar altura extra en el flex row)
     if (html !== "") {
         html = `<div style="width: 560px;">${html}</div>`;
@@ -334,7 +334,7 @@ function renderizarCamposRol(rol, detalles = {}) {
 }
 
 // Escuchar cambios en el selector de rol
-document.getElementById("rol")?.addEventListener("change", function(e) {
+document.getElementById("rol")?.addEventListener("change", function (e) {
     renderizarCamposRol(e.target.value);
 });
 
@@ -343,7 +343,7 @@ function toggleDetallesUsuario() {
     const contenedor = document.getElementById("detallesExtendidos");
     const modalDialog = document.getElementById("dialogUsuario");
     const btn = document.getElementById("btnToggleDetalles");
-    
+
     if (contenedor.style.width !== "0px" && contenedor.style.width !== "") {
         contenedor.style.width = "0px";
         contenedor.style.opacity = "0";
@@ -378,7 +378,7 @@ document.getElementById("modalUsuario")?.addEventListener('show.bs.modal', funct
             contDetalles.style.padding = "0";
         }
         if (modalDialog) modalDialog.style.maxWidth = "500px";
-        
+
         const btnTog = document.getElementById("btnToggleDetalles");
         if (btnTog) btnTog.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Ver detalles específicos del rol';
     }
@@ -553,7 +553,8 @@ async function cargarConvocatorias() {
             card.style.transition = "transform 0.2s, box-shadow 0.2s";
             card.onmouseover = () => { card.style.transform = "scale(1.02)"; };
             card.onmouseout = () => { card.style.transform = "scale(1)"; };
-
+            const fechaInicioFormateada = new Date(conv.fecha_inicio).toLocaleDateString('es-MX');
+            const fechaFinFormateada = new Date(conv.fecha_fin).toLocaleDateString('es-MX');
             card.onclick = () => editarConvocatoria(conv.id);
 
             card.innerHTML = `
@@ -561,7 +562,7 @@ async function cargarConvocatorias() {
                     <i class="fa-solid fa-file-invoice"></i>
                 </div>
                 <h5 class="mb-1" style="font-weight:600; color:#2c3e50;">${conv.nombre}</h5>
-                <p class="mb-2 text-muted" style="font-size:0.9rem;">${conv.fecha_inicio} a ${conv.fecha_fin}</p>
+                <p class="mb-2 text-muted" style="font-size:0.9rem;">${fechaInicioFormateada} a ${fechaFinFormateada}</p>
                 <div>
                     <span class="badge" style="background-color: ${colorEstado}; font-size:0.8rem;">${conv.estado}</span>
                 </div>
@@ -606,7 +607,7 @@ function toggleCamposPorTipo() {
         if (grupoEntrevistas) grupoEntrevistas.style.display = "none";
         document.getElementById("convocatoria_fechaEntrevistaInicio").value = "";
         document.getElementById("convocatoria_fechaEntrevistaFin").value = "";
-        
+
         // Mostrar académicas
         if (grupoAcademicas) grupoAcademicas.style.display = "block";
     } else if (tipo === "DOCTORADO") {
@@ -707,7 +708,7 @@ async function editarConvocatoria(id) {
         document.getElementById("convocatoria_estado").value = conv.estado || "Borrador";
         document.getElementById("convocatoria_modalidad").value = conv.modalidad || "Escolarizada";
         document.getElementById("convocatoria_duracion").value = conv.duracion || "";
-        
+
         document.getElementById("convocatoria_fecha_inicio").value = conv.fecha_inicio ? conv.fecha_inicio.split('T')[0] : "";
         document.getElementById("convocatoria_fecha_fin").value = conv.fecha_fin ? conv.fecha_fin.split('T')[0] : "";
         document.getElementById("convocatoria_fechaInicioDocumentos").value = conv.fechaInicioDocumentos ? conv.fechaInicioDocumentos.split('T')[0] : "";
@@ -716,7 +717,7 @@ async function editarConvocatoria(id) {
         document.getElementById("convocatoria_fechaEntrevistaFin").value = conv.fechaEntrevistaFin ? conv.fechaEntrevistaFin.split('T')[0] : "";
         document.getElementById("convocatoria_fechaInicioEscolar").value = conv.fechaInicioEscolar ? conv.fechaInicioEscolar.split('T')[0] : "";
         document.getElementById("convocatoria_fechaResultados").value = conv.fechaResultados ? conv.fechaResultados.split('T')[0] : "";
-        
+
         document.getElementById("convocatoria_inicioCurso").value = conv.inicioCurso ? conv.inicioCurso.split('T')[0] : "";
         document.getElementById("convocatoria_finCurso").value = conv.finCurso ? conv.finCurso.split('T')[0] : "";
         document.getElementById("convocatoria_inicioExamen").value = conv.inicioExamen ? conv.inicioExamen.split('T')[0] : "";
@@ -900,20 +901,33 @@ async function cargarAspirantes() {
             return;
         }
 
-        aspirantes.forEach(aspirante => {
+        for (const aspirante of aspirantes) {
             const tr = document.createElement("tr");
             // Formatear nombre completo
             const nombreCompleto = `${aspirante.nombre || ''} ${aspirante.primerApellido || ''} ${aspirante.segundoApellido || ''}`.trim();
+
+            async function correoAspirante(idUsuario) {
+                if (!idUsuario) return null;
+                try {
+                    const respuesta1 = await fetch(`/api/usuario/${idUsuario}`);
+                    const usuario1 = await respuesta1.json();
+                    return usuario1.correo;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            const correoReal = (await correoAspirante(aspirante.idUsuario)) || aspirante.correo || 'Sin correo';
 
             tr.style.cursor = "pointer";
             tr.onclick = () => verExpedienteAspirante(aspirante.id);
             tr.innerHTML = `
                 <td>${nombreCompleto || 'Sin nombre'}</td>
-                <td>${aspirante.correo || 'Sin correo'}</td>
+                <td>${correoReal}</td>
                 <td><span class="badge bg-secondary">Registrado</span></td>
             `;
             tbody.appendChild(tr);
-        });
+        }
     } catch (error) {
         console.error("Error al cargar aspirantes:", error);
         tbody.innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Esperando API de aspirantes...</td></tr>";
@@ -933,17 +947,17 @@ async function verExpedienteAspirante(id) {
         const nombreCompleto = `${perfil.nombre || ''} ${perfil.primerApellido || ''} ${perfil.segundoApellido || ''}`.trim();
         document.getElementById("perfil_nombreCompleto").textContent = nombreCompleto;
         document.getElementById("perfil_correo").textContent = perfil.correo || "Sin correo";
-        
+
         document.getElementById("perfil_curp").textContent = perfil.curp || "N/A";
         document.getElementById("perfil_telefono").textContent = perfil.telefono || "N/A";
-        
+
         let fechaNac = "N/A";
         if (perfil.fechaNacimiento) {
             fechaNac = new Date(perfil.fechaNacimiento).toLocaleDateString();
         }
         document.getElementById("perfil_nacimiento").textContent = fechaNac;
         document.getElementById("perfil_direccion").textContent = perfil.direccion || "N/A";
-        
+
         const badgeEstado = document.getElementById("perfil_estado");
         if (perfil.activo) {
             badgeEstado.className = "badge bg-success mb-4";
@@ -981,9 +995,9 @@ async function verExpedienteAspirante(id) {
                     sol.documentos.forEach(doc => {
                         let colorDoc = "text-secondary";
                         let iconoDoc = "fa-clock";
-                        if(doc.estadoValidacion === "APROBADO") { colorDoc = "text-success"; iconoDoc = "fa-check-circle"; }
-                        else if(doc.estadoValidacion === "RECHAZADO") { colorDoc = "text-danger"; iconoDoc = "fa-times-circle"; }
-                        else if(doc.estadoValidacion === "PENDIENTE") { colorDoc = "text-warning"; iconoDoc = "fa-clock"; }
+                        if (doc.estadoValidacion === "APROBADO") { colorDoc = "text-success"; iconoDoc = "fa-check-circle"; }
+                        else if (doc.estadoValidacion === "RECHAZADO") { colorDoc = "text-danger"; iconoDoc = "fa-times-circle"; }
+                        else if (doc.estadoValidacion === "PENDIENTE") { colorDoc = "text-warning"; iconoDoc = "fa-clock"; }
 
                         htmlDocs += `
                             <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
@@ -1099,7 +1113,7 @@ async function cargarNotificacionesAdmin() {
         contenedor.innerHTML = "";
 
         if (!notificaciones || notificaciones.length === 0) {
-            contenedor.innerHTML = `<tr><td colspan='4' class='text-center text-muted py-5'>
+            contenedor.innerHTML = `<tr><td colspan='5' class='text-center text-muted py-5'>
                 <i class="fa-solid fa-inbox fs-2 mb-3 opacity-25"></i>
                 <p class="mb-0">No hay notificaciones registradas.</p>
             </td></tr>`;
@@ -1108,18 +1122,21 @@ async function cargarNotificacionesAdmin() {
 
         notificaciones.forEach(notif => {
             const tr = document.createElement("tr");
-            
+
             // Etiqueta de destino y estado
             let destinoIcon = 'fa-users';
             let destinoText = notif.destino || 'todos';
             let destinoBg = 'bg-primary bg-opacity-10 text-primary';
-            
-            if(destinoText === 'aspirantes') { destinoIcon = 'fa-graduation-cap'; destinoBg = 'bg-info bg-opacity-10 text-info'; }
-            if(destinoText === 'docentes') { destinoIcon = 'fa-chalkboard-user'; destinoBg = 'bg-warning bg-opacity-10 text-warning'; }
-            if(destinoText === 'secretario') { destinoIcon = 'fa-file-signature'; destinoBg = 'bg-success bg-opacity-10 text-success'; }
-            
+
+            if (destinoText === 'aspirantes') { destinoIcon = 'fa-graduation-cap'; destinoBg = 'bg-info bg-opacity-10 text-info'; }
+            if (destinoText === 'docentes') { destinoIcon = 'fa-chalkboard-user'; destinoBg = 'bg-warning bg-opacity-10 text-warning'; }
+            if (destinoText === 'secretario') { destinoIcon = 'fa-file-signature'; destinoBg = 'bg-success bg-opacity-10 text-success'; }
+
             let estadoClass = notif.activa == 1 || notif.activa === 'true' || notif.activa === true ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger';
             let estadoText = notif.activa == 1 || notif.activa === 'true' || notif.activa === true ? 'Activa' : 'Inactiva';
+
+            tr.style.cursor = "pointer";
+            tr.onclick = () => editarNotificacion(notif.id);
 
             tr.innerHTML = `
                 <td>${notif.id}</td>
@@ -1127,20 +1144,12 @@ async function cargarNotificacionesAdmin() {
                 <td><span class="text-muted small d-inline-block text-truncate" style="max-width: 250px;">${notif.mensaje}</span></td>
                 <td><span class="badge rounded-pill px-3 py-2 ${destinoBg}"><i class="fa-solid ${destinoIcon} me-1"></i> ${destinoText}</span></td>
                 <td><span class="badge rounded-pill px-3 py-2 ${estadoClass}">${estadoText}</span></td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary shadow-sm me-1" onclick="editarNotificacion(${notif.id})" title="Editar">
-                        <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger shadow-sm" onclick="eliminarNotificacion(${notif.id})" title="Eliminar">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </td>
             `;
             contenedor.appendChild(tr);
         });
     } catch (error) {
         console.warn("Error al cargar notificaciones (API no lista):", error);
-        contenedor.innerHTML = `<tr><td colspan='4' class='text-center text-muted py-5'>
+        contenedor.innerHTML = `<tr><td colspan='5' class='text-center text-muted py-5'>
                 <i class="fa-solid fa-plug-circle-exclamation fs-2 mb-3 opacity-25"></i>
                 <p class="mb-0">Esperando conexión con el backend...</p>
             </td></tr>`;
@@ -1153,6 +1162,9 @@ function limpiarFormularioNotificacion() {
     document.getElementById("idNotificacionForm").value = "";
     document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-bell text-primary me-2"></i> Nueva Notificación';
     document.getElementById("btnEliminarNotificacion").style.display = "none";
+
+    const divIdDestino = document.getElementById('div_notif_idDestino');
+    if (divIdDestino) divIdDestino.style.display = 'none';
 }
 
 async function editarNotificacion(id) {
@@ -1167,6 +1179,17 @@ async function editarNotificacion(id) {
         document.getElementById("notif_mensaje").value = notif.mensaje || "";
         document.getElementById("notif_destino").value = notif.destino || "todos";
         document.getElementById("notif_estado").value = (notif.activa == 1 || notif.activa === 'true' || notif.activa === true) ? "1" : "0";
+
+        const notifDestino = document.getElementById("notif_destino");
+        if (notifDestino) {
+            notifDestino.dispatchEvent(new Event('change'));
+        }
+
+        const idDestinoEl = document.getElementById("notif_idDestino");
+        if (idDestinoEl && notif.destino === 'individual') {
+            await llenarSelectAspirantes();
+            idDestinoEl.value = notif.idDestino || "";
+        }
 
         document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-pen-to-square text-warning me-2"></i> Editar Notificación';
 
@@ -1195,6 +1218,12 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
     const activa = document.getElementById("notif_estado").value;
     const destino = document.getElementById("notif_destino").value;
 
+    let idDestino = null;
+    const idDestinoEl = document.getElementById("notif_idDestino");
+    if (idDestinoEl && idDestinoEl.value.trim() !== "") {
+        idDestino = idDestinoEl.value.trim();
+    }
+
     let rolRemitente = "ADMIN";
     let nombreRemitente = "Administrador del Sistema";
     try {
@@ -1203,9 +1232,9 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
             rolRemitente = usr.rol || "ADMIN";
             nombreRemitente = `${usr.nombre || ''} ${usr.primerApellido || ''}`.trim() || "Administrador del Sistema";
         }
-    } catch(e) {}
+    } catch (e) { }
 
-    const datosNotif = { nombre, mensaje, destino, activa, rolRemitente, nombreRemitente };
+    const datosNotif = { nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino };
     const token = sessionStorage.getItem("token") || "";
 
     try {
@@ -1244,7 +1273,7 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
             // Cerrar el modal
             const modalElement = document.getElementById('modalNotificacion');
             const modal = bootstrap.Modal.getInstance(modalElement);
-            if(modal) modal.hide();
+            if (modal) modal.hide();
         } else {
             Swal.fire('Error', resultado.mensaje || 'No se pudo guardar.', 'error');
         }
@@ -1265,7 +1294,7 @@ async function eliminarNotificacion(id) {
         confirmButtonText: 'Sí, eliminar',
         cancelButtonText: 'Cancelar'
     });
-    
+
     if (!confirmacion.isConfirmed) return;
 
     const token = sessionStorage.getItem("token") || "";
@@ -1282,11 +1311,11 @@ async function eliminarNotificacion(id) {
 
         if (respuesta.ok && resultado.success !== false) {
             Swal.fire('Eliminado', 'Notificación eliminada.', 'success');
-            
+
             // Cerrar modal si está abierto (ya que el botón de eliminar también vive allí)
             const modalElement = document.getElementById('modalNotificacion');
             const modal = bootstrap.Modal.getInstance(modalElement);
-            if(modal) modal.hide();
+            if (modal) modal.hide();
 
             limpiarFormularioNotificacion();
             cargarNotificacionesAdmin();
@@ -1299,3 +1328,38 @@ async function eliminarNotificacion(id) {
     }
 }
 
+async function llenarSelectAspirantes() {
+    const select = document.getElementById('notif_idDestino');
+    if (!select || select.options.length > 1) return;
+
+    try {
+        const respuesta = await fetch('/api/aspirante');
+        if (!respuesta.ok) return;
+        const aspirantes = await respuesta.json();
+
+        let html = '<option value="">Seleccione un aspirante...</option>';
+        for (const asp of aspirantes) {
+            const nombre = `${asp.nombre || ''} ${asp.primerApellido || ''} ${asp.segundoApellido || ''}`.trim();
+            if (asp.idUsuario) {
+                html += `<option value="${asp.idUsuario}">${nombre}</option>`;
+            }
+        }
+        select.innerHTML = html;
+    } catch (e) {
+        console.warn('Error al cargar aspirantes en el select:', e);
+    }
+}
+
+document.getElementById('notif_destino')?.addEventListener('change', async function (e) {
+    const divIdDestino = document.getElementById('div_notif_idDestino');
+    if (!divIdDestino) return;
+
+    if (e.target.value === 'individual') {
+        divIdDestino.style.display = 'block';
+        await llenarSelectAspirantes();
+    } else {
+        divIdDestino.style.display = 'none';
+        const selectDestino = document.getElementById('notif_idDestino');
+        if (selectDestino) selectDestino.value = '';
+    }
+});

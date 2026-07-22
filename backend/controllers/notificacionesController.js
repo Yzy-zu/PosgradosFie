@@ -65,11 +65,11 @@ const crearNotificacion = async (req, res) => {
 const actualizarNotificacion = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, mensaje, destino, activa } = req.body;
+        const { nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino } = req.body;
 
         await db.query(
-            'UPDATE notificaciones SET nombre = ?, mensaje = ?, destino = ?, activa = ? WHERE id = ?',
-            [nombre, mensaje, destino, activa, id]
+            'UPDATE notificaciones SET nombre = ?, mensaje = ?, destino = ?, activa = ?, rolRemitente = ?, nombreRemitente = ?, idDestino = ? WHERE id = ?',
+            [nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino || null, id]
         );
 
         return res.json({ success: true, mensaje: 'Notificación actualizada correctamente' });

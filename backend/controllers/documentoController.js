@@ -100,10 +100,60 @@ const eliminarDocumento = async (req, res) => {
     }
 };
 
+// Evaluar documento (flujo nuevo: solicitud_documentos)
+const evaluarDocumento = async (req, res) => {
+    try {
+        const { id } = req.params; // ID de solicitud_documentos
+        const { estadoValidacion, comentarios } = req.body; // PENDIENTE, APROBADO, RECHAZADO
+
+        if (!['PENDIENTE', 'APROBADO', 'RECHAZADO'].includes(estadoValidacion)) {
+            return res.status(400).json({ mensaje: 'Estado de validación inválido.' });
+        }
+
+        // Obtener el ID de la solicitud
+        const [doc] = await db.query('SELECT idSolicitud FROM solicitud_documentos WHERE id = ?', [id]);
+        if (doc.length === 0) {
+            return res.status(404).json({ mensaje: 'Documento no encontrado.' });
+        }
+        const idSolicitud = doc[0].idSolicitud;
+
+        // Actualizar el documento
+        await db.query(
+            'UPDATE solicitud_documentos SET estadoValidacion = ?, comentarios = ? WHERE id = ?',
+            [estadoValidacion, comentarios || null, id]
+        );
+
+        // Lógica automática para actualizar el estado general de la solicitud
+        // Obtener todos los documentos de la solicitud
+        const [todosDocs] = await db.query('SELECT estadoValidacion FROM solicitud_documentos WHERE idSolicitud = ?', [idSolicitud]);
+        
+        let nuevoEstadoSolicitud = 'EN_REVISION';
+        
+        const tieneRechazados = todosDocs.some(d => d.estadoValidacion === 'RECHAZADO');
+        const todosAprobados = todosDocs.every(d => d.estadoValidacion === 'APROBADO');
+        
+        if (tieneRechazados) {
+            nuevoEstadoSolicitud = 'RECHAZADO';
+        } else if (todosAprobados && todosDocs.length > 0) {
+            nuevoEstadoSolicitud = 'APROBADO';
+        } else {
+            nuevoEstadoSolicitud = 'EN_REVISION';
+        }
+
+        await db.query('UPDATE solicitud SET estado = ? WHERE id = ?', [nuevoEstadoSolicitud, idSolicitud]);
+
+        return res.json({ success: true, mensaje: 'Documento evaluado correctamente.', nuevoEstadoSolicitud });
+    } catch (error) {
+        console.error('Error en evaluarDocumento:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al evaluar documento.' });
+    }
+};
+
 module.exports = {
     subirDocumento,
     obtenerDocumentos,
     obtenerDocumento,
     actualizarDocumento,
-    eliminarDocumento
+    eliminarDocumento,
+    evaluarDocumento
 };

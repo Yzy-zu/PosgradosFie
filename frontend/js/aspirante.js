@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 const lblTelefono = document.getElementById('perfil-telefono');
 
                 if (lblNombre) lblNombre.innerText = `${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido}`;
-                if (lblCorreo) lblCorreo.innerText = aspiranteData.correo;
+                if (lblCorreo) lblCorreo.innerText = usuario.correo;
                 if (lblTelefono) lblTelefono.innerText = aspiranteData.telefono;
 
                 // Cargar modalidades de admisión dinámicas
@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                         if (soliData.existe) {
                             // Hidratamos la UI del usuario desde el Backend
                             hidratarUI(soliData);
-                            
+
                             // Render initial route
                             const currentHash = window.location.hash.replace('#', '');
                             if (!currentHash) {
@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                             } else {
                                 switchView(currentHash);
                             }
-                            
+
                             // Ocultamos el loader inicial si hubiera
                             ocultarLoader();
                             return; // Salimos para no ejecutar el código de abajo
@@ -159,7 +159,7 @@ async function cargarNotificaciones() {
     try {
         const usr = JSON.parse(sessionStorage.getItem('usuario'));
         if (usr && usr.id) idUsuario = usr.id;
-    } catch(e) {}
+    } catch (e) { }
 
     try {
         const res = await fetch(`/api/notificaciones?destino=aspirantes&idUsuario=${idUsuario}`, {
@@ -181,7 +181,7 @@ async function cargarNotificaciones() {
                     const colorTitle = isGeneral ? '#2c3e50' : '#8a1c24';
                     const iconName = isGeneral ? 'fa-scroll' : 'fa-triangle-exclamation';
                     const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico de Posgrado' : 'Coordinación Académica FIE');
-                    
+
                     // Formatear fecha
                     const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
                     const formattedDate = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -214,12 +214,12 @@ function abrirNotificacion(notifDataEnc) {
         const notif = JSON.parse(decodeURIComponent(notifDataEnc));
         document.getElementById('modal-notif-titulo').innerText = notif.nombre || 'Aviso';
         document.getElementById('modal-notif-cuerpo').innerText = notif.mensaje || '';
-        
+
         // Formatear si tuviéramos fecha
         document.getElementById('modal-notif-fecha').innerHTML = `<i class="fa-regular fa-clock"></i> Notificación del Sistema`;
 
         const modal = document.getElementById('modal-notificacion');
-        if(modal) modal.style.display = 'flex';
+        if (modal) modal.style.display = 'flex';
     } catch (error) {
         console.error("Error al abrir notificación", error);
     }
@@ -486,7 +486,7 @@ async function avanzarEstacion(nuevaEstacion) {
                 const subidaData = new FormData();
                 subidaData.append('idSoli', currentSolicitudId);
                 // El name del input ahora es el idRequisito dinámico
-                subidaData.append('idRequisito', name); 
+                subidaData.append('idRequisito', name);
                 subidaData.append('archivo', file);
 
                 try {
@@ -528,11 +528,11 @@ async function avanzarEstacion(nuevaEstacion) {
  */
 function actualizarCostosAdmision() {
     const inputs = document.querySelectorAll('input[name="modalidad"]');
-    
+
     inputs.forEach(input => {
         const card = input.closest('.radio-card');
         const strongText = card.querySelector('strong');
-        
+
         if (input.checked) {
             // Estilo seleccionado (sólido)
             card.style.backgroundColor = '#8a1c24';
@@ -590,7 +590,7 @@ function verificarArchivosEstacion(estacion) {
                     allValid = false;
                 }
             });
-            
+
             // Si es estación 3, también validar el checkbox legal
             if (estacion === 3) {
                 const chkProtesta = document.getElementById('chk-protesta');
@@ -598,7 +598,7 @@ function verificarArchivosEstacion(estacion) {
                     allValid = false;
                 }
             }
-            
+
             const btn = document.getElementById(btnId);
             if (btn) btn.disabled = !allValid;
         }
@@ -687,7 +687,7 @@ async function finalizarProcesoEstaciones() {
                 icon: 'success',
                 confirmButtonColor: 'var(--color-success)'
             });
-            
+
             // Forzar recarga de UI a EN_REVISION
             const soliRes = await fetch(`/api/solicitud/${currentSolicitudId}`);
             if (soliRes.ok) {
@@ -702,7 +702,7 @@ async function finalizarProcesoEstaciones() {
     }
 
     ocultarLoader();
-    
+
     // Lo redirigimos a la vista de proceso en lugar de inicio
     switchView('proceso');
 }
@@ -807,7 +807,7 @@ async function cancelarSolicitudActual() {
         confirmButtonText: 'Sí, cancelar solicitud',
         cancelButtonText: 'No, mantenerla'
     });
-    
+
     if (!confirmacion.isConfirmed) return;
     if (!currentSolicitudId) return;
 
@@ -851,11 +851,11 @@ async function cargarModalidadesAdmision() {
         if (res.ok) {
             const modalidades = await res.json();
             contenedor.innerHTML = '';
-            
+
             modalidades.forEach((mod, index) => {
                 const titulo = mod.replace(/_/g, ' ').replace(/\w\S*/g, w => (w.replace(/^\w/, c => c.toUpperCase())));
                 const checkedStr = index === 0 ? 'checked' : '';
-                
+
                 contenedor.innerHTML += `
                     <label class="radio-card" style="display:block; flex: 1 1 220px; min-width: 220px; position:relative; padding:20px; border-radius:10px; border:2px dashed #8a1c24; cursor:pointer; text-align:center; background-color:#f8f9fa; margin: 10px;">
                         <input type="radio" name="modalidad" value="${mod}" ${checkedStr} onchange="actualizarCostosAdmision()" style="position:absolute; opacity:0; width:0; height:0;">
@@ -883,11 +883,11 @@ async function cargarRequisitosDocumentales(idConvocatoria) {
             const gridIdentidad = document.getElementById('grid-dinamico-identidad');
             const gridAcademico = document.getElementById('grid-dinamico-academico');
             const gridEvaluacion = document.getElementById('grid-dinamico-evaluacion');
-            
+
             if (gridIdentidad) gridIdentidad.innerHTML = '';
             if (gridAcademico) gridAcademico.innerHTML = '';
             if (gridEvaluacion) gridEvaluacion.innerHTML = '';
-            
+
             if (requisitos.length === 0) {
                 if (gridIdentidad) gridIdentidad.innerHTML = '<p style="color: #666; font-style: italic;">No hay requisitos configurados.</p>';
                 return;
@@ -896,7 +896,7 @@ async function cargarRequisitosDocumentales(idConvocatoria) {
             requisitos.forEach(req => {
                 const isRequired = req.obligatorio ? '*' : '';
                 const requiredAttr = req.obligatorio ? 'required' : '';
-                
+
                 const htmlReq = `
                     <div class="file-box">
                         <label><i class="fa-solid fa-file-arrow-up"></i> ${req.descripcion} <span style="color:red;">${isRequired}</span></label>
@@ -912,7 +912,7 @@ async function cargarRequisitosDocumentales(idConvocatoria) {
                     if (gridEvaluacion) gridEvaluacion.innerHTML += htmlReq;
                 }
             });
-            
+
             // Re-ejecutar verificación en caso de que todo sea opcional
             verificarArchivosEstacion(1);
             verificarArchivosEstacion(2);
@@ -999,12 +999,12 @@ function configurarPanelesNivel(nivel, idConvocatoria) {
 }
 
 // ==== MANEJO DE UI PARA INPUTS DE ARCHIVOS ====
-document.addEventListener('change', function(e) {
+document.addEventListener('change', function (e) {
     if (e.target && e.target.type === 'file') {
         const fileBox = e.target.closest('.file-box');
         if (fileBox) {
             const files = e.target.files;
-            
+
             // Eliminar nombre de archivo previo si existe
             const existingDisplay = fileBox.querySelector('.file-name-display');
             if (existingDisplay) {
@@ -1013,12 +1013,12 @@ document.addEventListener('change', function(e) {
 
             if (files && files.length > 0) {
                 const fileName = files[0].name;
-                
+
                 // Crear el elemento para mostrar el nombre
                 const displayDiv = document.createElement('div');
                 displayDiv.className = 'file-name-display';
                 displayDiv.innerHTML = `<i class="fa-solid fa-file-pdf"></i> ${fileName}`;
-                
+
                 fileBox.appendChild(displayDiv);
                 fileBox.classList.add('file-selected');
             } else {

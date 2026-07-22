@@ -186,14 +186,6 @@
                             </table>
                         </div>
 
-                        <div id="contenedor-preview" class="preview-box">
-                            <h4>
-                                <span><i class="fa-solid fa-file-pdf" style="color: #e74c3c;"></i> Vista Previa Documental: <strong id="preview-nombre-doc">Acta de Nacimiento</strong></span>
-                                <button onclick="cerrarVistaPrevia()" style="background: none; border: none; font-size: 16px; cursor: pointer; color: #c0392b; font-weight: bold;"><i class="fa-solid fa-xmark"></i> Cerrar Vista</button>
-                            </h4>
-                            <div id="preview-contenido-texto" class="preview-content">
-                                </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -221,6 +213,18 @@
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="cerrarModalRechazo()"><i class="fa-solid fa-ban"></i> Cancelar</button>
                 <button class="btn-save-reject" onclick="guardarRechazoDocumento()"><i class="fa-solid fa-floppy-disk"></i> Guardar y Rechazar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visor de Documentos Modal -->
+    <div class="modal-overlay" id="modal-visor-documento" style="display: none;">
+        <div class="modal-card" style="width: 85%; max-width: 1200px; height: 85vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+                <h3 style="margin: 0;"><i class="fa-solid fa-file-pdf" style="color: #e74c3c;"></i> Vista Previa Documental: <strong id="preview-nombre-doc">Documento</strong></h3>
+                <button onclick="cerrarVistaPrevia()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #c0392b; font-weight: bold;"><i class="fa-solid fa-xmark"></i> Cerrar</button>
+            </div>
+            <div id="preview-contenido-texto" style="flex: 1; overflow: auto; background-color: #f1f2f6; border-radius: 4px; display: flex; justify-content: center; align-items: center;">
             </div>
         </div>
     </div>

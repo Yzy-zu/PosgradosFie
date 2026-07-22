@@ -315,12 +315,11 @@
                                 <th>Mensaje</th>
                                 <th>Destino</th>
                                 <th>Estado</th>
-                                <th class="text-end">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tablaNotificaciones">
                             <tr>
-                                <td colspan='6' class='text-center text-muted py-3'>Cargando notificaciones...</td>
+                                <td colspan='5' class='text-center text-muted py-3'>Cargando notificaciones...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -373,6 +372,7 @@
                                         <option value="secretario">Secretaría</option>
                                         <option value="docentes">Docentes</option>
                                         <option value="coordinador">Coordinador</option>
+                                        <option value="individual">Aspirante Individual</option>
                                     </select>
                                     <label for="notif_destino">Público Destino</label>
                                 </div>
@@ -384,6 +384,15 @@
                                         <option value="0">Inactiva (Oculta)</option>
                                     </select>
                                     <label for="notif_estado">Estado Inicial</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12 mt-3" id="div_notif_idDestino" style="display: none;">
+                                <div class="form-floating">
+                                    <select class="form-select" id="notif_idDestino">
+                                        <option value="">Seleccione un aspirante...</option>
+                                    </select>
+                                    <label for="notif_idDestino">Aspirante Destinatario</label>
                                 </div>
                             </div>
                         </div>

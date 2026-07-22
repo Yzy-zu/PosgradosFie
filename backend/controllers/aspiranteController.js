@@ -143,7 +143,7 @@ const obtenerExpediente = async (req, res) => {
             
             // 3. Documentos por solicitud
             const queryDocs = `
-                SELECT sd.idSolicitud, sd.rutaArchivo, sd.estadoValidacion, cr.nombre as requisitoNombre
+                SELECT sd.id as idDocumento, sd.idSolicitud, sd.rutaArchivo, sd.estadoValidacion, sd.comentarios, cr.nombre as requisitoNombre
                 FROM solicitud_documentos sd
                 JOIN catalogo_requisitos cr ON sd.idRequisito = cr.id
                 WHERE sd.idSolicitud IN (?)
@@ -162,10 +162,68 @@ const obtenerExpediente = async (req, res) => {
         return res.status(500).json({ success: false, mensaje: 'Error en el servidor' });
     }
 };
+// Obtener todos los expedientes (para panel de docentes)
+const obtenerTodosLosExpedientes = async (req, res) => {
+    try {
+        const queryAspirantes = `
+            SELECT a.id, a.nombre, a.primerApellido, a.segundoApellido, u.correo, a.fechaNacimiento
+            FROM aspirante a 
+            JOIN usuario u ON a.idUsuario = u.id
+        `;
+        const [aspirantes] = await db.query(queryAspirantes);
+
+        if (aspirantes.length === 0) {
+            return res.status(200).json([]);
+        }
+
+        const idsAspirantes = aspirantes.map(a => a.id);
+        
+        const querySolicitudes = `
+            SELECT s.id as idSolicitud, s.idAspi, s.estado, s.creadoEn, s.tipoAdmision, c.nombre as convocatoriaNombre, c.posgrado_id
+            FROM solicitud s
+            JOIN convocatorias c ON s.idConvocatoria = c.id
+            WHERE s.idAspi IN (?)
+            ORDER BY s.creadoEn DESC
+        `;
+        const [solicitudes] = await db.query(querySolicitudes, [idsAspirantes]);
+        
+        let documentos = [];
+        if (solicitudes.length > 0) {
+            const idsSolicitudes = solicitudes.map(s => s.idSolicitud);
+            const queryDocs = `
+                SELECT sd.id as idDocumento, sd.idSolicitud, sd.rutaArchivo, sd.estadoValidacion, sd.comentarios, cr.nombre as requisitoNombre
+                FROM solicitud_documentos sd
+                JOIN catalogo_requisitos cr ON sd.idRequisito = cr.id
+                WHERE sd.idSolicitud IN (?)
+            `;
+            const [docs] = await db.query(queryDocs, [idsSolicitudes]);
+            documentos = docs;
+        }
+
+        const expedientes = aspirantes.map(asp => {
+            const solsAsp = solicitudes.filter(s => s.idAspi === asp.id).map(sol => {
+                return {
+                    ...sol,
+                    documentos: documentos.filter(doc => doc.idSolicitud === sol.idSolicitud)
+                };
+            });
+            return {
+                perfil: asp,
+                solicitudes: solsAsp
+            };
+        });
+
+        return res.status(200).json(expedientes);
+    } catch (error) {
+        console.error('Error en obtenerTodosLosExpedientes:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error en el servidor' });
+    }
+};
 
 module.exports = {
     registrarAspirante,
     obtenerAspirantes,
     obtenerAspirantePorId,
-    obtenerExpediente
+    obtenerExpediente,
+    obtenerTodosLosExpedientes
 };
