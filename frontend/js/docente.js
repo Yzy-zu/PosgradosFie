@@ -6,12 +6,34 @@ let documentoARechazar = null;
 // Inicialización de la Aplicación
 document.addEventListener("DOMContentLoaded", async function () {
     console.log("Portal de Docente Inicializado.");
+    async function cargarDocente(id) {
+        const datos = sessionStorage.getItem('token');
+        try {
+            const docente = await fetch(`/api/docentes/${id}`, {
+                headers: {
+                    "Authorization": `Bearer ${datos}`
+                }
+            })
+            const data = await docente.json()
+            return data
+        } catch (error) {
+            console.log(error)
+        }
 
+    }
     // Configurar el saludo de usuario personalizado
-    const usuarioLogueado = sessionStorage.getItem('usuarioLogueado');
+    const token = sessionStorage.getItem('usuario');
+    const usuario = JSON.parse(token);
     const saludo = document.getElementById('saludo-usuario');
+    const datitos = await cargarDocente(usuario.id);
+    console.log(datitos);
     if (saludo) {
-        saludo.innerText = `Hola Bienvenid@, ${usuarioLogueado}`;
+        saludo.innerText = `Hola Bienvenid@, ${datitos.nombre}`;
+        const lblNombre = document.getElementById('menu-nombre-docente');
+        const lblCorreo = document.getElementById('menu-correo-docente');
+        if (lblNombre) lblNombre.innerText = `${datitos.nombre}`;
+        if (lblCorreo) lblCorreo.innerText = `${usuario.correo}`;
+
     }
 
     await cargarAspirantesAPI();
@@ -19,7 +41,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 async function cargarAspirantesAPI() {
     try {
-        const token = sessionStorage.getItem("token") || "";
+        const token = sessionStorage.getItem("token");
         const respuesta = await fetch('/api/aspirante/expedientes/todos', {
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -364,7 +386,7 @@ function verDocumento(docId) {
     const previewTexto = document.getElementById('preview-contenido-texto');
 
     previewNombre.innerText = doc.nombre;
-    
+
     // Generar visor dependiendo si es imagen o PDF
     const extension = doc.url.split('.').pop().toLowerCase();
     if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
@@ -412,7 +434,7 @@ async function aprobarDocumento(docId) {
         if (res.ok) {
             aspirantes[aspIndex].documentos[docIndex].estado = 'aprobado';
             aspirantes[aspIndex].documentos[docIndex].note = '';
-            
+
             actualizarEstadisticas();
             seleccionarAspirante(idAspiranteActivo);
         } else {
@@ -486,7 +508,7 @@ async function guardarRechazoDocumento() {
         if (res.ok) {
             aspirantes[aspIndex].documentos[docIndex].estado = 'rechazado';
             aspirantes[aspIndex].documentos[docIndex].note = noteText;
-        
+
             cerrarModalRechazo();
             actualizarEstadisticas();
             seleccionarAspirante(idAspiranteActivo);

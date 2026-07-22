@@ -15,7 +15,7 @@ const obtenerDocentes = async (req, res) => {
 const obtenerDocente = async (req, res) => {
     try {
         const { id } = req.params;
-        const [resultados] = await db.query('SELECT * FROM docente WHERE idDocente = ?', [id]);
+        const [resultados] = await db.query('SELECT * FROM docente WHERE idUsua = ?', [id]);
 
         if (resultados.length === 0) {
             return res.status(404).json({ success: false, mensaje: 'Docente no encontrado' });
