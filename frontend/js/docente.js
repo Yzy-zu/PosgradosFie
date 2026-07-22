@@ -71,6 +71,10 @@ function switchView(viewId) {
         targetSection.classList.add('fade-in');
     }
     
+    if (viewId === 'notificaciones') {
+        cargarNotificaciones();
+    }
+
     setTimeout(() => {
         ocultarLoader();
     }, 300);
@@ -441,4 +445,62 @@ function guardarRechazoDocumento() {
     // Refrescar vistas
     actualizarEstadisticas();
     seleccionarAspirante(idAspiranteActivo);
+}
+
+/**
+ * Carga las notificaciones desde la API
+ */
+async function cargarNotificaciones() {
+    const contenedor = document.getElementById('contenedor-notificaciones');
+    if (!contenedor) return;
+
+    // Estado de carga inicial
+    contenedor.innerHTML = '<div class="card" style="text-align: center; padding: 40px; color: #7f8c8d;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i><p>Cargando notificaciones...</p></div>';
+
+    let idUsuario = "";
+    try {
+        const usr = JSON.parse(sessionStorage.getItem('usuario'));
+        if (usr && usr.id) idUsuario = usr.id;
+    } catch(e) {}
+
+    try {
+        const res = await fetch(`/api/notificaciones?destino=docentes&idUsuario=${idUsuario}`, {
+            headers: {
+                'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+            }
+        });
+
+        if (res.ok) {
+            const notificaciones = await res.json();
+            if (!notificaciones || notificaciones.length === 0) {
+                contenedor.innerHTML = '<div class="card" style="text-align: center; color: #7f8c8d;"><p>No tienes notificaciones nuevas.</p></div>';
+            } else {
+                let html = '';
+                notificaciones.forEach(notif => {
+                    const isGeneral = notif.destino === 'todos';
+                    const colorBorder = isGeneral ? '#2980b9' : '#8a1c24';
+                    const colorTitle = isGeneral ? '#2c3e50' : '#8a1c24';
+                    const iconName = isGeneral ? 'fa-scroll' : 'fa-triangle-exclamation';
+                    const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico de Posgrado' : 'Coordinación Académica FIE');
+                    
+                    // Formatear fecha
+                    const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
+                    const formattedDate = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+
+                    html += `
+                    <div class="card" style="margin-bottom: 15px; border-left: 5px solid ${colorBorder}; text-align: left; display: block;">
+                        <h4 style="color: ${colorTitle}; margin-bottom: 5px;"><i class="fa-solid ${iconName}"></i> ${notif.nombre}</h4>
+                        <p style="font-size: 13px; color: #555; line-height: 1.4; white-space: pre-wrap; margin: 0;">${notif.mensaje}</p>
+                        <small style="color: #777; display: block; margin-top: 8px;"><i class="fa-solid fa-user-tie"></i> Enviado por: ${remitente} | ${formattedDate}</small>
+                    </div>`;
+                });
+                contenedor.innerHTML = html;
+            }
+        } else {
+            contenedor.innerHTML = '<div class="card"><p><strong><i class="fa-solid fa-triangle-exclamation" style="color: #e67e22;"></i> Sistema FIE:</strong> Las notificaciones no están disponibles por el momento.</p></div>';
+        }
+    } catch (e) {
+        console.warn("Error al obtener notificaciones:", e);
+        contenedor.innerHTML = '<div class="card"><p><strong><i class="fa-solid fa-triangle-exclamation" style="color: #e67e22;"></i> Sistema FIE:</strong> Error de conexión al cargar notificaciones.</p></div>';
+    }
 }

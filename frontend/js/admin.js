@@ -1195,7 +1195,17 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
     const activa = document.getElementById("notif_estado").value;
     const destino = document.getElementById("notif_destino").value;
 
-    const datosNotif = { nombre, mensaje, destino, activa };
+    let rolRemitente = "ADMIN";
+    let nombreRemitente = "Administrador del Sistema";
+    try {
+        const usr = JSON.parse(sessionStorage.getItem("usuario"));
+        if (usr) {
+            rolRemitente = usr.rol || "ADMIN";
+            nombreRemitente = `${usr.nombre || ''} ${usr.primerApellido || ''}`.trim() || "Administrador del Sistema";
+        }
+    } catch(e) {}
+
+    const datosNotif = { nombre, mensaje, destino, activa, rolRemitente, nombreRemitente };
     const token = sessionStorage.getItem("token") || "";
 
     try {

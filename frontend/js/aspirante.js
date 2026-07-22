@@ -155,8 +155,14 @@ async function cargarNotificaciones() {
     // Estado de carga inicial
     contenedor.innerHTML = '<div class="card"><p>Cargando notificaciones...</p></div>';
 
+    let idUsuario = "";
     try {
-        const res = await fetch('/api/notificaciones?destino=aspirantes', {
+        const usr = JSON.parse(sessionStorage.getItem('usuario'));
+        if (usr && usr.id) idUsuario = usr.id;
+    } catch(e) {}
+
+    try {
+        const res = await fetch(`/api/notificaciones?destino=aspirantes&idUsuario=${idUsuario}`, {
             headers: {
                 'Authorization': `Bearer ${sessionStorage.getItem('token')}`
             }
@@ -170,25 +176,21 @@ async function cargarNotificaciones() {
                 let html = '';
                 notificaciones.forEach(notif => {
                     // Extraer un resumen del mensaje (máximo 60 caracteres)
-                    let resumen = notif.mensaje.length > 60 ? notif.mensaje.substring(0, 60) + '...' : notif.mensaje;
+                    const isGeneral = notif.destino === 'todos';
+                    const colorBorder = isGeneral ? '#2980b9' : '#8a1c24';
+                    const colorTitle = isGeneral ? '#2c3e50' : '#8a1c24';
+                    const iconName = isGeneral ? 'fa-scroll' : 'fa-triangle-exclamation';
+                    const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico de Posgrado' : 'Coordinación Académica FIE');
                     
-                    // Escapar comillas dobles o simples para que no rompa el onclick (mejorando la inyección de data)
-                    const notifStr = encodeURIComponent(JSON.stringify(notif));
+                    // Formatear fecha
+                    const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
+                    const formattedDate = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
 
                     html += `
-                    <div class="card notif-card" style="cursor: pointer; position: relative; padding: 25px 20px; text-align: center; border-top: 4px solid #3498db; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-height: 180px;" onclick="abrirNotificacion('${notifStr}')" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 2px 10px rgba(0,0,0,0.05)';">
-                        
-                        <div>
-                            <div style="width: 50px; height: 50px; background: #e8f4fd; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px auto;">
-                                <i class="fa-solid fa-envelope" style="color: #3498db; font-size: 20px;"></i>
-                            </div>
-                            <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">${notif.nombre}</h4>
-                            <p style="color: #7f8c8d; font-size: 13px; margin: 0; line-height: 1.4;">${resumen}</p>
-                        </div>
-
-                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 12px; color: #bdc3c7;">
-                            <i class="fa-solid fa-magnifying-glass-plus"></i> Clic para leer completo
-                        </div>
+                    <div class="card" style="margin-bottom: 15px; border-left: 5px solid ${colorBorder}; text-align: left; display: block;">
+                        <h4 style="color: ${colorTitle}; margin-bottom: 5px;"><i class="fa-solid ${iconName}"></i> ${notif.nombre}</h4>
+                        <p style="font-size: 13px; color: #555; line-height: 1.4; white-space: pre-wrap; margin: 0;">${notif.mensaje}</p>
+                        <small style="color: #777; display: block; margin-top: 8px;"><i class="fa-solid fa-user-tie"></i> Enviado por: ${remitente} | ${formattedDate}</small>
                     </div>`;
                 });
                 contenedor.innerHTML = html;
