@@ -346,6 +346,7 @@ async function activarModulosPostRegistro(nombrePrograma) {
             if (respuesta.ok) {
                 const convocatorias = await respuesta.json();
                 const activas = convocatorias.filter(c => c.estado === 'Activa' && c.tipo === nivel);
+                window.convocatoriasDisponibles = activas;
 
                 htmlConvocatorias = `<h3>Oferta Académica Desbloqueada: ${nivel === 'DOCTORADO' ? 'Doctorados' : 'Maestrías'} FIE</h3><br>`;
                 if (activas.length === 0) {
@@ -392,6 +393,45 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
         return;
     }
 
+    const conv = window.convocatoriasDisponibles ? window.convocatoriasDisponibles.find(c => c.id === idConvocatoria) : null;
+    let idOpcionSeleccionada = null;
+
+    if (conv && conv.opciones && conv.opciones.length > 0) {
+        // Filtrar solo opciones activas
+        const opcionesActivas = conv.opciones.filter(o => o.opcionConvocatoriaActiva && o.opcionPosgradoActiva);
+        if (opcionesActivas.length > 0) {
+            const inputOptions = {};
+            opcionesActivas.forEach(opt => {
+                inputOptions[opt.idConvocatoriaOpcion] = opt.nombre;
+            });
+
+            const { value: opcionElegida } = await Swal.fire({
+                title: 'Selecciona una Opción',
+                text: 'Esta convocatoria tiene múltiples líneas de investigación o especialidades. Por favor elige una:',
+                input: 'select',
+                inputOptions: inputOptions,
+                inputPlaceholder: 'Selecciona una opción',
+                showCancelButton: true,
+                confirmButtonText: 'Continuar',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                    return new Promise((resolve) => {
+                        if (value) {
+                            resolve();
+                        } else {
+                            resolve('Debes seleccionar una opción para continuar.');
+                        }
+                    });
+                }
+            });
+
+            if (!opcionElegida) {
+                return;
+            }
+            idOpcionSeleccionada = opcionElegida;
+        }
+    }
+
     // Crear Solicitud en la base de datos
     try {
         const respuestaSoli = await fetch('/api/solicitud/crear', {
@@ -401,7 +441,8 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
             },
             body: JSON.stringify({
                 idAspi: aspiranteData.id,
-                idC: idConvocatoria
+                idC: idConvocatoria,
+                idConvocatoriaOpcion: idOpcionSeleccionada
             })
         });
 
@@ -686,7 +727,9 @@ async function bloquearInterfazPorRevision() {
         banner.innerHTML = `
             <div style="display: flex; align-items: center; gap: 5px; margin-top: 15px; margin-bottom: 2px; flex-wrap: wrap;">
                 <span class="badge" style="background-color: #3b82f6; color: white; margin-left: 0;">Bajo Revisión, permanece pendiente para cualquier modificacion acerca de tus documentos.</span>
+                <span id="banner-opcion-seleccionada" class="badge bg-light text-dark border" style="display:none;"><i class="fa-solid fa-layer-group text-primary me-1"></i> Opción: </span>
             </div>
+
             <div id="docs-dinamicos-container" class="docs-revision-grid">
                 <div style="text-align:center; padding: 20px; grid-column: 1 / -1; color:#777;">
                     <i class="fa-solid fa-spinner fa-spin"></i> Cargando tus documentos...
@@ -716,6 +759,12 @@ async function bloquearInterfazPorRevision() {
             if (res.ok) {
                 const data = await res.json();
                 const solicitudActiva = data.solicitudes.find(s => s.idSolicitud === currentSolicitudId);
+
+                const bannerOpcion = document.getElementById('banner-opcion-seleccionada');
+                if (bannerOpcion && solicitudActiva && solicitudActiva.opcionNombre) {
+                    bannerOpcion.innerHTML = `<i class="fa-solid fa-layer-group text-primary me-1"></i> Opción: ${solicitudActiva.opcionNombre}`;
+                    bannerOpcion.style.display = 'inline-flex';
+                }
 
                 const container = document.getElementById('docs-dinamicos-container');
                 if (container) {

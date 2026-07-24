@@ -3,7 +3,7 @@ const db = require('../database/db');
 // Crear una solicitud
 const crearSolicitud = async (req, res) => {
     try {
-        const { idAspi, idC } = req.body;
+        const { idAspi, idC, idConvocatoriaOpcion } = req.body;
 
         if (!idAspi || !idC) {
             return res.status(400).json({ mensaje: 'Todos los campos son obligatorios.' });
@@ -44,8 +44,8 @@ const crearSolicitud = async (req, res) => {
 
         // Insertar nueva solicitud
         const [resultado] = await db.query(
-            'INSERT INTO solicitud (idAspi, idConvocatoria) VALUES (?, ?)',
-            [idAspi, idC]
+            'INSERT INTO solicitud (idAspi, idConvocatoria, idConvocatoriaOpcion) VALUES (?, ?, ?)',
+            [idAspi, idC, idConvocatoriaOpcion || null]
         );
 
         // Emitir evento global

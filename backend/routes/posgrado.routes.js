@@ -8,4 +8,9 @@ router.get(
     posgradoController.obtenerPosgrados
 );
 
+router.get(
+    '/opciones',
+    posgradoController.obtenerOpcionesPosgrado
+);
+
 module.exports = router;

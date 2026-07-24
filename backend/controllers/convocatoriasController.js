@@ -4,7 +4,24 @@ const db = require('../database/db');
 const obtenerConvocatorias = async (req, res) => {
     try {
         const [resultados] = await db.query('SELECT * FROM convocatorias');
-        return res.json(resultados);
+        
+        // Fetch options for each convocatoria
+        const [opciones] = await db.query(`
+            SELECT co.id as idConvocatoriaOpcion, co.convocatoria_id, co.cupos, co.activo as opcionConvocatoriaActiva,
+                   op.id as idOpcionPosgrado, op.nombre, op.descripcion, op.activo as opcionPosgradoActiva
+            FROM convocatoria_opcion co
+            JOIN opcion_posgrado op ON co.opcion_posgrado_id = op.id
+        `);
+
+        // Attach options to convocatorias
+        const convocatoriasConOpciones = resultados.map(conv => {
+            return {
+                ...conv,
+                opciones: opciones.filter(op => op.convocatoria_id === conv.id)
+            };
+        });
+
+        return res.json(convocatoriasConOpciones);
     } catch (error) {
         console.error('Error en obtenerConvocatorias:', error);
         return res.status(500).json({ success: false, mensaje: 'Error al obtener convocatorias' });
@@ -28,10 +45,10 @@ const obtenerConvocatoria = async (req, res) => {
     }
 };
 
-// Crear convocatoria con requisitos
+// Crear convocatoria con requisitos y opciones
 const crearConvocatorias = async (req, res) => {
     try {
-        const { nombre, descripcion, fecha_inicio, fecha_fin, estado, requisitos, posgrado_id, tipo, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, duracion, modalidad, inicioCurso, finCurso, inicioExamen, finExamen } = req.body;
+        const { nombre, descripcion, fecha_inicio, fecha_fin, estado, requisitos, opciones, posgrado_id, tipo, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, duracion, modalidad, inicioCurso, finCurso, inicioExamen, finExamen } = req.body;
 
         const [resultado] = await db.query(
             'INSERT INTO convocatorias (nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, tipo, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, duracion, modalidad, inicioCurso, finCurso, inicioExamen, finExamen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -46,6 +63,15 @@ const crearConvocatorias = async (req, res) => {
             await db.query(
                 'INSERT INTO convocatoria_requisitos (convocatoria_id, requisito_id, obligatorio) VALUES ?',
                 [reqValues]
+            );
+        }
+
+        // Insertar opciones de posgrado si existen
+        if (opciones && opciones.length > 0) {
+            const opValues = opciones.map(o => [convocatoriaId, o.idOpcionPosgrado, o.cupos]);
+            await db.query(
+                'INSERT INTO convocatoria_opcion (convocatoria_id, opcion_posgrado_id, cupos) VALUES ?',
+                [opValues]
             );
         }
 
@@ -97,6 +123,31 @@ const actualizarConvocatorias = async (req, res) => {
                     await db.query('UPDATE convocatoria_requisitos SET obligatorio = ? WHERE id = ?', [r.obligatorio ? 1 : 0, existe.id]);
                 } else {
                     await db.query('INSERT INTO convocatoria_requisitos (convocatoria_id, requisito_id, obligatorio) VALUES (?, ?, ?)', [id, r.id, r.obligatorio ? 1 : 0]);
+                }
+            }
+        }
+
+        // Manejar opciones de posgrado
+        const { opciones } = req.body;
+        const [existentesOpciones] = await db.query('SELECT id, opcion_posgrado_id FROM convocatoria_opcion WHERE convocatoria_id = ?', [id]);
+        const nuevosIdsOpciones = opciones ? opciones.map(o => o.idOpcionPosgrado.toString()) : [];
+        
+        const paraEliminarOpciones = existentesOpciones.filter(e => !nuevosIdsOpciones.includes(e.opcion_posgrado_id.toString()));
+        for (const opc of paraEliminarOpciones) {
+            try {
+                await db.query('DELETE FROM convocatoria_opcion WHERE id = ?', [opc.id]);
+            } catch (err) {
+                console.warn(`No se pudo eliminar la opcion ${opc.id} de la convocatoria porque está en uso.`);
+            }
+        }
+
+        if (opciones && opciones.length > 0) {
+            for (const o of opciones) {
+                const existeOpc = existentesOpciones.find(e => e.opcion_posgrado_id.toString() === o.idOpcionPosgrado.toString());
+                if (existeOpc) {
+                    await db.query('UPDATE convocatoria_opcion SET cupos = ? WHERE id = ?', [o.cupos, existeOpc.id]);
+                } else {
+                    await db.query('INSERT INTO convocatoria_opcion (convocatoria_id, opcion_posgrado_id, cupos) VALUES (?, ?, ?)', [id, o.idOpcionPosgrado, o.cupos]);
                 }
             }
         }

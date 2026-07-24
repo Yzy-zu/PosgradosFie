@@ -23,9 +23,11 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarUsuarios();
     cargarConvocatorias(); // Inicializar panel de convocatorias
     cargarPosgradosEnSelect();
+    cargarOpcionesPosgradoGlobal();
     cargarAspirantes();
     cargarNotificacionesAdmin(); // Inicializar panel de notificaciones
     cargarCatalogoRequisitosUI(); // Inicializar catálogo de requisitos
+    inicializarFlatpickr();
 
     // Router inicial: si no hay hash, lo ponemos en dashboard
     if (!window.location.hash) {
@@ -618,6 +620,7 @@ async function cargarConvocatorias() {
     }
 }
 
+let todosLosPosgrados = [];
 async function cargarPosgradosEnSelect() {
     try {
         const respuesta = await fetch("/api/posgrado");
@@ -627,6 +630,7 @@ async function cargarPosgradosEnSelect() {
         if (!select) return;
         select.innerHTML = '<option value="">Seleccione un posgrado...</option>';
         if (Array.isArray(posgrados)) {
+            todosLosPosgrados = posgrados;
             posgrados.forEach(pos => {
                 const option = document.createElement("option");
                 option.value = pos.id;
@@ -639,49 +643,236 @@ async function cargarPosgradosEnSelect() {
     }
 }
 
-function toggleCamposPorTipo() {
-    const tipo = document.getElementById("convocatoria_tipo").value;
+let todasLasOpcionesPosgrado = [];
+async function cargarOpcionesPosgradoGlobal() {
+    try {
+        const respuesta = await fetch("/api/posgrado/opciones");
+        if (respuesta.ok) {
+            todasLasOpcionesPosgrado = await respuesta.json();
+        }
+    } catch (error) {
+        console.error("Error al cargar opciones posgrado:", error);
+    }
+}
+
+function inicializarFlatpickr() {
+    const configSingle = {
+        dateFormat: "Y-m-d",
+        locale: "es",
+        allowInput: true
+    };
+    flatpickr(".date-single", configSingle);
+}
+
+let opcionesSeleccionadas = [];
+
+document.getElementById("convocatoria_opciones")?.addEventListener("change", (e) => {
+    const id = parseInt(e.target.value);
+    if (!id) return;
+    const opc = todasLasOpcionesPosgrado.find(o => o.id === id);
+    if (opc && !opcionesSeleccionadas.find(s => s.idOpcionPosgrado === id)) {
+        opcionesSeleccionadas.push({ idOpcionPosgrado: id, cupos: null, nombre: opc.nombre });
+        renderizarChipsOpciones();
+    }
+    e.target.value = ""; // reset
+});
+
+function renderizarChipsOpciones() {
+    const container = document.getElementById("contenedorChipsOpciones");
+    if (!container) return;
+    let html = "";
+    opcionesSeleccionadas.forEach(op => {
+        const cuposVal = op.cupos !== null ? op.cupos : "";
+        html += `
+            <div class="badge bg-light text-dark border d-flex align-items-center p-2" id="chip_opc_${op.idOpcionPosgrado}">
+                <span class="me-2">${op.nombre}</span>
+                <input type="number" class="form-control form-control-sm cupo-input border-secondary text-center" style="width: 70px; height: 26px; font-size: 0.8rem;" placeholder="Cupos" value="${cuposVal}" onchange="actualizarCupo(${op.idOpcionPosgrado}, this.value)">
+                <button type="button" class="btn-close ms-2" style="font-size: 0.6rem;" onclick="removerOpcion(${op.idOpcionPosgrado})"></button>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+window.actualizarCupo = function(id, val) {
+    const op = opcionesSeleccionadas.find(o => o.idOpcionPosgrado === id);
+    if (op) op.cupos = val ? parseInt(val) : null;
+};
+
+window.removerOpcion = function(id) {
+    opcionesSeleccionadas = opcionesSeleccionadas.filter(o => o.idOpcionPosgrado !== id);
+    renderizarChipsOpciones();
+};
+
+function renderizarOpcionesPorPosgrado(posgradoId, opcionesSeleccionadasPrevias = []) {
+    const selectOpciones = document.getElementById("convocatoria_opciones");
+    if (!selectOpciones) return;
+    
+    selectOpciones.innerHTML = '<option value="">Selecciona opciones...</option>';
+    opcionesSeleccionadas = [];
+
+    if (!posgradoId) {
+        renderizarChipsOpciones();
+        return;
+    }
+
+    // Actualizar campos mostrados según el tipo de posgrado
+    const posgrado = todosLosPosgrados.find(p => p.id == posgradoId);
+    if (posgrado) {
+        toggleCamposPorTipo(posgrado.tipo);
+    }
+
+    const opcionesPosgrado = todasLasOpcionesPosgrado.filter(op => op.posgrado_id == posgradoId);
+    
+    opcionesPosgrado.forEach(op => {
+        const option = document.createElement("option");
+        option.value = op.id;
+        option.textContent = op.nombre;
+        selectOpciones.appendChild(option);
+        
+        const sel = opcionesSeleccionadasPrevias.find(s => s.idOpcionPosgrado == op.id || s.opcion_posgrado_id == op.id);
+        if (sel) {
+            opcionesSeleccionadas.push({ idOpcionPosgrado: op.id, cupos: sel.cupos, nombre: op.nombre });
+        }
+    });
+
+    renderizarChipsOpciones();
+}
+
+document.getElementById("convocatoria_posgrado")?.addEventListener("change", (e) => {
+    renderizarOpcionesPorPosgrado(e.target.value);
+});
+
+function toggleCamposPorTipo(tipo) {
     const grupoEntrevistas = document.getElementById("grupo_entrevistas");
     const grupoAcademicas = document.getElementById("grupo_fechas_academicas");
 
     if (tipo === "MAESTRIA") {
         // Ocultar entrevistas y limpiar
         if (grupoEntrevistas) grupoEntrevistas.style.display = "none";
-        document.getElementById("convocatoria_fechaEntrevistaInicio").value = "";
-        document.getElementById("convocatoria_fechaEntrevistaFin").value = "";
+        
+        const f1 = document.getElementById("convocatoria_fechaEntrevistaInicio")?._flatpickr;
+        if (f1) f1.clear();
+        const f2 = document.getElementById("convocatoria_fechaEntrevistaFin")?._flatpickr;
+        if (f2) f2.clear();
 
         // Mostrar académicas
         if (grupoAcademicas) grupoAcademicas.style.display = "block";
     } else if (tipo === "DOCTORADO") {
         // Mostrar entrevistas
-        if (grupoEntrevistas) grupoEntrevistas.style.display = "flex"; // row display flex by default in BS
+        if (grupoEntrevistas) grupoEntrevistas.style.display = "block";
 
         // Ocultar académicas y limpiar
         if (grupoAcademicas) grupoAcademicas.style.display = "none";
-        document.getElementById("convocatoria_inicioCurso").value = "";
-        document.getElementById("convocatoria_finCurso").value = "";
-        document.getElementById("convocatoria_inicioExamen").value = "";
-        document.getElementById("convocatoria_finExamen").value = "";
+        
+        ["convocatoria_inicioCurso", "convocatoria_finCurso", "convocatoria_inicioExamen", "convocatoria_finExamen"].forEach(id => {
+            const fp = document.getElementById(id)?._flatpickr;
+            if (fp) fp.clear();
+        });
     }
 }
-
-document.getElementById("convocatoria_tipo")?.addEventListener("change", toggleCamposPorTipo);
 
 function limpiarFormularioConvocatoria() {
     document.getElementById("formConvocatoria").reset();
     document.getElementById("idConvocatoriaForm").value = "";
-    document.getElementById("convocatoria_posgrado").value = "";
-    document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-bullhorn"></i> Nueva Convocatoria';
-    document.getElementById("btnEliminarConvocatoria").style.display = "none";
-    toggleCamposPorTipo();
+    
+    // Limpiar flatpickrs
+    document.querySelectorAll('.date-single').forEach(el => {
+        if (el._flatpickr) el._flatpickr.clear();
+    });
+    
+    // Limpiar opciones seleccionadas
+    opcionesSeleccionadas = [];
+    document.getElementById("contenedorChipsOpciones").innerHTML = "";
 
-    // Desmarcar todos los checkboxes del catálogo
+    const btnEliminar = document.getElementById("btnEliminarConvocatoria");
+    if (btnEliminar) btnEliminar.style.display = "none";
+    
+    // Reiniciar Wizard a paso 1
+    if (typeof actualizarWizard === "function") {
+        actualizarWizard(1);
+    }
+    
+    // Desmarcar todos los requisitos
     const checkboxes = document.querySelectorAll("#contenedorRequisitos .req-checkbox");
     checkboxes.forEach(cb => {
         cb.checked = false;
         const oblCb = document.getElementById(`obligatorio_${cb.value}`);
         if (oblCb) oblCb.checked = false;
     });
+}
+
+// Variables y Funciones del Wizard (Stepper)
+let pasoActualConvocatoria = 1;
+const totalPasosConvocatoria = 4;
+
+function actualizarWizard(paso) {
+    pasoActualConvocatoria = paso;
+    
+    // Ocultar todos los panes
+    document.querySelectorAll('.step-pane').forEach(pane => pane.classList.remove('active'));
+    // Desactivar todos los indicators
+    document.querySelectorAll('.step-indicator').forEach(ind => {
+        ind.classList.remove('active');
+        ind.classList.remove('completed');
+    });
+    
+    // Mostrar el pane actual
+    const pane = document.getElementById(`step-pane-${paso}`);
+    if(pane) pane.classList.add('active');
+    
+    // Actualizar indicators
+    for (let i = 1; i <= totalPasosConvocatoria; i++) {
+        const ind = document.getElementById(`indicator-${i}`);
+        if (!ind) continue;
+        if (i < paso) {
+            ind.classList.add('completed');
+        } else if (i === paso) {
+            ind.classList.add('active');
+        }
+    }
+    
+    // Actualizar visibilidad de botones
+    const btnPrev = document.getElementById('btnPrevStep');
+    const btnNext = document.getElementById('btnNextStep');
+    const btnSave = document.getElementById('btnSaveConvocatoria');
+    
+    if (btnPrev) btnPrev.style.display = (paso === 1) ? 'none' : 'inline-block';
+    
+    if (paso === totalPasosConvocatoria) {
+        if (btnNext) btnNext.style.display = 'none';
+        if (btnSave) btnSave.style.display = 'inline-block';
+    } else {
+        if (btnNext) btnNext.style.display = 'inline-block';
+        if (btnSave) btnSave.style.display = 'none';
+    }
+}
+
+function validarPasoActual() {
+    const paneActual = document.getElementById(`step-pane-${pasoActualConvocatoria}`);
+    if(!paneActual) return true;
+    const inputsRequeridos = paneActual.querySelectorAll('input[required], select[required], textarea[required]');
+    
+    for (let input of inputsRequeridos) {
+        if (!input.value || !input.value.trim()) {
+            input.reportValidity(); // Muestra el tooltip nativo de HTML5
+            return false;
+        }
+    }
+    return true;
+}
+
+window.siguientePaso = function() {
+    if (!validarPasoActual()) return;
+    if (pasoActualConvocatoria < totalPasosConvocatoria) {
+        actualizarWizard(pasoActualConvocatoria + 1);
+    }
+}
+
+window.pasoAnterior = function() {
+    if (pasoActualConvocatoria > 1) {
+        actualizarWizard(pasoActualConvocatoria - 1);
+    }
 }
 
 function crearConvocatoria() {
@@ -744,26 +935,34 @@ async function editarConvocatoria(id) {
         limpiarFormularioConvocatoria();
         document.getElementById("idConvocatoriaForm").value = conv.id;
         document.getElementById("convocatoria_posgrado").value = conv.posgrado_id || "";
-        document.getElementById("convocatoria_tipo").value = conv.tipo || "MAESTRIA";
         document.getElementById("convocatoria_nombre").value = conv.nombre || "";
         document.getElementById("convocatoria_descripcion").value = conv.descripcion || "";
         document.getElementById("convocatoria_estado").value = conv.estado || "Borrador";
         document.getElementById("convocatoria_modalidad").value = conv.modalidad || "Escolarizada";
         document.getElementById("convocatoria_duracion").value = conv.duracion || "";
 
-        document.getElementById("convocatoria_fecha_inicio").value = conv.fecha_inicio ? conv.fecha_inicio.split('T')[0] : "";
-        document.getElementById("convocatoria_fecha_fin").value = conv.fecha_fin ? conv.fecha_fin.split('T')[0] : "";
-        document.getElementById("convocatoria_fechaInicioDocumentos").value = conv.fechaInicioDocumentos ? conv.fechaInicioDocumentos.split('T')[0] : "";
-        document.getElementById("convocatoria_fechaFinDocumentos").value = conv.fechaFinDocumentos ? conv.fechaFinDocumentos.split('T')[0] : "";
-        document.getElementById("convocatoria_fechaEntrevistaInicio").value = conv.fechaEntrevistaInicio ? conv.fechaEntrevistaInicio.split('T')[0] : "";
-        document.getElementById("convocatoria_fechaEntrevistaFin").value = conv.fechaEntrevistaFin ? conv.fechaEntrevistaFin.split('T')[0] : "";
-        document.getElementById("convocatoria_fechaInicioEscolar").value = conv.fechaInicioEscolar ? conv.fechaInicioEscolar.split('T')[0] : "";
-        document.getElementById("convocatoria_fechaResultados").value = conv.fechaResultados ? conv.fechaResultados.split('T')[0] : "";
+        const setSingle = (id, val) => {
+            const el = document.getElementById(id);
+            if (!el || !el._flatpickr) return;
+            if (val) el._flatpickr.setDate(val.split('T')[0]);
+            else el._flatpickr.clear();
+        };
 
-        document.getElementById("convocatoria_inicioCurso").value = conv.inicioCurso ? conv.inicioCurso.split('T')[0] : "";
-        document.getElementById("convocatoria_finCurso").value = conv.finCurso ? conv.finCurso.split('T')[0] : "";
-        document.getElementById("convocatoria_inicioExamen").value = conv.inicioExamen ? conv.inicioExamen.split('T')[0] : "";
-        document.getElementById("convocatoria_finExamen").value = conv.finExamen ? conv.finExamen.split('T')[0] : "";
+        setSingle("convocatoria_fecha_inicio", conv.fecha_inicio);
+        setSingle("convocatoria_fecha_fin", conv.fecha_fin);
+        setSingle("convocatoria_fechaInicioDocumentos", conv.fechaInicioDocumentos);
+        setSingle("convocatoria_fechaFinDocumentos", conv.fechaFinDocumentos);
+        setSingle("convocatoria_fechaEntrevistaInicio", conv.fechaEntrevistaInicio);
+        setSingle("convocatoria_fechaEntrevistaFin", conv.fechaEntrevistaFin);
+        setSingle("convocatoria_inicioCurso", conv.inicioCurso);
+        setSingle("convocatoria_finCurso", conv.finCurso);
+        setSingle("convocatoria_inicioExamen", conv.inicioExamen);
+        setSingle("convocatoria_finExamen", conv.finExamen);
+        setSingle("convocatoria_fechaInicioEscolar", conv.fechaInicioEscolar);
+        setSingle("convocatoria_fechaResultados", conv.fechaResultados);
+        
+        // Renderizar opciones guardadas
+        renderizarOpcionesPorPosgrado(conv.posgrado_id, conv.opciones || []);
 
         // Cargar requisitos desde tabla pivote
         try {
@@ -808,26 +1007,27 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
 
     const idInput = document.getElementById("idConvocatoriaForm").value;
     const posgrado_id = document.getElementById("convocatoria_posgrado").value;
-    const tipo = document.getElementById("convocatoria_tipo").value;
+    const posgradoData = todosLosPosgrados.find(p => p.id == posgrado_id);
+    const tipo = posgradoData ? posgradoData.tipo : "MAESTRIA";
+    
     const nombre = document.getElementById("convocatoria_nombre").value;
     const descripcion = document.getElementById("convocatoria_descripcion").value;
     const estado = document.getElementById("convocatoria_estado").value;
     const modalidad = document.getElementById("convocatoria_modalidad").value;
     const duracion = document.getElementById("convocatoria_duracion").value;
 
-    const fecha_inicio = document.getElementById("convocatoria_fecha_inicio").value;
-    const fecha_fin = document.getElementById("convocatoria_fecha_fin").value;
-    const fechaInicioDocumentos = document.getElementById("convocatoria_fechaInicioDocumentos").value;
-    const fechaFinDocumentos = document.getElementById("convocatoria_fechaFinDocumentos").value;
-    const fechaEntrevistaInicio = document.getElementById("convocatoria_fechaEntrevistaInicio").value;
-    const fechaEntrevistaFin = document.getElementById("convocatoria_fechaEntrevistaFin").value;
-    const fechaInicioEscolar = document.getElementById("convocatoria_fechaInicioEscolar").value;
-    const fechaResultados = document.getElementById("convocatoria_fechaResultados").value;
-
-    const inicioCurso = document.getElementById("convocatoria_inicioCurso").value;
-    const finCurso = document.getElementById("convocatoria_finCurso").value;
-    const inicioExamen = document.getElementById("convocatoria_inicioExamen").value;
-    const finExamen = document.getElementById("convocatoria_finExamen").value;
+    const fecha_inicio = document.getElementById("convocatoria_fecha_inicio").value || null;
+    const fecha_fin = document.getElementById("convocatoria_fecha_fin").value || null;
+    const fechaInicioDocumentos = document.getElementById("convocatoria_fechaInicioDocumentos").value || null;
+    const fechaFinDocumentos = document.getElementById("convocatoria_fechaFinDocumentos").value || null;
+    const fechaEntrevistaInicio = document.getElementById("convocatoria_fechaEntrevistaInicio").value || null;
+    const fechaEntrevistaFin = document.getElementById("convocatoria_fechaEntrevistaFin").value || null;
+    const inicioCurso = document.getElementById("convocatoria_inicioCurso").value || null;
+    const finCurso = document.getElementById("convocatoria_finCurso").value || null;
+    const inicioExamen = document.getElementById("convocatoria_inicioExamen").value || null;
+    const finExamen = document.getElementById("convocatoria_finExamen").value || null;
+    const fechaInicioEscolar = document.getElementById("convocatoria_fechaInicioEscolar").value || null;
+    const fechaResultados = document.getElementById("convocatoria_fechaResultados").value || null;
 
     // Recopilar requisitos del DOM (los checkboxes marcados)
     const checkboxes = document.querySelectorAll("#contenedorRequisitos .req-checkbox:checked");
@@ -841,7 +1041,13 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
         });
     });
 
-    const datosConvocatoria = { nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, tipo, modalidad, duracion, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, inicioCurso, finCurso, inicioExamen, finExamen, requisitos };
+    // Enviar las opciones con sus cupos recopiladas
+    const opciones = opcionesSeleccionadas.map(o => ({
+        idOpcionPosgrado: o.idOpcionPosgrado,
+        cupos: o.cupos
+    }));
+
+    const datosConvocatoria = { nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, tipo, modalidad, duracion, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, inicioCurso, finCurso, inicioExamen, finExamen, requisitos, opciones };
     const token = sessionStorage.getItem("token") || "";
 
     try {
@@ -865,7 +1071,7 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
         const resultado = await respuesta.json();
 
         if (respuesta.ok && resultado.success !== false) {
-            alert(resultado.mensaje || "Operación realizada con éxito");
+            Swal.fire("¡Éxito!", resultado.mensaje || "Operación realizada con éxito", "success");
 
             const modalElement = document.getElementById("modalConvocatoria");
             const modal = bootstrap.Modal.getInstance(modalElement);
@@ -874,17 +1080,28 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
             limpiarFormularioConvocatoria();
             cargarConvocatorias();
         } else {
-            alert(resultado.mensaje || "Hubo un error al procesar la solicitud.");
+            Swal.fire("Error", resultado.mensaje || "Hubo un error al procesar la solicitud.", "error");
         }
 
     } catch (error) {
         console.error("Error al guardar la convocatoria:", error);
-        alert("Ocurrió un error en la conexión con el servidor.");
+        Swal.fire("Error", "Ocurrió un error en la conexión con el servidor.", "error");
     }
 });
 
 async function eliminarConvocatoria(id) {
-    if (!confirm(`¿Está seguro de eliminar la convocatoria con ID: ${id}?`)) {
+    const result = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: `Se eliminará la convocatoria. ¡Esta acción no se puede deshacer!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) {
         return;
     }
 
@@ -901,7 +1118,7 @@ async function eliminarConvocatoria(id) {
         const resultado = await respuesta.json();
 
         if (respuesta.ok && resultado.success !== false) {
-            alert(resultado.mensaje || "Convocatoria eliminada con éxito.");
+            Swal.fire('¡Eliminado!', resultado.mensaje || 'Convocatoria eliminada con éxito.', 'success');
 
             const modalElement = document.getElementById("modalConvocatoria");
             const modal = bootstrap.Modal.getInstance(modalElement);
@@ -909,12 +1126,12 @@ async function eliminarConvocatoria(id) {
 
             cargarConvocatorias();
         } else {
-            alert(resultado.mensaje || "No se pudo eliminar la convocatoria.");
+            Swal.fire('Error', resultado.mensaje || 'No se pudo eliminar la convocatoria.', 'error');
         }
 
     } catch (error) {
         console.error("Error en eliminarConvocatoria:", error);
-        alert("Ocurrió un error al intentar eliminar la convocatoria.");
+        Swal.fire('Error', "Ocurrió un error al intentar eliminar la convocatoria.", 'error');
     }
 }
 // ==========================================
@@ -1080,14 +1297,15 @@ async function verExpedienteAspirante(id) {
 
                 contSolicitudes.innerHTML += `
                     <div class="mb-5 pb-2" style="border-bottom: 1px dashed #e2e8f0;">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
                                 <h5 class="fw-bold mb-1" style="color: #0f172a;">${sol.convocatoriaNombre}</h5>
-                                <div class="text-muted small" style="font-weight: 500;">
+                                ${sol.opcionNombre ? `<div class="mb-1"><span class="badge bg-light text-dark border"><i class="fa-solid fa-layer-group text-primary me-1"></i> Opción: ${sol.opcionNombre}</span></div>` : ''}
+                                <div class="text-muted small mt-1" style="font-weight: 500;">
                                     <span>Iniciado el: ${d}</span> &nbsp;&bull;&nbsp; <span>${sol.tipoAdmision}</span>
                                 </div>
                             </div>
-                            <span class="soft-badge ${badgeSolicitud}">${sol.estado}</span>
+                            <span class="soft-badge ${badgeSolicitud} mt-1">${sol.estado}</span>
                         </div>
                         ${htmlDocs}
                     </div>
