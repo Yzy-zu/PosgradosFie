@@ -509,6 +509,51 @@ function cambiarTabEvaluacion(tabName) {
     }
 }
 
+function ocultarPanelNotificaciones() {
+    const p = document.getElementById('panel-notificaciones');
+    if (p) p.style.display = 'none';
+}
+
+function abrirNotificacion(notifDataEnc, element) {
+    try {
+        const notif = JSON.parse(decodeURIComponent(notifDataEnc));
+        
+        // Marcar activo en la lista
+        document.querySelectorAll('#notification-list .chat-item').forEach(el => el.style.background = 'transparent');
+        if(element) element.style.background = '#e2e8f0';
+
+        // Mostrar paneles
+        document.getElementById('messages-empty-pane').style.display = 'none';
+        const readPane = document.getElementById('messages-read-pane');
+        readPane.style.display = 'flex';
+        
+        // Llenar datos
+        const isGeneral = notif.destino === 'todos';
+        const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico' : 'Administración Posgrados');
+        
+        document.getElementById('messages-read-title').innerText = remitente;
+        
+        const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
+        const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        const dateStr = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+
+        const body = document.getElementById('messages-read-body');
+        body.innerHTML = `
+            <div style="text-align: center; margin-bottom: 15px;">
+                <span style="background: #e2e8f0; padding: 2px 8px; border-radius: 12px; font-size: 11px; color: #64748b;">${dateStr}</span>
+            </div>
+            <div style="background: white; padding: 12px 15px; border-radius: 18px 18px 18px 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 14px; color: #1c1e21; max-width: 90%; margin-bottom: 10px; word-wrap: break-word;">
+                <div style="font-weight: bold; color: var(--color-primary); margin-bottom: 5px; font-size: 12px;">${notif.nombre}</div>
+                ${notif.mensaje}
+                <div style="font-size: 10px; color: #94a3b8; margin-top: 5px; text-align: right;">${timeStr}</div>
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error("Error al abrir notificación", error);
+    }
+}
+
 function cerrarModalEvaluacion() {
     document.getElementById('modal-evaluacion-doc').style.display = 'none';
     document.getElementById('eval-tab-documento').innerHTML = '';
@@ -660,13 +705,12 @@ async function cargarNotificaciones() {
             }
 
             if (!notificaciones || notificaciones.length === 0) {
-                contenedor.innerHTML = '<div style="padding: 20px; text-align: center; color: #7f8c8d; font-size: 13px;">No tienes notificaciones nuevas.</div>';
+                contenedor.innerHTML = '<div class="messages-empty-state"><i class="fa-solid fa-inbox fa-2x mb-2 opacity-50"></i>No tienes mensajes.</div>';
             } else {
                 let html = '';
                 notificaciones.forEach(notif => {
                     const isGeneral = notif.destino === 'todos';
-                    const itemClass = isGeneral ? 'notif-general' : 'notif-specific';
-                    const iconName = isGeneral ? 'fa-scroll' : 'fa-bell';
+                    const bgClass = isGeneral ? 'bg-primary' : 'bg-warning';
                     const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico' : 'Coordinación FIE');
                     
                     const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
@@ -675,24 +719,23 @@ async function cargarNotificaciones() {
                     const notifDataStr = encodeURIComponent(JSON.stringify(notif));
 
                     html += `
-                    <div class="notification-item-modern ${itemClass}" style="cursor: pointer;">
-                        <div class="notif-icon">
-                            <i class="fa-solid ${iconName}"></i>
+                    <div class="chat-item p-3 border-bottom" style="cursor: pointer; display: flex; gap: 10px; align-items: center;" onclick="abrirNotificacion('${notifDataStr}', this)">
+                        <div class="chat-avatar ${bgClass} text-white rounded-circle d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; flex-shrink: 0;">
+                            <i class="fa-solid fa-user"></i>
                         </div>
-                        <div style="flex: 1;">
-                            <h4>${notif.nombre}</h4>
-                            <p>${notif.mensaje.substring(0, 60)}${notif.mensaje.length > 60 ? '...' : ''}</p>
-                            <div class="notif-meta">
-                                <span><i class="fa-solid fa-user-tie"></i> ${remitente}</span>
-                                <span>• ${formattedDate}</span>
+                        <div class="chat-details" style="flex: 1; overflow: hidden;">
+                            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+                                <div style="font-weight: bold; font-size: 13px; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${remitente}</div>
+                                <div style="font-size: 11px; color: #94a3b8; flex-shrink: 0;">${formattedDate}</div>
                             </div>
+                            <div style="font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><strong>${notif.nombre}</strong> - ${notif.mensaje}</div>
                         </div>
                     </div>`;
                 });
                 contenedor.innerHTML = html;
             }
         } else {
-            contenedor.innerHTML = '<div style="padding: 20px; text-align: center; color: #e67e22; font-size: 13px;"><i class="fa-solid fa-triangle-exclamation"></i> Error al cargar notificaciones.</div>';
+            contenedor.innerHTML = '<div class="messages-empty-state text-danger"><i class="fa-solid fa-triangle-exclamation mb-2"></i> Error al cargar.</div>';
         }
     } catch (e) {
         console.warn("Ocurrio un error al obtener notificaciones:", e);

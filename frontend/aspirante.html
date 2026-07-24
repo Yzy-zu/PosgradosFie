@@ -49,23 +49,40 @@
 
             <!-- Acciones Superiores Derechas -->
             <div style="display: flex; align-items: center; gap: 20px;">
-                <!-- Menú de Notificaciones -->
-                <div class="notification-container" onclick="toggleNotificationMenu(event)">
+                <!-- Menú de Mensajes -->
+                <div class="notification-container" onclick="toggleNotificationMenu(event)" style="position: relative;">
                     <div class="notification-trigger">
-                        <i class="fa-solid fa-bell"></i>
+                        <i class="fa-solid fa-comment-dots"></i>
                         <span id="notification-badge" class="notification-badge" style="display: none;">0</span>
                     </div>
-                    <div id="notification-dropdown" class="notification-menu">
-                        <div class="menu-header"
-                            style="display: flex; justify-content: space-between; align-items: center;">
-                            <span>Notificaciones</span>
-                            <i class="fa-solid fa-check-double" style="cursor: pointer; color: var(--color-info);"
-                                title="Marcar todas como leídas"
-                                onclick="event.stopPropagation(); alert('En desarrollo: Marcar todas leídas')"></i>
+                    <!-- Mega Dropdown Messages -->
+                    <div id="notification-dropdown" class="messages-mega-dropdown" onclick="event.stopPropagation();">
+                        <div class="messages-mega-header">
+                            <span>Bandeja de Mensajes</span>
+                            <i class="fa-solid fa-check-double" style="cursor: pointer; color: #94a3b8;" title="Marcar todos como leídos" onclick="alert('En desarrollo')"></i>
                         </div>
-                        <div id="notification-list" class="notification-list">
-                            <div style="text-align: center; padding: 20px; color: #7f8c8d;">
-                                <i class="fa-solid fa-spinner fa-spin"></i> Cargando...
+                        <div class="messages-mega-body">
+                            <!-- Lista de chats (Izquierda) -->
+                            <div class="messages-mega-list" id="notification-list">
+                                <div class="messages-empty-state">
+                                    <i class="fa-solid fa-spinner fa-spin mb-2"></i> Cargando...
+                                </div>
+                            </div>
+                            <!-- Vista de lectura de chat (Derecha) -->
+                            <div class="messages-mega-read" id="messages-read-pane" style="display: none;">
+                                <div class="messages-mega-read-header">
+                                    <i class="fa-solid fa-user me-2"></i> <span id="messages-read-title">Gestión Posgrados</span>
+                                </div>
+                                <div class="messages-mega-read-body" id="messages-read-body">
+                                    <!-- Burbuja de mensaje inyectada por JS -->
+                                </div>
+                            </div>
+                            <!-- Vista vacía de lectura (Derecha) -->
+                            <div class="messages-mega-read" id="messages-empty-pane">
+                                <div class="messages-empty-state">
+                                    <i class="fa-regular fa-comments fa-3x mb-3 opacity-25"></i>
+                                    <p>Selecciona un mensaje<br>para ver la conversación</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -328,29 +345,7 @@
 
 
 
-        <!-- Modal de Lectura de Notificación -->
-        <div id="modal-notificacion" class="modal-overlay-modern">
-            <div class="modal-content-modern">
-                <div
-                    style="background: var(--color-primary); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0; font-size: 18px; display: flex; align-items: center; gap: 10px;">
-                        <i class="fa-solid fa-envelope-open-text" style="color: var(--color-info);"></i>
-                        <span id="modal-notif-titulo">Título de Notificación</span>
-                    </h3>
-                    <button onclick="document.getElementById('modal-notificacion').style.display = 'none'"
-                        style="background: none; border: none; color: white; cursor: pointer; font-size: 20px; transition: transform 0.2s;"
-                        onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"><i
-                            class="fa-solid fa-times"></i></button>
-                </div>
-                <div style="padding: 30px; line-height: 1.6; color: var(--color-text); font-size: 15px;">
-                    <p id="modal-notif-cuerpo">Cuerpo del mensaje...</p>
-                    <div style="margin-top: 30px; text-align: right; font-size: 12px; color: #94a3b8;"
-                        id="modal-notif-fecha">
-                        Recibido
-                    </div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Modal de Revisión de Documento -->
         <div id="modal-revision-doc" class="modal-overlay-modern" style="display: none;">
