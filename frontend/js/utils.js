@@ -20,9 +20,24 @@ function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const mainContent = document.querySelector('.main-content');
     
-    if (sidebar) sidebar.classList.toggle('collapsed');
+    if (sidebar) {
+        sidebar.classList.toggle('collapsed');
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        localStorage.setItem('sidebarCollapsed', isCollapsed);
+    }
     if (mainContent) mainContent.classList.toggle('expanded');
 }
+
+// Inicializar estado del sidebar al cargar
+document.addEventListener("DOMContentLoaded", () => {
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (isCollapsed) {
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        if (sidebar) sidebar.classList.add('collapsed');
+        if (mainContent) mainContent.classList.add('expanded');
+    }
+});
 
 // ==== MANEJO DE SESIÓN ====
 function cerrarSesion() {

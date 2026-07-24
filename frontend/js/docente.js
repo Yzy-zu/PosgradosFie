@@ -47,6 +47,14 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     await cargarAspirantesAPI();
     cargarNotificaciones();
+
+    // Restaurar vista desde la URL (Persistencia)
+    const currentHash = window.location.hash.replace("#", "");
+    if (currentHash) {
+        switchView(currentHash);
+    } else {
+        switchView('inicio');
+    }
 });
 
 async function cargarAspirantesAPI() {
@@ -107,6 +115,9 @@ async function cargarAspirantesAPI() {
 function switchView(viewId) {
     mostrarLoader();
 
+    // Actualizar URL sin recargar para persistencia
+    window.history.pushState(null, null, `#${viewId}`);
+
     // Ocultar todas las secciones y quitar fade-in
     const sections = document.querySelectorAll('.view-section');
     sections.forEach(sec => {
@@ -122,22 +133,14 @@ function switchView(viewId) {
         targetSection.classList.add('fade-in');
     }
 
-    // if (viewId === 'notificaciones') {
-    //     cargarNotificaciones();
-    // }
+    // Actualizar estado activo en la barra lateral
+    document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+    const activeLink = document.getElementById(`nav-${viewId}`);
+    if (activeLink) activeLink.classList.add('active');
 
     setTimeout(() => {
         ocultarLoader();
     }, 300);
-
-    // Actualizar clase activa en enlaces de navegación
-    const navLinks = document.querySelectorAll('.sidebar a');
-    navLinks.forEach(link => link.classList.remove('active'));
-
-    const activeNavLink = document.getElementById(`nav-${viewId}`);
-    if (activeNavLink) {
-        activeNavLink.classList.add('active');
-    }
 }
 
 /**
