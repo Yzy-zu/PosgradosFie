@@ -37,7 +37,7 @@
 
         <div id="sidebarMenu">
             <a href="#" class="nav-link active" data-target="dashboard">
-                <i class="fa-solid fa-gauge-high"></i> <span class="text">Dashboard</span>
+                <i class="fa-solid fa-gauge-high"></i> <span class="text">Inicio</span>
             </a>
             <a href="#" class="nav-link" data-target="usuarios">
                 <i class="fa-solid fa-users"></i> <span class="text">Usuarios</span>
@@ -70,7 +70,7 @@
 
         <!-- Header from aspirante.html design -->
         <div class="header-user">
-            <h1 id="seccion-titulo"><i class="fa-solid fa-screwdriver-wrench"></i> Panel de Administración</h1>
+            <h1 id="seccion-titulo"><i class="fa-solid fa-screwdriver-wrench"></i> Panel General</h1>
 
             <div class="profile-container" id="profile-container">
                 <div class="profile-trigger">
@@ -86,8 +86,11 @@
                                 id="menu-correo-admin">admin@umsnh.mx</span></p>
                     </div>
                     <hr>
-                        <a class="menu-link" onclick="abrirModalCambiarPassword()" style="cursor:pointer; display:block; padding:10px 15px; color:#333; text-decoration:none;"><i class="fa-solid fa-key"></i> Restablecer contraseña</a>
-                        <a id="btnCerrarSesion" class="logout-link" style="cursor:pointer; display:block; padding:10px 15px; color:#e74c3c; text-decoration:none;"><i
+                    <a class="menu-link" onclick="abrirModalCambiarPassword()"
+                        style="cursor:pointer; display:block; padding:10px 15px; color:#333; text-decoration:none;"><i
+                            class="fa-solid fa-key"></i> Restablecer contraseña</a>
+                    <a id="btnCerrarSesion" class="logout-link"
+                        style="cursor:pointer; display:block; padding:10px 15px; color:#e74c3c; text-decoration:none;"><i
                             class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</a>
                 </div>
             </div>
@@ -179,7 +182,7 @@
             <div id="seccion-convocatorias" class="content-section d-none">
                 <div class="card mt-2 shadow-sm" style="flex:auto;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0" style="color:#1a1f2c;"><i class="fa-solid fa-bullhorn"></i> Gestión de
+                        <h5 class="mb-0" style="color:#1a1f2c;"><i class="fa-solid fa-bullhorn"></i>
                             Convocatorias</h5>
                         <button class="btn btn-primary" style="width:auto; padding: 8px 15px;"
                             onclick="crearConvocatoria()">
@@ -223,8 +226,7 @@
                     <button class="btn btn-outline-secondary" onclick="cerrarExpedienteAspirante()">
                         <i class="fa-solid fa-arrow-left"></i> Volver a la lista
                     </button>
-                    <h5 class="mb-0 text-primary fw-bold"><i class="fa-solid fa-address-card"></i> Expediente del
-                        Aspirante</h5>
+                    <h5 class="mb-0 text-primary fw-bold"><i class="fa-solid fa-address-card"></i> Expediente</h5>
                 </div>
 
                 <div class="row g-4">
@@ -388,7 +390,7 @@
                                     <label for="notif_estado">Estado Inicial</label>
                                 </div>
                             </div>
-                            
+
                             <div class="col-12 mt-3" id="div_notif_idDestino" style="display: none;">
                                 <div class="form-floating">
                                     <select class="form-select" id="notif_idDestino">
@@ -508,7 +510,8 @@
 
                         <div class="row">
                             <!-- Lado Izquierdo: Detalles Básicos -->
-                            <div class="col-md-6 border-end pe-4" style="max-height: 550px; overflow-y: auto; overflow-x: hidden;">
+                            <div class="col-md-6 border-end pe-4"
+                                style="max-height: 550px; overflow-y: auto; overflow-x: hidden;">
                                 <h6 class="text-primary mb-3"><i class="fa-solid fa-circle-info"></i> Información
                                     General</h6>
 
@@ -530,12 +533,14 @@
 
                                 <div class="mb-2">
                                     <label class="form-label fw-bold text-muted small">Nombre de la Convocatoria</label>
-                                    <input type="text" id="convocatoria_nombre" class="form-control form-control-sm" required>
+                                    <input type="text" id="convocatoria_nombre" class="form-control form-control-sm"
+                                        required>
                                 </div>
 
                                 <div class="mb-2">
                                     <label class="form-label fw-bold text-muted small">Descripción</label>
-                                    <textarea id="convocatoria_descripcion" class="form-control form-control-sm" rows="2"></textarea>
+                                    <textarea id="convocatoria_descripcion" class="form-control form-control-sm"
+                                        rows="2"></textarea>
                                 </div>
 
                                 <div class="row mb-2">
@@ -560,37 +565,67 @@
                                 <div class="row mb-2">
                                     <div class="col-6">
                                         <label class="form-label fw-bold text-muted small">Duración (meses)</label>
-                                        <input type="number" id="convocatoria_duracion" class="form-control form-control-sm" required>
+                                        <input type="number" id="convocatoria_duracion"
+                                            class="form-control form-control-sm" required>
                                     </div>
                                 </div>
 
-                                <h6 class="text-secondary mt-3 mb-2 border-bottom pb-1 small"><i class="fa-regular fa-calendar"></i> Fechas Principales</h6>
+                                <h6 class="text-secondary mt-3 mb-2 border-bottom pb-1 small"><i
+                                        class="fa-regular fa-calendar"></i> Fechas Principales</h6>
                                 <div class="row mb-2">
-                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Fecha Inicio</label><input type="date" id="convocatoria_fecha_inicio" class="form-control form-control-sm" required></div>
-                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Fecha Fin</label><input type="date" id="convocatoria_fecha_fin" class="form-control form-control-sm" required></div>
+                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Fecha
+                                            Inicio</label><input type="date" id="convocatoria_fecha_inicio"
+                                            class="form-control form-control-sm" required></div>
+                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Fecha
+                                            Fin</label><input type="date" id="convocatoria_fecha_fin"
+                                            class="form-control form-control-sm" required></div>
                                 </div>
                                 <div class="row mb-2">
-                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio Documentos</label><input type="date" id="convocatoria_fechaInicioDocumentos" class="form-control form-control-sm" required></div>
-                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Fin Documentos</label><input type="date" id="convocatoria_fechaFinDocumentos" class="form-control form-control-sm" required></div>
+                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio
+                                            Documentos</label><input type="date" id="convocatoria_fechaInicioDocumentos"
+                                            class="form-control form-control-sm" required></div>
+                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Fin
+                                            Documentos</label><input type="date" id="convocatoria_fechaFinDocumentos"
+                                            class="form-control form-control-sm" required></div>
                                 </div>
                                 <div class="row mb-2" id="grupo_entrevistas">
-                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio Entrevistas</label><input type="date" id="convocatoria_fechaEntrevistaInicio" class="form-control form-control-sm"></div>
-                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Fin Entrevistas</label><input type="date" id="convocatoria_fechaEntrevistaFin" class="form-control form-control-sm"></div>
+                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio
+                                            Entrevistas</label><input type="date"
+                                            id="convocatoria_fechaEntrevistaInicio"
+                                            class="form-control form-control-sm"></div>
+                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Fin
+                                            Entrevistas</label><input type="date" id="convocatoria_fechaEntrevistaFin"
+                                            class="form-control form-control-sm"></div>
                                 </div>
                                 <div class="row mb-2">
-                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio Escolar</label><input type="date" id="convocatoria_fechaInicioEscolar" class="form-control form-control-sm" required></div>
-                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Resultados</label><input type="date" id="convocatoria_fechaResultados" class="form-control form-control-sm" required></div>
+                                    <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio
+                                            Escolar</label><input type="date" id="convocatoria_fechaInicioEscolar"
+                                            class="form-control form-control-sm" required></div>
+                                    <div class="col-6"><label
+                                            class="form-label fw-bold text-muted small">Resultados</label><input
+                                            type="date" id="convocatoria_fechaResultados"
+                                            class="form-control form-control-sm" required></div>
                                 </div>
 
                                 <div id="grupo_fechas_academicas">
-                                    <h6 class="text-secondary mt-3 mb-2 border-bottom pb-1 small"><i class="fa-solid fa-graduation-cap"></i> Fechas Académicas (Propedéutico y Examen)</h6>
+                                    <h6 class="text-secondary mt-3 mb-2 border-bottom pb-1 small"><i
+                                            class="fa-solid fa-graduation-cap"></i> Fechas Académicas (Propedéutico y
+                                        Examen)</h6>
                                     <div class="row mb-2">
-                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio Curso</label><input type="date" id="convocatoria_inicioCurso" class="form-control form-control-sm"></div>
-                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Fin Curso</label><input type="date" id="convocatoria_finCurso" class="form-control form-control-sm"></div>
+                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio
+                                                Curso</label><input type="date" id="convocatoria_inicioCurso"
+                                                class="form-control form-control-sm"></div>
+                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Fin
+                                                Curso</label><input type="date" id="convocatoria_finCurso"
+                                                class="form-control form-control-sm"></div>
                                     </div>
                                     <div class="row mb-3">
-                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio Examen</label><input type="date" id="convocatoria_inicioExamen" class="form-control form-control-sm"></div>
-                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Fin Examen</label><input type="date" id="convocatoria_finExamen" class="form-control form-control-sm"></div>
+                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio
+                                                Examen</label><input type="date" id="convocatoria_inicioExamen"
+                                                class="form-control form-control-sm"></div>
+                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Fin
+                                                Examen</label><input type="date" id="convocatoria_finExamen"
+                                                class="form-control form-control-sm"></div>
                                     </div>
                                 </div>
                             </div>

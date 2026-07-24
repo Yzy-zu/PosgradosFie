@@ -1240,7 +1240,7 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
     }
 
     let rolRemitente = "ADMIN";
-    let nombreRemitente = "Administrador del Sistema";
+    let nombreRemitente = "admin";
     try {
         const usr = JSON.parse(sessionStorage.getItem("usuario"));
         if (usr) {
