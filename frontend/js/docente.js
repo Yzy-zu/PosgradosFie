@@ -541,6 +541,14 @@ function abrirNotificacion(remitenteKey, element) {
             const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
             const dateStr = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
             
+            let editadoHtml = '';
+            if (notif.editado_en && notif.creado_en && notif.editado_en !== notif.creado_en) {
+                const editDate = new Date(notif.editado_en);
+                if (Math.abs(editDate - dateObj) > 5000) {
+                    editadoHtml = `<span class="ms-1 text-muted fst-italic">(Editado)</span>`;
+                }
+            }
+            
             // Si cambió de día, ponemos un separador de fecha
             if (dateStr !== lastDateStr) {
                 chatHtml += `
@@ -555,7 +563,7 @@ function abrirNotificacion(remitenteKey, element) {
                 <div style="background: white; padding: 12px 15px; border-radius: 18px 18px 18px 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 14px; color: #1c1e21; max-width: 90%; margin-bottom: 10px; word-wrap: break-word; align-self: flex-start;">
                     <div style="font-weight: bold; color: var(--color-primary); margin-bottom: 5px; font-size: 12px;">${notif.nombre}</div>
                     ${notif.mensaje}
-                    <div style="font-size: 10px; color: #94a3b8; margin-top: 5px; text-align: right;">${timeStr}</div>
+                    <div style="font-size: 10px; color: #94a3b8; margin-top: 5px; text-align: right;">${timeStr} ${editadoHtml}</div>
                 </div>
             `;
         });

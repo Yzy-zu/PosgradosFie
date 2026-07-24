@@ -1413,6 +1413,9 @@ async function cargarNotificacionesAdmin() {
 
             let estadoIcon = notif.activa == 1 || notif.activa === 'true' || notif.activa === true ? '<i class="fa-solid fa-eye text-success"></i>' : '<i class="fa-solid fa-eye-slash text-danger"></i>';
 
+            const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
+            const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
             item.onclick = () => mostrarLecturaNotificacion(notif.id);
 
             item.innerHTML = `
@@ -1420,9 +1423,9 @@ async function cargarNotificacionesAdmin() {
                 <div class="chat-details">
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <div class="chat-title">${notif.nombre}</div>
-                        <div class="chat-meta">${estadoIcon} #${notif.id}</div>
+                        <div class="chat-meta" style="font-size: 11px;">${timeStr}</div>
                     </div>
-                    <div class="chat-preview">${notif.mensaje}</div>
+                    <div class="chat-preview">${estadoIcon} ${notif.mensaje}</div>
                 </div>
             `;
             contenedor.appendChild(item);
@@ -1486,15 +1489,32 @@ function mostrarLecturaNotificacion(id) {
     document.getElementById("chatReadDestino").innerText = `Enviado a: ${destinoText}`;
     document.getElementById("btnEliminarNotifChat").style.display = "inline-block";
 
+    const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
+    const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+    
+    let editadoHtml = '';
+    if (notif.editado_en && notif.creado_en && notif.editado_en !== notif.creado_en) {
+        const editDate = new Date(notif.editado_en);
+        // Si hay una diferencia significativa de más de 5 segundos, se considera editado
+        if (Math.abs(editDate - dateObj) > 5000) {
+            editadoHtml = `<span class="ms-2 text-muted fst-italic" style="font-size: 10px;">(Editado)</span>`;
+        }
+    }
+
     const body = document.getElementById("chatReadBody");
     body.innerHTML = `
+        <div style="text-align: center; margin-bottom: 15px;">
+            <span style="background: #e2e8f0; padding: 2px 8px; border-radius: 12px; font-size: 11px; color: #64748b; font-weight: bold;">${dateStr}</span>
+        </div>
         <div class="chat-bubble">
             <div class="chat-bubble-title">${notif.nombre}</div>
             <div class="chat-bubble-text">${notif.mensaje}</div>
-            <div class="chat-bubble-footer">
+            <div class="chat-bubble-footer d-flex justify-content-between">
                 <span><i class="fa-solid fa-user me-1"></i> Destino: ${destinoText} ${notif.destino === 'individual' ? `(ID: ${notif.idDestino})` : ''}</span>
-                <span>${estadoText}</span>
+                <span>${timeStr} ${editadoHtml}</span>
             </div>
+            <div class="mt-2 text-end">${estadoText}</div>
         </div>
         <div class="text-center mt-4">
             <button class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm" onclick="editarNotificacion(${notif.id})">
