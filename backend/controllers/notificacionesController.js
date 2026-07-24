@@ -6,7 +6,7 @@ const obtenerNotificaciones = async (req, res) => {
         const { destino, idUsuario } = req.query;
         let query = 'SELECT * FROM notificaciones';
         let params = [];
-        
+
         if (destino && idUsuario) {
             query += ' WHERE (destino = ? OR destino = "todos") OR (destino = "individual" AND idDestino = ?)';
             params.push(destino, idUsuario);
@@ -14,7 +14,7 @@ const obtenerNotificaciones = async (req, res) => {
             query += ' WHERE destino = ? OR destino = "todos"';
             params.push(destino);
         }
-        
+
         const [resultados] = await db.query(query, params);
         return res.json(resultados);
     } catch (error) {
@@ -43,7 +43,29 @@ const obtenerNotificacion = async (req, res) => {
 // Crear notificación
 const crearNotificacion = async (req, res) => {
     try {
-        const { nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino } = req.body;
+        const { nombre, mensaje, destino, activa, idDestino } = req.body;
+        const rolRemitente = req.usuario.rol;
+        const idUsuario = req.usuario.id;
+
+        // Obtener nombre del remitente según el rol
+        let nombreRemitente = 'Sistema';
+        try {
+            if (rolRemitente === 'ASPIRANTE') {
+                const [usr] = await db.query('SELECT nombre, primerApellido FROM aspirante WHERE idUsuario = ?', [idUsuario]);
+                if (usr.length > 0) nombreRemitente = `${usr[0].nombre || ''} ${usr[0].primerApellido || ''}`.trim();
+            } else if (rolRemitente === 'DOCENTE') {
+                const [usr] = await db.query('SELECT nombre, primerApellido FROM docente WHERE idUsua = ?', [idUsuario]);
+                if (usr.length > 0) nombreRemitente = `${usr[0].nombre || ''} ${usr[0].primerApellido || ''}`.trim();
+            } else if (rolRemitente === 'ADMIN') {
+                nombreRemitente = 'Administrador del Sistema';
+            } else if (rolRemitente === 'SECRETARIO') {
+                nombreRemitente = 'Secretaría Académica';
+            } else if (rolRemitente === 'COORDINADOR') {
+                nombreRemitente = 'Coordinación';
+            }
+        } catch (e) {
+            console.error("Error al obtener nombreRemitente:", e);
+        }
 
         const [resultado] = await db.query(
             'INSERT INTO notificaciones (nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -65,7 +87,29 @@ const crearNotificacion = async (req, res) => {
 const actualizarNotificacion = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino } = req.body;
+        const { nombre, mensaje, destino, activa, idDestino } = req.body;
+        const rolRemitente = req.usuario.rol;
+        const idUsuario = req.usuario.id;
+
+        // Obtener nombre del remitente según el rol
+        let nombreRemitente = 'Sistema';
+        try {
+            if (rolRemitente === 'ASPIRANTE') {
+                const [usr] = await db.query('SELECT nombre, primerApellido FROM aspirante WHERE idUsuario = ?', [idUsuario]);
+                if (usr.length > 0) nombreRemitente = `${usr[0].nombre || ''} ${usr[0].primerApellido || ''}`.trim();
+            } else if (rolRemitente === 'DOCENTE') {
+                const [usr] = await db.query('SELECT nombre, primerApellido FROM docente WHERE idUsua = ?', [idUsuario]);
+                if (usr.length > 0) nombreRemitente = `${usr[0].nombre || ''} ${usr[0].primerApellido || ''}`.trim();
+            } else if (rolRemitente === 'ADMIN') {
+                nombreRemitente = 'Administrador del Sistema';
+            } else if (rolRemitente === 'SECRETARIO') {
+                nombreRemitente = 'Secretaría Académica';
+            } else if (rolRemitente === 'COORDINADOR') {
+                nombreRemitente = 'Coordinación';
+            }
+        } catch (e) {
+            console.error("Error al obtener nombreRemitente:", e);
+        }
 
         await db.query(
             'UPDATE notificaciones SET nombre = ?, mensaje = ?, destino = ?, activa = ?, rolRemitente = ?, nombreRemitente = ?, idDestino = ? WHERE id = ?',

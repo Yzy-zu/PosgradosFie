@@ -103,10 +103,8 @@
         </div>
 
         <section id="view-inicio" class="view-section active">
-            <h1 id="saludo-usuario" style="margin-bottom: 5px;"><i class="fa-solid fa-graduation-cap"></i> Hola
+            <h1 id="saludo-usuario" style="margin-bottom: 20px;"><i class="fa-solid fa-graduation-cap"></i> Hola
                 Bienvenid@, "Nombre del estudiante"</h1>
-            <h2 style="color: #64748b; font-weight: normal; font-size: 16px; margin-bottom: 20px;">Vista de Menú
-                Principal</h2>
             <div class="dashboard-grid">
                 <div class="card" onclick="switchView('proceso')" style="cursor:pointer;">
                     <h3><i class="fa-solid fa-route" style="color: #8a1c24;"></i> Proceso de admisión</h3>
@@ -362,7 +360,7 @@
                     style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; padding: 20px 25px; display: flex; justify-content: space-between; align-items: center;">
                     <h3
                         style="margin: 0; font-size: 18px; display: flex; align-items: center; gap: 10px; font-weight: 600; color: #f8fafc;">
-                        <i class="fa-solid fa-file-contract" style="color: var(--color-info);"></i>
+                        <i class="fa-solid" style="color: var(--color-info);"></i>
                         <span id="modal-doc-titulo">Detalles del Documento</span>
                     </h3>
                     <button onclick="cerrarModalDoc()"
@@ -395,13 +393,12 @@
                         style="background: #f1f5f9; border-radius: 12px; padding: 18px; border-left: 4px solid #3b82f6; margin-bottom: 20px;">
                         <h5
                             style="margin: 0 0 8px 0; color: #334155; font-size: 14px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
-                            <i class="fa-solid fa-comments" style="color: #3b82f6;"></i> Observaciones y Comentarios del
-                            Evaluador
+                            <i class="fa-solid fa-comments" style="color: #3b82f6;"></i> Comentarios
                         </h5>
-                        <p id="modal-doc-comentarios"
-                            style="margin: 0; color: #475569; font-size: 14px; line-height: 1.5; white-space: pre-wrap;">
-                            El documento se encuentra actualmente bajo revisión por el equipo docente.
-                        </p>
+                        <div id="modal-doc-comentarios"
+                            style="margin: 0; color: #475569; font-size: 14px; line-height: 1.5;">
+                            El documento se encuentra actualmente bajo revisión.
+                        </div>
                     </div>
 
                     <!-- Contenedor para acción de Re-subida -->

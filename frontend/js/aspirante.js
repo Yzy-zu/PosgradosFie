@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                 // Cargar modalidades de admisión dinámicas
                 cargarModalidadesAdmision();
-                
+
                 // Cargar notificaciones al iniciar sesión
                 cargarNotificaciones();
 
@@ -188,7 +188,7 @@ async function cargarNotificaciones() {
 
         if (res.ok) {
             const notificaciones = await res.json();
-            
+
             // Update Badge
             if (badge) {
                 if (notificaciones.length > 0) {
@@ -208,7 +208,7 @@ async function cargarNotificaciones() {
                     const itemClass = isGeneral ? 'notif-general' : 'notif-specific';
                     const iconName = isGeneral ? 'fa-scroll' : 'fa-bell';
                     const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico' : 'Coordinación FIE');
-                    
+
                     const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
                     const formattedDate = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 
@@ -247,12 +247,12 @@ function toggleNotificationMenu(event) {
     event.stopPropagation(); // Evitar que se propague al document
     const menu = document.getElementById('notification-dropdown');
     const profileMenu = document.getElementById('profile-dropdown');
-    
+
     // Si el menú de perfil está abierto, lo cerramos
     if (profileMenu && profileMenu.classList.contains('show')) {
         profileMenu.classList.remove('show');
     }
-    
+
     if (menu) {
         menu.classList.toggle('show');
     }
@@ -262,11 +262,11 @@ function toggleNotificationMenu(event) {
 document.addEventListener('click', function (event) {
     const notificationMenu = document.getElementById('notification-dropdown');
     const profileMenu = document.getElementById('profile-dropdown');
-    
+
     if (notificationMenu && notificationMenu.classList.contains('show') && !event.target.closest('.notification-container')) {
         notificationMenu.classList.remove('show');
     }
-    
+
     if (profileMenu && profileMenu.classList.contains('show') && !event.target.closest('.profile-container')) {
         profileMenu.classList.remove('show');
     }
@@ -684,11 +684,9 @@ async function bloquearInterfazPorRevision() {
         banner.style.boxShadow = 'none';
         banner.style.padding = '0';
         banner.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px; flex-wrap: wrap;">
-                <h3 style="margin:0;"><i class="fa-solid fa-folder-open" style="color: var(--color-guinda);"></i> Tu Expediente Digital</h3>
-                <span class="badge" style="background-color: #3b82f6; color: white; margin-left: 0;">Bajo Revisión Institucional</span>
+            <div style="display: flex; align-items: center; gap: 5px; margin-top: 15px; margin-bottom: 2px; flex-wrap: wrap;">
+                <span class="badge" style="background-color: #3b82f6; color: white; margin-left: 0;">Bajo Revisión, permanece pendiente para cualquier modificacion acerca de tus documentos.</span>
             </div>
-            <p style="color: #64748b; margin-bottom: 15px;">Aquí puedes consultar el estado de cada documento que enviaste. Selecciona uno para ver los detalles y comentarios del comité.</p>
             <div id="docs-dinamicos-container" class="docs-revision-grid">
                 <div style="text-align:center; padding: 20px; grid-column: 1 / -1; color:#777;">
                     <i class="fa-solid fa-spinner fa-spin"></i> Cargando tus documentos...
@@ -718,7 +716,7 @@ async function bloquearInterfazPorRevision() {
             if (res.ok) {
                 const data = await res.json();
                 const solicitudActiva = data.solicitudes.find(s => s.idSolicitud === currentSolicitudId);
-                
+
                 const container = document.getElementById('docs-dinamicos-container');
                 if (container) {
                     if (solicitudActiva && solicitudActiva.documentos && solicitudActiva.documentos.length > 0) {
@@ -736,16 +734,16 @@ async function bloquearInterfazPorRevision() {
 
 function renderizarVistaDinamicaDocumentos(documentos, container) {
     let html = '';
-    
+
     documentos.forEach(doc => {
         let estadoClass = '';
         let badgeClass = '';
         let estadoTexto = '';
         let iconClass = 'fa-file-lines';
-        
+
         const numIntentos = doc.intentos || 1;
 
-        switch(doc.estadoValidacion) {
+        switch (doc.estadoValidacion) {
             case 'APROBADO':
                 estadoClass = 'state-aprobado';
                 badgeClass = 'status-aprobado';
@@ -783,21 +781,21 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
             </div>
         `;
     });
-    
+
     container.innerHTML = html;
 }
 
 function abrirModalDoc(docStr) {
     try {
         const doc = JSON.parse(decodeURIComponent(docStr));
-        
+
         document.getElementById('modal-doc-titulo').innerText = 'Detalles del Documento';
         document.getElementById('modal-doc-requisito').innerText = doc.requisitoNombre || 'Documento adjunto';
-        
+
         const numIntentos = doc.intentos || 1;
         const badge = document.getElementById('modal-doc-estado');
         badge.className = 'status-badge'; // reset
-        
+
         const comentariosWrapper = document.getElementById('modal-doc-comentarios-wrapper');
         const comentariosTxt = document.getElementById('modal-doc-comentarios');
         const resubirContainer = document.getElementById('modal-doc-resubir-container');
@@ -815,7 +813,7 @@ function abrirModalDoc(docStr) {
                         <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: ${colorState};">
                             <span><i class="fa-solid ${iconoState}"></i> Intento ${h.intentos} - ${h.estadoValidacion}</span>
                         </div>
-                        <p style="margin: 0; font-size: 13.5px; color: #334155; line-height: 1.4;">${comTxt}</p>
+                        <p style="margin: 0; font-size: 13.5px; color: #334155; line-height: 1.4; white-space: pre-wrap;">${comTxt}</p>
                     </div>
                 `;
             });
@@ -832,7 +830,7 @@ function abrirModalDoc(docStr) {
             badge.classList.add('status-rechazado');
             badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Rechazado (Intento ${numIntentos} de 3)`;
             if (comentariosWrapper) comentariosWrapper.style.borderLeftColor = '#ef4444';
-            
+
             if (resubirContainer) {
                 resubirContainer.style.display = 'block';
                 if (numIntentos < 3) {
@@ -857,7 +855,7 @@ function abrirModalDoc(docStr) {
             if (comentariosWrapper) comentariosWrapper.style.borderLeftColor = '#f59e0b';
             if (resubirContainer) resubirContainer.style.display = 'none';
         }
-        
+
         const enlace = document.getElementById('modal-doc-enlace');
         if (doc.rutaArchivo) {
             enlace.href = `/uploads/${doc.rutaArchivo}`;
@@ -865,10 +863,10 @@ function abrirModalDoc(docStr) {
         } else {
             enlace.style.display = 'none';
         }
-        
+
         const modal = document.getElementById('modal-revision-doc');
         if (modal) modal.style.display = 'flex';
-        
+
     } catch (e) {
         console.error("Error al abrir modal del documento", e);
     }
