@@ -1376,67 +1376,139 @@ document.getElementById("formAspirante")?.addEventListener("submit", async (e) =
 // MÓDULO NOTIFICACIONES
 // ==========================================
 
+// --- NOTIFICATIONS CHAT STATE ---
+let notificacionActivaId = null;
+let notificacionesGlobales = [];
+
 async function cargarNotificacionesAdmin() {
-    const contenedor = document.getElementById("tablaNotificaciones");
+    const contenedor = document.getElementById("listaNotificacionesChat");
     if (!contenedor) return;
 
     try {
         const respuesta = await fetch("/api/notificaciones");
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
 
-        const notificaciones = await respuesta.json();
+        notificacionesGlobales = await respuesta.json();
         contenedor.innerHTML = "";
 
-        if (!notificaciones || notificaciones.length === 0) {
-            contenedor.innerHTML = `<tr><td colspan='5' class='text-center text-muted py-5'>
-                <i class="fa-solid fa-inbox fs-2 mb-3 opacity-25"></i>
-                <p class="mb-0">No hay notificaciones registradas.</p>
-            </td></tr>`;
+        if (!notificacionesGlobales || notificacionesGlobales.length === 0) {
+            contenedor.innerHTML = `<div class="p-4 text-center text-muted small">
+                <i class="fa-solid fa-inbox fs-3 mb-2 opacity-50"></i><br>No hay mensajes.
+            </div>`;
             return;
         }
 
-        notificaciones.forEach(notif => {
-            const tr = document.createElement("tr");
+        notificacionesGlobales.forEach(notif => {
+            const item = document.createElement("div");
+            item.className = "chat-item";
+            if (notificacionActivaId === notif.id) item.classList.add("active");
 
-            // Etiqueta de destino y estado
             let destinoIcon = 'fa-users';
             let destinoText = notif.destino || 'todos';
-            let destinoBg = 'bg-primary bg-opacity-10 text-primary';
+            let bgClass = 'bg-primary';
 
-            if (destinoText === 'aspirantes') { destinoIcon = 'fa-graduation-cap'; destinoBg = 'bg-info bg-opacity-10 text-info'; }
-            if (destinoText === 'docentes') { destinoIcon = 'fa-chalkboard-user'; destinoBg = 'bg-warning bg-opacity-10 text-warning'; }
-            if (destinoText === 'secretario') { destinoIcon = 'fa-file-signature'; destinoBg = 'bg-success bg-opacity-10 text-success'; }
+            if (destinoText === 'aspirantes') { destinoIcon = 'fa-graduation-cap'; bgClass = 'bg-info'; }
+            if (destinoText === 'docentes') { destinoIcon = 'fa-chalkboard-user'; bgClass = 'bg-warning'; }
+            if (destinoText === 'secretario') { destinoIcon = 'fa-file-signature'; bgClass = 'bg-success'; }
 
-            let estadoClass = notif.activa == 1 || notif.activa === 'true' || notif.activa === true ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger';
-            let estadoText = notif.activa == 1 || notif.activa === 'true' || notif.activa === true ? 'Activa' : 'Inactiva';
+            let estadoIcon = notif.activa == 1 || notif.activa === 'true' || notif.activa === true ? '<i class="fa-solid fa-eye text-success"></i>' : '<i class="fa-solid fa-eye-slash text-danger"></i>';
 
-            tr.style.cursor = "pointer";
-            tr.onclick = () => editarNotificacion(notif.id);
+            item.onclick = () => mostrarLecturaNotificacion(notif.id);
 
-            tr.innerHTML = `
-                <td>${notif.id}</td>
-                <td><span class="fw-bold text-dark">${notif.nombre}</span></td>
-                <td><span class="text-muted small d-inline-block text-truncate" style="max-width: 250px;">${notif.mensaje}</span></td>
-                <td><span class="badge rounded-pill px-3 py-2 ${destinoBg}"><i class="fa-solid ${destinoIcon} me-1"></i> ${destinoText}</span></td>
-                <td><span class="badge rounded-pill px-3 py-2 ${estadoClass}">${estadoText}</span></td>
+            item.innerHTML = `
+                <div class="chat-avatar ${bgClass}"><i class="fa-solid ${destinoIcon}"></i></div>
+                <div class="chat-details">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div class="chat-title">${notif.nombre}</div>
+                        <div class="chat-meta">${estadoIcon} #${notif.id}</div>
+                    </div>
+                    <div class="chat-preview">${notif.mensaje}</div>
+                </div>
             `;
-            contenedor.appendChild(tr);
+            contenedor.appendChild(item);
         });
     } catch (error) {
-        console.warn("Error al cargar notificaciones (API no lista):", error);
-        contenedor.innerHTML = `<tr><td colspan='5' class='text-center text-muted py-5'>
-                <i class="fa-solid fa-plug-circle-exclamation fs-2 mb-3 opacity-25"></i>
-                <p class="mb-0">Esperando conexión con el backend...</p>
-            </td></tr>`;
+        console.warn("Error al cargar notificaciones:", error);
+        contenedor.innerHTML = `<div class="p-4 text-center text-danger small"><i class="fa-solid fa-plug-circle-exclamation mb-2"></i><br>Error al cargar.</div>`;
     }
+}
+
+function mostrarRedaccionNotificacion() {
+    limpiarFormularioNotificacion();
+    document.getElementById("chatReadMode").style.display = "none";
+    document.getElementById("chatComposeMode").style.display = "flex";
+    
+    document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+    notificacionActivaId = null;
+}
+
+function cerrarRedaccionNotificacion() {
+    document.getElementById("chatComposeMode").style.display = "none";
+    document.getElementById("chatReadMode").style.display = "flex";
+    
+    if (!notificacionActivaId) {
+        limpiarLecturaNotificacion();
+    }
+}
+
+function limpiarLecturaNotificacion() {
+    document.getElementById("chatReadTitle").innerText = "Selecciona un mensaje";
+    document.getElementById("chatReadDestino").innerText = "Para leer los detalles";
+    document.getElementById("btnEliminarNotifChat").style.display = "none";
+    
+    const body = document.getElementById("chatReadBody");
+    body.innerHTML = `
+        <div class="d-flex justify-content-center align-items-center h-100 text-muted">
+            <div class="text-center">
+                <i class="fa-regular fa-comments fa-3x mb-3 opacity-50"></i>
+                <p>Selecciona una notificación de la lista <br>para ver el mensaje completo.</p>
+            </div>
+        </div>
+    `;
+}
+
+function mostrarLecturaNotificacion(id) {
+    notificacionActivaId = id;
+    document.getElementById("chatComposeMode").style.display = "none";
+    document.getElementById("chatReadMode").style.display = "flex";
+
+    document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+    // Refrescar clases active re-renderizando listado rápido
+    cargarNotificacionesAdmin(); 
+    
+    const notif = notificacionesGlobales.find(n => n.id === id);
+    if (!notif) return;
+
+    let destinoText = notif.destino || 'todos';
+    let estadoText = notif.activa == 1 || notif.activa === 'true' || notif.activa === true ? '<span class="text-success fw-bold"><i class="fa-solid fa-eye"></i> Visible</span>' : '<span class="text-danger fw-bold"><i class="fa-solid fa-eye-slash"></i> Oculta</span>';
+
+    document.getElementById("chatReadTitle").innerText = notif.nombre;
+    document.getElementById("chatReadDestino").innerText = `Enviado a: ${destinoText}`;
+    document.getElementById("btnEliminarNotifChat").style.display = "inline-block";
+
+    const body = document.getElementById("chatReadBody");
+    body.innerHTML = `
+        <div class="chat-bubble">
+            <div class="chat-bubble-title">${notif.nombre}</div>
+            <div class="chat-bubble-text">${notif.mensaje}</div>
+            <div class="chat-bubble-footer">
+                <span><i class="fa-solid fa-user me-1"></i> Destino: ${destinoText} ${notif.destino === 'individual' ? `(ID: ${notif.idDestino})` : ''}</span>
+                <span>${estadoText}</span>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <button class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm" onclick="editarNotificacion(${notif.id})">
+                <i class="fa-solid fa-pen-to-square"></i> Editar este mensaje
+            </button>
+        </div>
+    `;
 }
 
 function limpiarFormularioNotificacion() {
     const form = document.getElementById("formNotificacion");
     if (form) form.reset();
     document.getElementById("idNotificacionForm").value = "";
-    document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-bell text-primary me-2"></i> Nueva Notificación';
-    document.getElementById("btnEliminarNotificacion").style.display = "none";
+    document.getElementById("notif_estado_switch").checked = true;
 
     const divIdDestino = document.getElementById('div_notif_idDestino');
     if (divIdDestino) divIdDestino.style.display = 'none';
@@ -1444,16 +1516,17 @@ function limpiarFormularioNotificacion() {
 
 async function editarNotificacion(id) {
     try {
-        const respuesta = await fetch(`/api/notificaciones/${id}`);
-        if (!respuesta.ok) throw new Error("Notificación no encontrada");
+        const notif = notificacionesGlobales.find(n => n.id === id);
+        if (!notif) throw new Error("Notificación no encontrada");
 
-        const notif = await respuesta.json();
+        mostrarRedaccionNotificacion();
+        notificacionActivaId = id; 
 
         document.getElementById("idNotificacionForm").value = notif.id;
         document.getElementById("notif_titulo").value = notif.nombre || "";
         document.getElementById("notif_mensaje").value = notif.mensaje || "";
         document.getElementById("notif_destino").value = notif.destino || "todos";
-        document.getElementById("notif_estado").value = (notif.activa == 1 || notif.activa === 'true' || notif.activa === true) ? "1" : "0";
+        document.getElementById("notif_estado_switch").checked = (notif.activa == 1 || notif.activa === 'true' || notif.activa === true);
 
         const notifDestino = document.getElementById("notif_destino");
         if (notifDestino) {
@@ -1465,22 +1538,9 @@ async function editarNotificacion(id) {
             await llenarSelectAspirantes();
             idDestinoEl.value = notif.idDestino || "";
         }
-
-        document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-pen-to-square text-warning me-2"></i> Editar Notificación';
-
-        const btnEliminar = document.getElementById("btnEliminarNotificacion");
-        if (btnEliminar) {
-            btnEliminar.style.display = "inline-block";
-        }
-
-        // Abrir el Modal de Bootstrap
-        const modalElement = document.getElementById("modalNotificacion");
-        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
-        modal.show();
-
     } catch (error) {
-        console.warn("API de edición de notificaciones no lista:", error);
-        Swal.fire('Error', 'La API para obtener la notificación falló.', 'error');
+        console.warn("Error al preparar edición:", error);
+        Swal.fire('Error', 'La notificación no se pudo cargar.', 'error');
     }
 }
 
@@ -1490,7 +1550,7 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
     const idInput = document.getElementById("idNotificacionForm").value;
     const nombre = document.getElementById("notif_titulo").value;
     const mensaje = document.getElementById("notif_mensaje").value;
-    const activa = document.getElementById("notif_estado").value;
+    const activa = document.getElementById("notif_estado_switch").checked ? 1 : 0;
     const destino = document.getElementById("notif_destino").value;
 
     let idDestino = null;
@@ -1524,21 +1584,21 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
 
         if (respuesta.ok && resultado.success !== false) {
             Swal.fire({
-                toast: true,
-                position: 'top-end',
+                title: '¡Enviado!',
+                text: resultado.mensaje || 'Notificación procesada con éxito.',
                 icon: 'success',
-                title: resultado.mensaje || 'Notificación guardada',
-                showConfirmButton: false,
-                timer: 3000
+                timer: 2000,
+                showConfirmButton: false
             });
 
             limpiarFormularioNotificacion();
+            cerrarRedaccionNotificacion();
             cargarNotificacionesAdmin();
-
-            // Cerrar el modal
-            const modalElement = document.getElementById('modalNotificacion');
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            if (modal) modal.hide();
+            
+            // Si es edición, volver a leer el mensaje (luego de recargar la lista el id sigue siendo el mismo)
+            if (idInput) {
+                mostrarLecturaNotificacion(parseInt(idInput, 10));
+            }
         } else {
             Swal.fire('Error', resultado.mensaje || 'No se pudo guardar.', 'error');
         }
@@ -1548,10 +1608,12 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
     }
 });
 
-async function eliminarNotificacion(id) {
+async function eliminarNotificacionActiva() {
+    if(!notificacionActivaId) return;
+    
     const confirmacion = await Swal.fire({
-        title: '¿Eliminar Aviso?',
-        text: "Esta acción no se puede deshacer.",
+        title: '¿Eliminar Mensaje?',
+        text: "Este mensaje será eliminado. ¡No se puede deshacer!",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
@@ -1565,7 +1627,7 @@ async function eliminarNotificacion(id) {
     const token = sessionStorage.getItem("token") || "";
 
     try {
-        const respuesta = await fetch(`/api/notificaciones/${id}`, {
+        const respuesta = await fetch(`/api/notificaciones/${notificacionActivaId}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -1575,21 +1637,17 @@ async function eliminarNotificacion(id) {
         const resultado = await respuesta.json();
 
         if (respuesta.ok && resultado.success !== false) {
-            Swal.fire('Eliminado', 'Notificación eliminada.', 'success');
+            Swal.fire('¡Eliminado!', 'El mensaje ha sido eliminado.', 'success');
 
-            // Cerrar modal si está abierto (ya que el botón de eliminar también vive allí)
-            const modalElement = document.getElementById('modalNotificacion');
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            if (modal) modal.hide();
-
-            limpiarFormularioNotificacion();
+            notificacionActivaId = null;
+            limpiarLecturaNotificacion();
             cargarNotificacionesAdmin();
         } else {
             Swal.fire('Error', resultado.mensaje || "No se pudo eliminar.", 'error');
         }
     } catch (error) {
         console.warn("API de eliminar notificaciones no lista:", error);
-        alert("Ocurrió un error al intentar eliminar la notificación. (API no implementada)");
+        Swal.fire('Error', "Ocurrió un error al intentar eliminar la notificación.", 'error');
     }
 }
 
