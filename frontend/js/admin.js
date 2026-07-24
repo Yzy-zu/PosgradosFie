@@ -1239,17 +1239,7 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
         idDestino = idDestinoEl.value.trim();
     }
 
-    let rolRemitente = "ADMIN";
-    let nombreRemitente = "admin";
-    try {
-        const usr = JSON.parse(sessionStorage.getItem("usuario"));
-        if (usr) {
-            rolRemitente = usr.rol || "ADMIN";
-            nombreRemitente = `${usr.nombre || ''} ${usr.primerApellido || ''}`.trim() || "Administrador del Sistema";
-        }
-    } catch (e) { }
-
-    const datosNotif = { nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino };
+    const datosNotif = { nombre, mensaje, destino, activa, idDestino };
     const token = sessionStorage.getItem("token") || "";
 
     try {

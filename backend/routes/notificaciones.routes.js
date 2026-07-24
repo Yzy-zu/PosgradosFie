@@ -9,14 +9,16 @@ const {
     eliminarNotificacion
 } = require('../controllers/notificacionesController');
 
+const verificarToken = require('../middlewares/auth');
+
 router.get('/', obtenerNotificaciones);
 
 router.get('/:id', obtenerNotificacion);
 
-router.post('/', crearNotificacion);
+router.post('/', verificarToken, crearNotificacion);
 
-router.put('/:id', actualizarNotificacion);
+router.put('/:id', verificarToken, actualizarNotificacion);
 
-router.delete('/:id', eliminarNotificacion);
+router.delete('/:id', verificarToken, eliminarNotificacion);
 
 module.exports = router;
