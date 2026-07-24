@@ -15,6 +15,15 @@ function ocultarLoader() {
     }
 }
 
+// ==== SIDEBAR TOGGLE ====
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    
+    if (sidebar) sidebar.classList.toggle('collapsed');
+    if (mainContent) mainContent.classList.toggle('expanded');
+}
+
 // ==== MANEJO DE SESIÓN ====
 function cerrarSesion() {
     if (confirm("¿Desea cerrar sesión?")) {
@@ -46,3 +55,105 @@ document.addEventListener("DOMContentLoaded", () => {
         profileContainer.addEventListener('click', toggleProfileMenu);
     }
 });
+
+// ==== RESTABLECER CONTRASEÑA ====
+async function abrirModalCambiarPassword() {
+    const dropdown = document.getElementById('profile-dropdown');
+    if (dropdown) dropdown.classList.remove('show');
+
+    const usuarioStr = sessionStorage.getItem('usuario');
+    const token = sessionStorage.getItem('token');
+    
+    if (!usuarioStr || !token) {
+        Swal.fire('Error', 'Sesión no válida', 'error');
+        return;
+    }
+    
+    const usuario = JSON.parse(usuarioStr);
+
+    const { value: formValues } = await Swal.fire({
+        title: `<i class="fa-solid fa-key" style="color: #8a1c24;"></i> Cambiar Contraseña`,
+        html: `
+            <div style="text-align: left; font-size: 14px; color: #334155; margin-top: 10px;">
+                <p style="margin-bottom: 15px; color: #475569;">Por favor, ingresa tu contraseña actual y la nueva contraseña que deseas utilizar.</p>
+                
+                <label style="font-weight: 600; margin-bottom: 5px; display: block; color: #1e293b;">Contraseña Actual:</label>
+                <input id="swal-pass-actual" type="password" class="swal2-input" placeholder="••••••••" style="margin: 0 0 15px 0; width: 100%; box-sizing: border-box; border-radius: 6px;">
+                
+                <label style="font-weight: 600; margin-bottom: 5px; display: block; color: #1e293b;">Nueva Contraseña:</label>
+                <input id="swal-pass-nueva" type="password" class="swal2-input" placeholder="••••••••" style="margin: 0 0 15px 0; width: 100%; box-sizing: border-box; border-radius: 6px;">
+                
+                <label style="font-weight: 600; margin-bottom: 5px; display: block; color: #1e293b;">Confirmar Nueva Contraseña:</label>
+                <input id="swal-pass-confirm" type="password" class="swal2-input" placeholder="••••••••" style="margin: 0; width: 100%; box-sizing: border-box; border-radius: 6px;">
+            </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-floppy-disk"></i> Guardar Cambios',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#8a1c24',
+        preConfirm: () => {
+            const passActual = document.getElementById('swal-pass-actual').value;
+            const passNueva = document.getElementById('swal-pass-nueva').value;
+            const passConfirm = document.getElementById('swal-pass-confirm').value;
+
+            if (!passActual || !passNueva || !passConfirm) {
+                Swal.showValidationMessage('Todos los campos son obligatorios');
+                return false;
+            }
+            if (passNueva !== passConfirm) {
+                Swal.showValidationMessage('La nueva contraseña y la confirmación no coinciden');
+                return false;
+            }
+            if (passActual === passNueva) {
+                Swal.showValidationMessage('La nueva contraseña debe ser diferente a la actual');
+                return false;
+            }
+            
+            return { passwordActual: passActual, passwordNueva: passNueva };
+        }
+    });
+
+    if (formValues) {
+        try {
+            mostrarLoader();
+            const response = await fetch(`/api/usuario/${usuario.id}/password`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(formValues)
+            });
+
+            const data = await response.json();
+            ocultarLoader();
+
+            if (response.ok && data.success) {
+                Swal.fire({
+                    title: '¡Actualizada!',
+                    text: data.mensaje || 'Tu contraseña ha sido actualizada correctamente.',
+                    icon: 'success',
+                    confirmButtonColor: '#8a1c24'
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: data.mensaje || 'Hubo un problema al cambiar la contraseña.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
+            }
+        } catch (error) {
+            console.error('Error al cambiar contraseña:', error);
+            ocultarLoader();
+            Swal.fire({
+                title: 'Error',
+                text: 'Error de conexión con el servidor.',
+                icon: 'error',
+                confirmButtonColor: '#ef4444'
+            });
+        }
+    }
+}
+
