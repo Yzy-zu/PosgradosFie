@@ -49,6 +49,8 @@ const crearConvocatorias = async (req, res) => {
             );
         }
 
+        // Emitir evento global a todos los clientes (Admin, Docentes, Aspirantes)
+        req.app.get('io').emit('actualizacionGlobal');
         return res.json({ success: true, mensaje: 'Convocatoria creada correctamente' });
     } catch (error) {
         console.error('Error en crearConvocatorias:', error);
@@ -99,6 +101,8 @@ const actualizarConvocatorias = async (req, res) => {
             }
         }
 
+        // Emitir evento global a todos los clientes
+        req.app.get('io').emit('actualizacionGlobal');
         return res.json({ success: true, mensaje: 'Convocatoria actualizada correctamente' });
     } catch (error) {
         console.error('Error en actualizarConvocatorias:', error);
@@ -111,6 +115,9 @@ const eliminarConvocatorias = async (req, res) => {
     try {
         const { id } = req.params;
         await db.query('DELETE FROM convocatorias WHERE id=?', [id]);
+        
+        // Emitir evento global a todos los clientes
+        req.app.get('io').emit('actualizacionGlobal');
         return res.json({ success: true, mensaje: 'Convocatoria eliminada correctamente' });
     } catch (error) {
         console.error('Error en eliminarConvocatorias:', error);

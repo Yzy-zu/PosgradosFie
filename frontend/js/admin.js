@@ -1,3 +1,18 @@
+// Conexión Socket.io
+const socket = io();
+socket.on('actualizacionGlobal', () => {
+    // Recargar vista actual si hay un cambio en el sistema
+    const currentHash = window.location.hash.replace("#", "");
+    if (currentHash === 'dashboard' || currentHash === '') {
+        if (typeof cargarDashboard === 'function') cargarDashboard();
+    } else if (currentHash === 'usuarios') {
+        if (typeof cargarUsuarios === 'function') cargarUsuarios();
+    } else if (currentHash === 'convocatorias') {
+        if (typeof cargarConvocatorias === 'function') cargarConvocatorias();
+    } else if (currentHash === 'aspirantes') {
+        if (typeof cargarAspirantes === 'function') cargarAspirantes();
+    }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
     validarSesion();

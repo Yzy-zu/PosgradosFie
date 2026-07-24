@@ -23,7 +23,7 @@ const crearSolicitud = async (req, res) => {
 
         // Buscar solicitudes activas del aspirante
         const [solicitudes] = await db.query(
-            "SELECT * FROM solicitud WHERE idAspi = ? AND estado IN ('PENDIENTE', 'EN_REVISION')",
+            "SELECT * FROM solicitud WHERE idAspi = ? AND estado != 'CANCELADO'",
             [idAspi]
         );
 
@@ -48,6 +48,9 @@ const crearSolicitud = async (req, res) => {
             [idAspi, idC]
         );
 
+        // Emitir evento global
+        req.app.get('io').emit('actualizacionGlobal');
+
         return res.status(201).json({
             mensaje: 'Solicitud creada correctamente.',
             idSolicitud: resultado.insertId
@@ -67,7 +70,7 @@ const getSolicitudActiva = async (req, res) => {
             `SELECT s.*, c.tipo AS nivel
              FROM solicitud s
              JOIN convocatorias c ON s.idConvocatoria = c.id
-             WHERE s.idAspi = ? AND s.estado IN ('PENDIENTE', 'EN_REVISION')
+             WHERE s.idAspi = ? AND s.estado != 'CANCELADO'
              ORDER BY s.creadoEn DESC LIMIT 1`,
             [idAspi]
         );

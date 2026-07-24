@@ -1,10 +1,31 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const http = require('http'); // Agregado para Socket.io
+const { Server } = require('socket.io'); // Agregado para Socket.io
 require('dotenv').config();
 require('./database/db');
 
 const app = express();
+const server = http.createServer(app); // Servidor HTTP
+const io = new Server(server, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST', 'PUT', 'DELETE']
+    }
+});
+
+// Guardar la instancia de socket.io para usarla en los controladores
+app.set('io', io);
+
+io.on('connection', (socket) => {
+    console.log('Nuevo cliente conectado vía Socket.io:', socket.id);
+    
+    socket.on('disconnect', () => {
+        console.log('Cliente desconectado:', socket.id);
+    });
+});
+
 const PORT = process.env.PORT || 4000;
 
 app.use(cors({
@@ -38,6 +59,6 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/aspirante.html'));
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Servidor listo en http://localhost:${PORT}`);
-})
+});

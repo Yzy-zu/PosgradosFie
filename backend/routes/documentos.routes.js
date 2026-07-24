@@ -9,10 +9,13 @@ const {
     obtenerDocumento,
     actualizarDocumento,
     eliminarDocumento,
-    evaluarDocumento
+    evaluarDocumento,
+    reemplazarDocumento
 } = require('../controllers/documentoController');
 
 router.post('/', upload.single('archivo'), subirDocumento);
+
+router.put('/reemplazar/:id', upload.single('archivo'), reemplazarDocumento);
 
 router.get('/', obtenerDocumentos);
 

@@ -149,10 +149,45 @@ const eliminarUsuario = async (req, res) => {
     }
 };
 
+// Cambiar contraseña del usuario
+const cambiarPassword = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { passwordActual, passwordNueva } = req.body;
+
+        if (!passwordActual || !passwordNueva) {
+            return res.status(400).json({ success: false, mensaje: 'Debe proporcionar la contraseña actual y la nueva' });
+        }
+
+        // Obtener usuario para verificar contraseña actual
+        const [resultados] = await db.query('SELECT contraseña FROM usuario WHERE id = ?', [id]);
+        
+        if (resultados.length === 0) {
+            return res.status(404).json({ success: false, mensaje: 'Usuario no encontrado' });
+        }
+
+        const usuarioDB = resultados[0];
+        
+        // Verificar si la contraseña actual coincide (está en texto plano)
+        if (usuarioDB.contraseña !== passwordActual) {
+            return res.status(401).json({ success: false, mensaje: 'La contraseña actual es incorrecta' });
+        }
+
+        // Actualizar contraseña
+        await db.query('UPDATE usuario SET contraseña = ? WHERE id = ?', [passwordNueva, id]);
+
+        return res.json({ success: true, mensaje: 'Contraseña actualizada correctamente' });
+    } catch (error) {
+        console.error('Error en cambiarPassword:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al cambiar la contraseña' });
+    }
+};
+
 module.exports = {
     obtenerUsuarios,
     obtenerUsuario,
     crearUsuario,
     actualizarUsuario,
-    eliminarUsuario
+    eliminarUsuario,
+    cambiarPassword
 };

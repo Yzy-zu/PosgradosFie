@@ -3,6 +3,15 @@ let aspirantes = [];
 let idAspiranteActivo = null;
 let documentoARechazar = null;
 
+// Conexión Socket.io
+const socket = io();
+socket.on('actualizacionGlobal', () => {
+    // Recargar vista actual si hay un cambio (ej. aspirante sube nuevo documento)
+    if (typeof cargarExpedientesAspirantes === 'function') {
+        cargarExpedientesAspirantes();
+    }
+});
+
 // Inicialización de la Aplicación
 document.addEventListener("DOMContentLoaded", async function () {
     console.log("Portal de Docente Inicializado.");
@@ -37,6 +46,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     await cargarAspirantesAPI();
+    cargarNotificaciones();
 });
 
 async function cargarAspirantesAPI() {
@@ -55,7 +65,7 @@ async function cargarAspirantesAPI() {
                 const asp = exp.perfil;
                 // Buscar la solicitud activa (en revision o pendiente) o la primera (que será la más reciente gracias al ORDER BY)
                 const sol = exp.solicitudes && exp.solicitudes.length > 0
-                    ? (exp.solicitudes.find(s => ['EN_REVISION', 'PENDIENTE'].includes(s.estado)) || exp.solicitudes[0])
+                    ? (exp.solicitudes.find(s => ['EN_REVISION', 'PENDIENTE', 'RECHAZADO', 'INCOMPLETO', 'APROBADO'].includes(s.estado)) || exp.solicitudes[0])
                     : null;
 
                 let docList = [];
@@ -112,9 +122,9 @@ function switchView(viewId) {
         targetSection.classList.add('fade-in');
     }
 
-    if (viewId === 'notificaciones') {
-        cargarNotificaciones();
-    }
+    // if (viewId === 'notificaciones') {
+    //     cargarNotificaciones();
+    // }
 
     setTimeout(() => {
         ocultarLoader();
@@ -526,11 +536,12 @@ async function guardarRechazoDocumento() {
  * Carga las notificaciones desde la API
  */
 async function cargarNotificaciones() {
-    const contenedor = document.getElementById('contenedor-notificaciones');
+    const contenedor = document.getElementById('notification-list');
+    const badge = document.getElementById('notification-badge');
     if (!contenedor) return;
 
     // Estado de carga inicial
-    contenedor.innerHTML = '<div class="card" style="text-align: center; padding: 40px; color: #7f8c8d;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i><p>Cargando notificaciones...</p></div>';
+    contenedor.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;"><i class="fa-solid fa-spinner fa-spin"></i> Cargando...</div>';
 
     let idUsuario = "";
     try {
@@ -547,35 +558,86 @@ async function cargarNotificaciones() {
 
         if (res.ok) {
             const notificaciones = await res.json();
+            
+            // Update Badge
+            if (badge) {
+                if (notificaciones.length > 0) {
+                    badge.style.display = 'block';
+                    badge.innerText = notificaciones.length;
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+
             if (!notificaciones || notificaciones.length === 0) {
-                contenedor.innerHTML = '<div class="card" style="text-align: center; color: #7f8c8d;"><p>No tienes notificaciones nuevas.</p></div>';
+                contenedor.innerHTML = '<div style="padding: 20px; text-align: center; color: #7f8c8d; font-size: 13px;">No tienes notificaciones nuevas.</div>';
             } else {
                 let html = '';
                 notificaciones.forEach(notif => {
                     const isGeneral = notif.destino === 'todos';
-                    const colorBorder = isGeneral ? '#2980b9' : '#8a1c24';
-                    const colorTitle = isGeneral ? '#2c3e50' : '#8a1c24';
-                    const iconName = isGeneral ? 'fa-scroll' : 'fa-triangle-exclamation';
-                    const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico de Posgrado' : 'Coordinación Académica FIE');
-
-                    // Formatear fecha
+                    const itemClass = isGeneral ? 'notif-general' : 'notif-specific';
+                    const iconName = isGeneral ? 'fa-scroll' : 'fa-bell';
+                    const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico' : 'Coordinación FIE');
+                    
                     const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
-                    const formattedDate = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+                    const formattedDate = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+
+                    const notifDataStr = encodeURIComponent(JSON.stringify(notif));
 
                     html += `
-                    <div class="card" style="margin-bottom: 15px; border-left: 5px solid ${colorBorder}; text-align: left; display: block;">
-                        <h4 style="color: ${colorTitle}; margin-bottom: 5px;"><i class="fa-solid ${iconName}"></i> ${notif.nombre}</h4>
-                        <p style="font-size: 13px; color: #555; line-height: 1.4; white-space: pre-wrap; margin: 0;">${notif.mensaje}</p>
-                        <small style="color: #777; display: block; margin-top: 8px;"><i class="fa-solid fa-user-tie"></i> Enviado por: ${remitente} | ${formattedDate}</small>
+                    <div class="notification-item-modern ${itemClass}" style="cursor: pointer;">
+                        <div class="notif-icon">
+                            <i class="fa-solid ${iconName}"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <h4>${notif.nombre}</h4>
+                            <p>${notif.mensaje.substring(0, 60)}${notif.mensaje.length > 60 ? '...' : ''}</p>
+                            <div class="notif-meta">
+                                <span><i class="fa-solid fa-user-tie"></i> ${remitente}</span>
+                                <span>• ${formattedDate}</span>
+                            </div>
+                        </div>
                     </div>`;
                 });
                 contenedor.innerHTML = html;
             }
         } else {
-            contenedor.innerHTML = '<div class="card"><p><strong><i class="fa-solid fa-triangle-exclamation" style="color: #e67e22;"></i> Sistema FIE:</strong> Las notificaciones no están disponibles por el momento.</p></div>';
+            contenedor.innerHTML = '<div style="padding: 20px; text-align: center; color: #e67e22; font-size: 13px;"><i class="fa-solid fa-triangle-exclamation"></i> Error al cargar notificaciones.</div>';
         }
     } catch (e) {
-        console.warn("Error al obtener notificaciones:", e);
-        contenedor.innerHTML = '<div class="card"><p><strong><i class="fa-solid fa-triangle-exclamation" style="color: #e67e22;"></i> Sistema FIE:</strong> Error de conexión al cargar notificaciones.</p></div>';
+        console.warn("Ocurrio un error al obtener notificaciones:", e);
+        contenedor.innerHTML = '<div style="padding: 20px; text-align: center; color: #7f8c8d; font-size: 13px;">Modo Offline: Avisos no disponibles.</div>';
     }
 }
+
+/**
+ * Muestra u oculta el menú de notificaciones
+ */
+function toggleNotificationMenu(event) {
+    event.stopPropagation(); // Evitar que se propague al document
+    const menu = document.getElementById('notification-dropdown');
+    const profileMenu = document.getElementById('profile-dropdown');
+    
+    // Si el menú de perfil está abierto, lo cerramos
+    if (profileMenu && profileMenu.classList.contains('show')) {
+        profileMenu.classList.remove('show');
+    }
+    
+    if (menu) {
+        menu.classList.toggle('show');
+    }
+}
+
+// Cerrar los menús al hacer click fuera
+document.addEventListener('click', function (event) {
+    const notificationMenu = document.getElementById('notification-dropdown');
+    const profileMenu = document.getElementById('profile-dropdown');
+    
+    if (notificationMenu && notificationMenu.classList.contains('show') && !event.target.closest('.notification-container')) {
+        notificationMenu.classList.remove('show');
+    }
+    
+    if (profileMenu && profileMenu.classList.contains('show') && !event.target.closest('.profile-container')) {
+        profileMenu.classList.remove('show');
+    }
+});

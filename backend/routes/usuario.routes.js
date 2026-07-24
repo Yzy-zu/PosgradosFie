@@ -7,7 +7,8 @@ const {
     obtenerUsuario,
     crearUsuario,
     actualizarUsuario,
-    eliminarUsuario
+    eliminarUsuario,
+    cambiarPassword
 } = require('../controllers/usuarioController');
 
 // PÚBLICAS: No llevan 'verificarToken' para que la tabla cargue libremente
@@ -18,5 +19,6 @@ router.get('/:id', obtenerUsuario);
 router.post('/', verificarToken, crearUsuario);
 router.put('/:id', verificarToken, actualizarUsuario);
 router.delete('/:id', verificarToken, eliminarUsuario);
+router.put('/:id/password', verificarToken, cambiarPassword);
 
 module.exports = router;
