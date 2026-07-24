@@ -22,7 +22,10 @@
 
     <!-- BARRA LATERAL DE NAVEGACIÓN -->
     <nav class="sidebar">
-        <h2><i class="fa-solid fa-bars-staggered"></i> Navegación</h2>
+        <div class="sidebar-header">
+            <img src="css/umsnh-logo.png" alt="Logo" class="sidebar-logo" onclick="toggleSidebar()">
+            <span class="text">FIE DOCENTE</span>
+        </div>
         <a id="nav-inicio" onclick="switchView('inicio')" class="active"><i class="fa-solid fa-chalkboard-user"></i> <span class="text">Inicio / Resumen</span>
             </a>
         <a id="nav-aspirantes" onclick="switchView('aspirantes')"><i class="fa-solid fa-id-card-clip"></i> <span class="text">Revisión de
