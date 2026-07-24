@@ -10,7 +10,8 @@ const {
     registrarAspirante,
     obtenerAspirantes,
     obtenerAspirantePorId,
-    obtenerExpediente
+    obtenerExpediente,
+    obtenerTodosLosExpedientes
 } = require('../controllers/aspiranteController');
 
 // ==========================================
@@ -20,6 +21,7 @@ const {
 // Registro público: Cualquier persona externa puede crear su cuenta de aspirante
 router.post('/registro', registrarAspirante);
 router.get('/', obtenerAspirantes);
+router.get('/expedientes/todos', obtenerTodosLosExpedientes);
 router.get('/:id', obtenerAspirantePorId);
 router.get('/:id/expediente', obtenerExpediente);
 

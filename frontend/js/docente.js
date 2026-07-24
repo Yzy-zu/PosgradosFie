@@ -3,43 +3,102 @@ let aspirantes = [];
 let idAspiranteActivo = null;
 let documentoARechazar = null;
 
-// Inicialización de la Aplicación
-document.addEventListener("DOMContentLoaded", async function() {
-    console.log("Portal de Docente Inicializado.");
+// Conexión Socket.io
+const socket = io();
+socket.on('actualizacionGlobal', () => {
+    // Recargar vista actual si hay un cambio (ej. aspirante sube nuevo documento)
+    if (typeof cargarExpedientesAspirantes === 'function') {
+        cargarExpedientesAspirantes();
+    }
+});
 
+// Inicialización de la Aplicación
+document.addEventListener("DOMContentLoaded", async function () {
+    console.log("Portal de Docente Inicializado.");
+    async function cargarDocente(id) {
+        const datos = sessionStorage.getItem('token');
+        try {
+            const docente = await fetch(`/api/docentes/${id}`, {
+                headers: {
+                    "Authorization": `Bearer ${datos}`
+                }
+            })
+            const data = await docente.json()
+            return data
+        } catch (error) {
+            console.log(error)
+        }
+
+    }
     // Configurar el saludo de usuario personalizado
-    const usuarioLogueado = sessionStorage.getItem('usuarioLogueado') || "Docente Evaluador";
+    const token = sessionStorage.getItem('usuario');
+    const usuario = JSON.parse(token);
     const saludo = document.getElementById('saludo-usuario');
+    const datitos = await cargarDocente(usuario.id);
+    console.log(datitos);
     if (saludo) {
-        saludo.innerText = `Hola Bienvenid@, ${usuarioLogueado}`;
+        saludo.innerText = `Hola Bienvenid@, ${datitos.nombre}`;
+        const lblNombre = document.getElementById('menu-nombre-docente');
+        const lblCorreo = document.getElementById('menu-correo-docente');
+        if (lblNombre) lblNombre.innerText = `${datitos.nombre}`;
+        if (lblCorreo) lblCorreo.innerText = `${usuario.correo}`;
+
     }
 
     await cargarAspirantesAPI();
+    cargarNotificaciones();
+
+    // Restaurar vista desde la URL (Persistencia)
+    const currentHash = window.location.hash.replace("#", "");
+    if (currentHash) {
+        switchView(currentHash);
+    } else {
+        switchView('inicio');
+    }
 });
 
 async function cargarAspirantesAPI() {
     try {
-        const token = sessionStorage.getItem("token") || "";
-        const respuesta = await fetch('/api/aspirante', {
+        const token = sessionStorage.getItem("token");
+        const respuesta = await fetch('/api/aspirante/expedientes/todos', {
             headers: {
                 "Authorization": `Bearer ${token}`
             }
         });
-        
+
         if (respuesta.ok) {
             const data = await respuesta.json();
             // Mapear los datos de la BD a la estructura que requiere la vista
-            aspirantes = data.map(asp => ({
-                id: asp.id,
-                nombre: `${asp.nombre || ''} ${asp.primerApellido || ''} ${asp.segundoApellido || ''}`.trim() || "Sin nombre",
-                programa: "Por asignar",
-                correo: asp.correo || "Sin correo",
-                fechaRegistro: asp.fechaNacimiento ? asp.fechaNacimiento.split('T')[0] : "N/A",
-                mecanismo: "Regular",
-                nivel: "Por asignar",
-                documentos: [] // Vacío por ahora, se llenará cuando se tenga la API de documentos
-            }));
-            
+            aspirantes = data.map(exp => {
+                const asp = exp.perfil;
+                // Buscar la solicitud activa (en revision o pendiente) o la primera (que será la más reciente gracias al ORDER BY)
+                const sol = exp.solicitudes && exp.solicitudes.length > 0
+                    ? (exp.solicitudes.find(s => ['EN_REVISION', 'PENDIENTE', 'RECHAZADO', 'INCOMPLETO', 'APROBADO'].includes(s.estado)) || exp.solicitudes[0])
+                    : null;
+
+                let docList = [];
+                if (sol && sol.documentos) {
+                    docList = sol.documentos.map(d => ({
+                        id: d.idDocumento,
+                        nombre: d.requisitoNombre,
+                        url: `/uploads/${d.rutaArchivo}`,
+                        estado: d.estadoValidacion.toLowerCase(),
+                        note: d.comentarios || ""
+                    }));
+                }
+
+                return {
+                    id: asp.id,
+                    nombre: `${asp.nombre || ''} ${asp.primerApellido || ''} ${asp.segundoApellido || ''}`.trim() || "Sin nombre",
+                    programa: sol ? sol.convocatoriaNombre : "Sin Solicitud",
+                    correo: asp.correo || "Sin correo",
+                    fechaRegistro: sol ? new Date(sol.creadoEn).toISOString().split('T')[0] : (asp.fechaNacimiento ? asp.fechaNacimiento.split('T')[0] : "N/A"),
+                    mecanismo: sol ? sol.tipoAdmision.replace(/_/g, ' ') : "N/A",
+                    nivel: sol && sol.posgrado_id == 2 ? "Doctorado" : (sol && sol.posgrado_id == 1 ? "Maestría" : "Por asignar"),
+                    documentos: docList
+                };
+            });
+
             actualizarEstadisticas();
             filtrarYMostrarAspirantes();
         } else {
@@ -56,6 +115,9 @@ async function cargarAspirantesAPI() {
 function switchView(viewId) {
     mostrarLoader();
 
+    // Actualizar URL sin recargar para persistencia
+    window.history.pushState(null, null, `#${viewId}`);
+
     // Ocultar todas las secciones y quitar fade-in
     const sections = document.querySelectorAll('.view-section');
     sections.forEach(sec => {
@@ -70,19 +132,15 @@ function switchView(viewId) {
         void targetSection.offsetWidth; // Trigger reflow
         targetSection.classList.add('fade-in');
     }
-    
+
+    // Actualizar estado activo en la barra lateral
+    document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+    const activeLink = document.getElementById(`nav-${viewId}`);
+    if (activeLink) activeLink.classList.add('active');
+
     setTimeout(() => {
         ocultarLoader();
     }, 300);
-
-    // Actualizar clase activa en enlaces de navegación
-    const navLinks = document.querySelectorAll('.sidebar a');
-    navLinks.forEach(link => link.classList.remove('active'));
-
-    const activeNavLink = document.getElementById(`nav-${viewId}`);
-    if (activeNavLink) {
-        activeNavLink.classList.add('active');
-    }
 }
 
 /**
@@ -146,7 +204,7 @@ function actualizarEstadisticas() {
     if (totalDocs > 0) {
         let porcAprobado = (docsAprobados / totalDocs) * 100;
         let porcRechazado = (docsRechazados / totalDocs) * 100;
-        
+
         let finAprobados = porcAprobado;
         let finRechazados = finAprobados + porcRechazado;
 
@@ -180,10 +238,10 @@ function filtrarYMostrarAspirantes() {
     const aspirantesFiltrados = aspirantes.filter(asp => {
         // Filtro por nombre
         const matchesNombre = asp.nombre.toLowerCase().includes(queryNombre);
-        
+
         // Filtro por programa
         const matchesProg = filtroProg === "" || asp.programa.includes(filtroProg);
-        
+
         // Determinar estado general del aspirante
         let estadoGeneral = 'pendiente';
         const tieneRechazados = asp.documentos.some(d => d.estado === 'rechazado');
@@ -219,7 +277,7 @@ function renderizarListaAspirantes(lista) {
         // Determinar estado general para el Badge visual de la lista
         const tieneRechazados = asp.documentos.some(d => d.estado === 'rechazado');
         const tienePendientes = asp.documentos.some(d => d.estado === 'pendiente');
-        
+
         let badgeHtml = "";
         if (tieneRechazados) {
             badgeHtml = `<span class="badge badge-rechazado">Rechazado / Inc.</span>`;
@@ -248,7 +306,7 @@ function renderizarListaAspirantes(lista) {
  */
 function seleccionarAspirante(id) {
     idAspiranteActivo = id;
-    
+
     // Volver a renderizar la lista para actualizar el resaltado ".active"
     filtrarYMostrarAspirantes();
 
@@ -285,7 +343,7 @@ function seleccionarAspirante(id) {
     }
 
     // Ocultar previsualización de documentos previos
-    cerrarVistaPrevia();
+    // cerrarVistaPrevia(); (No lo necesitamos ejecutar aquí porque ahora es modal y ya debería estar cerrado)
 
     // Rellenar tabla de documentos
     const tbody = document.getElementById('tabla-documentos-cuerpo');
@@ -293,7 +351,7 @@ function seleccionarAspirante(id) {
 
     asp.documentos.forEach(doc => {
         const tr = document.createElement('tr');
-        
+
         // Estatus visual del documento
         let statusBadge = "";
         if (doc.estado === 'aprobado') {
@@ -333,52 +391,73 @@ function verDocumento(docId) {
     const asp = aspirantes.find(a => a.id === idAspiranteActivo);
     if (!asp) return;
 
-    const doc = asp.documentos.find(d => d.id === docId);
+    const doc = asp.documentos.find(d => d.id == docId);
     if (!doc) return;
 
-    const previewBox = document.getElementById('contenedor-preview');
+    const previewBox = document.getElementById('modal-visor-documento');
     const previewNombre = document.getElementById('preview-nombre-doc');
     const previewTexto = document.getElementById('preview-contenido-texto');
 
     previewNombre.innerText = doc.nombre;
-    previewTexto.innerText = doc.content;
-    
-    previewBox.style.display = 'block';
-    
-    // Hacer scroll automático hacia la visualización de la vista previa
-    previewBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Generar visor dependiendo si es imagen o PDF
+    const extension = doc.url.split('.').pop().toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
+        previewTexto.innerHTML = `<img src="${doc.url}" alt="${doc.nombre}" style="max-width: 100%; max-height: 100%; display: block; margin: 0 auto; object-fit: contain;">`;
+    } else {
+        previewTexto.innerHTML = `<iframe src="${doc.url}" width="100%" height="100%" style="border: none; flex: 1;"></iframe>`;
+    }
+
+    previewBox.style.display = 'flex';
 }
 
 /**
  * Oculta el visor del documento
  */
 function cerrarVistaPrevia() {
-    const previewBox = document.getElementById('contenedor-preview');
+    const previewBox = document.getElementById('modal-visor-documento');
     if (previewBox) {
         previewBox.style.display = 'none';
+        // Limpiar el contenido para que deje de cargar el iframe
+        document.getElementById('preview-contenido-texto').innerHTML = '';
     }
 }
 
 /**
  * Aprueba el documento indicado del aspirante activo, guardando los cambios
  */
-function aprobarDocumento(docId) {
+async function aprobarDocumento(docId) {
     const aspIndex = aspirantes.findIndex(a => a.id === idAspiranteActivo);
     if (aspIndex === -1) return;
 
-    const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id === docId);
+    const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id == docId);
     if (docIndex === -1) return;
 
-    // Actualizar estado en memoria
-    aspirantes[aspIndex].documentos[docIndex].estado = 'aprobado';
-    aspirantes[aspIndex].documentos[docIndex].note = ''; // Limpiar nota previa si existía
+    try {
+        const token = sessionStorage.getItem("token") || "";
+        const res = await fetch(`/api/documentos/evaluar/${docId}`, {
+            method: 'PUT',
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ estadoValidacion: 'APROBADO', comentarios: '' })
+        });
 
-    // Guardar en almacenamiento local
-    sessionStorage.setItem("docenteAspirantes", JSON.stringify(aspirantes));
+        if (res.ok) {
+            aspirantes[aspIndex].documentos[docIndex].estado = 'aprobado';
+            aspirantes[aspIndex].documentos[docIndex].note = '';
 
-    // Refrescar vistas
-    actualizarEstadisticas();
-    seleccionarAspirante(idAspiranteActivo);
+            actualizarEstadisticas();
+            seleccionarAspirante(idAspiranteActivo);
+        } else {
+            const err = await res.json();
+            alert("No se pudo aprobar el documento: " + (err.mensaje || "Error"));
+        }
+    } catch (e) {
+        console.error("Error al aprobar documento:", e);
+        alert("Ocurrió un error al comunicarse con el servidor.");
+    }
 }
 
 /**
@@ -388,7 +467,7 @@ function rechazarDocumentoPrompt(docId) {
     const asp = aspirantes.find(a => a.id === idAspiranteActivo);
     if (!asp) return;
 
-    const doc = asp.documentos.find(d => d.id === docId);
+    const doc = asp.documentos.find(d => d.id == docId);
     if (!doc) return;
 
     documentoARechazar = docId;
@@ -414,9 +493,9 @@ function cerrarModalRechazo() {
 /**
  * Confirma el cambio del estatus a rechazado guardando la nota explicativa
  */
-function guardarRechazoDocumento() {
+async function guardarRechazoDocumento() {
     const noteText = document.getElementById('modal-nota-texto').value.trim();
-    
+
     if (noteText === "") {
         alert("Por favor, ingresa el motivo del rechazo del archivo. Es obligatorio informarle al aspirante el por qué.");
         return;
@@ -425,20 +504,143 @@ function guardarRechazoDocumento() {
     const aspIndex = aspirantes.findIndex(a => a.id === idAspiranteActivo);
     if (aspIndex === -1) return;
 
-    const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id === documentoARechazar);
+    const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id == documentoARechazar);
     if (docIndex === -1) return;
 
-    // Actualizar estado y nota en memoria
-    aspirantes[aspIndex].documentos[docIndex].estado = 'rechazado';
-    aspirantes[aspIndex].documentos[docIndex].note = noteText;
+    try {
+        const token = sessionStorage.getItem("token") || "";
+        const res = await fetch(`/api/documentos/evaluar/${documentoARechazar}`, {
+            method: 'PUT',
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ estadoValidacion: 'RECHAZADO', comentarios: noteText })
+        });
 
-    // Guardar en almacenamiento local
-    sessionStorage.setItem("docenteAspirantes", JSON.stringify(aspirantes));
+        if (res.ok) {
+            aspirantes[aspIndex].documentos[docIndex].estado = 'rechazado';
+            aspirantes[aspIndex].documentos[docIndex].note = noteText;
 
-    // Cerrar modal
-    cerrarModalRechazo();
-
-    // Refrescar vistas
-    actualizarEstadisticas();
-    seleccionarAspirante(idAspiranteActivo);
+            cerrarModalRechazo();
+            actualizarEstadisticas();
+            seleccionarAspirante(idAspiranteActivo);
+        } else {
+            const err = await res.json();
+            alert("No se pudo rechazar el documento: " + (err.mensaje || "Error"));
+        }
+    } catch (e) {
+        console.error("Error al rechazar documento:", e);
+        alert("Ocurrió un error al comunicarse con el servidor.");
+    }
 }
+
+/**
+ * Carga las notificaciones desde la API
+ */
+async function cargarNotificaciones() {
+    const contenedor = document.getElementById('notification-list');
+    const badge = document.getElementById('notification-badge');
+    if (!contenedor) return;
+
+    // Estado de carga inicial
+    contenedor.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;"><i class="fa-solid fa-spinner fa-spin"></i> Cargando...</div>';
+
+    let idUsuario = "";
+    try {
+        const usr = JSON.parse(sessionStorage.getItem('usuario'));
+        if (usr && usr.id) idUsuario = usr.id;
+    } catch (e) { }
+
+    try {
+        const res = await fetch(`/api/notificaciones?destino=docentes&idUsuario=${idUsuario}`, {
+            headers: {
+                'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+            }
+        });
+
+        if (res.ok) {
+            const notificaciones = await res.json();
+            
+            // Update Badge
+            if (badge) {
+                if (notificaciones.length > 0) {
+                    badge.style.display = 'block';
+                    badge.innerText = notificaciones.length;
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+
+            if (!notificaciones || notificaciones.length === 0) {
+                contenedor.innerHTML = '<div style="padding: 20px; text-align: center; color: #7f8c8d; font-size: 13px;">No tienes notificaciones nuevas.</div>';
+            } else {
+                let html = '';
+                notificaciones.forEach(notif => {
+                    const isGeneral = notif.destino === 'todos';
+                    const itemClass = isGeneral ? 'notif-general' : 'notif-specific';
+                    const iconName = isGeneral ? 'fa-scroll' : 'fa-bell';
+                    const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico' : 'Coordinación FIE');
+                    
+                    const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
+                    const formattedDate = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+
+                    const notifDataStr = encodeURIComponent(JSON.stringify(notif));
+
+                    html += `
+                    <div class="notification-item-modern ${itemClass}" style="cursor: pointer;">
+                        <div class="notif-icon">
+                            <i class="fa-solid ${iconName}"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <h4>${notif.nombre}</h4>
+                            <p>${notif.mensaje.substring(0, 60)}${notif.mensaje.length > 60 ? '...' : ''}</p>
+                            <div class="notif-meta">
+                                <span><i class="fa-solid fa-user-tie"></i> ${remitente}</span>
+                                <span>• ${formattedDate}</span>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                contenedor.innerHTML = html;
+            }
+        } else {
+            contenedor.innerHTML = '<div style="padding: 20px; text-align: center; color: #e67e22; font-size: 13px;"><i class="fa-solid fa-triangle-exclamation"></i> Error al cargar notificaciones.</div>';
+        }
+    } catch (e) {
+        console.warn("Ocurrio un error al obtener notificaciones:", e);
+        contenedor.innerHTML = '<div style="padding: 20px; text-align: center; color: #7f8c8d; font-size: 13px;">Modo Offline: Avisos no disponibles.</div>';
+    }
+}
+
+/**
+ * Muestra u oculta el menú de notificaciones
+ */
+function toggleNotificationMenu(event) {
+    event.stopPropagation(); // Evitar que se propague al document
+    const menu = document.getElementById('notification-dropdown');
+    const profileMenu = document.getElementById('profile-dropdown');
+    
+    // Si el menú de perfil está abierto, lo cerramos
+    if (profileMenu && profileMenu.classList.contains('show')) {
+        profileMenu.classList.remove('show');
+    }
+    
+    if (menu) {
+        menu.classList.toggle('show');
+    }
+}
+
+// Cerrar los menús al hacer click fuera
+document.addEventListener('click', function (event) {
+    const notificationMenu = document.getElementById('notification-dropdown');
+    const profileMenu = document.getElementById('profile-dropdown');
+    
+    if (notificationMenu && notificationMenu.classList.contains('show') && !event.target.closest('.notification-container')) {
+        notificationMenu.classList.remove('show');
+    }
+    
+    if (profileMenu && profileMenu.classList.contains('show') && !event.target.closest('.profile-container')) {
+        profileMenu.classList.remove('show');
+    }
+});

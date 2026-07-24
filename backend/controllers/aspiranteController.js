@@ -107,6 +107,38 @@ const obtenerAspirantePorId = async (req, res) => {
     }
 };
 
+// Función auxiliar para agrupar múltiples intentos por requisito manteniendo el historial
+function agruparDocumentosPorRequisito(docsList) {
+    const mapa = {};
+    docsList.forEach(doc => {
+        const reqKey = doc.idRequisito || doc.requisitoNombre;
+        if (!mapa[reqKey]) {
+            mapa[reqKey] = [];
+        }
+        mapa[reqKey].push(doc);
+    });
+
+    const resultado = [];
+    Object.keys(mapa).forEach(key => {
+        const intentosArr = mapa[key].sort((a, b) => (a.intentos || 1) - (b.intentos || 1));
+        const ultimoIntento = intentosArr[intentosArr.length - 1];
+
+        resultado.push({
+            ...ultimoIntento,
+            historial: intentosArr.map(i => ({
+                idDocumento: i.idDocumento,
+                intentos: i.intentos || 1,
+                rutaArchivo: i.rutaArchivo,
+                estadoValidacion: i.estadoValidacion,
+                comentarios: i.comentarios
+            }))
+        });
+    });
+
+    return resultado;
+}
+
+// Obtener expediente por ID de aspirante
 const obtenerExpediente = async (req, res) => {
     try {
         const { id } = req.params;
@@ -122,7 +154,7 @@ const obtenerExpediente = async (req, res) => {
         if (resAspirante.length === 0) {
             return res.status(404).json({ success: false, mensaje: 'Aspirante no encontrado' });
         }
-        
+
         let expediente = {
             perfil: resAspirante[0],
             solicitudes: []
@@ -137,21 +169,23 @@ const obtenerExpediente = async (req, res) => {
             ORDER BY s.creadoEn DESC
         `;
         const [solicitudes] = await db.query(querySolicitudes, [id]);
-        
+
         if (solicitudes.length > 0) {
             const idsSolicitudes = solicitudes.map(s => s.idSolicitud);
-            
+
             // 3. Documentos por solicitud
             const queryDocs = `
-                SELECT sd.idSolicitud, sd.rutaArchivo, sd.estadoValidacion, cr.nombre as requisitoNombre
+                SELECT sd.id as idDocumento, sd.idSolicitud, sd.idRequisito, sd.rutaArchivo, sd.estadoValidacion, sd.comentarios, sd.intentos, cr.nombre as requisitoNombre
                 FROM solicitud_documentos sd
                 JOIN catalogo_requisitos cr ON sd.idRequisito = cr.id
                 WHERE sd.idSolicitud IN (?)
+                ORDER BY sd.intentos ASC
             `;
             const [documentos] = await db.query(queryDocs, [idsSolicitudes]);
-            
+
             expediente.solicitudes = solicitudes.map(sol => {
-                sol.documentos = documentos.filter(doc => doc.idSolicitud === sol.idSolicitud);
+                const docsDeEstaSoli = documentos.filter(doc => doc.idSolicitud === sol.idSolicitud);
+                sol.documentos = agruparDocumentosPorRequisito(docsDeEstaSoli);
                 return sol;
             });
         }
@@ -163,9 +197,71 @@ const obtenerExpediente = async (req, res) => {
     }
 };
 
+// Obtener todos los expedientes (para panel de docentes)
+const obtenerTodosLosExpedientes = async (req, res) => {
+    try {
+        const queryAspirantes = `
+            SELECT a.id, a.nombre, a.primerApellido, a.segundoApellido, u.correo, a.fechaNacimiento
+            FROM aspirante a 
+            JOIN usuario u ON a.idUsuario = u.id
+            ORDER BY a.id DESC
+        `;
+        const [aspirantes] = await db.query(queryAspirantes);
+
+        if (aspirantes.length === 0) {
+            return res.status(200).json([]);
+        }
+
+        const idsAspirantes = aspirantes.map(a => a.id);
+
+        const querySolicitudes = `
+            SELECT s.id as idSolicitud, s.idAspi, s.idConvocatoria, s.estado, s.creadoEn, s.tipoAdmision, c.nombre as convocatoriaNombre, c.posgrado_id
+            FROM solicitud s
+            JOIN convocatorias c ON s.idConvocatoria = c.id
+            WHERE s.idAspi IN (?)
+            ORDER BY s.creadoEn DESC
+        `;
+        const [solicitudes] = await db.query(querySolicitudes, [idsAspirantes]);
+
+        let documentos = [];
+        if (solicitudes.length > 0) {
+            const idsSolicitudes = solicitudes.map(s => s.idSolicitud);
+            const queryDocs = `
+                SELECT sd.id as idDocumento, sd.idSolicitud, sd.idRequisito, sd.rutaArchivo, sd.estadoValidacion, sd.comentarios, sd.intentos, cr.nombre as requisitoNombre
+                FROM solicitud_documentos sd
+                JOIN catalogo_requisitos cr ON sd.idRequisito = cr.id
+                WHERE sd.idSolicitud IN (?)
+                ORDER BY sd.intentos ASC
+            `;
+            const [docs] = await db.query(queryDocs, [idsSolicitudes]);
+            documentos = docs;
+        }
+
+        const expedientes = aspirantes.map(asp => {
+            const solsAsp = solicitudes.filter(s => s.idAspi === asp.id).map(sol => {
+                const docsDeEstaSoli = documentos.filter(doc => doc.idSolicitud === sol.idSolicitud);
+                return {
+                    ...sol,
+                    documentos: agruparDocumentosPorRequisito(docsDeEstaSoli)
+                };
+            });
+            return {
+                perfil: asp,
+                solicitudes: solsAsp
+            };
+        });
+
+        return res.status(200).json(expedientes);
+    } catch (error) {
+        console.error('Error en obtenerTodosLosExpedientes:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error en el servidor' });
+    }
+};
+
 module.exports = {
     registrarAspirante,
     obtenerAspirantes,
     obtenerAspirantePorId,
-    obtenerExpediente
+    obtenerExpediente,
+    obtenerTodosLosExpedientes
 };

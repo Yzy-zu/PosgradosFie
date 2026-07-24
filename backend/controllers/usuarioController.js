@@ -26,7 +26,7 @@ const obtenerUsuario = async (req, res) => {
         
         // Cargar detalles extra según rol
         if (usuario.rol === 'ASPIRANTE') {
-            const [detalles] = await db.query('SELECT curp, nombre, primerApellido, segundoApellido, telefono, direccion, fechaNacimiento FROM aspirante WHERE idUsuario = ?', [id]);
+            const [detalles] = await db.query('SELECT curp, nombre, primerApellido, segundoApellido, telefono, direccion, fechaNacimiento, estadoCivil, licenciatura, institucionLicenciatura, fechaEgreso, fechaTitulacion, promedio, otrosEstudios, ocupacion, direccionPostal, ciudadOcupacion, estadoOcupacion, telefonoOcupacion FROM aspirante WHERE idUsuario = ?', [id]);
             if (detalles.length > 0) usuario.detalles = detalles[0];
         } else if (usuario.rol === 'DOCENTE') {
             const [detalles] = await db.query('SELECT nombre, primerApellido, segundoApellido, cargo, especialidad, cubiculo FROM docente WHERE idUsua = ?', [id]);
@@ -58,8 +58,8 @@ const crearUsuario = async (req, res) => {
         if (detalles) {
             if (rol === 'ASPIRANTE') {
                 await db.query(
-                    'INSERT INTO aspirante (idUsuario, nombre, primerApellido, segundoApellido, curp, telefono, direccion, fechaNacimiento) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                    [idUsuario, detalles.nombre||'', detalles.primerApellido||'', detalles.segundoApellido||'', detalles.curp||'', detalles.telefono||'', detalles.direccion||'', detalles.fechaNacimiento||new Date()]
+                    'INSERT INTO aspirante (idUsuario, nombre, primerApellido, segundoApellido, curp, telefono, direccion, fechaNacimiento, estadoCivil, licenciatura, institucionLicenciatura, fechaEgreso, fechaTitulacion, promedio, otrosEstudios, ocupacion, direccionPostal, ciudadOcupacion, estadoOcupacion, telefonoOcupacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [idUsuario, detalles.nombre||'', detalles.primerApellido||'', detalles.segundoApellido||'', detalles.curp||'', detalles.telefono||'', detalles.direccion||'', detalles.fechaNacimiento||new Date(), detalles.estadoCivil||'SOLTERO', detalles.licenciatura||'', detalles.institucionLicenciatura||'', detalles.fechaEgreso||null, detalles.fechaTitulacion||null, detalles.promedio||null, detalles.otrosEstudios||'', detalles.ocupacion||'', detalles.direccionPostal||null, detalles.ciudadOcupacion||'', detalles.estadoOcupacion||'', detalles.telefonoOcupacion||null]
                 );
             } else if (rol === 'DOCENTE') {
                 await db.query(
@@ -103,11 +103,11 @@ const actualizarUsuario = async (req, res) => {
             if (rol === 'ASPIRANTE') {
                 const [exists] = await db.query('SELECT id FROM aspirante WHERE idUsuario = ?', [id]);
                 if (exists.length > 0) {
-                    await db.query('UPDATE aspirante SET nombre=?, primerApellido=?, segundoApellido=?, curp=?, telefono=?, direccion=?, fechaNacimiento=? WHERE idUsuario=?', 
-                    [detalles.nombre||'', detalles.primerApellido||'', detalles.segundoApellido||'', detalles.curp||'', detalles.telefono||'', detalles.direccion||'', detalles.fechaNacimiento||new Date(), id]);
+                    await db.query('UPDATE aspirante SET nombre=?, primerApellido=?, segundoApellido=?, curp=?, telefono=?, direccion=?, fechaNacimiento=?, estadoCivil=?, licenciatura=?, institucionLicenciatura=?, fechaEgreso=?, fechaTitulacion=?, promedio=?, otrosEstudios=?, ocupacion=?, direccionPostal=?, ciudadOcupacion=?, estadoOcupacion=?, telefonoOcupacion=? WHERE idUsuario=?', 
+                    [detalles.nombre||'', detalles.primerApellido||'', detalles.segundoApellido||'', detalles.curp||'', detalles.telefono||'', detalles.direccion||'', detalles.fechaNacimiento||new Date(), detalles.estadoCivil||'SOLTERO', detalles.licenciatura||'', detalles.institucionLicenciatura||'', detalles.fechaEgreso||null, detalles.fechaTitulacion||null, detalles.promedio||null, detalles.otrosEstudios||'', detalles.ocupacion||'', detalles.direccionPostal||null, detalles.ciudadOcupacion||'', detalles.estadoOcupacion||'', detalles.telefonoOcupacion||null, id]);
                 } else {
-                    await db.query('INSERT INTO aspirante (idUsuario, nombre, primerApellido, segundoApellido, curp, telefono, direccion, fechaNacimiento) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                    [id, detalles.nombre||'', detalles.primerApellido||'', detalles.segundoApellido||'', detalles.curp||'', detalles.telefono||'', detalles.direccion||'', detalles.fechaNacimiento||new Date()]);
+                    await db.query('INSERT INTO aspirante (idUsuario, nombre, primerApellido, segundoApellido, curp, telefono, direccion, fechaNacimiento, estadoCivil, licenciatura, institucionLicenciatura, fechaEgreso, fechaTitulacion, promedio, otrosEstudios, ocupacion, direccionPostal, ciudadOcupacion, estadoOcupacion, telefonoOcupacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [id, detalles.nombre||'', detalles.primerApellido||'', detalles.segundoApellido||'', detalles.curp||'', detalles.telefono||'', detalles.direccion||'', detalles.fechaNacimiento||new Date(), detalles.estadoCivil||'SOLTERO', detalles.licenciatura||'', detalles.institucionLicenciatura||'', detalles.fechaEgreso||null, detalles.fechaTitulacion||null, detalles.promedio||null, detalles.otrosEstudios||'', detalles.ocupacion||'', detalles.direccionPostal||null, detalles.ciudadOcupacion||'', detalles.estadoOcupacion||'', detalles.telefonoOcupacion||null]);
                 }
             } else if (rol === 'DOCENTE') {
                 const [exists] = await db.query('SELECT id FROM docente WHERE idUsua = ?', [id]);
@@ -149,10 +149,45 @@ const eliminarUsuario = async (req, res) => {
     }
 };
 
+// Cambiar contraseña del usuario
+const cambiarPassword = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { passwordActual, passwordNueva } = req.body;
+
+        if (!passwordActual || !passwordNueva) {
+            return res.status(400).json({ success: false, mensaje: 'Debe proporcionar la contraseña actual y la nueva' });
+        }
+
+        // Obtener usuario para verificar contraseña actual
+        const [resultados] = await db.query('SELECT contraseña FROM usuario WHERE id = ?', [id]);
+        
+        if (resultados.length === 0) {
+            return res.status(404).json({ success: false, mensaje: 'Usuario no encontrado' });
+        }
+
+        const usuarioDB = resultados[0];
+        
+        // Verificar si la contraseña actual coincide (está en texto plano)
+        if (usuarioDB.contraseña !== passwordActual) {
+            return res.status(401).json({ success: false, mensaje: 'La contraseña actual es incorrecta' });
+        }
+
+        // Actualizar contraseña
+        await db.query('UPDATE usuario SET contraseña = ? WHERE id = ?', [passwordNueva, id]);
+
+        return res.json({ success: true, mensaje: 'Contraseña actualizada correctamente' });
+    } catch (error) {
+        console.error('Error en cambiarPassword:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al cambiar la contraseña' });
+    }
+};
+
 module.exports = {
     obtenerUsuarios,
     obtenerUsuario,
     crearUsuario,
     actualizarUsuario,
-    eliminarUsuario
+    eliminarUsuario,
+    cambiarPassword
 };

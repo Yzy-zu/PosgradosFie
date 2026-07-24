@@ -9,7 +9,8 @@ const {
     obtenerUsuario,
     crearUsuario,
     actualizarUsuario,
-    eliminarUsuario
+    eliminarUsuario,
+    cambiarPassword
 } = require('../controllers/usuarioController');
 
 // ==========================================
@@ -22,6 +23,7 @@ router.get(
     obtenerUsuarios
 );
 
+<<<<<<< HEAD
 router.get(
     '/:id',
     verificarToken,
@@ -51,5 +53,12 @@ router.delete(
     validarRol('ADMIN'),
     eliminarUsuario
 );
+=======
+// PROTEGIDAS: Estas sí requieren que el frontend mande el token válido
+router.post('/', verificarToken, crearUsuario);
+router.put('/:id', verificarToken, actualizarUsuario);
+router.delete('/:id', verificarToken, eliminarUsuario);
+router.put('/:id/password', verificarToken, cambiarPassword);
+>>>>>>> c8499856640f3616eea34a938798895ce1695dde
 
 module.exports = router;

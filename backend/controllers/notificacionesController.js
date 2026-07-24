@@ -3,11 +3,14 @@ const db = require('../database/db');
 // Obtener todas las notificaciones
 const obtenerNotificaciones = async (req, res) => {
     try {
-        const { destino } = req.query;
+        const { destino, idUsuario } = req.query;
         let query = 'SELECT * FROM notificaciones';
         let params = [];
         
-        if (destino) {
+        if (destino && idUsuario) {
+            query += ' WHERE (destino = ? OR destino = "todos") OR (destino = "individual" AND idDestino = ?)';
+            params.push(destino, idUsuario);
+        } else if (destino) {
             query += ' WHERE destino = ? OR destino = "todos"';
             params.push(destino);
         }
@@ -40,11 +43,11 @@ const obtenerNotificacion = async (req, res) => {
 // Crear notificación
 const crearNotificacion = async (req, res) => {
     try {
-        const { nombre, mensaje, destino, activa } = req.body;
+        const { nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino } = req.body;
 
         const [resultado] = await db.query(
-            'INSERT INTO notificaciones (nombre, mensaje, destino, activa) VALUES (?, ?, ?, ?)',
-            [nombre, mensaje, destino, activa]
+            'INSERT INTO notificaciones (nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino || null]
         );
 
         return res.json({
@@ -62,11 +65,11 @@ const crearNotificacion = async (req, res) => {
 const actualizarNotificacion = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, mensaje, destino, activa } = req.body;
+        const { nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino } = req.body;
 
         await db.query(
-            'UPDATE notificaciones SET nombre = ?, mensaje = ?, destino = ?, activa = ? WHERE id = ?',
-            [nombre, mensaje, destino, activa, id]
+            'UPDATE notificaciones SET nombre = ?, mensaje = ?, destino = ?, activa = ?, rolRemitente = ?, nombreRemitente = ?, idDestino = ? WHERE id = ?',
+            [nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino || null, id]
         );
 
         return res.json({ success: true, mensaje: 'Notificación actualizada correctamente' });

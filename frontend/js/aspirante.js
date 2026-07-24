@@ -4,6 +4,20 @@ let estacionActual = 0;
 let aspiranteData = null; // Almacenará los datos de la BD del aspirante
 let currentSolicitudId = null;
 
+// Conexión Socket.io
+const socket = io();
+socket.on('actualizacionGlobal', () => {
+    // Recargar vista actual si hay un cambio en el sistema (ej. evaluación de docente)
+    const currentHash = window.location.hash;
+    if (currentHash === '#inicio' || currentHash === '') {
+        if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
+    } else if (currentHash === '#documentos') {
+        if (typeof bloquearInterfazPorRevision === 'function') bloquearInterfazPorRevision();
+    } else if (currentHash === '#convocatorias') {
+        if (typeof cargarConvocatorias === 'function') cargarConvocatorias();
+    }
+});
+
 // Comprobación de Sesión y Estado de Registro al inicializar la página
 document.addEventListener("DOMContentLoaded", async function () {
     const token = sessionStorage.getItem('token');
@@ -36,11 +50,14 @@ document.addEventListener("DOMContentLoaded", async function () {
                 const lblTelefono = document.getElementById('perfil-telefono');
 
                 if (lblNombre) lblNombre.innerText = `${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido}`;
-                if (lblCorreo) lblCorreo.innerText = aspiranteData.correo;
+                if (lblCorreo) lblCorreo.innerText = usuario.correo;
                 if (lblTelefono) lblTelefono.innerText = aspiranteData.telefono;
 
                 // Cargar modalidades de admisión dinámicas
                 cargarModalidadesAdmision();
+                
+                // Cargar notificaciones al iniciar sesión
+                cargarNotificaciones();
 
                 // --- RESTAURAR SESION DE SOLICITUD (HIDRATACIÓN) ---
                 try {
@@ -50,7 +67,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                         if (soliData.existe) {
                             // Hidratamos la UI del usuario desde el Backend
                             hidratarUI(soliData);
-                            
+
                             // Render initial route
                             const currentHash = window.location.hash.replace('#', '');
                             if (!currentHash) {
@@ -58,7 +75,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                             } else {
                                 switchView(currentHash);
                             }
-                            
+
                             // Ocultamos el loader inicial si hubiera
                             ocultarLoader();
                             return; // Salimos para no ejecutar el código de abajo
@@ -129,10 +146,10 @@ function switchView(viewId) {
         targetNavLink.classList.add('active');
     }
 
-    // Cargar notificaciones si se abre esa vista
-    if (viewId === 'notificaciones') {
-        cargarNotificaciones();
-    }
+    // Cargar notificaciones al abrir el dropdown, o mantenerlo en DOMContentLoaded
+    // if (viewId === 'notificaciones') {
+    //     cargarNotificaciones();
+    // }
 
     setTimeout(() => {
         ocultarLoader();
@@ -149,14 +166,21 @@ window.addEventListener('hashchange', () => {
  * Carga las notificaciones desde la API
  */
 async function cargarNotificaciones() {
-    const contenedor = document.getElementById('contenedor-notificaciones');
+    const contenedor = document.getElementById('notification-list');
+    const badge = document.getElementById('notification-badge');
     if (!contenedor) return;
 
     // Estado de carga inicial
-    contenedor.innerHTML = '<div class="card"><p>Cargando notificaciones...</p></div>';
+    contenedor.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;"><i class="fa-solid fa-spinner fa-spin"></i> Cargando...</div>';
+
+    let idUsuario = "";
+    try {
+        const usr = JSON.parse(sessionStorage.getItem('usuario'));
+        if (usr && usr.id) idUsuario = usr.id;
+    } catch (e) { }
 
     try {
-        const res = await fetch('/api/notificaciones?destino=aspirantes', {
+        const res = await fetch(`/api/notificaciones?destino=aspirantes&idUsuario=${idUsuario}`, {
             headers: {
                 'Authorization': `Bearer ${sessionStorage.getItem('token')}`
             }
@@ -164,45 +188,89 @@ async function cargarNotificaciones() {
 
         if (res.ok) {
             const notificaciones = await res.json();
+            
+            // Update Badge
+            if (badge) {
+                if (notificaciones.length > 0) {
+                    badge.style.display = 'block';
+                    badge.innerText = notificaciones.length;
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+
             if (!notificaciones || notificaciones.length === 0) {
-                contenedor.innerHTML = '<div class="card" style="grid-column: 1 / -1; text-align: center; color: #7f8c8d;"><p>No tienes notificaciones nuevas.</p></div>';
+                contenedor.innerHTML = '<div style="padding: 20px; text-align: center; color: #7f8c8d; font-size: 13px;">No tienes notificaciones nuevas.</div>';
             } else {
                 let html = '';
                 notificaciones.forEach(notif => {
-                    // Extraer un resumen del mensaje (máximo 60 caracteres)
-                    let resumen = notif.mensaje.length > 60 ? notif.mensaje.substring(0, 60) + '...' : notif.mensaje;
+                    const isGeneral = notif.destino === 'todos';
+                    const itemClass = isGeneral ? 'notif-general' : 'notif-specific';
+                    const iconName = isGeneral ? 'fa-scroll' : 'fa-bell';
+                    const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico' : 'Coordinación FIE');
                     
-                    // Escapar comillas dobles o simples para que no rompa el onclick (mejorando la inyección de data)
-                    const notifStr = encodeURIComponent(JSON.stringify(notif));
+                    const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
+                    const formattedDate = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+
+                    const notifDataStr = encodeURIComponent(JSON.stringify(notif));
 
                     html += `
-                    <div class="card notif-card" style="cursor: pointer; position: relative; padding: 25px 20px; text-align: center; border-top: 4px solid #3498db; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-height: 180px;" onclick="abrirNotificacion('${notifStr}')" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 2px 10px rgba(0,0,0,0.05)';">
-                        
-                        <div>
-                            <div style="width: 50px; height: 50px; background: #e8f4fd; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px auto;">
-                                <i class="fa-solid fa-envelope" style="color: #3498db; font-size: 20px;"></i>
-                            </div>
-                            <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">${notif.nombre}</h4>
-                            <p style="color: #7f8c8d; font-size: 13px; margin: 0; line-height: 1.4;">${resumen}</p>
+                    <div class="notification-item-modern ${itemClass}" style="cursor: pointer;" onclick="abrirNotificacion('${notifDataStr}')">
+                        <div class="notif-icon">
+                            <i class="fa-solid ${iconName}"></i>
                         </div>
-
-                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 12px; color: #bdc3c7;">
-                            <i class="fa-solid fa-magnifying-glass-plus"></i> Clic para leer completo
+                        <div style="flex: 1;">
+                            <h4>${notif.nombre}</h4>
+                            <p>${notif.mensaje.substring(0, 60)}${notif.mensaje.length > 60 ? '...' : ''}</p>
+                            <div class="notif-meta">
+                                <span><i class="fa-solid fa-user-tie"></i> ${remitente}</span>
+                                <span>• ${formattedDate}</span>
+                            </div>
                         </div>
                     </div>`;
                 });
                 contenedor.innerHTML = html;
             }
         } else {
-            // Error o endpoint no existe
-            contenedor.innerHTML = '<div class="card"><p><strong><i class="fa-solid fa-triangle-exclamation" style="color: #e67e22;"></i> Sistema FIE:</strong> Las notificaciones no están disponibles por el momento.</p></div>';
+            contenedor.innerHTML = '<div style="padding: 20px; text-align: center; color: #e67e22; font-size: 13px;"><i class="fa-solid fa-triangle-exclamation"></i> Error al cargar notificaciones.</div>';
         }
     } catch (e) {
-        // Fallback por si la API aún no está implementada por el backend
         console.warn("Ocurrio un error al obtener notificaciones:", e);
-        contenedor.innerHTML = '<div class="card" style="grid-column: 1 / -1;"><p><strong><i class="fa-solid fa-triangle-exclamation" style="color: #e67e22;"></i> Sistema FIE:</strong> Recuerda verificar las fechas límite del calendario de admisiones. (Modo Offline)</p></div>';
+        contenedor.innerHTML = '<div style="padding: 20px; text-align: center; color: #7f8c8d; font-size: 13px;">Modo Offline: Avisos no disponibles.</div>';
     }
 }
+
+/**
+ * Muestra u oculta el menú de notificaciones
+ */
+function toggleNotificationMenu(event) {
+    event.stopPropagation(); // Evitar que se propague al document
+    const menu = document.getElementById('notification-dropdown');
+    const profileMenu = document.getElementById('profile-dropdown');
+    
+    // Si el menú de perfil está abierto, lo cerramos
+    if (profileMenu && profileMenu.classList.contains('show')) {
+        profileMenu.classList.remove('show');
+    }
+    
+    if (menu) {
+        menu.classList.toggle('show');
+    }
+}
+
+// Cerrar los menús al hacer click fuera
+document.addEventListener('click', function (event) {
+    const notificationMenu = document.getElementById('notification-dropdown');
+    const profileMenu = document.getElementById('profile-dropdown');
+    
+    if (notificationMenu && notificationMenu.classList.contains('show') && !event.target.closest('.notification-container')) {
+        notificationMenu.classList.remove('show');
+    }
+    
+    if (profileMenu && profileMenu.classList.contains('show') && !event.target.closest('.profile-container')) {
+        profileMenu.classList.remove('show');
+    }
+});
 
 /**
  * Muestra el modal con la notificación completa
@@ -212,12 +280,12 @@ function abrirNotificacion(notifDataEnc) {
         const notif = JSON.parse(decodeURIComponent(notifDataEnc));
         document.getElementById('modal-notif-titulo').innerText = notif.nombre || 'Aviso';
         document.getElementById('modal-notif-cuerpo').innerText = notif.mensaje || '';
-        
+
         // Formatear si tuviéramos fecha
         document.getElementById('modal-notif-fecha').innerHTML = `<i class="fa-regular fa-clock"></i> Notificación del Sistema`;
 
         const modal = document.getElementById('modal-notificacion');
-        if(modal) modal.style.display = 'flex';
+        if (modal) modal.style.display = 'flex';
     } catch (error) {
         console.error("Error al abrir notificación", error);
     }
@@ -484,7 +552,7 @@ async function avanzarEstacion(nuevaEstacion) {
                 const subidaData = new FormData();
                 subidaData.append('idSoli', currentSolicitudId);
                 // El name del input ahora es el idRequisito dinámico
-                subidaData.append('idRequisito', name); 
+                subidaData.append('idRequisito', name);
                 subidaData.append('archivo', file);
 
                 try {
@@ -526,11 +594,11 @@ async function avanzarEstacion(nuevaEstacion) {
  */
 function actualizarCostosAdmision() {
     const inputs = document.querySelectorAll('input[name="modalidad"]');
-    
+
     inputs.forEach(input => {
         const card = input.closest('.radio-card');
         const strongText = card.querySelector('strong');
-        
+
         if (input.checked) {
             // Estilo seleccionado (sólido)
             card.style.backgroundColor = '#8a1c24';
@@ -588,7 +656,7 @@ function verificarArchivosEstacion(estacion) {
                     allValid = false;
                 }
             });
-            
+
             // Si es estación 3, también validar el checkbox legal
             if (estacion === 3) {
                 const chkProtesta = document.getElementById('chk-protesta');
@@ -596,7 +664,7 @@ function verificarArchivosEstacion(estacion) {
                     allValid = false;
                 }
             }
-            
+
             const btn = document.getElementById(btnId);
             if (btn) btn.disabled = !allValid;
         }
@@ -604,11 +672,30 @@ function verificarArchivosEstacion(estacion) {
 }
 
 // Bloquear toda la UI de carga cuando el expediente esté bajo revisión
-function bloquearInterfazPorRevision() {
+async function bloquearInterfazPorRevision() {
     // 1. Mostrar banner y ocultar encabezado normal
     const banner = document.getElementById('banner-revision');
     const encabezado = document.getElementById('encabezado-documentos');
-    if (banner) banner.style.display = 'block';
+    if (banner) {
+        banner.style.display = 'block';
+        banner.className = ''; // Quitamos la clase estática para evitar conflictos
+        banner.style.background = 'transparent';
+        banner.style.border = 'none';
+        banner.style.boxShadow = 'none';
+        banner.style.padding = '0';
+        banner.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px; flex-wrap: wrap;">
+                <h3 style="margin:0;"><i class="fa-solid fa-folder-open" style="color: var(--color-guinda);"></i> Tu Expediente Digital</h3>
+                <span class="badge" style="background-color: #3b82f6; color: white; margin-left: 0;">Bajo Revisión Institucional</span>
+            </div>
+            <p style="color: #64748b; margin-bottom: 15px;">Aquí puedes consultar el estado de cada documento que enviaste. Selecciona uno para ver los detalles y comentarios del comité.</p>
+            <div id="docs-dinamicos-container" class="docs-revision-grid">
+                <div style="text-align:center; padding: 20px; grid-column: 1 / -1; color:#777;">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Cargando tus documentos...
+                </div>
+            </div>
+        `;
+    }
     if (encabezado) encabezado.style.display = 'none';
 
     // 2. Ocultar el stepper
@@ -623,6 +710,276 @@ function bloquearInterfazPorRevision() {
     // 4. Asegurarse de ocultar panel 0 (Admisión general) si existe, u ocultar sus inputs
     const panel0 = document.getElementById('panel-estacion-0');
     if (panel0) panel0.style.display = 'none';
+
+    // Cargar documentos desde la API para el panel dinámico
+    if (aspiranteData && aspiranteData.id) {
+        try {
+            const res = await fetch(`/api/aspirante/${aspiranteData.id}/expediente`);
+            if (res.ok) {
+                const data = await res.json();
+                const solicitudActiva = data.solicitudes.find(s => s.idSolicitud === currentSolicitudId);
+                
+                const container = document.getElementById('docs-dinamicos-container');
+                if (container) {
+                    if (solicitudActiva && solicitudActiva.documentos && solicitudActiva.documentos.length > 0) {
+                        renderizarVistaDinamicaDocumentos(solicitudActiva.documentos, container);
+                    } else {
+                        container.innerHTML = '<p style="grid-column:1/-1;text-align:center;">No se encontraron documentos adjuntos.</p>';
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Error al cargar expediente dinámico:", error);
+        }
+    }
+}
+
+function renderizarVistaDinamicaDocumentos(documentos, container) {
+    let html = '';
+    
+    documentos.forEach(doc => {
+        let estadoClass = '';
+        let badgeClass = '';
+        let estadoTexto = '';
+        let iconClass = 'fa-file-lines';
+        
+        const numIntentos = doc.intentos || 1;
+
+        switch(doc.estadoValidacion) {
+            case 'APROBADO':
+                estadoClass = 'state-aprobado';
+                badgeClass = 'status-aprobado';
+                estadoTexto = '<i class="fa-solid fa-check-circle"></i> Aprobado';
+                break;
+            case 'RECHAZADO':
+                estadoClass = 'state-rechazado';
+                badgeClass = 'status-rechazado';
+                estadoTexto = `<i class="fa-solid fa-circle-xmark"></i> Rechazado (${numIntentos}/3)`;
+                break;
+            default:
+                estadoClass = 'state-pendiente';
+                badgeClass = 'status-pendiente';
+                estadoTexto = '<i class="fa-solid fa-clock"></i> Pendiente';
+                break;
+        }
+
+        // Serializar los datos para el onClick
+        const docDataStr = encodeURIComponent(JSON.stringify(doc));
+
+        html += `
+            <div class="doc-card-modern ${estadoClass}" onclick="abrirModalDoc('${docDataStr}')">
+                <div class="doc-card-header">
+                    <div class="doc-card-icon">
+                        <i class="fa-solid ${iconClass}"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <h4 class="doc-card-title">${doc.requisitoNombre || 'Documento adjunto'}</h4>
+                    </div>
+                </div>
+                <div class="doc-card-footer">
+                    <span class="status-badge ${badgeClass}">${estadoTexto}</span>
+                    <span class="doc-card-action">Ver Detalles <i class="fa-solid fa-chevron-right" style="font-size:10px;"></i></span>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function abrirModalDoc(docStr) {
+    try {
+        const doc = JSON.parse(decodeURIComponent(docStr));
+        
+        document.getElementById('modal-doc-titulo').innerText = 'Detalles del Documento';
+        document.getElementById('modal-doc-requisito').innerText = doc.requisitoNombre || 'Documento adjunto';
+        
+        const numIntentos = doc.intentos || 1;
+        const badge = document.getElementById('modal-doc-estado');
+        badge.className = 'status-badge'; // reset
+        
+        const comentariosWrapper = document.getElementById('modal-doc-comentarios-wrapper');
+        const comentariosTxt = document.getElementById('modal-doc-comentarios');
+        const resubirContainer = document.getElementById('modal-doc-resubir-container');
+
+        // Renderizar Historial Completo de Intentos y Comentarios
+        if (doc.historial && doc.historial.length > 0) {
+            let historialHtml = '';
+            doc.historial.forEach((h, idx) => {
+                const iconoState = h.estadoValidacion === 'APROBADO' ? 'fa-circle-check' : (h.estadoValidacion === 'RECHAZADO' ? 'fa-circle-xmark' : 'fa-clock');
+                const colorState = h.estadoValidacion === 'APROBADO' ? '#10b981' : (h.estadoValidacion === 'RECHAZADO' ? '#ef4444' : '#f59e0b');
+                const comTxt = (h.comentarios && h.comentarios.trim() !== '') ? h.comentarios : 'Sin observaciones por parte del evaluador en este intento.';
+
+                historialHtml += `
+                    <div style="margin-bottom: 12px; padding-bottom: 10px; ${idx < doc.historial.length - 1 ? 'border-bottom: 1px dashed #cbd5e1;' : ''}">
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: ${colorState};">
+                            <span><i class="fa-solid ${iconoState}"></i> Intento ${h.intentos} - ${h.estadoValidacion}</span>
+                        </div>
+                        <p style="margin: 0; font-size: 13.5px; color: #334155; line-height: 1.4;">${comTxt}</p>
+                    </div>
+                `;
+            });
+            comentariosTxt.innerHTML = historialHtml;
+        }
+
+        if (doc.estadoValidacion === 'APROBADO') {
+            badge.classList.add('status-aprobado');
+            badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Aprobado';
+            if (comentariosWrapper) comentariosWrapper.style.borderLeftColor = '#10b981';
+            if (resubirContainer) resubirContainer.style.display = 'none';
+
+        } else if (doc.estadoValidacion === 'RECHAZADO') {
+            badge.classList.add('status-rechazado');
+            badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Rechazado (Intento ${numIntentos} de 3)`;
+            if (comentariosWrapper) comentariosWrapper.style.borderLeftColor = '#ef4444';
+            
+            if (resubirContainer) {
+                resubirContainer.style.display = 'block';
+                if (numIntentos < 3) {
+                    const reqNombreSanitized = encodeURIComponent(doc.requisitoNombre || 'Documento');
+                    resubirContainer.innerHTML = `
+                        <button onclick="iniciarReSubidaDocumento(${doc.idDocumento}, '${reqNombreSanitized}', ${numIntentos})" style="background-color: #8a1c24; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; font-size: 15px; box-shadow: 0 4px 10px rgba(138, 28, 36, 0.2); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Volver a Intentar (Intento ${numIntentos + 1} de 3)
+                        </button>
+                    `;
+                } else {
+                    resubirContainer.innerHTML = `
+                        <div style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-ban"></i> Se ha alcanzado el límite máximo de 3 intentos para este documento.
+                        </div>
+                    `;
+                }
+            }
+
+        } else {
+            badge.classList.add('status-pendiente');
+            badge.innerHTML = '<i class="fa-solid fa-clock"></i> En Revisión';
+            if (comentariosWrapper) comentariosWrapper.style.borderLeftColor = '#f59e0b';
+            if (resubirContainer) resubirContainer.style.display = 'none';
+        }
+        
+        const enlace = document.getElementById('modal-doc-enlace');
+        if (doc.rutaArchivo) {
+            enlace.href = `/uploads/${doc.rutaArchivo}`;
+            enlace.style.display = 'inline-flex';
+        } else {
+            enlace.style.display = 'none';
+        }
+        
+        const modal = document.getElementById('modal-revision-doc');
+        if (modal) modal.style.display = 'flex';
+        
+    } catch (e) {
+        console.error("Error al abrir modal del documento", e);
+    }
+}
+
+/**
+ * Re-subida de documento rechazado con límite de 3 intentos
+ */
+async function iniciarReSubidaDocumento(idDoc, nombreReqEncoded, intentosActuales) {
+    // 1. Cerrar el modal previo para evitar encimamiento visual
+    cerrarModalDoc();
+
+    const nombreReq = decodeURIComponent(nombreReqEncoded);
+    const siguienteIntento = (intentosActuales || 1) + 1;
+
+    if (intentosActuales >= 3) {
+        Swal.fire({
+            title: 'Límite alcanzado',
+            text: 'Has alcanzado el límite máximo de 3 intentos para este documento.',
+            icon: 'warning',
+            confirmButtonColor: '#8a1c24'
+        });
+        return;
+    }
+
+    const { value: file } = await Swal.fire({
+        title: `<i class="fa-solid fa-cloud-arrow-up" style="color: #8a1c24;"></i> Subir Corrección`,
+        html: `
+            <div style="text-align: left; font-size: 14px; color: #334155; margin-top: 10px;">
+                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 15px; margin-bottom: 15px;">
+                    <span style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; display: block; letter-spacing: 0.5px;">Requisito A Corregir</span>
+                    <strong style="font-size: 16px; color: #0f172a; display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                        <i class="fa-solid fa-file-pdf" style="color: #ef4444; font-size: 20px;"></i> ${nombreReq}
+                    </strong>
+                </div>
+                <p style="margin-bottom: 6px; color: #475569;">Estás realizando el <strong>Intento ${siguienteIntento} de 3</strong>.</p>
+                <p style="font-size: 12px; color: #64748b; margin: 0;"><i class="fa-solid fa-circle-info"></i> Selecciona únicamente un archivo <strong>PDF (.pdf)</strong> corregido.</p>
+            </div>
+        `,
+        input: 'file',
+        inputAttributes: {
+            'accept': 'application/pdf, .pdf',
+            'aria-label': 'Selecciona tu archivo PDF corregido'
+        },
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-cloud-arrow-up"></i> Enviar PDF',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#8a1c24'
+    });
+
+    if (file) {
+        // Validar que sea un archivo PDF
+        if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+            Swal.fire({
+                title: 'Formato Inválido',
+                text: 'Únicamente se permiten archivos en formato PDF (.pdf). Por favor convierte tu documento a PDF e inténtalo de nuevo.',
+                icon: 'error',
+                confirmButtonColor: '#ef4444'
+            });
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('archivo', file);
+
+        try {
+            mostrarLoader();
+            const res = await fetch(`/api/documentos/reemplazar/${idDoc}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+                },
+                body: formData
+            });
+
+            const data = await res.json();
+            ocultarLoader();
+
+            if (res.ok && data.success) {
+                await Swal.fire({
+                    title: '¡Documento Actualizado!',
+                    text: data.mensaje || `Tu documento (${file.name}) ha sido enviado para revisión (Intento ${siguienteIntento} de 3).`,
+                    icon: 'success',
+                    confirmButtonColor: '#10b981'
+                });
+
+                // Recargar el panel dinámico para reflejar el nuevo estado en tiempo real
+                bloquearInterfazPorRevision();
+            } else {
+                Swal.fire({
+                    title: 'No se pudo subir',
+                    text: data.mensaje || 'Error al reemplazar el archivo.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
+            }
+        } catch (e) {
+            ocultarLoader();
+            console.error("Error al re-subir documento:", e);
+            Swal.fire({
+                title: 'Error de comunicación',
+                text: 'Ocurrió un fallo de red al conectarse con el servidor.',
+                icon: 'error'
+            });
+        }
+    }
+}
+
+function cerrarModalDoc() {
+    const modal = document.getElementById('modal-revision-doc');
+    if (modal) modal.style.display = 'none';
 }
 
 /**
@@ -685,12 +1042,12 @@ async function finalizarProcesoEstaciones() {
                 icon: 'success',
                 confirmButtonColor: 'var(--color-success)'
             });
-            
+
             // Forzar recarga de UI a EN_REVISION
             const soliRes = await fetch(`/api/solicitud/${currentSolicitudId}`);
             if (soliRes.ok) {
                 const soliData = await soliRes.json();
-                if (soliData.estado === 'EN_REVISION') {
+                if (['EN_REVISION', 'RECHAZADO', 'APROBADO'].includes(soliData.estado)) {
                     bloquearInterfazPorRevision();
                 }
             }
@@ -700,7 +1057,7 @@ async function finalizarProcesoEstaciones() {
     }
 
     ocultarLoader();
-    
+
     // Lo redirigimos a la vista de proceso en lugar de inicio
     switchView('proceso');
 }
@@ -805,7 +1162,7 @@ async function cancelarSolicitudActual() {
         confirmButtonText: 'Sí, cancelar solicitud',
         cancelButtonText: 'No, mantenerla'
     });
-    
+
     if (!confirmacion.isConfirmed) return;
     if (!currentSolicitudId) return;
 
@@ -849,11 +1206,11 @@ async function cargarModalidadesAdmision() {
         if (res.ok) {
             const modalidades = await res.json();
             contenedor.innerHTML = '';
-            
+
             modalidades.forEach((mod, index) => {
                 const titulo = mod.replace(/_/g, ' ').replace(/\w\S*/g, w => (w.replace(/^\w/, c => c.toUpperCase())));
                 const checkedStr = index === 0 ? 'checked' : '';
-                
+
                 contenedor.innerHTML += `
                     <label class="radio-card" style="display:block; flex: 1 1 220px; min-width: 220px; position:relative; padding:20px; border-radius:10px; border:2px dashed #8a1c24; cursor:pointer; text-align:center; background-color:#f8f9fa; margin: 10px;">
                         <input type="radio" name="modalidad" value="${mod}" ${checkedStr} onchange="actualizarCostosAdmision()" style="position:absolute; opacity:0; width:0; height:0;">
@@ -881,11 +1238,11 @@ async function cargarRequisitosDocumentales(idConvocatoria) {
             const gridIdentidad = document.getElementById('grid-dinamico-identidad');
             const gridAcademico = document.getElementById('grid-dinamico-academico');
             const gridEvaluacion = document.getElementById('grid-dinamico-evaluacion');
-            
+
             if (gridIdentidad) gridIdentidad.innerHTML = '';
             if (gridAcademico) gridAcademico.innerHTML = '';
             if (gridEvaluacion) gridEvaluacion.innerHTML = '';
-            
+
             if (requisitos.length === 0) {
                 if (gridIdentidad) gridIdentidad.innerHTML = '<p style="color: #666; font-style: italic;">No hay requisitos configurados.</p>';
                 return;
@@ -894,7 +1251,7 @@ async function cargarRequisitosDocumentales(idConvocatoria) {
             requisitos.forEach(req => {
                 const isRequired = req.obligatorio ? '*' : '';
                 const requiredAttr = req.obligatorio ? 'required' : '';
-                
+
                 const htmlReq = `
                     <div class="file-box">
                         <label><i class="fa-solid fa-file-arrow-up"></i> ${req.descripcion} <span style="color:red;">${isRequired}</span></label>
@@ -910,7 +1267,7 @@ async function cargarRequisitosDocumentales(idConvocatoria) {
                     if (gridEvaluacion) gridEvaluacion.innerHTML += htmlReq;
                 }
             });
-            
+
             // Re-ejecutar verificación en caso de que todo sea opcional
             verificarArchivosEstacion(1);
             verificarArchivosEstacion(2);
@@ -949,8 +1306,8 @@ function hidratarUI(soliData) {
         cambiarEstacion(Math.min(estacionGuardada, 3));
     }
 
-    // Bloquear si está en revisión
-    if (soliData.estado === 'EN_REVISION') {
+    // Bloquear si está en revisión, rechazado o aprobado
+    if (['EN_REVISION', 'RECHAZADO', 'APROBADO'].includes(soliData.estado)) {
         bloquearInterfazPorRevision();
     }
 }
@@ -997,12 +1354,12 @@ function configurarPanelesNivel(nivel, idConvocatoria) {
 }
 
 // ==== MANEJO DE UI PARA INPUTS DE ARCHIVOS ====
-document.addEventListener('change', function(e) {
+document.addEventListener('change', function (e) {
     if (e.target && e.target.type === 'file') {
         const fileBox = e.target.closest('.file-box');
         if (fileBox) {
             const files = e.target.files;
-            
+
             // Eliminar nombre de archivo previo si existe
             const existingDisplay = fileBox.querySelector('.file-name-display');
             if (existingDisplay) {
@@ -1011,12 +1368,12 @@ document.addEventListener('change', function(e) {
 
             if (files && files.length > 0) {
                 const fileName = files[0].name;
-                
+
                 // Crear el elemento para mostrar el nombre
                 const displayDiv = document.createElement('div');
                 displayDiv.className = 'file-name-display';
                 displayDiv.innerHTML = `<i class="fa-solid fa-file-pdf"></i> ${fileName}`;
-                
+
                 fileBox.appendChild(displayDiv);
                 fileBox.classList.add('file-selected');
             } else {

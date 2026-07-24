@@ -31,11 +31,11 @@ const obtenerConvocatoria = async (req, res) => {
 // Crear convocatoria con requisitos
 const crearConvocatorias = async (req, res) => {
     try {
-        const { nombre, descripcion, fecha_inicio, fecha_fin, estado, requisitos } = req.body;
+        const { nombre, descripcion, fecha_inicio, fecha_fin, estado, requisitos, posgrado_id, tipo, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, duracion, modalidad, inicioCurso, finCurso, inicioExamen, finExamen } = req.body;
 
         const [resultado] = await db.query(
-            'INSERT INTO convocatorias (nombre, descripcion, fecha_inicio, fecha_fin, estado) VALUES (?, ?, ?, ?, ?)',
-            [nombre, descripcion, fecha_inicio, fecha_fin, estado]
+            'INSERT INTO convocatorias (nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, tipo, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, duracion, modalidad, inicioCurso, finCurso, inicioExamen, finExamen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id || null, tipo || 'MAESTRIA', fechaInicioDocumentos || null, fechaFinDocumentos || null, fechaEntrevistaInicio || null, fechaEntrevistaFin || null, fechaInicioEscolar || null, fechaResultados || null, duracion || 0, modalidad || 'Escolarizada', inicioCurso || null, finCurso || null, inicioExamen || null, finExamen || null]
         );
 
         const convocatoriaId = resultado.insertId;
@@ -49,6 +49,8 @@ const crearConvocatorias = async (req, res) => {
             );
         }
 
+        // Emitir evento global a todos los clientes (Admin, Docentes, Aspirantes)
+        req.app.get('io').emit('actualizacionGlobal');
         return res.json({ success: true, mensaje: 'Convocatoria creada correctamente' });
     } catch (error) {
         console.error('Error en crearConvocatorias:', error);
@@ -60,11 +62,11 @@ const crearConvocatorias = async (req, res) => {
 const actualizarConvocatorias = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, descripcion, fecha_inicio, fecha_fin, estado, requisitos } = req.body;
+        const { nombre, descripcion, fecha_inicio, fecha_fin, estado, requisitos, posgrado_id, tipo, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, duracion, modalidad, inicioCurso, finCurso, inicioExamen, finExamen } = req.body;
 
         await db.query(
-            'UPDATE convocatorias SET nombre=?, descripcion=?, fecha_inicio=?, fecha_fin=?, estado=? WHERE id=?',
-            [nombre, descripcion, fecha_inicio, fecha_fin, estado, id]
+            'UPDATE convocatorias SET nombre=?, descripcion=?, fecha_inicio=?, fecha_fin=?, estado=?, posgrado_id=?, tipo=?, fechaInicioDocumentos=?, fechaFinDocumentos=?, fechaEntrevistaInicio=?, fechaEntrevistaFin=?, fechaInicioEscolar=?, fechaResultados=?, duracion=?, modalidad=?, inicioCurso=?, finCurso=?, inicioExamen=?, finExamen=? WHERE id=?',
+            [nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id || null, tipo || 'MAESTRIA', fechaInicioDocumentos || null, fechaFinDocumentos || null, fechaEntrevistaInicio || null, fechaEntrevistaFin || null, fechaInicioEscolar || null, fechaResultados || null, duracion || 0, modalidad || 'Escolarizada', inicioCurso || null, finCurso || null, inicioExamen || null, finExamen || null, id]
         );
 
         // Obtener requisitos actuales
@@ -99,6 +101,8 @@ const actualizarConvocatorias = async (req, res) => {
             }
         }
 
+        // Emitir evento global a todos los clientes
+        req.app.get('io').emit('actualizacionGlobal');
         return res.json({ success: true, mensaje: 'Convocatoria actualizada correctamente' });
     } catch (error) {
         console.error('Error en actualizarConvocatorias:', error);
@@ -111,6 +115,9 @@ const eliminarConvocatorias = async (req, res) => {
     try {
         const { id } = req.params;
         await db.query('DELETE FROM convocatorias WHERE id=?', [id]);
+        
+        // Emitir evento global a todos los clientes
+        req.app.get('io').emit('actualizacionGlobal');
         return res.json({ success: true, mensaje: 'Convocatoria eliminada correctamente' });
     } catch (error) {
         console.error('Error en eliminarConvocatorias:', error);

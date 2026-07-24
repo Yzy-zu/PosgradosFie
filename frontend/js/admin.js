@@ -1,3 +1,18 @@
+// Conexión Socket.io
+const socket = io();
+socket.on('actualizacionGlobal', () => {
+    // Recargar vista actual si hay un cambio en el sistema
+    const currentHash = window.location.hash.replace("#", "");
+    if (currentHash === 'dashboard' || currentHash === '') {
+        if (typeof cargarDashboard === 'function') cargarDashboard();
+    } else if (currentHash === 'usuarios') {
+        if (typeof cargarUsuarios === 'function') cargarUsuarios();
+    } else if (currentHash === 'convocatorias') {
+        if (typeof cargarConvocatorias === 'function') cargarConvocatorias();
+    } else if (currentHash === 'aspirantes') {
+        if (typeof cargarAspirantes === 'function') cargarAspirantes();
+    }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
     validarSesion();
@@ -232,7 +247,7 @@ async function editarUsuario(id) {
             contDetalles.style.padding = "0";
         }
         if (modalDialog) modalDialog.style.maxWidth = "500px";
-        
+
         const btnTog = document.getElementById("btnToggleDetalles");
         if (btnTog) btnTog.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Ver detalles específicos del rol';
 
@@ -250,19 +265,45 @@ async function editarUsuario(id) {
 function renderizarCamposRol(rol, detalles = {}) {
     const contenedorBtn = document.getElementById("contenedorBtnDetalles");
     const contenedorDetalles = document.getElementById("detallesExtendidos");
-    
+
     let html = "";
     if (rol === "ASPIRANTE") {
         html = `
             <h6 class="text-primary mb-3"><i class="fa-solid fa-user-graduate"></i> Detalles de Aspirante</h6>
-            <div class="row">
+            <div class="row" style="max-height: 400px; overflow-y: auto; overflow-x: hidden;">
                 <div class="col-md-4 mb-2"><label class="form-label small">Nombre</label><input type="text" id="det_nombre" class="form-control form-control-sm" value="${detalles.nombre || ''}"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small">Primer Apellido</label><input type="text" id="det_primerApellido" class="form-control form-control-sm" value="${detalles.primerApellido || ''}"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small">Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" value="${detalles.segundoApellido || ''}"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small">CURP</label><input type="text" id="det_curp" class="form-control form-control-sm" value="${detalles.curp || ''}"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small">Teléfono</label><input type="text" id="det_telefono" class="form-control form-control-sm" value="${detalles.telefono || ''}"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small">Fecha Nacimiento</label><input type="date" id="det_fechaNacimiento" class="form-control form-control-sm" value="${detalles.fechaNacimiento ? detalles.fechaNacimiento.split('T')[0] : ''}"></div>
-                <div class="col-md-12 mb-2"><label class="form-label small">Dirección</label><input type="text" id="det_direccion" class="form-control form-control-sm" value="${detalles.direccion || ''}"></div>
+                <div class="col-md-4 mb-2">
+                    <label class="form-label small">Estado Civil</label>
+                    <select id="det_estadoCivil" class="form-select form-select-sm">
+                        <option value="SOLTERO" ${detalles.estadoCivil === 'SOLTERO' ? 'selected' : ''}>SOLTERO</option>
+                        <option value="CASADO" ${detalles.estadoCivil === 'CASADO' ? 'selected' : ''}>CASADO</option>
+                        <option value="UNION_LIBRE" ${detalles.estadoCivil === 'UNION_LIBRE' ? 'selected' : ''}>UNIÓN LIBRE</option>
+                        <option value="DIVORCIADO" ${detalles.estadoCivil === 'DIVORCIADO' ? 'selected' : ''}>DIVORCIADO</option>
+                        <option value="SEPARADO" ${detalles.estadoCivil === 'SEPARADO' ? 'selected' : ''}>SEPARADO</option>
+                        <option value="VIUDO" ${detalles.estadoCivil === 'VIUDO' ? 'selected' : ''}>VIUDO</option>
+                    </select>
+                </div>
+                <div class="col-md-8 mb-2"><label class="form-label small">Dirección</label><input type="text" id="det_direccion" class="form-control form-control-sm" value="${detalles.direccion || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Código Postal</label><input type="number" id="det_direccionPostal" class="form-control form-control-sm" value="${detalles.direccionPostal || ''}"></div>
+                
+                <h6 class="text-secondary mt-3 mb-2 w-100 border-bottom pb-1"><i class="fa-solid fa-graduation-cap"></i> Antecedentes Académicos</h6>
+                <div class="col-md-6 mb-2"><label class="form-label small">Licenciatura</label><input type="text" id="det_licenciatura" class="form-control form-control-sm" value="${detalles.licenciatura || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small">Institución (Licenciatura)</label><input type="text" id="det_institucionLicenciatura" class="form-control form-control-sm" value="${detalles.institucionLicenciatura || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Fecha de Egreso</label><input type="date" id="det_fechaEgreso" class="form-control form-control-sm" value="${detalles.fechaEgreso ? detalles.fechaEgreso.split('T')[0] : ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Fecha de Titulación</label><input type="date" id="det_fechaTitulacion" class="form-control form-control-sm" value="${detalles.fechaTitulacion ? detalles.fechaTitulacion.split('T')[0] : ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Promedio</label><input type="number" step="0.01" id="det_promedio" class="form-control form-control-sm" value="${detalles.promedio || ''}"></div>
+                <div class="col-md-12 mb-2"><label class="form-label small">Otros Estudios</label><input type="text" id="det_otrosEstudios" class="form-control form-control-sm" value="${detalles.otrosEstudios || ''}"></div>
+
+                <h6 class="text-secondary mt-3 mb-2 w-100 border-bottom pb-1"><i class="fa-solid fa-briefcase"></i> Ocupación</h6>
+                <div class="col-md-6 mb-2"><label class="form-label small">Ocupación Actual</label><input type="text" id="det_ocupacion" class="form-control form-control-sm" value="${detalles.ocupacion || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small">Teléfono (Ocupación)</label><input type="text" id="det_telefonoOcupacion" class="form-control form-control-sm" value="${detalles.telefonoOcupacion || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small">Ciudad (Ocupación)</label><input type="text" id="det_ciudadOcupacion" class="form-control form-control-sm" value="${detalles.ciudadOcupacion || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small">Estado (Ocupación)</label><input type="text" id="det_estadoOcupacion" class="form-control form-control-sm" value="${detalles.estadoOcupacion || ''}"></div>
             </div>
         `;
         contenedorBtn.style.display = "block";
@@ -291,14 +332,14 @@ function renderizarCamposRol(rol, detalles = {}) {
     } else {
         html = "";
         contenedorBtn.style.display = "none";
-        
+
         contenedorDetalles.style.width = "0px";
         contenedorDetalles.style.opacity = "0";
         contenedorDetalles.style.padding = "0";
         const modalDialog = document.getElementById("dialogUsuario");
         if (modalDialog) modalDialog.style.maxWidth = "500px";
     }
-    
+
     // Envolver en un div de ancho fijo para que no haga wrap al colapsar (y evitar altura extra en el flex row)
     if (html !== "") {
         html = `<div style="width: 560px;">${html}</div>`;
@@ -307,7 +348,7 @@ function renderizarCamposRol(rol, detalles = {}) {
 }
 
 // Escuchar cambios en el selector de rol
-document.getElementById("rol")?.addEventListener("change", function(e) {
+document.getElementById("rol")?.addEventListener("change", function (e) {
     renderizarCamposRol(e.target.value);
 });
 
@@ -316,7 +357,7 @@ function toggleDetallesUsuario() {
     const contenedor = document.getElementById("detallesExtendidos");
     const modalDialog = document.getElementById("dialogUsuario");
     const btn = document.getElementById("btnToggleDetalles");
-    
+
     if (contenedor.style.width !== "0px" && contenedor.style.width !== "") {
         contenedor.style.width = "0px";
         contenedor.style.opacity = "0";
@@ -351,7 +392,7 @@ document.getElementById("modalUsuario")?.addEventListener('show.bs.modal', funct
             contDetalles.style.padding = "0";
         }
         if (modalDialog) modalDialog.style.maxWidth = "500px";
-        
+
         const btnTog = document.getElementById("btnToggleDetalles");
         if (btnTog) btnTog.innerHTML = '<i class="fa-solid fa-chevron-right"></i> Ver detalles específicos del rol';
     }
@@ -376,7 +417,19 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
             curp: document.getElementById("det_curp")?.value,
             telefono: document.getElementById("det_telefono")?.value,
             fechaNacimiento: document.getElementById("det_fechaNacimiento")?.value,
-            direccion: document.getElementById("det_direccion")?.value
+            estadoCivil: document.getElementById("det_estadoCivil")?.value || 'SOLTERO',
+            direccion: document.getElementById("det_direccion")?.value,
+            direccionPostal: document.getElementById("det_direccionPostal")?.value,
+            licenciatura: document.getElementById("det_licenciatura")?.value,
+            institucionLicenciatura: document.getElementById("det_institucionLicenciatura")?.value,
+            fechaEgreso: document.getElementById("det_fechaEgreso")?.value,
+            fechaTitulacion: document.getElementById("det_fechaTitulacion")?.value,
+            promedio: document.getElementById("det_promedio")?.value,
+            otrosEstudios: document.getElementById("det_otrosEstudios")?.value,
+            ocupacion: document.getElementById("det_ocupacion")?.value,
+            telefonoOcupacion: document.getElementById("det_telefonoOcupacion")?.value,
+            ciudadOcupacion: document.getElementById("det_ciudadOcupacion")?.value,
+            estadoOcupacion: document.getElementById("det_estadoOcupacion")?.value
         };
     } else if (rol === "DOCENTE") {
         detalles = {
@@ -514,7 +567,8 @@ async function cargarConvocatorias() {
             card.style.transition = "transform 0.2s, box-shadow 0.2s";
             card.onmouseover = () => { card.style.transform = "scale(1.02)"; };
             card.onmouseout = () => { card.style.transform = "scale(1)"; };
-
+            const fechaInicioFormateada = new Date(conv.fecha_inicio).toLocaleDateString('es-MX');
+            const fechaFinFormateada = new Date(conv.fecha_fin).toLocaleDateString('es-MX');
             card.onclick = () => editarConvocatoria(conv.id);
 
             card.innerHTML = `
@@ -522,7 +576,7 @@ async function cargarConvocatorias() {
                     <i class="fa-solid fa-file-invoice"></i>
                 </div>
                 <h5 class="mb-1" style="font-weight:600; color:#2c3e50;">${conv.nombre}</h5>
-                <p class="mb-2 text-muted" style="font-size:0.9rem;">${conv.fecha_inicio} a ${conv.fecha_fin}</p>
+                <p class="mb-2 text-muted" style="font-size:0.9rem;">${fechaInicioFormateada} a ${fechaFinFormateada}</p>
                 <div>
                     <span class="badge" style="background-color: ${colorEstado}; font-size:0.8rem;">${conv.estado}</span>
                 </div>
@@ -557,11 +611,40 @@ async function cargarPosgradosEnSelect() {
     }
 }
 
+function toggleCamposPorTipo() {
+    const tipo = document.getElementById("convocatoria_tipo").value;
+    const grupoEntrevistas = document.getElementById("grupo_entrevistas");
+    const grupoAcademicas = document.getElementById("grupo_fechas_academicas");
+
+    if (tipo === "MAESTRIA") {
+        // Ocultar entrevistas y limpiar
+        if (grupoEntrevistas) grupoEntrevistas.style.display = "none";
+        document.getElementById("convocatoria_fechaEntrevistaInicio").value = "";
+        document.getElementById("convocatoria_fechaEntrevistaFin").value = "";
+
+        // Mostrar académicas
+        if (grupoAcademicas) grupoAcademicas.style.display = "block";
+    } else if (tipo === "DOCTORADO") {
+        // Mostrar entrevistas
+        if (grupoEntrevistas) grupoEntrevistas.style.display = "flex"; // row display flex by default in BS
+
+        // Ocultar académicas y limpiar
+        if (grupoAcademicas) grupoAcademicas.style.display = "none";
+        document.getElementById("convocatoria_inicioCurso").value = "";
+        document.getElementById("convocatoria_finCurso").value = "";
+        document.getElementById("convocatoria_inicioExamen").value = "";
+        document.getElementById("convocatoria_finExamen").value = "";
+    }
+}
+
+document.getElementById("convocatoria_tipo")?.addEventListener("change", toggleCamposPorTipo);
+
 function limpiarFormularioConvocatoria() {
     document.getElementById("formConvocatoria").reset();
     document.getElementById("idConvocatoriaForm").value = "";
     document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-bullhorn"></i> Nueva Convocatoria';
     document.getElementById("btnEliminarConvocatoria").style.display = "none";
+    toggleCamposPorTipo();
 
     // Desmarcar todos los checkboxes del catálogo
     const checkboxes = document.querySelectorAll("#contenedorRequisitos .req-checkbox");
@@ -631,11 +714,27 @@ async function editarConvocatoria(id) {
         // Limpiar selecciones primero
         limpiarFormularioConvocatoria();
         document.getElementById("idConvocatoriaForm").value = conv.id;
+        document.getElementById("convocatoria_posgrado").value = conv.posgrado_id || "";
+        document.getElementById("convocatoria_tipo").value = conv.tipo || "MAESTRIA";
         document.getElementById("convocatoria_nombre").value = conv.nombre || "";
         document.getElementById("convocatoria_descripcion").value = conv.descripcion || "";
+        document.getElementById("convocatoria_estado").value = conv.estado || "Borrador";
+        document.getElementById("convocatoria_modalidad").value = conv.modalidad || "Escolarizada";
+        document.getElementById("convocatoria_duracion").value = conv.duracion || "";
+
         document.getElementById("convocatoria_fecha_inicio").value = conv.fecha_inicio ? conv.fecha_inicio.split('T')[0] : "";
         document.getElementById("convocatoria_fecha_fin").value = conv.fecha_fin ? conv.fecha_fin.split('T')[0] : "";
-        document.getElementById("convocatoria_estado").value = conv.estado || "Borrador";
+        document.getElementById("convocatoria_fechaInicioDocumentos").value = conv.fechaInicioDocumentos ? conv.fechaInicioDocumentos.split('T')[0] : "";
+        document.getElementById("convocatoria_fechaFinDocumentos").value = conv.fechaFinDocumentos ? conv.fechaFinDocumentos.split('T')[0] : "";
+        document.getElementById("convocatoria_fechaEntrevistaInicio").value = conv.fechaEntrevistaInicio ? conv.fechaEntrevistaInicio.split('T')[0] : "";
+        document.getElementById("convocatoria_fechaEntrevistaFin").value = conv.fechaEntrevistaFin ? conv.fechaEntrevistaFin.split('T')[0] : "";
+        document.getElementById("convocatoria_fechaInicioEscolar").value = conv.fechaInicioEscolar ? conv.fechaInicioEscolar.split('T')[0] : "";
+        document.getElementById("convocatoria_fechaResultados").value = conv.fechaResultados ? conv.fechaResultados.split('T')[0] : "";
+
+        document.getElementById("convocatoria_inicioCurso").value = conv.inicioCurso ? conv.inicioCurso.split('T')[0] : "";
+        document.getElementById("convocatoria_finCurso").value = conv.finCurso ? conv.finCurso.split('T')[0] : "";
+        document.getElementById("convocatoria_inicioExamen").value = conv.inicioExamen ? conv.inicioExamen.split('T')[0] : "";
+        document.getElementById("convocatoria_finExamen").value = conv.finExamen ? conv.finExamen.split('T')[0] : "";
 
         // Cargar requisitos desde tabla pivote
         try {
@@ -654,6 +753,8 @@ async function editarConvocatoria(id) {
         } catch (e) {
             console.error("Error al cargar requisitos de la convocatoria", e);
         }
+
+        toggleCamposPorTipo();
 
         document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Editar Convocatoria';
 
@@ -677,11 +778,27 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
     e.preventDefault();
 
     const idInput = document.getElementById("idConvocatoriaForm").value;
+    const posgrado_id = document.getElementById("convocatoria_posgrado").value;
+    const tipo = document.getElementById("convocatoria_tipo").value;
     const nombre = document.getElementById("convocatoria_nombre").value;
     const descripcion = document.getElementById("convocatoria_descripcion").value;
+    const estado = document.getElementById("convocatoria_estado").value;
+    const modalidad = document.getElementById("convocatoria_modalidad").value;
+    const duracion = document.getElementById("convocatoria_duracion").value;
+
     const fecha_inicio = document.getElementById("convocatoria_fecha_inicio").value;
     const fecha_fin = document.getElementById("convocatoria_fecha_fin").value;
-    const estado = document.getElementById("convocatoria_estado").value;
+    const fechaInicioDocumentos = document.getElementById("convocatoria_fechaInicioDocumentos").value;
+    const fechaFinDocumentos = document.getElementById("convocatoria_fechaFinDocumentos").value;
+    const fechaEntrevistaInicio = document.getElementById("convocatoria_fechaEntrevistaInicio").value;
+    const fechaEntrevistaFin = document.getElementById("convocatoria_fechaEntrevistaFin").value;
+    const fechaInicioEscolar = document.getElementById("convocatoria_fechaInicioEscolar").value;
+    const fechaResultados = document.getElementById("convocatoria_fechaResultados").value;
+
+    const inicioCurso = document.getElementById("convocatoria_inicioCurso").value;
+    const finCurso = document.getElementById("convocatoria_finCurso").value;
+    const inicioExamen = document.getElementById("convocatoria_inicioExamen").value;
+    const finExamen = document.getElementById("convocatoria_finExamen").value;
 
     // Recopilar requisitos del DOM (los checkboxes marcados)
     const checkboxes = document.querySelectorAll("#contenedorRequisitos .req-checkbox:checked");
@@ -695,7 +812,7 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
         });
     });
 
-    const datosConvocatoria = { nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, requisitos };
+    const datosConvocatoria = { nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, tipo, modalidad, duracion, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, inicioCurso, finCurso, inicioExamen, finExamen, requisitos };
     const token = sessionStorage.getItem("token") || "";
 
     try {
@@ -797,20 +914,33 @@ async function cargarAspirantes() {
             return;
         }
 
-        aspirantes.forEach(aspirante => {
+        for (const aspirante of aspirantes) {
             const tr = document.createElement("tr");
             // Formatear nombre completo
             const nombreCompleto = `${aspirante.nombre || ''} ${aspirante.primerApellido || ''} ${aspirante.segundoApellido || ''}`.trim();
+
+            async function correoAspirante(idUsuario) {
+                if (!idUsuario) return null;
+                try {
+                    const respuesta1 = await fetch(`/api/usuario/${idUsuario}`);
+                    const usuario1 = await respuesta1.json();
+                    return usuario1.correo;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            const correoReal = (await correoAspirante(aspirante.idUsuario)) || aspirante.correo || 'Sin correo';
 
             tr.style.cursor = "pointer";
             tr.onclick = () => verExpedienteAspirante(aspirante.id);
             tr.innerHTML = `
                 <td>${nombreCompleto || 'Sin nombre'}</td>
-                <td>${aspirante.correo || 'Sin correo'}</td>
+                <td>${correoReal}</td>
                 <td><span class="badge bg-secondary">Registrado</span></td>
             `;
             tbody.appendChild(tr);
-        });
+        }
     } catch (error) {
         console.error("Error al cargar aspirantes:", error);
         tbody.innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Esperando API de aspirantes...</td></tr>";
@@ -830,17 +960,17 @@ async function verExpedienteAspirante(id) {
         const nombreCompleto = `${perfil.nombre || ''} ${perfil.primerApellido || ''} ${perfil.segundoApellido || ''}`.trim();
         document.getElementById("perfil_nombreCompleto").textContent = nombreCompleto;
         document.getElementById("perfil_correo").textContent = perfil.correo || "Sin correo";
-        
+
         document.getElementById("perfil_curp").textContent = perfil.curp || "N/A";
         document.getElementById("perfil_telefono").textContent = perfil.telefono || "N/A";
-        
+
         let fechaNac = "N/A";
         if (perfil.fechaNacimiento) {
             fechaNac = new Date(perfil.fechaNacimiento).toLocaleDateString();
         }
         document.getElementById("perfil_nacimiento").textContent = fechaNac;
         document.getElementById("perfil_direccion").textContent = perfil.direccion || "N/A";
-        
+
         const badgeEstado = document.getElementById("perfil_estado");
         if (perfil.activo) {
             badgeEstado.className = "badge bg-success mb-4";
@@ -878,9 +1008,9 @@ async function verExpedienteAspirante(id) {
                     sol.documentos.forEach(doc => {
                         let colorDoc = "text-secondary";
                         let iconoDoc = "fa-clock";
-                        if(doc.estadoValidacion === "APROBADO") { colorDoc = "text-success"; iconoDoc = "fa-check-circle"; }
-                        else if(doc.estadoValidacion === "RECHAZADO") { colorDoc = "text-danger"; iconoDoc = "fa-times-circle"; }
-                        else if(doc.estadoValidacion === "PENDIENTE") { colorDoc = "text-warning"; iconoDoc = "fa-clock"; }
+                        if (doc.estadoValidacion === "APROBADO") { colorDoc = "text-success"; iconoDoc = "fa-check-circle"; }
+                        else if (doc.estadoValidacion === "RECHAZADO") { colorDoc = "text-danger"; iconoDoc = "fa-times-circle"; }
+                        else if (doc.estadoValidacion === "PENDIENTE") { colorDoc = "text-warning"; iconoDoc = "fa-clock"; }
 
                         htmlDocs += `
                             <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
@@ -996,7 +1126,7 @@ async function cargarNotificacionesAdmin() {
         contenedor.innerHTML = "";
 
         if (!notificaciones || notificaciones.length === 0) {
-            contenedor.innerHTML = `<tr><td colspan='4' class='text-center text-muted py-5'>
+            contenedor.innerHTML = `<tr><td colspan='5' class='text-center text-muted py-5'>
                 <i class="fa-solid fa-inbox fs-2 mb-3 opacity-25"></i>
                 <p class="mb-0">No hay notificaciones registradas.</p>
             </td></tr>`;
@@ -1005,18 +1135,21 @@ async function cargarNotificacionesAdmin() {
 
         notificaciones.forEach(notif => {
             const tr = document.createElement("tr");
-            
+
             // Etiqueta de destino y estado
             let destinoIcon = 'fa-users';
             let destinoText = notif.destino || 'todos';
             let destinoBg = 'bg-primary bg-opacity-10 text-primary';
-            
-            if(destinoText === 'aspirantes') { destinoIcon = 'fa-graduation-cap'; destinoBg = 'bg-info bg-opacity-10 text-info'; }
-            if(destinoText === 'docentes') { destinoIcon = 'fa-chalkboard-user'; destinoBg = 'bg-warning bg-opacity-10 text-warning'; }
-            if(destinoText === 'secretario') { destinoIcon = 'fa-file-signature'; destinoBg = 'bg-success bg-opacity-10 text-success'; }
-            
+
+            if (destinoText === 'aspirantes') { destinoIcon = 'fa-graduation-cap'; destinoBg = 'bg-info bg-opacity-10 text-info'; }
+            if (destinoText === 'docentes') { destinoIcon = 'fa-chalkboard-user'; destinoBg = 'bg-warning bg-opacity-10 text-warning'; }
+            if (destinoText === 'secretario') { destinoIcon = 'fa-file-signature'; destinoBg = 'bg-success bg-opacity-10 text-success'; }
+
             let estadoClass = notif.activa == 1 || notif.activa === 'true' || notif.activa === true ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger';
             let estadoText = notif.activa == 1 || notif.activa === 'true' || notif.activa === true ? 'Activa' : 'Inactiva';
+
+            tr.style.cursor = "pointer";
+            tr.onclick = () => editarNotificacion(notif.id);
 
             tr.innerHTML = `
                 <td>${notif.id}</td>
@@ -1024,20 +1157,12 @@ async function cargarNotificacionesAdmin() {
                 <td><span class="text-muted small d-inline-block text-truncate" style="max-width: 250px;">${notif.mensaje}</span></td>
                 <td><span class="badge rounded-pill px-3 py-2 ${destinoBg}"><i class="fa-solid ${destinoIcon} me-1"></i> ${destinoText}</span></td>
                 <td><span class="badge rounded-pill px-3 py-2 ${estadoClass}">${estadoText}</span></td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary shadow-sm me-1" onclick="editarNotificacion(${notif.id})" title="Editar">
-                        <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger shadow-sm" onclick="eliminarNotificacion(${notif.id})" title="Eliminar">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </td>
             `;
             contenedor.appendChild(tr);
         });
     } catch (error) {
         console.warn("Error al cargar notificaciones (API no lista):", error);
-        contenedor.innerHTML = `<tr><td colspan='4' class='text-center text-muted py-5'>
+        contenedor.innerHTML = `<tr><td colspan='5' class='text-center text-muted py-5'>
                 <i class="fa-solid fa-plug-circle-exclamation fs-2 mb-3 opacity-25"></i>
                 <p class="mb-0">Esperando conexión con el backend...</p>
             </td></tr>`;
@@ -1050,6 +1175,9 @@ function limpiarFormularioNotificacion() {
     document.getElementById("idNotificacionForm").value = "";
     document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-bell text-primary me-2"></i> Nueva Notificación';
     document.getElementById("btnEliminarNotificacion").style.display = "none";
+
+    const divIdDestino = document.getElementById('div_notif_idDestino');
+    if (divIdDestino) divIdDestino.style.display = 'none';
 }
 
 async function editarNotificacion(id) {
@@ -1064,6 +1192,17 @@ async function editarNotificacion(id) {
         document.getElementById("notif_mensaje").value = notif.mensaje || "";
         document.getElementById("notif_destino").value = notif.destino || "todos";
         document.getElementById("notif_estado").value = (notif.activa == 1 || notif.activa === 'true' || notif.activa === true) ? "1" : "0";
+
+        const notifDestino = document.getElementById("notif_destino");
+        if (notifDestino) {
+            notifDestino.dispatchEvent(new Event('change'));
+        }
+
+        const idDestinoEl = document.getElementById("notif_idDestino");
+        if (idDestinoEl && notif.destino === 'individual') {
+            await llenarSelectAspirantes();
+            idDestinoEl.value = notif.idDestino || "";
+        }
 
         document.getElementById("tituloModalNotificacion").innerHTML = '<i class="fa-solid fa-pen-to-square text-warning me-2"></i> Editar Notificación';
 
@@ -1092,7 +1231,23 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
     const activa = document.getElementById("notif_estado").value;
     const destino = document.getElementById("notif_destino").value;
 
-    const datosNotif = { nombre, mensaje, destino, activa };
+    let idDestino = null;
+    const idDestinoEl = document.getElementById("notif_idDestino");
+    if (idDestinoEl && idDestinoEl.value.trim() !== "") {
+        idDestino = idDestinoEl.value.trim();
+    }
+
+    let rolRemitente = "ADMIN";
+    let nombreRemitente = "admin";
+    try {
+        const usr = JSON.parse(sessionStorage.getItem("usuario"));
+        if (usr) {
+            rolRemitente = usr.rol || "ADMIN";
+            nombreRemitente = `${usr.nombre || ''} ${usr.primerApellido || ''}`.trim() || "Administrador del Sistema";
+        }
+    } catch (e) { }
+
+    const datosNotif = { nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino };
     const token = sessionStorage.getItem("token") || "";
 
     try {
@@ -1131,7 +1286,7 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
             // Cerrar el modal
             const modalElement = document.getElementById('modalNotificacion');
             const modal = bootstrap.Modal.getInstance(modalElement);
-            if(modal) modal.hide();
+            if (modal) modal.hide();
         } else {
             Swal.fire('Error', resultado.mensaje || 'No se pudo guardar.', 'error');
         }
@@ -1152,7 +1307,7 @@ async function eliminarNotificacion(id) {
         confirmButtonText: 'Sí, eliminar',
         cancelButtonText: 'Cancelar'
     });
-    
+
     if (!confirmacion.isConfirmed) return;
 
     const token = sessionStorage.getItem("token") || "";
@@ -1169,11 +1324,11 @@ async function eliminarNotificacion(id) {
 
         if (respuesta.ok && resultado.success !== false) {
             Swal.fire('Eliminado', 'Notificación eliminada.', 'success');
-            
+
             // Cerrar modal si está abierto (ya que el botón de eliminar también vive allí)
             const modalElement = document.getElementById('modalNotificacion');
             const modal = bootstrap.Modal.getInstance(modalElement);
-            if(modal) modal.hide();
+            if (modal) modal.hide();
 
             limpiarFormularioNotificacion();
             cargarNotificacionesAdmin();
@@ -1186,3 +1341,38 @@ async function eliminarNotificacion(id) {
     }
 }
 
+async function llenarSelectAspirantes() {
+    const select = document.getElementById('notif_idDestino');
+    if (!select || select.options.length > 1) return;
+
+    try {
+        const respuesta = await fetch('/api/aspirante');
+        if (!respuesta.ok) return;
+        const aspirantes = await respuesta.json();
+
+        let html = '<option value="">Seleccione un aspirante...</option>';
+        for (const asp of aspirantes) {
+            const nombre = `${asp.nombre || ''} ${asp.primerApellido || ''} ${asp.segundoApellido || ''}`.trim();
+            if (asp.idUsuario) {
+                html += `<option value="${asp.idUsuario}">${nombre}</option>`;
+            }
+        }
+        select.innerHTML = html;
+    } catch (e) {
+        console.warn('Error al cargar aspirantes en el select:', e);
+    }
+}
+
+document.getElementById('notif_destino')?.addEventListener('change', async function (e) {
+    const divIdDestino = document.getElementById('div_notif_idDestino');
+    if (!divIdDestino) return;
+
+    if (e.target.value === 'individual') {
+        divIdDestino.style.display = 'block';
+        await llenarSelectAspirantes();
+    } else {
+        divIdDestino.style.display = 'none';
+        const selectDestino = document.getElementById('notif_idDestino');
+        if (selectDestino) selectDestino.value = '';
+    }
+});
