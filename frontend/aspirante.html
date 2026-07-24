@@ -25,14 +25,20 @@
     </div>
 
     <nav class="sidebar">
+        <div class="sidebar-header">
         <h2><img src="css/umsnh-logo.png" alt="Logo"
                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; margin-right: 10px; vertical-align: middle;">
-            FIE ASPIRANTE</h2>
-        <a id="nav-inicio" href="#inicio" class="active"><i class="fa-solid fa-house"></i> Inicio / Menú Principal</a>
-        <a id="nav-proceso" href="#proceso"><i class="fa-solid fa-chart-pie"></i> Vista de Proceso</a>
-        <a id="nav-convocatorias" href="#convocatorias"><i class="fa-solid fa-bullhorn"></i> Convocatorias</a>
-        <a id="nav-documentos" href="#documentos" class="hidden"><i class="fa-solid fa-file-invoice-dollar"></i>
-            Documentos y Pagos</a>
+            <span class="text">FIE ASPIRANTE</span></h2>
+        <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+    </div>
+        <a id="nav-inicio" href="#inicio" class="active"><i class="fa-solid fa-house"></i> <span class="text">Inicio / Menú Principal</span>
+            </a>
+        <a id="nav-proceso" href="#proceso"><i class="fa-solid fa-chart-pie"></i> <span class="text">Vista de Proceso</span>
+            </a>
+        <a id="nav-convocatorias" href="#convocatorias"><i class="fa-solid fa-bullhorn"></i> <span class="text">Convocatorias</span>
+            </a>
+        <a id="nav-documentos" href="#documentos" class="hidden"><i class="fa-solid fa-file-invoice-dollar"></i> <span class="text">Documentos y Pagos</span>
+            </a>
     </nav>
 
     <main class="main-content" style="position: relative;">

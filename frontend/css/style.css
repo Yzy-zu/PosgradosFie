@@ -157,7 +157,9 @@ body {
 }
 
 .sidebar a {
-    padding: 15px 20px;
+    padding: 12px 15px;
+    margin: 5px 15px;
+    border-radius: 8px;
     color: #b0b5c0;
     text-decoration: none;
     display: flex;
@@ -165,6 +167,12 @@ body {
     font-size: 15px;
     transition: all 0.3s;
     cursor: pointer;
+}
+
+.sidebar.collapsed a {
+    margin: 5px 10px;
+    padding: 12px 0;
+    justify-content: center;
 }
 
 .sidebar a i {
@@ -177,16 +185,11 @@ body {
     transition: opacity 0.3s, margin-left 0.3s;
     opacity: 1;
     margin-left: 10px;
+    white-space: nowrap;
 }
 
 .sidebar.collapsed a span.text {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.sidebar.collapsed a {
-    padding: 15px 0;
-    justify-content: center;
+    display: none;
 }
 
 .sidebar a:hover,
