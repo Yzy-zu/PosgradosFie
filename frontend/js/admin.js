@@ -988,6 +988,11 @@ async function verExpedienteAspirante(id) {
         // Llenar el perfil resumido
         const nombreCompleto = `${perfil.nombre || ''} ${perfil.primerApellido || ''} ${perfil.segundoApellido || ''}`.trim();
         document.getElementById("perfil_nombreCompleto").textContent = nombreCompleto;
+        
+        // Avatar iniciales
+        const iniNombre = perfil.nombre ? perfil.nombre.charAt(0).toUpperCase() : '';
+        const iniApellido = perfil.primerApellido ? perfil.primerApellido.charAt(0).toUpperCase() : '';
+        document.getElementById("perfil_avatar").textContent = (iniNombre + iniApellido) || '--';
         document.getElementById("perfil_correo").textContent = perfil.correo || "Sin correo";
 
         document.getElementById("perfil_curp").textContent = perfil.curp || "N/A";
@@ -998,15 +1003,33 @@ async function verExpedienteAspirante(id) {
             fechaNac = new Date(perfil.fechaNacimiento).toLocaleDateString();
         }
         document.getElementById("perfil_nacimiento").textContent = fechaNac;
-        document.getElementById("perfil_direccion").textContent = perfil.direccion || "N/A";
+        
+        let direccion = perfil.direccion || "";
+        if (perfil.direccionPostal) direccion += ` (CP: ${perfil.direccionPostal})`;
+        document.getElementById("perfil_direccion").textContent = direccion || "N/A";
+
+        document.getElementById("perfil_estadoCivil").textContent = perfil.estadoCivil || "N/A";
+        document.getElementById("perfil_licenciatura").textContent = perfil.licenciatura || "N/A";
+        document.getElementById("perfil_institucionLicenciatura").textContent = perfil.institucionLicenciatura || "N/A";
+        
+        document.getElementById("perfil_fechaEgreso").textContent = perfil.fechaEgreso ? new Date(perfil.fechaEgreso).toLocaleDateString() : "N/A";
+        document.getElementById("perfil_fechaTitulacion").textContent = perfil.fechaTitulacion ? new Date(perfil.fechaTitulacion).toLocaleDateString() : "N/A";
+        document.getElementById("perfil_promedio").textContent = perfil.promedio || "N/A";
+        
+        let ocupacionInfo = perfil.ocupacion || "N/A";
+        if (perfil.ciudadOcupacion || perfil.estadoOcupacion) ocupacionInfo += ` (${perfil.ciudadOcupacion || ''}, ${perfil.estadoOcupacion || ''})`;
+        if (perfil.telefonoOcupacion) ocupacionInfo += ` - Tel: ${perfil.telefonoOcupacion}`;
+        document.getElementById("perfil_ocupacion").textContent = ocupacionInfo;
+        
+        document.getElementById("perfil_otrosEstudios").textContent = perfil.otrosEstudios || "N/A";
 
         const badgeEstado = document.getElementById("perfil_estado");
         if (perfil.activo) {
-            badgeEstado.className = "badge bg-success mb-4";
-            badgeEstado.textContent = "Usuario Activo";
+            badgeEstado.className = "soft-badge soft-badge-success mb-4 d-inline-block";
+            badgeEstado.textContent = "USUARIO ACTIVO";
         } else {
-            badgeEstado.className = "badge bg-danger mb-4";
-            badgeEstado.textContent = "Usuario Inactivo";
+            badgeEstado.className = "soft-badge soft-badge-danger mb-4 d-inline-block";
+            badgeEstado.textContent = "USUARIO INACTIVO";
         }
 
         // Llenar las solicitudes
@@ -1022,59 +1045,51 @@ async function verExpedienteAspirante(id) {
             `;
         } else {
             solicitudes.forEach(sol => {
-                let colorBadge = "bg-secondary";
-                if (sol.estado === "APROBADO") colorBadge = "bg-success";
-                else if (sol.estado === "RECHAZADO") colorBadge = "bg-danger";
-                else if (sol.estado === "EN_REVISION") colorBadge = "bg-info text-dark";
-                else if (sol.estado === "PENDIENTE") colorBadge = "bg-warning text-dark";
+                let badgeSolicitud = "soft-badge-warning";
+                if (sol.estado === "APROBADO") badgeSolicitud = "soft-badge-success";
+                else if (sol.estado === "RECHAZADO") badgeSolicitud = "soft-badge-danger";
 
                 const d = new Date(sol.creadoEn).toLocaleDateString();
 
                 // Armar la lista de documentos
                 let htmlDocs = "";
                 if (sol.documentos && sol.documentos.length > 0) {
-                    htmlDocs = `<div class="mt-3"><h6 class="small fw-bold text-muted border-bottom pb-1 mb-2">Documentos Adjuntos:</h6><ul class="list-group list-group-flush border rounded">`;
+                    htmlDocs = `<div class="mt-4"><h6 class="small fw-bold text-muted mb-3" style="letter-spacing: 0.5px; text-transform: uppercase;">Documentos Adjuntos</h6><div class="border rounded" style="border-color: #f1f5f9 !important; overflow: hidden;">`;
                     sol.documentos.forEach(doc => {
-                        let colorDoc = "text-secondary";
-                        let iconoDoc = "fa-clock";
-                        if (doc.estadoValidacion === "APROBADO") { colorDoc = "text-success"; iconoDoc = "fa-check-circle"; }
-                        else if (doc.estadoValidacion === "RECHAZADO") { colorDoc = "text-danger"; iconoDoc = "fa-times-circle"; }
-                        else if (doc.estadoValidacion === "PENDIENTE") { colorDoc = "text-warning"; iconoDoc = "fa-clock"; }
+                        let classBadge = "soft-badge-warning";
+                        if (doc.estadoValidacion === "APROBADO") { classBadge = "soft-badge-success"; }
+                        else if (doc.estadoValidacion === "RECHAZADO") { classBadge = "soft-badge-danger"; }
 
                         htmlDocs += `
-                            <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
-                                <div>
-                                    <i class="fa-solid fa-file-pdf text-danger me-2"></i>
-                                    <span class="small">${doc.requisitoNombre}</span>
+                            <div class="doc-row-premium" onclick="window.open('/uploads/${doc.rutaArchivo}', '_blank')">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa-solid fa-file-pdf doc-icon"></i>
+                                    <span style="font-weight: 500; color: #334155;">${doc.requisitoNombre}</span>
                                 </div>
-                                <div>
-                                    <span class="badge bg-light ${colorDoc} border me-2" title="Estado: ${doc.estadoValidacion}">
-                                        <i class="fa-solid ${iconoDoc}"></i> ${doc.estadoValidacion}
-                                    </span>
-                                    <a href="/uploads/${doc.rutaArchivo}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;">
-                                        Ver <i class="fa-solid fa-up-right-from-square ms-1"></i>
-                                    </a>
+                                <div class="d-flex align-items-center">
+                                    <span class="soft-badge ${classBadge} me-3">${doc.estadoValidacion}</span>
+                                    <i class="fa-solid fa-chevron-right chevron-icon"></i>
                                 </div>
-                            </li>
+                            </div>
                         `;
                     });
-                    htmlDocs += `</ul></div>`;
+                    htmlDocs += `</div></div>`;
                 } else {
-                    htmlDocs = `<div class="mt-3"><p class="text-muted small"><i class="fa-solid fa-folder-minus"></i> No se han adjuntado documentos aún.</p></div>`;
+                    htmlDocs = `<div class="mt-4 p-4 text-center rounded" style="background: #f8fafc;"><p class="text-muted small mb-0"><i class="fa-solid fa-folder-minus me-2"></i> No se han adjuntado documentos aún.</p></div>`;
                 }
 
                 contSolicitudes.innerHTML += `
-                    <div class="card border-0 shadow-sm mb-4 bg-light">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h5 class="card-title text-primary fw-bold mb-1">${sol.convocatoriaNombre}</h5>
-                                    <h6 class="card-subtitle text-muted small"><i class="fa-regular fa-calendar me-1"></i> Iniciado el: ${d} &nbsp;|&nbsp; <i class="fa-solid fa-graduation-cap me-1"></i> ${sol.tipoAdmision}</h6>
+                    <div class="mb-5 pb-2" style="border-bottom: 1px dashed #e2e8f0;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <h5 class="fw-bold mb-1" style="color: #0f172a;">${sol.convocatoriaNombre}</h5>
+                                <div class="text-muted small" style="font-weight: 500;">
+                                    <span>Iniciado el: ${d}</span> &nbsp;&bull;&nbsp; <span>${sol.tipoAdmision}</span>
                                 </div>
-                                <span class="badge ${colorBadge} fs-6 px-3 py-2 rounded-pill">${sol.estado}</span>
                             </div>
-                            ${htmlDocs}
+                            <span class="soft-badge ${badgeSolicitud}">${sol.estado}</span>
                         </div>
+                        ${htmlDocs}
                     </div>
                 `;
             });
