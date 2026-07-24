@@ -23,18 +23,41 @@ document.addEventListener("DOMContentLoaded", async function () {
                     "Authorization": `Bearer ${datos}`
                 }
             })
+            if (docente.status === 401 || docente.status === 403) {
+                console.warn("Token expirado o inválido según el backend. Cerrando sesión...");
+                sessionStorage.clear();
+                window.location.href = 'index.html';
+                return null;
+            }
             const data = await docente.json()
             return data
         } catch (error) {
             console.log(error)
+            throw error;
         }
 
     }
     // Configurar el saludo de usuario personalizado
-    const token = sessionStorage.getItem('usuario');
-    const usuario = JSON.parse(token);
+    const tokenObj = sessionStorage.getItem('usuario');
+    const tokenStr = sessionStorage.getItem('token');
+
+    if (!tokenObj || !tokenStr) {
+        console.warn("Sesión expirada o no encontrada, redirigiendo al login.");
+        window.location.href = 'index.html';
+        return;
+    }
+
+    const usuario = JSON.parse(tokenObj);
     const saludo = document.getElementById('saludo-usuario');
-    const datitos = await cargarDocente(usuario.id);
+    
+    let datitos;
+    try {
+        datitos = await cargarDocente(usuario.id);
+    } catch (e) {
+        console.error("Error al cargar datos del docente", e);
+        window.location.href = 'index.html';
+        return;
+    }
     console.log(datitos);
     if (saludo) {
         saludo.innerText = `Hola Bienvenid@, ${datitos.nombre}`;
@@ -83,7 +106,8 @@ async function cargarAspirantesAPI() {
                         nombre: d.requisitoNombre,
                         url: `/uploads/${d.rutaArchivo}`,
                         estado: d.estadoValidacion.toLowerCase(),
-                        note: d.comentarios || ""
+                        note: d.comentarios || "",
+                        historial: d.historial || []
                     }));
                 }
 
@@ -345,97 +369,175 @@ function seleccionarAspirante(id) {
     // Ocultar previsualización de documentos previos
     // cerrarVistaPrevia(); (No lo necesitamos ejecutar aquí porque ahora es modal y ya debería estar cerrado)
 
-    // Rellenar tabla de documentos
-    const tbody = document.getElementById('tabla-documentos-cuerpo');
-    tbody.innerHTML = "";
-
+    // Rellenar cuadrícula de documentos
+    const container = document.getElementById('docs-dinamicos-container');
+    let html = '';
+    
     asp.documentos.forEach(doc => {
-        const tr = document.createElement('tr');
+        let estadoClass = '';
+        let badgeClass = '';
+        let estadoTexto = '';
+        let iconClass = 'fa-file-lines';
 
-        // Estatus visual del documento
-        let statusBadge = "";
         if (doc.estado === 'aprobado') {
-            statusBadge = `<span class="badge badge-aprobado">✓ Aprobado</span>`;
+            estadoClass = 'state-aprobado';
+            badgeClass = 'status-aprobado';
+            estadoTexto = '<i class="fa-solid fa-check-circle"></i> Aprobado';
         } else if (doc.estado === 'rechazado') {
-            statusBadge = `<span class="badge badge-rechazado">✗ Rechazado</span>`;
+            estadoClass = 'state-rechazado';
+            badgeClass = 'status-rechazado';
+            estadoTexto = `<i class="fa-solid fa-circle-xmark"></i> Rechazado`;
         } else {
-            statusBadge = `<span class="badge badge-pendiente">? Pendiente</span>`;
+            estadoClass = 'state-pendiente';
+            badgeClass = 'status-pendiente';
+            estadoTexto = '<i class="fa-solid fa-clock"></i> Pendiente';
         }
 
-        // Fila de notas si existe rechazo
-        let noteHtml = "";
-        if (doc.estado === 'rechazado' && doc.note) {
-            noteHtml = `<div class="rejection-note-text"><strong>Motivo del rechazo:</strong> ${doc.note}</div>`;
-        }
-
-        tr.innerHTML = `
-            <td>
-                <span style="font-weight: bold; color: #1a1f2c;">${doc.nombre}</span>
-                ${noteHtml}
-            </td>
-            <td>${statusBadge}</td>
-            <td style="text-align: center; white-space: nowrap;">
-                <button class="btn-view-doc" onclick="verDocumento('${doc.id}')">👁️ Ver</button>
-                <button class="btn-stat btn-accept" title="Aprobar Documento" onclick="aprobarDocumento('${doc.id}')">✓</button>
-                <button class="btn-stat btn-reject" title="Rechazar Documento" onclick="rechazarDocumentoPrompt('${doc.id}')">✗</button>
-            </td>
+        html += `
+            <div class="doc-card-modern ${estadoClass}" onclick="abrirModalEvaluacion('${doc.id}')" style="cursor: pointer;">
+                <div class="doc-card-header">
+                    <div class="doc-card-icon">
+                        <i class="fa-solid ${iconClass}"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <h4 class="doc-card-title">${doc.nombre || 'Documento adjunto'}</h4>
+                    </div>
+                </div>
+                <div class="doc-card-footer">
+                    <span class="status-badge ${badgeClass}">${estadoTexto}</span>
+                    <span class="doc-card-action">Evaluar / Ver <i class="fa-solid fa-chevron-right" style="font-size:10px;"></i></span>
+                </div>
+            </div>
         `;
-        tbody.appendChild(tr);
     });
+    
+    container.innerHTML = html;
 }
 
-/**
- * Despliega el bloque simulado de lectura del documento en el pie del detalle
- */
-function verDocumento(docId) {
+// Variables globales para la evaluación en modal
+let documentoAEvaluar = null;
+
+function abrirModalEvaluacion(docId) {
     const asp = aspirantes.find(a => a.id === idAspiranteActivo);
     if (!asp) return;
 
     const doc = asp.documentos.find(d => d.id == docId);
     if (!doc) return;
 
-    const previewBox = document.getElementById('modal-visor-documento');
-    const previewNombre = document.getElementById('preview-nombre-doc');
-    const previewTexto = document.getElementById('preview-contenido-texto');
+    documentoAEvaluar = docId;
 
-    previewNombre.innerText = doc.nombre;
-
-    // Generar visor dependiendo si es imagen o PDF
+    // Rellenar UI del modal
+    document.getElementById('eval-modal-titulo').innerText = doc.nombre;
+    const visor = document.getElementById('eval-tab-documento');
+    const tabComentarios = document.getElementById('eval-tab-comentarios');
+    const tabHistorial = document.getElementById('eval-tab-historial');
+    
+    // Generar visor
     const extension = doc.url.split('.').pop().toLowerCase();
     if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
-        previewTexto.innerHTML = `<img src="${doc.url}" alt="${doc.nombre}" style="max-width: 100%; max-height: 100%; display: block; margin: 0 auto; object-fit: contain;">`;
+        visor.innerHTML = `<img src="${doc.url}" alt="${doc.nombre}" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain;">`;
     } else {
-        previewTexto.innerHTML = `<iframe src="${doc.url}" width="100%" height="100%" style="border: none; flex: 1;"></iframe>`;
+        visor.innerHTML = `<iframe src="${doc.url}" width="100%" height="100%" style="border: none;"></iframe>`;
     }
 
-    previewBox.style.display = 'flex';
+    // Comentarios
+    if (doc.note && doc.note.trim() !== '') {
+        tabComentarios.innerHTML = `<div style="background: #f1f5f9; padding: 15px; border-left: 4px solid #3b82f6; border-radius: 8px;"><p style="margin: 0; color: #334155;"><strong>Nota del evaluador:</strong><br>${doc.note}</p></div>`;
+    } else {
+        tabComentarios.innerHTML = `<p style="color: #94a3b8; text-align: center; margin-top: 20px;">No hay comentarios registrados para este documento.</p>`;
+    }
+
+    // Historial
+    if (doc.historial && doc.historial.length > 0) {
+        let histHtml = '<ul style="list-style: none; padding: 0;">';
+        doc.historial.forEach((h) => {
+            histHtml += `<li style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+                <strong style="color: ${h.estadoValidacion === 'APROBADO' ? '#10b981' : '#ef4444'}">Intento ${h.intentos} - ${h.estadoValidacion}</strong> <br>
+                <span style="font-size: 13px; color: #64748b;">${h.comentarios || 'Sin comentarios adicionales.'}</span>
+            </li>`;
+        });
+        histHtml += '</ul>';
+        tabHistorial.innerHTML = histHtml;
+    } else {
+        tabHistorial.innerHTML = `<p style="color: #94a3b8; text-align: center; margin-top: 20px;">No hay un historial previo para este documento.</p>`;
+    }
+
+    // Resetear panel de rechazo
+    ocultarOpcionesRechazo();
+    document.getElementById('eval-modal-nota').value = doc.note || "";
+
+    // Ocultar botones de evaluación si ya está aprobado
+    const controlesWrapper = document.getElementById('eval-controles-wrapper');
+    if (controlesWrapper) {
+        if (doc.estado === 'aprobado') {
+            controlesWrapper.style.display = 'none';
+        } else {
+            controlesWrapper.style.display = 'flex';
+        }
+    }
+
+    // Seleccionar por defecto la pestaña Documento
+    cambiarTabEvaluacion('documento');
+
+    // Mostrar modal
+    document.getElementById('modal-evaluacion-doc').style.display = 'flex';
 }
 
-/**
- * Oculta el visor del documento
- */
-function cerrarVistaPrevia() {
-    const previewBox = document.getElementById('modal-visor-documento');
-    if (previewBox) {
-        previewBox.style.display = 'none';
-        // Limpiar el contenido para que deje de cargar el iframe
-        document.getElementById('preview-contenido-texto').innerHTML = '';
+function cambiarTabEvaluacion(tabName) {
+    // Ocultar todos los tabs
+    document.querySelectorAll('.eval-tab-content').forEach(el => el.style.display = 'none');
+    // Reiniciar estilos de los botones
+    document.querySelectorAll('.modal-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.background = 'transparent';
+        btn.style.color = '#64748b';
+    });
+    
+    // Mostrar el tab seleccionado
+    const selectedTab = document.getElementById(`eval-tab-${tabName}`);
+    if (selectedTab) {
+        // si es el documento o historial lo mostramos en flex o block según convenga
+        selectedTab.style.display = tabName === 'documento' ? 'flex' : 'block'; 
+    }
+    
+    // Resaltar botón seleccionado
+    const activeBtn = document.getElementById(`btn-tab-${tabName}`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+        activeBtn.style.background = '#e2e8f0';
+        activeBtn.style.color = '#334155';
     }
 }
 
-/**
- * Aprueba el documento indicado del aspirante activo, guardando los cambios
- */
-async function aprobarDocumento(docId) {
+function cerrarModalEvaluacion() {
+    document.getElementById('modal-evaluacion-doc').style.display = 'none';
+    document.getElementById('eval-tab-documento').innerHTML = '';
+    documentoAEvaluar = null;
+}
+
+function mostrarOpcionesRechazo() {
+    document.getElementById('eval-botones-container').style.display = 'none';
+    document.getElementById('eval-panel-rechazo').style.display = 'block';
+    document.getElementById('eval-modal-nota').focus();
+}
+
+function ocultarOpcionesRechazo() {
+    document.getElementById('eval-botones-container').style.display = 'flex';
+    document.getElementById('eval-panel-rechazo').style.display = 'none';
+}
+
+async function aprobarDocumentoModal() {
+    if (!documentoAEvaluar) return;
+
     const aspIndex = aspirantes.findIndex(a => a.id === idAspiranteActivo);
     if (aspIndex === -1) return;
 
-    const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id == docId);
+    const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id == documentoAEvaluar);
     if (docIndex === -1) return;
 
     try {
         const token = sessionStorage.getItem("token") || "";
-        const res = await fetch(`/api/documentos/evaluar/${docId}`, {
+        const res = await fetch(`/api/documentos/evaluar/${documentoAEvaluar}`, {
             method: 'PUT',
             headers: {
                 "Content-Type": "application/json",
@@ -447,9 +549,10 @@ async function aprobarDocumento(docId) {
         if (res.ok) {
             aspirantes[aspIndex].documentos[docIndex].estado = 'aprobado';
             aspirantes[aspIndex].documentos[docIndex].note = '';
-
+            
             actualizarEstadisticas();
-            seleccionarAspirante(idAspiranteActivo);
+            seleccionarAspirante(idAspiranteActivo); // Recarga las tarjetas
+            cerrarModalEvaluacion();
         } else {
             const err = await res.json();
             alert("No se pudo aprobar el documento: " + (err.mensaje || "Error"));
@@ -460,56 +563,24 @@ async function aprobarDocumento(docId) {
     }
 }
 
-/**
- * Abre el cuadro modal de captura para definir el por qué del rechazo
- */
-function rechazarDocumentoPrompt(docId) {
-    const asp = aspirantes.find(a => a.id === idAspiranteActivo);
-    if (!asp) return;
-
-    const doc = asp.documentos.find(d => d.id == docId);
-    if (!doc) return;
-
-    documentoARechazar = docId;
-
-    // Mostrar el modal overlay
-    const modal = document.getElementById('modal-rechazo');
-    modal.style.display = 'flex';
-
-    // Rellenar metadatos en el modal
-    document.getElementById('modal-titulo-documento').innerText = `Rechazar: ${doc.nombre}`;
-    document.getElementById('modal-nota-texto').value = doc.note || "";
-    document.getElementById('modal-nota-texto').focus();
-}
-
-/**
- * Cierra el modal de captura sin guardar modificaciones
- */
-function cerrarModalRechazo() {
-    document.getElementById('modal-rechazo').style.display = 'none';
-    documentoARechazar = null;
-}
-
-/**
- * Confirma el cambio del estatus a rechazado guardando la nota explicativa
- */
-async function guardarRechazoDocumento() {
-    const noteText = document.getElementById('modal-nota-texto').value.trim();
+async function rechazarDocumentoModal() {
+    if (!documentoAEvaluar) return;
+    const noteText = document.getElementById('eval-modal-nota').value.trim();
 
     if (noteText === "") {
-        alert("Por favor, ingresa el motivo del rechazo del archivo. Es obligatorio informarle al aspirante el por qué.");
+        alert("Por favor, ingresa el motivo detallado del rechazo.");
         return;
     }
 
     const aspIndex = aspirantes.findIndex(a => a.id === idAspiranteActivo);
     if (aspIndex === -1) return;
 
-    const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id == documentoARechazar);
+    const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id == documentoAEvaluar);
     if (docIndex === -1) return;
 
     try {
         const token = sessionStorage.getItem("token") || "";
-        const res = await fetch(`/api/documentos/evaluar/${documentoARechazar}`, {
+        const res = await fetch(`/api/documentos/evaluar/${documentoAEvaluar}`, {
             method: 'PUT',
             headers: {
                 "Content-Type": "application/json",
@@ -522,9 +593,9 @@ async function guardarRechazoDocumento() {
             aspirantes[aspIndex].documentos[docIndex].estado = 'rechazado';
             aspirantes[aspIndex].documentos[docIndex].note = noteText;
 
-            cerrarModalRechazo();
             actualizarEstadisticas();
             seleccionarAspirante(idAspiranteActivo);
+            cerrarModalEvaluacion();
         } else {
             const err = await res.json();
             alert("No se pudo rechazar el documento: " + (err.mensaje || "Error"));

@@ -46,10 +46,13 @@ const obtenerUsuario = async (req, res) => {
 
 // Crear usuario
 const crearUsuario = async (req, res) => {
+    const conexion = await db.getConnection();
     try {
+        await conexion.beginTransaction();
+
         const { correo, password, rol, activo, detalles } = req.body;
 
-        const [result] = await db.query(
+        const [result] = await conexion.query(
             'INSERT INTO usuario (correo, contraseña, rol, activo) VALUES (?, ?, ?, ?)',
             [correo, password, rol, activo !== undefined ? activo : 1]
         );
@@ -57,27 +60,31 @@ const crearUsuario = async (req, res) => {
 
         if (detalles) {
             if (rol === 'ASPIRANTE') {
-                await db.query(
+                await conexion.query(
                     'INSERT INTO aspirante (idUsuario, nombre, primerApellido, segundoApellido, curp, telefono, direccion, fechaNacimiento, estadoCivil, licenciatura, institucionLicenciatura, fechaEgreso, fechaTitulacion, promedio, otrosEstudios, ocupacion, direccionPostal, ciudadOcupacion, estadoOcupacion, telefonoOcupacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                     [idUsuario, detalles.nombre||'', detalles.primerApellido||'', detalles.segundoApellido||'', detalles.curp||'', detalles.telefono||'', detalles.direccion||'', detalles.fechaNacimiento||new Date(), detalles.estadoCivil||'SOLTERO', detalles.licenciatura||'', detalles.institucionLicenciatura||'', detalles.fechaEgreso||null, detalles.fechaTitulacion||null, detalles.promedio||null, detalles.otrosEstudios||'', detalles.ocupacion||'', detalles.direccionPostal||null, detalles.ciudadOcupacion||'', detalles.estadoOcupacion||'', detalles.telefonoOcupacion||null]
                 );
             } else if (rol === 'DOCENTE') {
-                await db.query(
+                await conexion.query(
                     'INSERT INTO docente (idUsua, nombre, primerApellido, segundoApellido, cargo, especialidad, cubiculo) VALUES (?, ?, ?, ?, ?, ?, ?)',
                     [idUsuario, detalles.nombre||'', detalles.primerApellido||'', detalles.segundoApellido||'', detalles.cargo||'', detalles.especialidad||'', detalles.cubiculo||'']
                 );
             } else if (rol === 'SECRETARIO') {
-                await db.query(
+                await conexion.query(
                     'INSERT INTO secretario (idUsua, area, extension) VALUES (?, ?, ?)',
                     [idUsuario, detalles.area||'', detalles.extension||'']
                 );
             }
         }
 
+        await conexion.commit();
         return res.json({ success: true, mensaje: 'Usuario creado correctamente' });
     } catch (error) {
+        await conexion.rollback();
         console.error('Error en crearUsuario:', error);
-        return res.status(500).json({ success: false, mensaje: 'Error al crear usuario' });
+        return res.status(500).json({ success: false, mensaje: 'Error al crear usuario: ' + error.message });
+    } finally {
+        conexion.release();
     }
 };
 

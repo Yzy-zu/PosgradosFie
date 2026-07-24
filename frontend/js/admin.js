@@ -272,12 +272,12 @@ function renderizarCamposRol(rol, detalles = {}) {
         html = `
             <h6 class="text-primary mb-3"><i class="fa-solid fa-user-graduate"></i> Detalles de Aspirante</h6>
             <div class="row" style="max-height: 400px; overflow-y: auto; overflow-x: hidden;">
-                <div class="col-md-4 mb-2"><label class="form-label small">Nombre</label><input type="text" id="det_nombre" class="form-control form-control-sm" value="${detalles.nombre || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Primer Apellido</label><input type="text" id="det_primerApellido" class="form-control form-control-sm" value="${detalles.primerApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Nombre <span class="text-danger">*</span></label><input type="text" id="det_nombre" class="form-control form-control-sm" value="${detalles.nombre || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Primer Apellido <span class="text-danger">*</span></label><input type="text" id="det_primerApellido" class="form-control form-control-sm" value="${detalles.primerApellido || ''}"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small">Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" value="${detalles.segundoApellido || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">CURP</label><input type="text" id="det_curp" class="form-control form-control-sm" value="${detalles.curp || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Teléfono</label><input type="text" id="det_telefono" class="form-control form-control-sm" value="${detalles.telefono || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Fecha Nacimiento</label><input type="date" id="det_fechaNacimiento" class="form-control form-control-sm" value="${detalles.fechaNacimiento ? detalles.fechaNacimiento.split('T')[0] : ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">CURP <span class="text-danger">*</span></label><input type="text" id="det_curp" class="form-control form-control-sm" value="${detalles.curp || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Teléfono <span class="text-danger">*</span></label><input type="text" id="det_telefono" class="form-control form-control-sm" value="${detalles.telefono || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Fecha Nacimiento <span class="text-danger">*</span></label><input type="date" id="det_fechaNacimiento" class="form-control form-control-sm" value="${detalles.fechaNacimiento ? detalles.fechaNacimiento.split('T')[0] : ''}"></div>
                 <div class="col-md-4 mb-2">
                     <label class="form-label small">Estado Civil</label>
                     <select id="det_estadoCivil" class="form-select form-select-sm">
@@ -293,11 +293,11 @@ function renderizarCamposRol(rol, detalles = {}) {
                 <div class="col-md-4 mb-2"><label class="form-label small">Código Postal</label><input type="number" id="det_direccionPostal" class="form-control form-control-sm" value="${detalles.direccionPostal || ''}"></div>
                 
                 <h6 class="text-secondary mt-3 mb-2 w-100 border-bottom pb-1"><i class="fa-solid fa-graduation-cap"></i> Antecedentes Académicos</h6>
-                <div class="col-md-6 mb-2"><label class="form-label small">Licenciatura</label><input type="text" id="det_licenciatura" class="form-control form-control-sm" value="${detalles.licenciatura || ''}"></div>
-                <div class="col-md-6 mb-2"><label class="form-label small">Institución (Licenciatura)</label><input type="text" id="det_institucionLicenciatura" class="form-control form-control-sm" value="${detalles.institucionLicenciatura || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Fecha de Egreso</label><input type="date" id="det_fechaEgreso" class="form-control form-control-sm" value="${detalles.fechaEgreso ? detalles.fechaEgreso.split('T')[0] : ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Fecha de Titulación</label><input type="date" id="det_fechaTitulacion" class="form-control form-control-sm" value="${detalles.fechaTitulacion ? detalles.fechaTitulacion.split('T')[0] : ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Promedio</label><input type="number" step="0.01" id="det_promedio" class="form-control form-control-sm" value="${detalles.promedio || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small">Licenciatura <span class="text-danger">*</span></label><input type="text" id="det_licenciatura" class="form-control form-control-sm" value="${detalles.licenciatura || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small">Institución (Licenciatura) <span class="text-danger">*</span></label><input type="text" id="det_institucionLicenciatura" class="form-control form-control-sm" value="${detalles.institucionLicenciatura || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Fecha de Egreso <span class="text-danger">*</span></label><input type="date" id="det_fechaEgreso" class="form-control form-control-sm" value="${detalles.fechaEgreso ? detalles.fechaEgreso.split('T')[0] : ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Fecha de Titulación <span class="text-danger">*</span></label><input type="date" id="det_fechaTitulacion" class="form-control form-control-sm" value="${detalles.fechaTitulacion ? detalles.fechaTitulacion.split('T')[0] : ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small">Promedio <span class="text-danger">*</span></label><input type="number" step="0.01" id="det_promedio" class="form-control form-control-sm" value="${detalles.promedio || ''}"></div>
                 <div class="col-md-12 mb-2"><label class="form-label small">Otros Estudios</label><input type="text" id="det_otrosEstudios" class="form-control form-control-sm" value="${detalles.otrosEstudios || ''}"></div>
 
                 <h6 class="text-secondary mt-3 mb-2 w-100 border-bottom pb-1"><i class="fa-solid fa-briefcase"></i> Ocupación</h6>
@@ -432,6 +432,33 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
             ciudadOcupacion: document.getElementById("det_ciudadOcupacion")?.value,
             estadoOcupacion: document.getElementById("det_estadoOcupacion")?.value
         };
+
+        const requiredAspirante = [
+            { id: 'nombre', label: 'Nombre' },
+            { id: 'primerApellido', label: 'Primer Apellido' },
+            { id: 'curp', label: 'CURP' },
+            { id: 'telefono', label: 'Teléfono' },
+            { id: 'fechaNacimiento', label: 'Fecha Nacimiento' },
+            { id: 'licenciatura', label: 'Licenciatura' },
+            { id: 'institucionLicenciatura', label: 'Institución (Licenciatura)' },
+            { id: 'fechaEgreso', label: 'Fecha de Egreso' },
+            { id: 'fechaTitulacion', label: 'Fecha de Titulación' },
+            { id: 'promedio', label: 'Promedio' }
+        ];
+
+        let faltan = [];
+        requiredAspirante.forEach(campo => {
+            if (!detalles[campo.id]) faltan.push(campo.label);
+        });
+
+        if (faltan.length > 0) {
+            alert("Por favor complete los siguientes campos obligatorios del aspirante:\n- " + faltan.join("\n- "));
+            const contDetalles = document.getElementById("detallesExtendidos");
+            if (contDetalles && contDetalles.style.width === "0px") {
+                toggleDetallesUsuario();
+            }
+            return;
+        }
     } else if (rol === "DOCENTE") {
         detalles = {
             nombre: document.getElementById("det_nombre")?.value,
