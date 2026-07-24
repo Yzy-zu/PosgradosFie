@@ -514,9 +514,12 @@ function ocultarPanelNotificaciones() {
     if (p) p.style.display = 'none';
 }
 
-function abrirNotificacion(notifDataEnc, element) {
+function abrirNotificacion(remitenteKey, element) {
     try {
-        const notif = JSON.parse(decodeURIComponent(notifDataEnc));
+        const remitenteName = decodeURIComponent(remitenteKey);
+        const grupo = window.mensajesAgrupados ? window.mensajesAgrupados[remitenteName] : null;
+        
+        if (!grupo) return;
         
         // Marcar activo en la lista
         document.querySelectorAll('#notification-list .chat-item').forEach(el => el.style.background = 'transparent');
@@ -527,27 +530,42 @@ function abrirNotificacion(notifDataEnc, element) {
         const readPane = document.getElementById('messages-read-pane');
         readPane.style.display = 'flex';
         
-        // Llenar datos
-        const isGeneral = notif.destino === 'todos';
-        const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico' : 'Administración Posgrados');
+        document.getElementById('messages-read-title').innerText = grupo.remitente;
         
-        document.getElementById('messages-read-title').innerText = remitente;
-        
-        const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
-        const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-        const dateStr = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-
         const body = document.getElementById('messages-read-body');
-        body.innerHTML = `
-            <div style="text-align: center; margin-bottom: 15px;">
-                <span style="background: #e2e8f0; padding: 2px 8px; border-radius: 12px; font-size: 11px; color: #64748b;">${dateStr}</span>
-            </div>
-            <div style="background: white; padding: 12px 15px; border-radius: 18px 18px 18px 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 14px; color: #1c1e21; max-width: 90%; margin-bottom: 10px; word-wrap: break-word;">
-                <div style="font-weight: bold; color: var(--color-primary); margin-bottom: 5px; font-size: 12px;">${notif.nombre}</div>
-                ${notif.mensaje}
-                <div style="font-size: 10px; color: #94a3b8; margin-top: 5px; text-align: right;">${timeStr}</div>
-            </div>
-        `;
+        let chatHtml = '';
+        
+        let lastDateStr = '';
+        grupo.mensajes.forEach(notif => {
+            const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
+            const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+            
+            // Si cambió de día, ponemos un separador de fecha
+            if (dateStr !== lastDateStr) {
+                chatHtml += `
+                    <div style="text-align: center; margin-bottom: 15px; margin-top: 15px;">
+                        <span style="background: #e2e8f0; padding: 2px 8px; border-radius: 12px; font-size: 11px; color: #64748b; font-weight: bold;">${dateStr}</span>
+                    </div>
+                `;
+                lastDateStr = dateStr;
+            }
+
+            chatHtml += `
+                <div style="background: white; padding: 12px 15px; border-radius: 18px 18px 18px 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 14px; color: #1c1e21; max-width: 90%; margin-bottom: 10px; word-wrap: break-word; align-self: flex-start;">
+                    <div style="font-weight: bold; color: var(--color-primary); margin-bottom: 5px; font-size: 12px;">${notif.nombre}</div>
+                    ${notif.mensaje}
+                    <div style="font-size: 10px; color: #94a3b8; margin-top: 5px; text-align: right;">${timeStr}</div>
+                </div>
+            `;
+        });
+        
+        body.innerHTML = chatHtml;
+        
+        // Auto scroll al final del chat
+        setTimeout(() => {
+            body.scrollTop = body.scrollHeight;
+        }, 50);
         
     } catch (error) {
         console.error("Error al abrir notificación", error);
@@ -707,28 +725,51 @@ async function cargarNotificaciones() {
             if (!notificaciones || notificaciones.length === 0) {
                 contenedor.innerHTML = '<div class="messages-empty-state"><i class="fa-solid fa-inbox fa-2x mb-2 opacity-50"></i>No tienes mensajes.</div>';
             } else {
-                let html = '';
+                // Agrupar por remitente
+                const grupos = {};
                 notificaciones.forEach(notif => {
                     const isGeneral = notif.destino === 'todos';
-                    const bgClass = isGeneral ? 'bg-primary' : 'bg-warning';
-                    const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico' : 'Coordinación FIE');
+                    const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico' : 'Administración Posgrados');
                     
-                    const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
+                    if (!grupos[remitente]) {
+                        grupos[remitente] = {
+                            remitente: remitente,
+                            isGeneral: isGeneral,
+                            mensajes: []
+                        };
+                    }
+                    grupos[remitente].mensajes.push(notif);
+                });
+
+                // Ordenar mensajes de cada grupo (más viejo al más nuevo para leer como chat)
+                Object.values(grupos).forEach(grupo => {
+                    grupo.mensajes.sort((a, b) => new Date(a.creado_en || 0) - new Date(b.creado_en || 0));
+                });
+
+                // Guardar globalmente para no pasar todo por HTML
+                window.mensajesAgrupados = grupos;
+
+                let html = '';
+                Object.values(grupos).forEach(grupo => {
+                    const ultMsg = grupo.mensajes[grupo.mensajes.length - 1]; // Último mensaje
+                    const bgClass = grupo.isGeneral ? 'bg-primary' : 'bg-warning';
+                    
+                    const dateObj = ultMsg.creado_en ? new Date(ultMsg.creado_en) : new Date();
                     const formattedDate = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 
-                    const notifDataStr = encodeURIComponent(JSON.stringify(notif));
+                    const remitenteKey = encodeURIComponent(grupo.remitente);
 
                     html += `
-                    <div class="chat-item p-3 border-bottom" style="cursor: pointer; display: flex; gap: 10px; align-items: center;" onclick="abrirNotificacion('${notifDataStr}', this)">
+                    <div class="chat-item p-3 border-bottom" style="cursor: pointer; display: flex; gap: 10px; align-items: center;" onclick="abrirNotificacion('${remitenteKey}', this)">
                         <div class="chat-avatar ${bgClass} text-white rounded-circle d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; flex-shrink: 0;">
                             <i class="fa-solid fa-user"></i>
                         </div>
                         <div class="chat-details" style="flex: 1; overflow: hidden;">
                             <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
-                                <div style="font-weight: bold; font-size: 13px; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${remitente}</div>
+                                <div style="font-weight: bold; font-size: 13px; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${grupo.remitente}</div>
                                 <div style="font-size: 11px; color: #94a3b8; flex-shrink: 0;">${formattedDate}</div>
                             </div>
-                            <div style="font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><strong>${notif.nombre}</strong> - ${notif.mensaje}</div>
+                            <div style="font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><strong>${ultMsg.nombre}</strong> - ${ultMsg.mensaje}</div>
                         </div>
                     </div>`;
                 });
