@@ -828,7 +828,7 @@ function abrirModalDoc(docStr) {
 
         } else if (doc.estadoValidacion === 'RECHAZADO') {
             badge.classList.add('status-rechazado');
-            badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Rechazado (Intento ${numIntentos} de 3)`;
+            badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Rechazado en el Intento ${numIntentos}`;
             if (comentariosWrapper) comentariosWrapper.style.borderLeftColor = '#ef4444';
 
             if (resubirContainer) {
@@ -837,7 +837,7 @@ function abrirModalDoc(docStr) {
                     const reqNombreSanitized = encodeURIComponent(doc.requisitoNombre || 'Documento');
                     resubirContainer.innerHTML = `
                         <button onclick="iniciarReSubidaDocumento(${doc.idDocumento}, '${reqNombreSanitized}', ${numIntentos})" style="background-color: #8a1c24; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; font-size: 15px; box-shadow: 0 4px 10px rgba(138, 28, 36, 0.2); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> Volver a Intentar (Intento ${numIntentos + 1} de 3)
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Re-subir (Será tu Intento ${numIntentos + 1} de 3)
                         </button>
                     `;
                 } else {

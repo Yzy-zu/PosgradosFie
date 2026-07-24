@@ -553,6 +553,14 @@ async function aprobarDocumentoModal() {
             actualizarEstadisticas();
             seleccionarAspirante(idAspiranteActivo); // Recarga las tarjetas
             cerrarModalEvaluacion();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Documento Aprobado',
+                text: 'El documento ha sido marcado como aprobado exitosamente.',
+                timer: 1500,
+                showConfirmButton: false
+            });
         } else {
             const err = await res.json();
             alert("No se pudo aprobar el documento: " + (err.mensaje || "Error"));
@@ -596,6 +604,14 @@ async function rechazarDocumentoModal() {
             actualizarEstadisticas();
             seleccionarAspirante(idAspiranteActivo);
             cerrarModalEvaluacion();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Documento Rechazado',
+                text: 'El documento ha sido marcado como rechazado exitosamente.',
+                timer: 1500,
+                showConfirmButton: false
+            });
         } else {
             const err = await res.json();
             alert("No se pudo rechazar el documento: " + (err.mensaje || "Error"));
