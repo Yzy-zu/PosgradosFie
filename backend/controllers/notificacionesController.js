@@ -57,7 +57,7 @@ const crearNotificacion = async (req, res) => {
                 const [usr] = await db.query('SELECT nombre, primerApellido FROM docente WHERE idUsua = ?', [idUsuario]);
                 if (usr.length > 0) nombreRemitente = `${usr[0].nombre || ''} ${usr[0].primerApellido || ''}`.trim();
             } else if (rolRemitente === 'ADMIN') {
-                nombreRemitente = 'Administrador del Sistema';
+                nombreRemitente = 'Administracion Posgrados';
             } else if (rolRemitente === 'SECRETARIO') {
                 nombreRemitente = 'Secretaría Académica';
             } else if (rolRemitente === 'COORDINADOR') {
@@ -101,7 +101,7 @@ const actualizarNotificacion = async (req, res) => {
                 const [usr] = await db.query('SELECT nombre, primerApellido FROM docente WHERE idUsua = ?', [idUsuario]);
                 if (usr.length > 0) nombreRemitente = `${usr[0].nombre || ''} ${usr[0].primerApellido || ''}`.trim();
             } else if (rolRemitente === 'ADMIN') {
-                nombreRemitente = 'Administrador del Sistema';
+                nombreRemitente = 'Administracion Posgrados';
             } else if (rolRemitente === 'SECRETARIO') {
                 nombreRemitente = 'Secretaría Académica';
             } else if (rolRemitente === 'COORDINADOR') {

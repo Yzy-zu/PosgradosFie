@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     const usuario = JSON.parse(tokenObj);
     const saludo = document.getElementById('saludo-usuario');
-    
+
     let datitos;
     try {
         datitos = await cargarDocente(usuario.id);
@@ -372,7 +372,7 @@ function seleccionarAspirante(id) {
     // Rellenar cuadrícula de documentos
     const container = document.getElementById('docs-dinamicos-container');
     let html = '';
-    
+
     asp.documentos.forEach(doc => {
         let estadoClass = '';
         let badgeClass = '';
@@ -410,7 +410,7 @@ function seleccionarAspirante(id) {
             </div>
         `;
     });
-    
+
     container.innerHTML = html;
 }
 
@@ -431,7 +431,7 @@ function abrirModalEvaluacion(docId) {
     const visor = document.getElementById('eval-tab-documento');
     const tabComentarios = document.getElementById('eval-tab-comentarios');
     const tabHistorial = document.getElementById('eval-tab-historial');
-    
+
     // Generar visor
     const extension = doc.url.split('.').pop().toLowerCase();
     if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
@@ -492,14 +492,14 @@ function cambiarTabEvaluacion(tabName) {
         btn.style.background = 'transparent';
         btn.style.color = '#64748b';
     });
-    
+
     // Mostrar el tab seleccionado
     const selectedTab = document.getElementById(`eval-tab-${tabName}`);
     if (selectedTab) {
         // si es el documento o historial lo mostramos en flex o block según convenga
-        selectedTab.style.display = tabName === 'documento' ? 'flex' : 'block'; 
+        selectedTab.style.display = tabName === 'documento' ? 'flex' : 'block';
     }
-    
+
     // Resaltar botón seleccionado
     const activeBtn = document.getElementById(`btn-tab-${tabName}`);
     if (activeBtn) {
@@ -518,29 +518,29 @@ function abrirNotificacion(remitenteKey, element) {
     try {
         const remitenteName = decodeURIComponent(remitenteKey);
         const grupo = window.mensajesAgrupados ? window.mensajesAgrupados[remitenteName] : null;
-        
+
         if (!grupo) return;
-        
+
         // Marcar activo en la lista
         document.querySelectorAll('#notification-list .chat-item').forEach(el => el.style.background = 'transparent');
-        if(element) element.style.background = '#e2e8f0';
+        if (element) element.style.background = '#e2e8f0';
 
         // Mostrar paneles
         document.getElementById('messages-empty-pane').style.display = 'none';
         const readPane = document.getElementById('messages-read-pane');
         readPane.style.display = 'flex';
-        
+
         document.getElementById('messages-read-title').innerText = grupo.remitente;
-        
+
         const body = document.getElementById('messages-read-body');
         let chatHtml = '';
-        
+
         let lastDateStr = '';
         grupo.mensajes.forEach(notif => {
             const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
             const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
             const dateStr = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
-            
+
             let editadoHtml = '';
             if (notif.editado_en && notif.creado_en && notif.editado_en !== notif.creado_en) {
                 const editDate = new Date(notif.editado_en);
@@ -548,7 +548,7 @@ function abrirNotificacion(remitenteKey, element) {
                     editadoHtml = `<span class="ms-1 text-muted fst-italic">(Editado)</span>`;
                 }
             }
-            
+
             // Si cambió de día, ponemos un separador de fecha
             if (dateStr !== lastDateStr) {
                 chatHtml += `
@@ -567,14 +567,14 @@ function abrirNotificacion(remitenteKey, element) {
                 </div>
             `;
         });
-        
+
         body.innerHTML = chatHtml;
-        
+
         // Auto scroll al final del chat
         setTimeout(() => {
             body.scrollTop = body.scrollHeight;
         }, 50);
-        
+
     } catch (error) {
         console.error("Error al abrir notificación", error);
     }
@@ -620,11 +620,11 @@ async function aprobarDocumentoModal() {
         if (res.ok) {
             aspirantes[aspIndex].documentos[docIndex].estado = 'aprobado';
             aspirantes[aspIndex].documentos[docIndex].note = '';
-            
+
             actualizarEstadisticas();
             seleccionarAspirante(idAspiranteActivo); // Recarga las tarjetas
             cerrarModalEvaluacion();
-            
+
             Swal.fire({
                 icon: 'success',
                 title: 'Documento Aprobado',
@@ -675,7 +675,7 @@ async function rechazarDocumentoModal() {
             actualizarEstadisticas();
             seleccionarAspirante(idAspiranteActivo);
             cerrarModalEvaluacion();
-            
+
             Swal.fire({
                 icon: 'success',
                 title: 'Documento Rechazado',
@@ -719,7 +719,7 @@ async function cargarNotificaciones() {
 
         if (res.ok) {
             const notificaciones = await res.json();
-            
+
             // Update Badge
             if (badge) {
                 if (notificaciones.length > 0) {
@@ -737,8 +737,8 @@ async function cargarNotificaciones() {
                 const grupos = {};
                 notificaciones.forEach(notif => {
                     const isGeneral = notif.destino === 'todos';
-                    const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico' : 'Administración Posgrados');
-                    
+                    const remitente = notif.nombreRemitente ? `${notif.rolRemitente}: ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico' : 'Administración Posgrados');
+
                     if (!grupos[remitente]) {
                         grupos[remitente] = {
                             remitente: remitente,
@@ -761,7 +761,7 @@ async function cargarNotificaciones() {
                 Object.values(grupos).forEach(grupo => {
                     const ultMsg = grupo.mensajes[grupo.mensajes.length - 1]; // Último mensaje
                     const bgClass = grupo.isGeneral ? 'bg-primary' : 'bg-warning';
-                    
+
                     const dateObj = ultMsg.creado_en ? new Date(ultMsg.creado_en) : new Date();
                     const formattedDate = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 
@@ -799,12 +799,12 @@ function toggleNotificationMenu(event) {
     event.stopPropagation(); // Evitar que se propague al document
     const menu = document.getElementById('notification-dropdown');
     const profileMenu = document.getElementById('profile-dropdown');
-    
+
     // Si el menú de perfil está abierto, lo cerramos
     if (profileMenu && profileMenu.classList.contains('show')) {
         profileMenu.classList.remove('show');
     }
-    
+
     if (menu) {
         menu.classList.toggle('show');
     }
@@ -814,11 +814,11 @@ function toggleNotificationMenu(event) {
 document.addEventListener('click', function (event) {
     const notificationMenu = document.getElementById('notification-dropdown');
     const profileMenu = document.getElementById('profile-dropdown');
-    
+
     if (notificationMenu && notificationMenu.classList.contains('show') && !event.target.closest('.notification-container')) {
         notificationMenu.classList.remove('show');
     }
-    
+
     if (profileMenu && profileMenu.classList.contains('show') && !event.target.closest('.profile-container')) {
         profileMenu.classList.remove('show');
     }
