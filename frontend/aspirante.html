@@ -122,14 +122,32 @@
         <section id="view-inicio" class="view-section active">
             <h1 id="saludo-usuario" style="margin-bottom: 20px;"><i class="fa-solid fa-graduation-cap"></i> Hola
                 Bienvenid@, "Nombre del estudiante"</h1>
-            <div class="dashboard-grid">
-                <div class="card" onclick="switchView('proceso')" style="cursor:pointer;">
-                    <h3><i class="fa-solid fa-route" style="color: #8a1c24;"></i> Proceso de admisión</h3>
-                    <p>Ver estado actual</p>
+            <div class="carousel-container" id="inicio-carousel">
+                <div class="carousel-track" id="inicio-carousel-track">
+                    <!-- Placeholder images (the user will replace these) -->
+                    <div class="carousel-slide" style="background-color: #0f172a; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; font-weight: bold;">
+                        <img src="" style="display: none;" alt="Aviso 1">
+                        AVISO IMPORTANTE 1
+                    </div>
+                    <div class="carousel-slide" style="background-color: #8a1c24; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; font-weight: bold;">
+                        <img src="" style="display: none;" alt="Aviso 2">
+                        AVISO IMPORTANTE 2
+                    </div>
+                    <div class="carousel-slide" style="background-color: #0284c7; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; font-weight: bold;">
+                        <img src="" style="display: none;" alt="Aviso 3">
+                        AVISO IMPORTANTE 3
+                    </div>
                 </div>
-                <div class="card" onclick="switchView('convocatorias')" style="cursor:pointer;">
-                    <h3><i class="fa-solid fa-folder-open" style="color: #8a1c24;"></i> Convocatorias abiertas</h3>
-                    <p>Explorar opciones de posgrado</p>
+                
+                <!-- Controls -->
+                <button class="carousel-btn prev-btn" onclick="moveCarousel(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="carousel-btn next-btn" onclick="moveCarousel(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                
+                <!-- Indicators -->
+                <div class="carousel-indicators" id="inicio-carousel-indicators">
+                    <span class="indicator active" onclick="goToSlide(0)"></span>
+                    <span class="indicator" onclick="goToSlide(1)"></span>
+                    <span class="indicator" onclick="goToSlide(2)"></span>
                 </div>
             </div>
         </section>
@@ -164,14 +182,7 @@
             <h2>Convocatorias Disponibles</h2>
 
             <!-- Bloqueo de Convocatoria -->
-            <div id="bloqueo-convocatoria"
-                style="display: none; text-align: center; padding: 40px; background: #f9f9f9; border-radius: 8px; border: 2px solid #ddd; margin-top: 120px">
-                <h3><i class="fa-solid fa-lock" style="color: #8a1c24;"></i> Proceso en Curso</h3>
-                <p>Actualmente tienes una solicitud de admisión en progreso. Por seguridad, no puedes iniciar otra
-                    solicitud hasta cancelar o concluir la actual.</p>
-                <button class="btn-primary" onclick="switchView('documentos')"
-                    style="margin-top: 15px; width: auto; padding: 10px 20px;"><i class="fa-solid fa-arrow-right"></i>
-                    Ir a mis Documentos</button>
+            <div id="bloqueo-convocatoria" style="display: none; padding: 20px;">
             </div>
 
             <!-- Contenedor 1: Selección inicial de tarjetas -->

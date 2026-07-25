@@ -67,9 +67,18 @@ const getSolicitudActiva = async (req, res) => {
         const { idAspi } = req.params;
 
         const [resultados] = await db.query(
-            `SELECT s.*, c.tipo AS nivel
+            `SELECT s.*, c.tipo AS nivel, c.nombre AS convocatoriaTitulo, c.descripcion, 
+                    c.fecha_inicio, c.fecha_fin, c.fechaResultados AS fecha_resultados,
+                    c.fechaInicioDocumentos, c.fechaFinDocumentos,
+                    c.fechaEntrevistaInicio, c.fechaEntrevistaFin,
+                    c.inicioExamen, c.finExamen,
+                    c.inicioCurso, c.finCurso,
+                    c.fechaInicioEscolar, c.modalidad, c.duracion,
+                    op.nombre AS opcionElegida
              FROM solicitud s
              JOIN convocatorias c ON s.idConvocatoria = c.id
+             LEFT JOIN convocatoria_opcion co ON s.idConvocatoriaOpcion = co.id
+             LEFT JOIN opcion_posgrado op ON co.opcion_posgrado_id = op.id
              WHERE s.idAspi = ? AND s.estado != 'CANCELADO'
              ORDER BY s.creadoEn DESC LIMIT 1`,
             [idAspi]

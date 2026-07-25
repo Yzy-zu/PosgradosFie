@@ -23,7 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarUsuarios();
     cargarConvocatorias(); // Inicializar panel de convocatorias
     cargarPosgradosEnSelect();
-    cargarOpcionesPosgradoGlobal();
     cargarAspirantes();
     cargarNotificacionesAdmin(); // Inicializar panel de notificaciones
     cargarCatalogoRequisitosUI(); // Inicializar catálogo de requisitos
@@ -694,12 +693,12 @@ function renderizarChipsOpciones() {
     container.innerHTML = html;
 }
 
-window.actualizarCupo = function(id, val) {
+window.actualizarCupo = function (id, val) {
     const op = opcionesSeleccionadas.find(o => o.idOpcionPosgrado === id);
     if (op) op.cupos = val ? parseInt(val) : null;
 };
 
-window.removerOpcion = function(id) {
+window.removerOpcion = function (id) {
     opcionesSeleccionadas = opcionesSeleccionadas.filter(o => o.idOpcionPosgrado !== id);
     renderizarChipsOpciones();
 };
@@ -707,7 +706,7 @@ window.removerOpcion = function(id) {
 function renderizarOpcionesPorPosgrado(posgradoId, opcionesSeleccionadasPrevias = []) {
     const selectOpciones = document.getElementById("convocatoria_opciones");
     if (!selectOpciones) return;
-    
+
     selectOpciones.innerHTML = '<option value="">Selecciona opciones...</option>';
     opcionesSeleccionadas = [];
 
@@ -723,13 +722,13 @@ function renderizarOpcionesPorPosgrado(posgradoId, opcionesSeleccionadasPrevias 
     }
 
     const opcionesPosgrado = todasLasOpcionesPosgrado.filter(op => op.posgrado_id == posgradoId);
-    
+
     opcionesPosgrado.forEach(op => {
         const option = document.createElement("option");
         option.value = op.id;
         option.textContent = op.nombre;
         selectOpciones.appendChild(option);
-        
+
         const sel = opcionesSeleccionadasPrevias.find(s => s.idOpcionPosgrado == op.id || s.opcion_posgrado_id == op.id);
         if (sel) {
             opcionesSeleccionadas.push({ idOpcionPosgrado: op.id, cupos: sel.cupos, nombre: op.nombre });
@@ -750,7 +749,7 @@ function toggleCamposPorTipo(tipo) {
     if (tipo === "MAESTRIA") {
         // Ocultar entrevistas y limpiar
         if (grupoEntrevistas) grupoEntrevistas.style.display = "none";
-        
+
         const f1 = document.getElementById("convocatoria_fechaEntrevistaInicio")?._flatpickr;
         if (f1) f1.clear();
         const f2 = document.getElementById("convocatoria_fechaEntrevistaFin")?._flatpickr;
@@ -764,7 +763,7 @@ function toggleCamposPorTipo(tipo) {
 
         // Ocultar académicas y limpiar
         if (grupoAcademicas) grupoAcademicas.style.display = "none";
-        
+
         ["convocatoria_inicioCurso", "convocatoria_finCurso", "convocatoria_inicioExamen", "convocatoria_finExamen"].forEach(id => {
             const fp = document.getElementById(id)?._flatpickr;
             if (fp) fp.clear();
@@ -775,25 +774,12 @@ function toggleCamposPorTipo(tipo) {
 function limpiarFormularioConvocatoria() {
     document.getElementById("formConvocatoria").reset();
     document.getElementById("idConvocatoriaForm").value = "";
-    
-    // Limpiar flatpickrs
-    document.querySelectorAll('.date-single').forEach(el => {
-        if (el._flatpickr) el._flatpickr.clear();
-    });
-    
-    // Limpiar opciones seleccionadas
-    opcionesSeleccionadas = [];
-    document.getElementById("contenedorChipsOpciones").innerHTML = "";
+    document.getElementById("convocatoria_posgrado").value = "";
+    document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-bullhorn"></i> Nueva Convocatoria';
+    document.getElementById("btnEliminarConvocatoria").style.display = "none";
+    toggleCamposPorTipo();
 
-    const btnEliminar = document.getElementById("btnEliminarConvocatoria");
-    if (btnEliminar) btnEliminar.style.display = "none";
-    
-    // Reiniciar Wizard a paso 1
-    if (typeof actualizarWizard === "function") {
-        actualizarWizard(1);
-    }
-    
-    // Desmarcar todos los requisitos
+    // Desmarcar todos los checkboxes del catálogo
     const checkboxes = document.querySelectorAll("#contenedorRequisitos .req-checkbox");
     checkboxes.forEach(cb => {
         cb.checked = false;
@@ -808,7 +794,7 @@ const totalPasosConvocatoria = 4;
 
 function actualizarWizard(paso) {
     pasoActualConvocatoria = paso;
-    
+
     // Ocultar todos los panes
     document.querySelectorAll('.step-pane').forEach(pane => pane.classList.remove('active'));
     // Desactivar todos los indicators
@@ -816,11 +802,11 @@ function actualizarWizard(paso) {
         ind.classList.remove('active');
         ind.classList.remove('completed');
     });
-    
+
     // Mostrar el pane actual
     const pane = document.getElementById(`step-pane-${paso}`);
-    if(pane) pane.classList.add('active');
-    
+    if (pane) pane.classList.add('active');
+
     // Actualizar indicators
     for (let i = 1; i <= totalPasosConvocatoria; i++) {
         const ind = document.getElementById(`indicator-${i}`);
@@ -831,14 +817,14 @@ function actualizarWizard(paso) {
             ind.classList.add('active');
         }
     }
-    
+
     // Actualizar visibilidad de botones
     const btnPrev = document.getElementById('btnPrevStep');
     const btnNext = document.getElementById('btnNextStep');
     const btnSave = document.getElementById('btnSaveConvocatoria');
-    
+
     if (btnPrev) btnPrev.style.display = (paso === 1) ? 'none' : 'inline-block';
-    
+
     if (paso === totalPasosConvocatoria) {
         if (btnNext) btnNext.style.display = 'none';
         if (btnSave) btnSave.style.display = 'inline-block';
@@ -850,9 +836,9 @@ function actualizarWizard(paso) {
 
 function validarPasoActual() {
     const paneActual = document.getElementById(`step-pane-${pasoActualConvocatoria}`);
-    if(!paneActual) return true;
+    if (!paneActual) return true;
     const inputsRequeridos = paneActual.querySelectorAll('input[required], select[required], textarea[required]');
-    
+
     for (let input of inputsRequeridos) {
         if (!input.value || !input.value.trim()) {
             input.reportValidity(); // Muestra el tooltip nativo de HTML5
@@ -862,14 +848,14 @@ function validarPasoActual() {
     return true;
 }
 
-window.siguientePaso = function() {
+window.siguientePaso = function () {
     if (!validarPasoActual()) return;
     if (pasoActualConvocatoria < totalPasosConvocatoria) {
         actualizarWizard(pasoActualConvocatoria + 1);
     }
 }
 
-window.pasoAnterior = function() {
+window.pasoAnterior = function () {
     if (pasoActualConvocatoria > 1) {
         actualizarWizard(pasoActualConvocatoria - 1);
     }
@@ -960,7 +946,7 @@ async function editarConvocatoria(id) {
         setSingle("convocatoria_finExamen", conv.finExamen);
         setSingle("convocatoria_fechaInicioEscolar", conv.fechaInicioEscolar);
         setSingle("convocatoria_fechaResultados", conv.fechaResultados);
-        
+
         // Renderizar opciones guardadas
         renderizarOpcionesPorPosgrado(conv.posgrado_id, conv.opciones || []);
 
@@ -1009,7 +995,7 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
     const posgrado_id = document.getElementById("convocatoria_posgrado").value;
     const posgradoData = todosLosPosgrados.find(p => p.id == posgrado_id);
     const tipo = posgradoData ? posgradoData.tipo : "MAESTRIA";
-    
+
     const nombre = document.getElementById("convocatoria_nombre").value;
     const descripcion = document.getElementById("convocatoria_descripcion").value;
     const estado = document.getElementById("convocatoria_estado").value;
@@ -1205,7 +1191,7 @@ async function verExpedienteAspirante(id) {
         // Llenar el perfil resumido
         const nombreCompleto = `${perfil.nombre || ''} ${perfil.primerApellido || ''} ${perfil.segundoApellido || ''}`.trim();
         document.getElementById("perfil_nombreCompleto").textContent = nombreCompleto;
-        
+
         // Avatar iniciales
         const iniNombre = perfil.nombre ? perfil.nombre.charAt(0).toUpperCase() : '';
         const iniApellido = perfil.primerApellido ? perfil.primerApellido.charAt(0).toUpperCase() : '';
@@ -1220,7 +1206,7 @@ async function verExpedienteAspirante(id) {
             fechaNac = new Date(perfil.fechaNacimiento).toLocaleDateString();
         }
         document.getElementById("perfil_nacimiento").textContent = fechaNac;
-        
+
         let direccion = perfil.direccion || "";
         if (perfil.direccionPostal) direccion += ` (CP: ${perfil.direccionPostal})`;
         document.getElementById("perfil_direccion").textContent = direccion || "N/A";
@@ -1228,16 +1214,16 @@ async function verExpedienteAspirante(id) {
         document.getElementById("perfil_estadoCivil").textContent = perfil.estadoCivil || "N/A";
         document.getElementById("perfil_licenciatura").textContent = perfil.licenciatura || "N/A";
         document.getElementById("perfil_institucionLicenciatura").textContent = perfil.institucionLicenciatura || "N/A";
-        
+
         document.getElementById("perfil_fechaEgreso").textContent = perfil.fechaEgreso ? new Date(perfil.fechaEgreso).toLocaleDateString() : "N/A";
         document.getElementById("perfil_fechaTitulacion").textContent = perfil.fechaTitulacion ? new Date(perfil.fechaTitulacion).toLocaleDateString() : "N/A";
         document.getElementById("perfil_promedio").textContent = perfil.promedio || "N/A";
-        
+
         let ocupacionInfo = perfil.ocupacion || "N/A";
         if (perfil.ciudadOcupacion || perfil.estadoOcupacion) ocupacionInfo += ` (${perfil.ciudadOcupacion || ''}, ${perfil.estadoOcupacion || ''})`;
         if (perfil.telefonoOcupacion) ocupacionInfo += ` - Tel: ${perfil.telefonoOcupacion}`;
         document.getElementById("perfil_ocupacion").textContent = ocupacionInfo;
-        
+
         document.getElementById("perfil_otrosEstudios").textContent = perfil.otrosEstudios || "N/A";
 
         const badgeEstado = document.getElementById("perfil_estado");
@@ -1440,7 +1426,7 @@ function mostrarRedaccionNotificacion() {
     limpiarFormularioNotificacion();
     document.getElementById("chatReadMode").style.display = "none";
     document.getElementById("chatComposeMode").style.display = "flex";
-    
+
     document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
     notificacionActivaId = null;
 }
@@ -1448,7 +1434,7 @@ function mostrarRedaccionNotificacion() {
 function cerrarRedaccionNotificacion() {
     document.getElementById("chatComposeMode").style.display = "none";
     document.getElementById("chatReadMode").style.display = "flex";
-    
+
     if (!notificacionActivaId) {
         limpiarLecturaNotificacion();
     }
@@ -1458,7 +1444,7 @@ function limpiarLecturaNotificacion() {
     document.getElementById("chatReadTitle").innerText = "Selecciona un mensaje";
     document.getElementById("chatReadDestino").innerText = "Para leer los detalles";
     document.getElementById("btnEliminarNotifChat").style.display = "none";
-    
+
     const body = document.getElementById("chatReadBody");
     body.innerHTML = `
         <div class="d-flex justify-content-center align-items-center h-100 text-muted">
@@ -1477,8 +1463,8 @@ function mostrarLecturaNotificacion(id) {
 
     document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
     // Refrescar clases active re-renderizando listado rápido
-    cargarNotificacionesAdmin(); 
-    
+    cargarNotificacionesAdmin();
+
     const notif = notificacionesGlobales.find(n => n.id === id);
     if (!notif) return;
 
@@ -1492,7 +1478,7 @@ function mostrarLecturaNotificacion(id) {
     const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
     const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
     const dateStr = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
-    
+
     let editadoHtml = '';
     if (notif.editado_en && notif.creado_en && notif.editado_en !== notif.creado_en) {
         const editDate = new Date(notif.editado_en);
@@ -1540,7 +1526,7 @@ async function editarNotificacion(id) {
         if (!notif) throw new Error("Notificación no encontrada");
 
         mostrarRedaccionNotificacion();
-        notificacionActivaId = id; 
+        notificacionActivaId = id;
 
         document.getElementById("idNotificacionForm").value = notif.id;
         document.getElementById("notif_titulo").value = notif.nombre || "";
@@ -1614,7 +1600,7 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
             limpiarFormularioNotificacion();
             cerrarRedaccionNotificacion();
             cargarNotificacionesAdmin();
-            
+
             // Si es edición, volver a leer el mensaje (luego de recargar la lista el id sigue siendo el mismo)
             if (idInput) {
                 mostrarLecturaNotificacion(parseInt(idInput, 10));
@@ -1629,8 +1615,8 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
 });
 
 async function eliminarNotificacionActiva() {
-    if(!notificacionActivaId) return;
-    
+    if (!notificacionActivaId) return;
+
     const confirmacion = await Swal.fire({
         title: '¿Eliminar Mensaje?',
         text: "Este mensaje será eliminado. ¡No se puede deshacer!",

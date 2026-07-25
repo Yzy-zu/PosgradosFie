@@ -521,7 +521,20 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
         if (respuestaSoli.ok) {
             const dataSoli = await respuestaSoli.json();
             currentSolicitudId = dataSoli.idSolicitud;
-            bloquearConvocatorias();
+            
+            // Re-hidratar la UI para traer toda la info de la solicitud y de la convocatoria
+            try {
+                const resReFetch = await fetch(`/api/solicitud/activa/${aspiranteData.id}`);
+                if (resReFetch.ok) {
+                    const newSoliData = await resReFetch.json();
+                    if (newSoliData.existe) {
+                        hidratarUI(newSoliData);
+                    }
+                }
+            } catch (err) {
+                bloquearConvocatorias();
+            }
+            
         } else if (respuestaSoli.status === 409) {
             const errData = await respuestaSoli.json();
             Swal.fire('Aviso', errData.mensaje, 'warning');
@@ -1260,14 +1273,130 @@ function regresarAConvocatorias() {
 
 // --- NUEVAS FUNCIONES DE SEGURIDAD Y CANCELACION ---
 
-function bloquearConvocatorias() {
+function bloquearConvocatorias(soliData = null) {
     const seleccion = document.getElementById('seleccion-programa');
     const lista = document.getElementById('lista-programas-abiertos');
     const bloqueo = document.getElementById('bloqueo-convocatoria');
 
     if (seleccion) seleccion.style.display = 'none';
     if (lista) lista.style.display = 'none';
-    if (bloqueo) bloqueo.style.display = 'block';
+    if (bloqueo) {
+        bloqueo.style.display = 'block';
+        
+        // Si pasamos los datos, dibujamos la tarjeta con info
+        if (soliData && soliData.convocatoriaTitulo) {
+            // Función robusta para formatear fechas y evitar el "1899" o "0000-00-00"
+            const formatDateSafe = (dateStr) => {
+                if (!dateStr || dateStr.startsWith('0000-00-00')) return 'Por definir';
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime()) || d.getFullYear() < 2000) return 'Por definir';
+                
+                const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+                return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+            };
+            
+            const titulo = soliData.convocatoriaTitulo || 'Convocatoria Activa';
+            const nivel = soliData.nivel === 'DOCTORADO' ? 'Doctorado' : 'Maestría';
+            const opcionElegida = soliData.opcionElegida ? soliData.opcionElegida : 'Programa General';
+            // Lógica condicional: Las maestrías típicamente no tienen entrevistas formales obligatorias
+            let entrevistasHtml = '';
+            if (nivel === 'Doctorado') {
+                const entInicio = formatDateSafe(soliData.fechaEntrevistaInicio);
+                const entFin = formatDateSafe(soliData.fechaEntrevistaFin);
+                const entRango = (entInicio !== 'Por definir') ? `${entInicio} ${entFin !== 'Por definir' ? 'al ' + entFin : ''}` : 'Por definir';
+                
+                entrevistasHtml = `<li><i class="fa-solid fa-comments" style="color:var(--color-guinda); margin-right:8px; width:16px;"></i> Entrevistas: <strong>${entRango}</strong></li>`;
+            }
+            
+            const infoHtml = `
+                <style>
+                    .slide-view {
+                        grid-area: 1 / 1;
+                        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+                    }
+                </style>
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 40px; text-align: center; width: 100%; margin: 20px 0; box-shadow: var(--shadow-sm); font-family: 'Inter', Arial, sans-serif; overflow: hidden;">
+                    
+                    <div style="background: #fcf0f1; border: 1px solid #f3d8da; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                        <i class="fa-solid fa-lock" style="font-size: 24px; color: var(--color-guinda);"></i>
+                    </div>
+                    
+                    <h3 style="font-size: 22px; font-weight: 700; color: var(--color-primary); margin-bottom: 20px;">Trámite de Admisión en Curso</h3>
+                    
+                    <!-- CONTENEDOR SLIDER HORIZONTAL -->
+                    <div style="display: grid; width: 100%;">
+                        
+                        <!-- VISTA A: Resumen -->
+                        <div id="view-a" class="slide-view" style="transform: translateX(0); opacity: 1;">
+                            <p style="font-size: 15px; color: var(--color-text); line-height: 1.6; margin-bottom: 25px; max-width: 800px; margin-left: auto; margin-right: auto;">
+                                Actualmente estás participando en el proceso de selección institucional para el:<br>
+                                <strong style="color: var(--color-primary); font-size: 16px; display: inline-block; margin-top: 8px;">Programa de ${nivel} en Ciencias en Ingeniería Eléctrica</strong><br>
+                                <span style="font-size: 14px; color: #64748b;">Opción seleccionada: <strong>${opcionElegida}</strong></span>
+                            </p>
+                            
+                            <button class="btn-primary" onclick="switchView('documentos')" style="padding: 12px 30px; border-radius: 6px; font-size: 15px; font-weight: 500; margin-bottom: 25px; min-width: 250px;">
+                                <i class="fa-solid fa-folder-open" style="margin-right: 8px;"></i> Continuar mi Trámite
+                            </button>
+                            
+                            <div>
+                                <button onclick="document.getElementById('view-a').style.transform = 'translateX(-100%)'; document.getElementById('view-a').style.opacity = '0'; document.getElementById('view-a').style.pointerEvents = 'none'; document.getElementById('view-b').style.transform = 'translateX(0)'; document.getElementById('view-b').style.opacity = '1'; document.getElementById('view-b').style.pointerEvents = 'auto';" style="background: none; border: none; color: var(--color-guinda); font-size: 14px; font-weight: 600; cursor: pointer; padding: 5px;">
+                                    Ver fechas y detalles del proceso <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- VISTA B: Detalles -->
+                        <div id="view-b" class="slide-view" style="transform: translateX(100%); opacity: 0; pointer-events: none; text-align: left;">
+                            <div style="display: flex; gap: 30px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; justify-content: center;">
+                                <div><i class="fa-solid fa-clock" style="color:var(--color-primary);"></i> Duración: <strong>${soliData.duracion || '4'} semestres</strong></div>
+                                <div><i class="fa-solid fa-globe" style="color:var(--color-primary);"></i> Modalidad: <strong>${soliData.modalidad || 'Escolarizada'}</strong></div>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; gap: 15px; text-align: left; width: 100%; margin-bottom: 25px;">
+                                <div style="background: var(--color-bg); border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; flex: 1;">
+                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-circle-check" style="color:var(--color-guinda);"></i> Apertura</span>
+                                    <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fecha_inicio)}</div>
+                                </div>
+                                <div style="background: var(--color-bg); border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; flex: 1;">
+                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-file-arrow-up" style="color:var(--color-guinda);"></i> Documentos</span>
+                                    <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fechaFinDocumentos)}</div>
+                                </div>
+                                ${nivel === 'Doctorado' ? `
+                                <div style="background: var(--color-bg); border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; flex: 1;">
+                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-comments" style="color:var(--color-guinda);"></i> Entrevistas</span>
+                                    <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fechaEntrevistaInicio)}</div>
+                                </div>` : ''}
+                                <div style="background: var(--color-bg); border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; flex: 1;">
+                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-bullhorn" style="color:var(--color-guinda);"></i> Resultados</span>
+                                    <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fecha_resultados)}</div>
+                                </div>
+                                <div style="background: var(--color-bg); border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; flex: 1;">
+                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-calendar-days" style="color:var(--color-guinda);"></i> Semestre</span>
+                                    <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fechaInicioEscolar)}</div>
+                                </div>
+                            </div>
+
+                            <div style="text-align: center;">
+                                <button onclick="document.getElementById('view-b').style.transform = 'translateX(100%)'; document.getElementById('view-b').style.opacity = '0'; document.getElementById('view-b').style.pointerEvents = 'none'; document.getElementById('view-a').style.transform = 'translateX(0)'; document.getElementById('view-a').style.opacity = '1'; document.getElementById('view-a').style.pointerEvents = 'auto';" style="background: none; border: none; color: var(--color-guinda); font-size: 14px; font-weight: 600; cursor: pointer; padding: 5px;">
+                                    <i class="fa-solid fa-arrow-left" style="margin-right: 5px;"></i> Volver al resumen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            let infoContainer = document.getElementById('bloqueo-info-convocatoria');
+            if (!infoContainer) {
+                infoContainer = document.createElement('div');
+                infoContainer.id = 'bloqueo-info-convocatoria';
+                // Insertamos antes del boton de regresar a mis documentos
+                const btn = bloqueo.querySelector('button');
+                bloqueo.insertBefore(infoContainer, btn);
+            }
+            infoContainer.innerHTML = infoHtml;
+        }
+    }
 }
 
 async function cancelarSolicitudActual() {
@@ -1410,7 +1539,7 @@ function hidratarUI(soliData) {
     const estacionGuardada = soliData.estacion_actual || 0;
 
     // Desbloquear navegación
-    bloquearConvocatorias();
+    bloquearConvocatorias(soliData);
     const navDocumentos = document.getElementById('nav-documentos');
     if (navDocumentos) {
         navDocumentos.style.display = 'block';
@@ -1501,3 +1630,50 @@ document.addEventListener('change', function (e) {
         }
     }
 });
+
+/* ==========================================================================
+   Carousel Logic (Aspirante Inicio)
+   ========================================================================== */
+let currentSlide = 0;
+const slides = document.querySelectorAll('.carousel-slide');
+const totalSlides = slides.length;
+const track = document.getElementById('inicio-carousel-track');
+const indicators = document.querySelectorAll('#inicio-carousel-indicators .indicator');
+let autoSlideInterval;
+
+function updateCarousel() {
+    if (!track) return;
+    track.style.transform = `translateX(-${currentSlide * 100}%)`;
+    indicators.forEach((ind, index) => {
+        if (index === currentSlide) ind.classList.add('active');
+        else ind.classList.remove('active');
+    });
+}
+
+function moveCarousel(direction) {
+    currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
+    updateCarousel();
+    resetAutoSlide();
+}
+
+function goToSlide(index) {
+    currentSlide = index;
+    updateCarousel();
+    resetAutoSlide();
+}
+
+function startAutoSlide() {
+    autoSlideInterval = setInterval(() => {
+        moveCarousel(1);
+    }, 5000); // Cambia de slide cada 5 segundos
+}
+
+function resetAutoSlide() {
+    clearInterval(autoSlideInterval);
+    startAutoSlide();
+}
+
+// Iniciar carrusel al cargar si existe
+if (track) {
+    startAutoSlide();
+}
