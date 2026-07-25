@@ -1,290 +1,294 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <script src="js/authInterceptor.js"></script>
-    <script src="js/utils.js"></script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Coordinador | Sistema de Posgrados</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../frontend/css/style.css">
-
+    <title>Coordinación - Posgrados FIE</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.2/css/all.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Estilos del Proyecto -->
+    <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
 
-    <!-- Global Loader (UX) -->
-    <div id="global-loader" style="display: none;">
-        <div class="spinner"></div>
-        <p style="color:#333; font-weight:bold; font-size:16px;">Cargando información, por favor espera...</p>
-    </div>
+    <!-- Interceptor global para peticiones Fetch -->
+    <script src="/js/authInterceptor.js"></script>
 
-<div class="d-flex">
+    <div class="d-flex">
 
-    <!-- Sidebar -->
-
-    <aside class="sidebar bg-primary text-white p-3">
-
-       <h2><img src="css/umsnh-logo.png" alt="Logo"
-                style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; margin-right: 10px; vertical-align: middle;">
-            FIE COORD</h2>
-
-        <ul class="nav flex-column">
-
-            <li class="nav-item">
-                <a class="nav-link text-white" href="#">
-                    <i class="bi bi-house-door"></i>
-                    Inicio
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link text-white" href="#">
-                    <i class="bi bi-person-vcard"></i>
-                    Aspirantes
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link text-white" href="#">
-                    <i class="bi bi-file-earmark-text"></i>
-                    Solicitudes
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link text-white" href="#">
-                    <i class="bi bi-folder2-open"></i>
-                    Documentos
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link text-white" href="#">
-                    <i class="bi bi-person-video3"></i>
-                    Entrevistas
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link text-white" href="#">
-                    <i class="bi bi-clipboard-data"></i>
-                    Evaluaciones
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link text-white" href="#">
-                    <i class="bi bi-check-circle"></i>
-                    Dictámenes
-                </a>
-            </li>
-
-            <li class="nav-item mt-5">
-                <button class="btn btn-danger w-100">
-                    <i class="bi bi-box-arrow-right"></i>
-                    Cerrar sesión
-                </button>
-            </li>
-
-        </ul>
-
-    </aside>
-
-    <!-- Contenido -->
-
-    <main class="flex-grow-1">
-
-        <nav class="navbar navbar-light bg-white shadow-sm px-4">
-
-            <button class="btn">
-                <i class="bi bi-list fs-4"></i>
-            </button>
-
-            <div>
-
-                <i class="bi bi-bell fs-4 me-3"></i>
-
-                <img src="../img/user.png"
-                     width="40"
-                     height="40"
-                     class="rounded-circle">
-
-                <span class="fw-bold ms-2">
-                    Coordinador
-                </span>
-
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar d-flex flex-column text-white">
+            <div class="sidebar-header">
+                <img src="css/umsnh-logo.png" alt="Logo FIE" class="sidebar-logo">
+                <span class="text ms-2">FIE COORDINACIÓN</span>
             </div>
 
-        </nav>
+            <nav class="mt-3 flex-grow-1">
+                <a href="#inicio" class="active">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span class="text">Inicio</span>
+                </a>
+                <a href="#convocatorias">
+                    <i class="fa-solid fa-bullhorn"></i>
+                    <span class="text">Convocatorias</span>
+                </a>
+                <a href="#aspirantes">
+                    <i class="fa-solid fa-users"></i>
+                    <span class="text">Aspirantes</span>
+                </a>
+                <a href="#entrevistas">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <span class="text">Entrevistas</span>
+                </a>
+                <a href="#dictamenes">
+                    <i class="fa-solid fa-stamp"></i>
+                    <span class="text">Dictámenes</span>
+                </a>
+                <a href="#notificaciones">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="text">Notificaciones</span>
+                </a>
+            </nav>
+        </aside>
 
-        <div class="container-fluid p-4">
-
-            <h2>Panel del Coordinador</h2>
-
-            <p class="text-muted">
-                Administración de solicitudes y seguimiento académico.
-            </p>
-
-            <div class="row mt-4">
-
-                <div class="col-md-3">
-
-                    <div class="card shadow">
-
-                        <div class="card-body">
-
-                            <h6>Solicitudes</h6>
-
-                            <h2>80</h2>
-
-                            <i class="bi bi-file-earmark-text fs-1 text-primary"></i>
-
-                        </div>
-
-                    </div>
-
+        <!-- Área de Contenido Principal -->
+        <main class="main-content flex-grow-1">
+            
+            <!-- Header Superior -->
+            <header class="header-user">
+                <div>
+                    <h2 class="fw-bold m-0" id="tituloVista">Panel de Coordinación</h2>
+                    <p class="text-muted m-0 mt-1" style="font-size: 0.95rem;">Bienvenido al sistema de gestión académica de Posgrados FIE.</p>
                 </div>
 
-                <div class="col-md-3">
-
-                    <div class="card shadow">
-
-                        <div class="card-body">
-
-                            <h6>Entrevistas</h6>
-
-                            <h2>25</h2>
-
-                            <i class="bi bi-camera-video fs-1 text-success"></i>
-
+                <div class="profile-container">
+                    <div class="profile-trigger" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="profile-avatar">
+                            <i class="fa-solid fa-circle-user"></i>
                         </div>
+                        <span class="profile-name">Coordinador</span>
+                        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                    </div>
+                    <ul class="dropdown-menu dropdown-menu-end profile-menu shadow-sm" aria-labelledby="userMenu">
+                        <li class="menu-header">Opciones de Usuario</li>
+                        <li><a href="#"><i class="fa-solid fa-id-badge"></i> Perfil</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a href="#" id="menuLogout" class="logout-link"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</a></li>
+                    </ul>
+                </div>
+            </header>
 
+            <!-- VISTA 1: INICIO (Métricas y Panel General) -->
+            <section id="vista-inicio" class="vista-seccion mt-4">
+                <div class="dashboard-grid mb-4">
+                    <div class="card p-4 text-center">
+                        <i class="fa-solid fa-users text-primary mb-2" style="font-size: 2.2rem;"></i>
+                        <h1 class="fw-bold m-0" id="cantSolicitudes">0</h1>
+                        <span class="text-muted fw-medium small mt-1">Solicitudes Totales</span>
                     </div>
 
-                </div>
-
-                <div class="col-md-3">
-
-                    <div class="card shadow">
-
-                        <div class="card-body">
-
-                            <h6>Evaluaciones</h6>
-
-                            <h2>62</h2>
-
-                            <i class="bi bi-clipboard-check fs-1 text-warning"></i>
-
-                        </div>
-
+                    <div class="card p-4 text-center">
+                        <i class="fa-solid fa-clock-rotate-left text-warning mb-2" style="font-size: 2.2rem;"></i>
+                        <h1 class="fw-bold m-0" id="cantPendientes">0</h1>
+                        <span class="text-muted fw-medium small mt-1">Por Revisar</span>
                     </div>
 
-                </div>
-
-                <div class="col-md-3">
-
-                    <div class="card shadow">
-
-                        <div class="card-body">
-
-                            <h6>Aceptados</h6>
-
-                            <h2>38</h2>
-
-                            <i class="bi bi-patch-check fs-1 text-danger"></i>
-
-                        </div>
-
+                    <div class="card p-4 text-center">
+                        <i class="fa-solid fa-calendar-day text-info mb-2" style="font-size: 2.2rem;"></i>
+                        <h1 class="fw-bold m-0" id="cantEntrevistas">0</h1>
+                        <span class="text-muted fw-medium small mt-1">Entrevistas Agendadas</span>
                     </div>
 
+                    <div class="card p-4 text-center">
+                        <i class="fa-solid fa-user-check text-success mb-2" style="font-size: 2.2rem;"></i>
+                        <h1 class="fw-bold m-0" id="cantAceptados">0</h1>
+                        <span class="text-muted fw-medium small mt-1">Aspirantes Aceptados</span>
+                    </div>
                 </div>
 
+                <div class="card p-4 text-center text-muted shadow-sm">
+                    <i class="fa-solid fa-circle-info fa-2x mb-2 text-primary"></i>
+                    <h5 class="fw-bold text-dark">Panel de Monitoreo General</h5>
+                    <p class="m-0">Selecciona una opción del menú lateral para gestionar convocatorias, revisar expedientes o emitir dictámenes.</p>
+                </div>
+            </section>
+
+            <!-- VISTA 2: CONVOCATORIAS (Tarjetas Dinámicas) -->
+            <section id="vista-convocatorias" class="vista-seccion mt-4 d-none">
+                <div class="card p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <h5 class="fw-bold m-0"><i class="fa-solid fa-bullhorn me-2"></i>Convocatorias Registradas</h5>
+                        <button class="btn btn-dark btn-sm px-3 fw-medium" id="btnNuevaConvocatoria">
+                            <i class="fa-solid fa-plus me-1"></i> Nueva Convocatoria
+                        </button>
+                    </div>
+
+                    <div class="row g-3" id="contenedorConvocatorias">
+                        <div class="col-12 text-center py-4 text-muted">
+                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                            Cargando convocatorias...
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VISTA 3: ASPIRANTES (Tabla con Acordeón/Desplegable) -->
+            <section id="vista-aspirantes" class="vista-seccion mt-4 d-none">
+                <div class="card p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="fw-bold m-0"><i class="fa-solid fa-users me-2"></i>Aspirantes en Proceso</h5>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table align-middle border-bottom">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 35%;">ASPIRANTE / FOLIO</th>
+                                    <th style="width: 35%;">PROGRAMA</th>
+                                    <th style="width: 15%;">ESTADO</th>
+                                    <th style="width: 15%;" class="text-end">DETALLES</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaAspirantesBody">
+                                <!-- Filas colapsables JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+          <!-- VISTA 4: ENTREVISTAS -->
+<section id="vista-entrevistas" class="vista-seccion mt-4 d-none">
+    <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0" id="tablaEntrevistas">
+        <thead class="table-light">
+            <tr>
+                <th scope="col" style="width: 25%;">Aspirante</th>
+                <th scope="col" style="width: 25%;">Programa</th>
+                <th scope="col" style="width: 20%;">Docente Asignado</th>
+                <th scope="col" style="width: 15%;">Fecha / Estatus</th>
+                <th scope="col" style="width: 15%;" class="text-end">Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="tablaEntrevistasBody">
+            <!-- Renderizado dinámico con JS -->
+        </tbody>
+    </table>
+</div>
+</section>
+
+<!-- MODAL PARA AGENDAR/EDITAR ENTREVISTA -->
+<div class="modal fade" id="modalEntrevista" tabindex="-1" aria-labelledby="modalEntrevistaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="modalEntrevistaLabel">
+                    <i class="fa-solid fa-user-clock me-2"></i>Agendar Entrevista
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <form id="formAgendaEntrevista">
+                <div class="modal-body">
+                    <input type="hidden" id="entrevista_id_solicitud" name="idSolicitud">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="entrevista_fecha" class="form-label fw-semibold">Fecha:</label>
+                            <input type="date" id="entrevista_fecha" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="entrevista_hora" class="form-label fw-semibold">Hora:</label>
+                            <input type="time" id="entrevista_hora" class="form-control" required>
+                        </div>
+                    </div>
 
-            <div class="card mt-5 shadow">
+                    <div class="mb-3">
+                        <label for="entrevista_docente" class="form-label fw-semibold">Docente Asignado:</label>
+                        <select id="entrevista_docente" class="form-select" required>
+                            <option value="">-- Seleccionar Docente --</option>
+                        </select>
+                    </div>
 
-                <div class="card-header bg-white d-flex justify-content-between">
-
-                    <h5>Solicitudes pendientes</h5>
-
-                    <button class="btn btn-primary">
-                        Revisar todas
+                    <div class="mb-3">
+                        <label for="entrevista_lugar" class="form-label fw-semibold">Lugar o Enlace (Meet/Teams/Aula):</label>
+                        <input type="text" id="entrevista_lugar" class="form-control" placeholder="Ej. https://meet.google.com/xyz o Aula 3" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Entrevista
                     </button>
-
                 </div>
-
-                <div class="card-body">
-
-                    <table class="table table-hover">
-
-                        <thead>
-
-                        <tr>
-
-                            <th>ID</th>
-
-                            <th>Aspirante</th>
-
-                            <th>Posgrado</th>
-
-                            <th>Estado</th>
-
-                            <th>Acciones</th>
-
-                        </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                        <tr>
-
-                            <td>1</td>
-
-                            <td>Juan Pérez</td>
-
-                            <td>Maestría en Ingeniería Eléctrica</td>
-
-                            <td>
-
-                                <span class="badge bg-warning">
-                                    En revisión
-                                </span>
-
-                            </td>
-
-                            <td>
-
-                                <button class="btn btn-success btn-sm">
-                                    Ver
-                                </button>
-
-                            </td>
-
-                        </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
+            </form>
         </div>
-
-    </main>
-
+    </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+            <!-- VISTA 5: DICTÁMENES -->
+            <section id="vista-dictamenes" class="vista-seccion mt-4 d-none">
+                <div class="card p-4">
+                    <h5 class="fw-bold mb-3"><i class="fa-solid fa-stamp me-2"></i>Historial de Dictámenes</h5>
+                    <div id="contenidoDictamenes"><p class="text-muted">Módulo de historial de dictámenes.</p></div>
+                </div>
+            </section>
+<!-- VISTA 6: NOTIFICACIONES -->
+<section id="vista-notificaciones" class="vista-seccion mt-4 d-none">
+    <div class="card p-4 shadow-sm border-0" style="border-radius: 12px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold m-0"><i class="fa-solid fa-bell me-2 text-primary"></i>Notificaciones del Sistema</h5>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Título</th>
+                        <th scope="col">Mensaje</th>
+                        <th scope="col">Destino</th>
+                        <th scope="col">Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaNotificaciones">
+                    <!-- JS cargará las filas aquí -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
 
+    <!-- Modal para Expediente -->
+    <div class="modal fade" id="modalExpediente" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-folder-open me-2"></i>Expediente del Aspirante</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalExpedienteBody">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 text-muted">Cargando datos del expediente...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts CDN y Librerías -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- Script principal del coordinador -->
+    <script src="js/coor.js"></script>
 </body>
-
 </html>

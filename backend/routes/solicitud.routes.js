@@ -1,6 +1,12 @@
 const express = require('express');
 const router = express.Router();
 
+// Middlewares de protección y validación
+const verificarToken = require('../middlewares/auth');
+const validarRol = require('../middlewares/validarRol');
+const validarSolicitud = require('../middlewares/validarSolicitud');
+
+// Controladores
 const {
     crearSolicitud,
     getSolicitudActiva,

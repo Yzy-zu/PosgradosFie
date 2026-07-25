@@ -46,6 +46,7 @@ app.use('/api/convocatorias', require('./routes/convocatorias.routes'));
 app.use('/api/notificaciones', require('./routes/notificaciones.routes'));
 app.use('/api/aspirante', require('./routes/aspirante.routes'));
 app.use('/api/docentes', require('./routes/docentes.routes'));
+app.use('/api/coordinador', require('./routes/coordinador.routes'));
 //app.use('/api/evaluacion', require('./routes/evaluacion.routes'));
 //app.use('/api/pagos', require('./routes/pagos.routes'));
 app.use('/api/solicitud', require('./routes/solicitud.routes'));
