@@ -301,16 +301,16 @@ async function cargarNotificaciones() {
                     const remitenteKey = encodeURIComponent(grupo.remitente);
 
                     html += `
-                    <div class="chat-item p-3 border-bottom" style="cursor: pointer; display: flex; gap: 10px; align-items: center;" onclick="abrirNotificacion('${remitenteKey}', this)">
-                        <div class="chat-avatar ${bgClass} text-white rounded-circle d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; flex-shrink: 0;">
+                    <div class="chat-item p-3 border-bottom" style="cursor: pointer; display: flex; gap: 10px; align-items: center; border-color: var(--color-border) !important;" onclick="abrirNotificacion('${remitenteKey}', this)">
+                        <div class="chat-avatar ${bgClass} text-white rounded-circle d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; flex-shrink: 0; background-color: var(--color-guinda) !important;">
                             <i class="fa-solid fa-user"></i>
                         </div>
                         <div class="chat-details" style="flex: 1; overflow: hidden;">
                             <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
-                                <div style="font-weight: bold; font-size: 13px; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${grupo.remitente}</div>
-                                <div style="font-size: 11px; color: #94a3b8; flex-shrink: 0;">${formattedDate}</div>
+                                <div style="font-weight: bold; font-size: 13px; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${grupo.remitente}</div>
+                                <div style="font-size: 11px; color: var(--color-text-muted); flex-shrink: 0;">${formattedDate}</div>
                             </div>
-                            <div style="font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><strong>${ultMsg.nombre}</strong> - ${ultMsg.mensaje}</div>
+                            <div style="font-size: 12px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><strong>${ultMsg.nombre}</strong> - ${ultMsg.mensaje}</div>
                         </div>
                     </div>`;
                 });
@@ -462,17 +462,17 @@ function abrirNotificacion(remitenteKey, element) {
             if (dateStr !== lastDateStr) {
                 chatHtml += `
                     <div style="text-align: center; margin-bottom: 15px; margin-top: 15px;">
-                        <span style="background: var(--color-border); padding: 2px 8px; border-radius: 12px; font-size: 11px; color: #64748b; font-weight: bold;">${dateStr}</span>
+                        <span style="background: var(--color-border); padding: 2px 10px; border-radius: 12px; font-size: 11px; color: var(--color-text-muted); font-weight: bold;">${dateStr}</span>
                     </div>
                 `;
                 lastDateStr = dateStr;
             }
 
             chatHtml += `
-                <div style="background: white; padding: 12px 15px; border-radius: 18px 18px 18px 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 14px; color: #1c1e21; max-width: 90%; margin-bottom: 10px; word-wrap: break-word; align-self: flex-start;">
-                    <div style="font-weight: bold; color: var(--color-primary); margin-bottom: 5px; font-size: 12px;">${notif.nombre}</div>
+                <div style="background: var(--color-card-bg); border: 1px solid var(--color-border); padding: 12px 15px; border-radius: 14px 14px 14px 4px; box-shadow: var(--shadow-sm); font-size: 13.5px; color: var(--color-text); max-width: 90%; margin-bottom: 10px; word-wrap: break-word; align-self: flex-start;">
+                    <div style="font-weight: bold; color: var(--color-guinda); margin-bottom: 5px; font-size: 12px;">${notif.nombre}</div>
                     ${notif.mensaje}
-                    <div style="font-size: 10px; color: #94a3b8; margin-top: 5px; text-align: right;">${timeStr} ${editadoHtml}</div>
+                    <div style="font-size: 10px; color: var(--color-text-muted); margin-top: 5px; text-align: right;">${timeStr} ${editadoHtml}</div>
                 </div>
             `;
         });
@@ -530,8 +530,15 @@ async function activarModulosPostRegistro(nombrePrograma) {
     const panelListaAbierta = document.getElementById('lista-programas-abiertos');
     const contenedorTarjetas = document.getElementById('contenedor-tarjetas-programas');
 
-    if (panelSeleccion) panelSeleccion.style.display = 'none';
-    if (panelListaAbierta) panelListaAbierta.style.display = 'block';
+    if (panelSeleccion) {
+        panelSeleccion.style.display = 'none';
+        panelSeleccion.classList.remove('fade-in');
+    }
+    if (panelListaAbierta) {
+        panelListaAbierta.style.display = 'block';
+        void panelListaAbierta.offsetWidth;
+        panelListaAbierta.classList.add('fade-in');
+    }
 
     if (contenedorTarjetas) {
         contenedorTarjetas.innerHTML = "<p>Cargando convocatorias...</p>";
@@ -546,21 +553,34 @@ async function activarModulosPostRegistro(nombrePrograma) {
                 const activas = convocatorias.filter(c => c.estado === 'Activa' && c.tipo === nivel);
                 window.convocatoriasDisponibles = activas;
 
-                htmlConvocatorias = `<h3>Oferta Académica Desbloqueada: ${nivel === 'DOCTORADO' ? 'Doctorados' : 'Maestrías'} FIE</h3><br>`;
+                const ofertaTxt = typeof t === 'function' ? t('conv_oferta_desbloqueada') : 'Oferta Académica Desbloqueada:';
+                const nivelTxt = nivel === 'DOCTORADO' ? (typeof t === 'function' ? t('sb_doctorados') || 'Doctorados' : 'Doctorados') : (typeof t === 'function' ? t('sb_maestrias') || 'Maestrías' : 'Maestrías');
+                htmlConvocatorias = `<h3 style="color: var(--color-text); font-weight: 700; margin-bottom: 15px;">${ofertaTxt} ${nivelTxt} FIE</h3>`;
+
                 if (activas.length === 0) {
-                    htmlConvocatorias += `<p style="color: #555;">No hay convocatorias abiertas en este momento para este nivel.</p>`;
+                    htmlConvocatorias += `<p style="color: var(--color-text-muted);">${typeof t === 'function' ? t('conv_sin_abiertas') : 'No hay convocatorias abiertas en este momento para este nivel.'}</p>`;
                 } else {
                     activas.forEach(c => {
                         // Formatear fechas
-                        const fechaCierre = new Date(c.fecha_fin).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+                        const langCode = (typeof getIdiomaActual === 'function' && getIdiomaActual() === 'en') ? 'en-US' : 'es-ES';
+                        const fechaCierre = new Date(c.fecha_fin).toLocaleDateString(langCode, { day: 'numeric', month: 'long' });
 
                         htmlConvocatorias += `
-                            <div class="convocatoria-item" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 4px;">
-                                <h4>${c.nombre}</h4>
-                                <p style="margin: 5px 0; color: #555; font-size: 0.95rem;"><strong>${c.posgrado_nombre || ''}</strong></p>
-                                <p style="margin: 5px 0; color: #555;">${c.descripcion || 'Sin descripción disponible.'}</p>
-                                <p style="font-size: 14px; color: #8a1c24; margin-bottom: 10px;"><strong>Estado:</strong> Abierta | <strong>Cierre:</strong> ${fechaCierre}</p>
-                                <button class="btn-primary" style="width:auto; padding:6px 15px; font-size:13px;" onclick="prepararFlujoEstaciones('${nivelAcademicoSeleccionado}', ${c.id})">Iniciar Proceso de Registro</button>
+                            <div class="convocatoria-item" style="margin-bottom: 20px; padding: 20px; border: 1px solid var(--color-border); border-radius: 10px; background-color: var(--color-card-bg); box-shadow: var(--shadow-sm); transition: transform 0.2s, box-shadow 0.2s;">
+                                <h4 style="margin: 0 0 8px 0; color: var(--color-text); font-size: 1.15rem; font-weight: 700;">${c.nombre}</h4>
+                                <p style="margin: 0 0 8px 0; color: var(--color-text-muted); font-size: 0.95rem;"><strong>${c.posgrado_nombre || ''}</strong></p>
+                                <p style="margin: 0 0 15px 0; color: var(--color-text-muted); font-size: 0.9rem; line-height: 1.5;">${c.descripcion || (typeof t === 'function' ? t('conv_sin_desc') : 'Sin descripción disponible.')}</p>
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-top: 1px solid var(--color-border); padding-top: 15px;">
+                                    <div style="font-size: 13.5px; color: var(--color-text-muted);">
+                                        <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 4px 12px; border-radius: 12px; font-weight: 600; font-size: 12px; margin-right: 10px; display: inline-flex; align-items: center; gap: 6px;">
+                                            <i class="fa-solid fa-circle-check"></i> ${typeof t === 'function' ? t('conv_abierta') : 'Abierta'}
+                                        </span>
+                                        <strong>${typeof t === 'function' ? t('conv_cierre') : 'Cierre'}:</strong> ${fechaCierre}
+                                    </div>
+                                    <button class="btn-primary" style="width: auto; padding: 8px 18px; font-size: 13.5px; font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;" onclick="prepararFlujoEstaciones('${nivelAcademicoSeleccionado}', ${c.id})">
+                                        <i class="fa-solid fa-pen-to-square"></i> ${typeof t === 'function' ? t('conv_btn_iniciar') : 'Iniciar Proceso de Registro'}
+                                    </button>
+                                </div>
                             </div>
                         `;
                     });
@@ -794,16 +814,16 @@ function actualizarCostosAdmision() {
 
         if (input.checked) {
             // Estilo seleccionado (sólido)
-            card.style.backgroundColor = '#8a1c24';
-            card.style.borderColor = '#8a1c24';
+            card.style.backgroundColor = 'var(--color-guinda)';
+            card.style.borderColor = 'var(--color-guinda)';
             card.style.borderStyle = 'solid';
             if (strongText) strongText.style.color = '#ffffff';
         } else {
             // Estilo normal (punteado)
-            card.style.backgroundColor = '#f8f9fa';
-            card.style.borderColor = '#8a1c24';
+            card.style.backgroundColor = 'var(--color-card-bg)';
+            card.style.borderColor = 'var(--color-guinda)';
             card.style.borderStyle = 'dashed';
-            if (strongText) strongText.style.color = '#8a1c24';
+            if (strongText) strongText.style.color = 'var(--color-text)';
         }
     });
 
@@ -1404,11 +1424,19 @@ function actualizarGraficaProceso(aprobados = 0, rechazados = 0, total = 5) {
 function regresarAConvocatorias() {
 
 
-    // 1. Volvemos a mostrar el contenedor con las dos tarjetas originales
-    document.getElementById('seleccion-programa').style.display = 'flex';
+    const panelSeleccion = document.getElementById('seleccion-programa');
+    const panelListaAbierta = document.getElementById('lista-programas-abiertos');
 
-    // 2. Ocultamos la lista detallada y el botón de regreso
-    document.getElementById('lista-programas-abiertos').style.display = 'none';
+    if (panelListaAbierta) {
+        panelListaAbierta.style.display = 'none';
+        panelListaAbierta.classList.remove('fade-in');
+    }
+
+    if (panelSeleccion) {
+        panelSeleccion.style.display = 'flex';
+        void panelSeleccion.offsetWidth;
+        panelSeleccion.classList.add('fade-in');
+    }
 
     // 3. Ocultar la pestaña de documentos si nos regresamos
     const navDocumentos = document.getElementById('nav-documentos');

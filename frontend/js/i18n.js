@@ -6,6 +6,8 @@ const translations = {
         "sb_proceso": "Proceso",
         "sb_convocatorias": "Convocatorias",
         "sb_documentos": "Documentos",
+        "sb_maestria": "Maestría",
+        "sb_doctorado": "Doctorado",
         "sb_ajustes": "Ajustes",
         "sb_cerrar_sesion": "Cerrar Sesión",
 
@@ -99,6 +101,12 @@ const translations = {
         "conv_resultados": "Resultados",
         "conv_semestre": "Semestre",
         "conv_volver_resumen": "Volver al resumen",
+        "conv_abierta": "Abierta",
+        "conv_cierre": "Cierre",
+        "conv_btn_iniciar": "Iniciar Proceso de Registro",
+        "conv_sin_desc": "Sin descripción disponible.",
+        "conv_oferta_desbloqueada": "Oferta Académica Desbloqueada:",
+        "conv_sin_abiertas": "No hay convocatorias abiertas en este momento para este nivel.",
 
         // Documentos View
         "doc_msg_completar": "Completa cada una de las estaciones requeridas para enviar tu postulación a revisión administrativa.",
@@ -177,6 +185,8 @@ const translations = {
         "sb_proceso": "Process",
         "sb_convocatorias": "Admissions",
         "sb_documentos": "Documents",
+        "sb_maestria": "Master's Degree",
+        "sb_doctorado": "Doctorate (Ph.D.)",
         "sb_ajustes": "Settings",
         "sb_cerrar_sesion": "Log Out",
 
@@ -270,6 +280,12 @@ const translations = {
         "conv_resultados": "Results",
         "conv_semestre": "Semester",
         "conv_volver_resumen": "Back to summary",
+        "conv_abierta": "Open",
+        "conv_cierre": "Deadline",
+        "conv_btn_iniciar": "Start Registration Process",
+        "conv_sin_desc": "No description available.",
+        "conv_oferta_desbloqueada": "Unlocked Academic Offer:",
+        "conv_sin_abiertas": "There are no open calls for applications at this moment for this level.",
 
         // Documentos View
         "doc_msg_completar": "Complete each of the required stations to submit your application for administrative review.",

@@ -376,7 +376,7 @@ body {
 }
 
 .topbar-greeting span {
-    color: #0f172a;
+    color: var(--color-text);
     font-size: 22px;
     font-weight: 800;
 }
@@ -524,29 +524,33 @@ body {
 .programas-container {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 40px;
-    margin-top: 40px;
+    padding: 60px 20px;
+    min-height: calc(100vh - 200px);
 }
 
 .box-programa {
-    background-color: #ffffff;
-    border: 2px solid #8a1c24;
-    border-radius: 8px;
-    width: 300px;
-    padding: 50px 20px;
+    background-color: var(--color-card-bg);
+    border: 2px solid var(--color-guinda);
+    border-radius: var(--radius-lg);
+    width: 320px;
+    padding: 60px 30px;
     text-align: center;
     font-size: 22px;
-    font-weight: bold;
-    color: #1a1f2c;
+    font-weight: 700;
+    color: var(--color-text);
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-    transition: transform 0.3s, background-color 0.3s, color 0.3s;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
 }
 
 .box-programa:hover {
-    transform: translateY(-5px);
-    background-color: #8a1c24;
+    transform: translateY(-8px);
+    background-color: var(--color-guinda);
     color: #ffffff;
+    border-color: var(--color-guinda);
+    box-shadow: 0 12px 25px rgba(138, 28, 36, 0.25);
 }
 
 /* Lista de convocatorias reales */
@@ -574,8 +578,9 @@ body {
     display: flex;
     justify-content: space-between;
     position: relative;
-    margin-bottom: 30px;
+    margin: 0 auto 30px auto;
     max-width: 800px;
+    width: 100%;
 }
 
 .stepper-wrapper::before {
@@ -647,9 +652,9 @@ body {
 .radio-card {
     display: block;
     position: relative;
-    background-color: #f8f9fa;
-    /* Fondo suave */
-    border: 2px dashed #8a1c24;
+    background-color: var(--color-card-bg);
+    /* Fondo dinámico adaptable */
+    border: 2px dashed var(--color-guinda);
     /* Borde punteado guinda */
     border-radius: 12px;
     padding: 30px 20px;
@@ -661,7 +666,7 @@ body {
 }
 
 .radio-card:hover {
-    background-color: #f1e9ea;
+    background-color: var(--color-border);
 }
 
 .radio-card input[type="radio"] {
@@ -712,9 +717,9 @@ body {
 
 .file-box {
     position: relative;
-    background-color: #f8f9fa;
-    /* Fondo suave */
-    border: 2px dashed #8a1c24;
+    background-color: var(--color-card-bg);
+    /* Fondo adaptable */
+    border: 2px dashed var(--color-guinda);
     /* Borde punteado guinda */
     border-radius: 12px;
     /* Bordes suavizados */
@@ -728,14 +733,14 @@ body {
 }
 
 .file-box:hover {
-    background-color: #f1e9ea;
+    background-color: var(--color-border);
 }
 
 .file-box label {
     display: block;
     font-size: 14px;
     font-weight: bold;
-    color: #333;
+    color: var(--color-text);
     pointer-events: none;
     /* Deja pasar el click al input */
     margin-bottom: 10px;
@@ -744,7 +749,7 @@ body {
 .file-box label i {
     display: block;
     font-size: 28px;
-    color: #8a1c24;
+    color: var(--color-guinda);
     margin-bottom: 10px;
 }
 
@@ -763,11 +768,11 @@ body {
     display: inline-block;
     margin-top: 10px;
     font-size: 12px;
-    color: #8a1c24;
-    background: #f2dede;
-    padding: 5px 10px;
+    color: var(--color-guinda);
+    background: rgba(138, 28, 36, 0.1);
+    padding: 5px 12px;
     border-radius: 20px;
-    border: 1px solid #ebccd1;
+    border: 1px solid var(--color-guinda);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
@@ -2533,7 +2538,7 @@ body {
 }
 
 .messages-mega-header {
-    background: var(--color-primary);
+    background: var(--color-guinda);
     color: white;
     padding: 12px 20px;
     font-weight: bold;
@@ -3451,4 +3456,19 @@ body.dark-mode .messages-mega-read-body {
 body.dark-mode .messages-mega-read-header,
 body.dark-mode .messages-empty-state {
     color: var(--color-text);
+}
+
+body.dark-mode .file-box::after {
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+body.dark-mode .file-box.file-selected {
+    background-color: rgba(16, 185, 129, 0.15);
+    border-color: #10b981;
+}
+
+body.dark-mode .file-box.file-selected label i {
+    color: #10b981;
 }

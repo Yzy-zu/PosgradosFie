@@ -255,10 +255,10 @@
             <!-- Contenedor 1: Selección inicial de tarjetas -->
             <div id="seleccion-programa" class="programas-container">
                 <div class="box-programa" onclick="seleccionarPrograma('Maestría en Ingeniería Eléctrica')">
-                    <i class="fa-solid fa-book-bookmark"></i><br>Maestría
+                    <i class="fa-solid fa-book-bookmark"></i><br><span data-i18n="sb_maestria">Maestría</span>
                 </div>
                 <div class="box-programa" onclick="seleccionarPrograma('Doctorado en Ingeniería Eléctrica')">
-                    <i class="fa-solid fa-user-graduate"></i><br>Doctorado
+                    <i class="fa-solid fa-user-graduate"></i><br><span data-i18n="sb_doctorado">Doctorado</span>
                 </div>
             </div>
 
@@ -281,11 +281,11 @@
             <div id="banner-revision"></div>
 
             <div id="encabezado-documentos"
-                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-right: 220px;">
-                <p data-i18n="doc_msg_completar">Completa cada una de las estaciones requeridas para enviar tu postulación a revisión administrativa.
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px;">
+                <p data-i18n="doc_msg_completar" style="margin: 0; color: var(--color-text-muted);">Completa cada una de las estaciones requeridas para enviar tu postulación a revisión administrativa.
                 </p>
-                <button type="button" id="btn-cancelar-solicitud" class="btn-primary"
-                    onclick="cancelarSolicitudActual()" style="background-color: var(--color-danger); border: none;"><i
+                <button type="button" id="btn-cancelar-solicitud"
+                    onclick="cancelarSolicitudActual()" style="background-color: var(--color-danger); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'"><i
                         class="fa-solid fa-trash"></i> <span data-i18n="doc_btn_cancelar">Cancelar Solicitud</span></button>
             </div>
             <br>
@@ -338,7 +338,7 @@
             <div id="panel-estacion-1" class="station-panel">
                 <div class="card">
                     <h3><i class="fa-solid fa-address-card" style="color:#8a1c24;"></i> <span data-i18n="doc_est1_titulo">Estación 1: Identidad y Datos Generales</span></h3>
-                    <p style="margin-bottom: 15px; color: #555;" data-i18n="doc_est1_desc">Sube los documentos oficiales de identificación y datos
+                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est1_desc">Sube los documentos oficiales de identificación y datos
                         generales. Los campos con asterisco (*) son obligatorios.</p>
                     <form id="form-estacion-1">
                         <div id="grid-dinamico-identidad" class="file-grid">
@@ -359,7 +359,7 @@
             <div id="panel-estacion-2" class="station-panel">
                 <div class="card">
                     <h3><i class="fa-solid fa-user-tie" style="color:#8a1c24;"></i> <span data-i18n="doc_est2_titulo">Estación 2: Antecedentes Académicos</span></h3>
-                    <p style="margin-bottom: 15px; color: #555;" data-i18n="doc_est2_desc">Carga tus títulos, certificados e historial académico oficial.</p>
+                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est2_desc">Carga tus títulos, certificados e historial académico oficial.</p>
                     <form id="form-estacion-2">
                         <div id="grid-dinamico-academico" class="file-grid">
                             <!-- Los requisitos ACADEMICOS se inyectan aquí -->
@@ -379,7 +379,7 @@
             <div id="panel-estacion-3" class="station-panel">
                 <div class="card">
                     <h3><i class="fa-solid fa-square-poll-vertical" style="color:#8a1c24;"></i> <span data-i18n="doc_est3_titulo">Estación 3: Evaluación y Cartas</span></h3>
-                    <p style="margin-bottom: 15px; color: #555;" data-i18n="doc_est3_desc">Sube los resultados de tus certificaciones, exámenes y
+                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est3_desc">Sube los resultados de tus certificaciones, exámenes y
                         cartas de recomendación.</p>
                     <form id="form-estacion-3">
                         <div id="grid-dinamico-evaluacion" class="file-grid">
