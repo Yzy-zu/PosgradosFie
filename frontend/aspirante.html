@@ -27,7 +27,7 @@
     <nav class="sidebar">
         <div class="sidebar-header">
             <img src="css/umsnh-logo.png" alt="Logo" class="sidebar-logo" onclick="toggleSidebar()">
-            <span class="text">FIE ASPIRANTE</span>
+            <span class="text">FIE</span>
         </div>
         <a id="nav-inicio" href="#inicio" class="active"><i class="fa-solid fa-house"></i> <span class="text">Inicio
             </span>
@@ -59,7 +59,8 @@
                     <div id="notification-dropdown" class="messages-mega-dropdown" onclick="event.stopPropagation();">
                         <div class="messages-mega-header">
                             <span>Bandeja de Mensajes</span>
-                            <i class="fa-solid fa-check-double" style="cursor: pointer; color: #94a3b8;" title="Marcar todos como leídos" onclick="alert('En desarrollo')"></i>
+                            <i class="fa-solid fa-check-double" style="cursor: pointer; color: #94a3b8;"
+                                title="Marcar todos como leídos" onclick="alert('En desarrollo')"></i>
                         </div>
                         <div class="messages-mega-body">
                             <!-- Lista de chats (Izquierda) -->
@@ -71,7 +72,8 @@
                             <!-- Vista de lectura de chat (Derecha) -->
                             <div class="messages-mega-read" id="messages-read-pane" style="display: none;">
                                 <div class="messages-mega-read-header">
-                                    <i class="fa-solid fa-user me-2"></i> <span id="messages-read-title">Gestión Posgrados</span>
+                                    <i class="fa-solid fa-user me-2"></i> <span id="messages-read-title">Gestión
+                                        Posgrados</span>
                                 </div>
                                 <div class="messages-mega-read-body" id="messages-read-body">
                                     <!-- Burbuja de mensaje inyectada por JS -->
@@ -98,7 +100,7 @@
                     <div id="profile-dropdown" class="profile-menu">
                         <!-- Encabezado con Información Detallada del Usuario -->
                         <div class="profile-user-details">
-                            <div class="user-role-badge"><i class="fa-solid fa-shield"></i> Aspirante</div>
+                            <div class="user-role-badge"> Aspirante</div>
                             <h4 class="user-full-name" id="perfil-nombre">Cargando...</h4>
                             <p class="user-info-text"><i class="fa-regular fa-envelope"></i> <span
                                     id="perfil-correo">Cargando...</span></p>
@@ -125,24 +127,29 @@
             <div class="carousel-container" id="inicio-carousel">
                 <div class="carousel-track" id="inicio-carousel-track">
                     <!-- Placeholder images (the user will replace these) -->
-                    <div class="carousel-slide" style="background-color: #0f172a; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; font-weight: bold;">
+                    <div class="carousel-slide"
+                        style="background-color: #0f172a; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; font-weight: bold;">
                         <img src="" style="display: none;" alt="Aviso 1">
                         AVISO IMPORTANTE 1
                     </div>
-                    <div class="carousel-slide" style="background-color: #8a1c24; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; font-weight: bold;">
+                    <div class="carousel-slide"
+                        style="background-color: #8a1c24; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; font-weight: bold;">
                         <img src="" style="display: none;" alt="Aviso 2">
                         AVISO IMPORTANTE 2
                     </div>
-                    <div class="carousel-slide" style="background-color: #0284c7; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; font-weight: bold;">
+                    <div class="carousel-slide"
+                        style="background-color: #0284c7; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; font-weight: bold;">
                         <img src="" style="display: none;" alt="Aviso 3">
                         AVISO IMPORTANTE 3
                     </div>
                 </div>
-                
+
                 <!-- Controls -->
-                <button class="carousel-btn prev-btn" onclick="moveCarousel(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-                <button class="carousel-btn next-btn" onclick="moveCarousel(1)"><i class="fa-solid fa-chevron-right"></i></button>
-                
+                <button class="carousel-btn prev-btn" onclick="moveCarousel(-1)"><i
+                        class="fa-solid fa-chevron-left"></i></button>
+                <button class="carousel-btn next-btn" onclick="moveCarousel(1)"><i
+                        class="fa-solid fa-chevron-right"></i></button>
+
                 <!-- Indicators -->
                 <div class="carousel-indicators" id="inicio-carousel-indicators">
                     <span class="indicator active" onclick="goToSlide(0)"></span>
@@ -396,10 +403,10 @@
 
                     <!-- Caja de comentarios y observaciones -->
                     <div id="modal-doc-comentarios-wrapper"
-                        style="background: #f1f5f9; border-radius: 12px; padding: 18px; border-left: 4px solid #3b82f6; margin-bottom: 20px;">
+                        style="background: #f1f5f9; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
                         <h5
-                            style="margin: 0 0 8px 0; color: #334155; font-size: 14px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
-                            <i class="fa-solid fa-comments" style="color: #3b82f6;"></i> Comentarios
+                            style="margin: 0 0 8px 0; color: #334155; font-size: 14px; display: flex; align-items: center; justify-content: center; width: 100%; font-weight: 600;">
+                            Comentarios
                         </h5>
                         <div id="modal-doc-comentarios"
                             style="margin: 0; color: #475569; font-size: 14px; line-height: 1.5;">

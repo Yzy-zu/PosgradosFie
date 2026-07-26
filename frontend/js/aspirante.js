@@ -207,7 +207,7 @@ async function cargarNotificaciones() {
                 notificaciones.forEach(notif => {
                     const isGeneral = notif.destino === 'todos';
                     const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico' : 'Administración Posgrados');
-                    
+
                     if (!grupos[remitente]) {
                         grupos[remitente] = {
                             remitente: remitente,
@@ -230,7 +230,7 @@ async function cargarNotificaciones() {
                 Object.values(grupos).forEach(grupo => {
                     const ultMsg = grupo.mensajes[grupo.mensajes.length - 1]; // Último mensaje
                     const bgClass = grupo.isGeneral ? 'bg-primary' : 'bg-info';
-                    
+
                     const dateObj = ultMsg.creado_en ? new Date(ultMsg.creado_en) : new Date();
                     const formattedDate = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 
@@ -301,29 +301,29 @@ function abrirNotificacion(remitenteKey, element) {
     try {
         const remitenteName = decodeURIComponent(remitenteKey);
         const grupo = window.mensajesAgrupados ? window.mensajesAgrupados[remitenteName] : null;
-        
+
         if (!grupo) return;
-        
+
         // Marcar activo en la lista
         document.querySelectorAll('#notification-list .chat-item').forEach(el => el.style.background = 'transparent');
-        if(element) element.style.background = '#e2e8f0';
+        if (element) element.style.background = '#e2e8f0';
 
         // Mostrar paneles
         document.getElementById('messages-empty-pane').style.display = 'none';
         const readPane = document.getElementById('messages-read-pane');
         readPane.style.display = 'flex';
-        
+
         document.getElementById('messages-read-title').innerText = grupo.remitente;
-        
+
         const body = document.getElementById('messages-read-body');
         let chatHtml = '';
-        
+
         let lastDateStr = '';
         grupo.mensajes.forEach(notif => {
             const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
             const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
             const dateStr = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
-            
+
             let editadoHtml = '';
             if (notif.editado_en && notif.creado_en && notif.editado_en !== notif.creado_en) {
                 const editDate = new Date(notif.editado_en);
@@ -331,7 +331,7 @@ function abrirNotificacion(remitenteKey, element) {
                     editadoHtml = `<span class="ms-1 text-muted fst-italic">(Editado)</span>`;
                 }
             }
-            
+
             // Si cambió de día, ponemos un separador de fecha
             if (dateStr !== lastDateStr) {
                 chatHtml += `
@@ -350,14 +350,14 @@ function abrirNotificacion(remitenteKey, element) {
                 </div>
             `;
         });
-        
+
         body.innerHTML = chatHtml;
-        
+
         // Auto scroll al final del chat
         setTimeout(() => {
             body.scrollTop = body.scrollHeight;
         }, 50);
-        
+
     } catch (error) {
         console.error("Error al abrir notificación", error);
     }
@@ -521,7 +521,7 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
         if (respuestaSoli.ok) {
             const dataSoli = await respuestaSoli.json();
             currentSolicitudId = dataSoli.idSolicitud;
-            
+
             // Re-hidratar la UI para traer toda la info de la solicitud y de la convocatoria
             try {
                 const resReFetch = await fetch(`/api/solicitud/activa/${aspiranteData.id}`);
@@ -534,7 +534,7 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
             } catch (err) {
                 bloquearConvocatorias();
             }
-            
+
         } else if (respuestaSoli.status === 409) {
             const errData = await respuestaSoli.json();
             Swal.fire('Aviso', errData.mensaje, 'warning');
@@ -881,17 +881,17 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
             case 'APROBADO':
                 estadoClass = 'state-aprobado';
                 badgeClass = 'status-aprobado';
-                estadoTexto = '<i class="fa-solid fa-check-circle"></i> Aprobado';
+                estadoTexto = '<i class="fa-solid"></i> Aprobado';
                 break;
             case 'RECHAZADO':
                 estadoClass = 'state-rechazado';
                 badgeClass = 'status-rechazado';
-                estadoTexto = `<i class="fa-solid fa-circle-xmark"></i> Rechazado (${numIntentos}/3)`;
+                estadoTexto = `<i class="fa-solid"></i> Rechazado (${numIntentos}/3)`;
                 break;
             default:
                 estadoClass = 'state-pendiente';
                 badgeClass = 'status-pendiente';
-                estadoTexto = '<i class="fa-solid fa-clock"></i> Pendiente';
+                estadoTexto = '<i class="fa-solid"></i> Pendiente';
                 break;
         }
 
@@ -938,14 +938,13 @@ function abrirModalDoc(docStr) {
         if (doc.historial && doc.historial.length > 0) {
             let historialHtml = '';
             doc.historial.forEach((h, idx) => {
-                const iconoState = h.estadoValidacion === 'APROBADO' ? 'fa-circle-check' : (h.estadoValidacion === 'RECHAZADO' ? 'fa-circle-xmark' : 'fa-clock');
                 const colorState = h.estadoValidacion === 'APROBADO' ? '#10b981' : (h.estadoValidacion === 'RECHAZADO' ? '#ef4444' : '#f59e0b');
-                const comTxt = (h.comentarios && h.comentarios.trim() !== '') ? h.comentarios : 'Sin observaciones por parte del evaluador en este intento.';
+                const comTxt = (h.comentarios && h.comentarios.trim() !== '') ? h.comentarios : 'Sin observaciones por parte del evaluador en esta solicitud.';
 
                 historialHtml += `
                     <div style="margin-bottom: 12px; padding-bottom: 10px; ${idx < doc.historial.length - 1 ? 'border-bottom: 1px dashed #cbd5e1;' : ''}">
-                        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: ${colorState};">
-                            <span><i class="fa-solid ${iconoState}"></i> Intento ${h.intentos} - ${h.estadoValidacion}</span>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #000;">
+                            <span>Solicitud ${h.intentos} - ${h.estadoValidacion}</span>
                         </div>
                         <p style="margin: 0; font-size: 13.5px; color: #334155; line-height: 1.4; white-space: pre-wrap;">${comTxt}</p>
                     </div>
@@ -957,13 +956,11 @@ function abrirModalDoc(docStr) {
         if (doc.estadoValidacion === 'APROBADO') {
             badge.classList.add('status-aprobado');
             badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Aprobado';
-            if (comentariosWrapper) comentariosWrapper.style.borderLeftColor = '#10b981';
             if (resubirContainer) resubirContainer.style.display = 'none';
 
         } else if (doc.estadoValidacion === 'RECHAZADO') {
             badge.classList.add('status-rechazado');
-            badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Rechazado en el Intento ${numIntentos}`;
-            if (comentariosWrapper) comentariosWrapper.style.borderLeftColor = '#ef4444';
+            badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Rechazado en la Solicitud ${numIntentos}`;
 
             if (resubirContainer) {
                 resubirContainer.style.display = 'block';
@@ -986,7 +983,6 @@ function abrirModalDoc(docStr) {
         } else {
             badge.classList.add('status-pendiente');
             badge.innerHTML = '<i class="fa-solid fa-clock"></i> En Revisión';
-            if (comentariosWrapper) comentariosWrapper.style.borderLeftColor = '#f59e0b';
             if (resubirContainer) resubirContainer.style.display = 'none';
         }
 
@@ -1282,7 +1278,7 @@ function bloquearConvocatorias(soliData = null) {
     if (lista) lista.style.display = 'none';
     if (bloqueo) {
         bloqueo.style.display = 'block';
-        
+
         // Si pasamos los datos, dibujamos la tarjeta con info
         if (soliData && soliData.convocatoriaTitulo) {
             // Función robusta para formatear fechas y evitar el "1899" o "0000-00-00"
@@ -1290,11 +1286,11 @@ function bloquearConvocatorias(soliData = null) {
                 if (!dateStr || dateStr.startsWith('0000-00-00')) return 'Por definir';
                 const d = new Date(dateStr);
                 if (isNaN(d.getTime()) || d.getFullYear() < 2000) return 'Por definir';
-                
+
                 const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
                 return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
             };
-            
+
             const titulo = soliData.convocatoriaTitulo || 'Convocatoria Activa';
             const nivel = soliData.nivel === 'DOCTORADO' ? 'Doctorado' : 'Maestría';
             const opcionElegida = soliData.opcionElegida ? soliData.opcionElegida : 'Programa General';
@@ -1304,10 +1300,10 @@ function bloquearConvocatorias(soliData = null) {
                 const entInicio = formatDateSafe(soliData.fechaEntrevistaInicio);
                 const entFin = formatDateSafe(soliData.fechaEntrevistaFin);
                 const entRango = (entInicio !== 'Por definir') ? `${entInicio} ${entFin !== 'Por definir' ? 'al ' + entFin : ''}` : 'Por definir';
-                
+
                 entrevistasHtml = `<li><i class="fa-solid fa-comments" style="color:var(--color-guinda); margin-right:8px; width:16px;"></i> Entrevistas: <strong>${entRango}</strong></li>`;
             }
-            
+
             const infoHtml = `
                 <style>
                     .slide-view {
@@ -1335,7 +1331,7 @@ function bloquearConvocatorias(soliData = null) {
                             </p>
                             
                             <button class="btn-primary" onclick="switchView('documentos')" style="padding: 12px 30px; border-radius: 6px; font-size: 15px; font-weight: 500; margin-bottom: 25px; min-width: 250px;">
-                                <i class="fa-solid fa-folder-open" style="margin-right: 8px;"></i> Continuar mi Trámite
+                                <i class="fa-solid" style="margin-right: 8px;"></i> Continuar mi Trámite
                             </button>
                             
                             <div>
@@ -1385,7 +1381,7 @@ function bloquearConvocatorias(soliData = null) {
                     </div>
                 </div>
             `;
-            
+
             let infoContainer = document.getElementById('bloqueo-info-convocatoria');
             if (!infoContainer) {
                 infoContainer = document.createElement('div');
