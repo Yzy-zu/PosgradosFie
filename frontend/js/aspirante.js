@@ -943,7 +943,7 @@ function abrirModalDoc(docStr) {
 
                 historialHtml += `
                     <div style="margin-bottom: 12px; padding-bottom: 10px; ${idx < doc.historial.length - 1 ? 'border-bottom: 1px dashed #cbd5e1;' : ''}">
-                        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #000;">
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 2px; color: #000;">
                             <span>Solicitud ${h.intentos} - ${h.estadoValidacion}</span>
                         </div>
                         <p style="margin: 0; font-size: 13.5px; color: #334155; line-height: 1.4; white-space: pre-wrap;">${comTxt}</p>
@@ -955,12 +955,12 @@ function abrirModalDoc(docStr) {
 
         if (doc.estadoValidacion === 'APROBADO') {
             badge.classList.add('status-aprobado');
-            badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Aprobado';
+            badge.innerHTML = '<i class="fa-solid"></i> Aprobado';
             if (resubirContainer) resubirContainer.style.display = 'none';
 
         } else if (doc.estadoValidacion === 'RECHAZADO') {
             badge.classList.add('status-rechazado');
-            badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Rechazado en la Solicitud ${numIntentos}`;
+            badge.innerHTML = `<i class="fa-solid"></i> Rechazado en la Solicitud ${numIntentos}`;
 
             if (resubirContainer) {
                 resubirContainer.style.display = 'block';
@@ -1566,7 +1566,7 @@ function configurarPanelesNivel(nivel, idConvocatoria) {
     const boxCostos = document.getElementById('box-costos-desglose');
 
     if (nivel === "Doctorado") {
-        if (titulo) titulo.innerText = "Integración de Expediente: Doctorado FIE";
+        if (titulo) titulo.innerText = "Expediente: Doctorado FIE";
         if (document.getElementById('lbl-step-1')) document.getElementById('lbl-step-1').innerText = "Identidad y Generales";
         if (document.getElementById('lbl-step-2')) document.getElementById('lbl-step-2').innerText = "Académicos";
         if (document.getElementById('lbl-step-3')) document.getElementById('lbl-step-3').innerText = "Evaluación / Cartas";
@@ -1579,7 +1579,7 @@ function configurarPanelesNivel(nivel, idConvocatoria) {
         }
         if (document.getElementById('btn-next-0')) document.getElementById('btn-next-0').disabled = true;
     } else {
-        if (titulo) titulo.innerText = "Integración de Expediente: Maestría FIE";
+        if (titulo) titulo.innerText = "Expediente: Maestría FIE";
         if (document.getElementById('lbl-step-1')) document.getElementById('lbl-step-1').innerText = "Identidad y Generales";
         if (document.getElementById('lbl-step-2')) document.getElementById('lbl-step-2').innerText = "Académicos";
         if (document.getElementById('lbl-step-3')) document.getElementById('lbl-step-3').innerText = "Evaluación / Cartas";

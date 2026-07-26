@@ -126,8 +126,8 @@ body {
 }
 
 .sidebar-logo {
-    width: 40px;
-    height: 40px;
+    width: 90px;
+    height: auto;
     object-fit: cover;
     border-radius: 5px;
     cursor: pointer;
@@ -1826,7 +1826,7 @@ body {
     color: #3730a3;
     font-size: 2.5rem;
     font-weight: 700;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     border: 3px solid #fff;
     margin: 0 auto;
 }
@@ -1835,7 +1835,7 @@ body {
     background: #fff;
     border-radius: 16px;
     padding: 30px 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
     border: 1px solid #f1f5f9;
     text-align: center;
 }
@@ -1931,6 +1931,7 @@ body {
     margin-bottom: 30px;
     padding: 0 20px;
 }
+
 .wizard-stepper::before {
     content: '';
     position: absolute;
@@ -1942,6 +1943,7 @@ body {
     z-index: 1;
     transform: translateY(-50%);
 }
+
 .step-indicator {
     position: relative;
     z-index: 2;
@@ -1958,16 +1960,19 @@ body {
     border: 3px solid #fff;
     box-shadow: 0 0 0 2px #e2e8f0;
 }
+
 .step-indicator.active {
     background-color: #3b82f6;
     color: white;
     box-shadow: 0 0 0 2px #3b82f6;
 }
+
 .step-indicator.completed {
     background-color: #10b981;
     color: white;
     box-shadow: 0 0 0 2px #10b981;
 }
+
 .step-label {
     position: absolute;
     top: 45px;
@@ -1978,20 +1983,31 @@ body {
     white-space: nowrap;
     font-weight: 500;
 }
+
 .step-indicator.active .step-label {
     color: #3b82f6;
     font-weight: 700;
 }
+
 .step-pane {
     display: none;
     animation: fadeIn 0.4s ease;
 }
+
 .step-pane.active {
     display: block;
 }
+
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Chat Layout (WhatsApp style) */
@@ -2058,8 +2074,13 @@ body {
     flex-shrink: 0;
 }
 
-.chat-avatar.bg-primary { background-color: #3b82f6 !important; }
-.chat-avatar.bg-success { background-color: #10b981 !important; }
+.chat-avatar.bg-primary {
+    background-color: #3b82f6 !important;
+}
+
+.chat-avatar.bg-success {
+    background-color: #10b981 !important;
+}
 
 .chat-details {
     flex: 1;
@@ -2118,7 +2139,7 @@ body {
     padding: 15px 20px;
     border-radius: 12px;
     border-top-left-radius: 2px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     max-width: 80%;
     margin-bottom: 20px;
     position: relative;
@@ -2151,11 +2172,13 @@ body {
     background-color: #fff;
     padding: 20px;
     border-top: 1px solid #e2e8f0;
-    display: none; /* Shown via JS */
+    display: none;
+    /* Shown via JS */
 }
 
 .chat-read-mode {
-    display: none; /* Shown via JS */
+    display: none;
+    /* Shown via JS */
 }
 
 /* FB Style Chat Popup for End Users */
@@ -2163,17 +2186,19 @@ body {
     display: none;
     position: fixed;
     bottom: 0;
-    right: 80px; /* Offset from right edge */
+    right: 80px;
+    /* Offset from right edge */
     width: 320px;
     background: #fff;
     border-radius: 8px 8px 0 0;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
     z-index: 10000;
     flex-direction: column;
-    border: 1px solid rgba(0,0,0,0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-bottom: none;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
+
 .fb-chat-header {
     background: var(--color-primary);
     color: #fff;
@@ -2186,6 +2211,7 @@ body {
     border-radius: 8px 8px 0 0;
     cursor: pointer;
 }
+
 .fb-chat-header button {
     background: none;
     border: none;
@@ -2194,9 +2220,11 @@ body {
     font-size: 16px;
     opacity: 0.8;
 }
+
 .fb-chat-header button:hover {
     opacity: 1;
 }
+
 .fb-chat-body {
     padding: 15px;
     height: 280px;
@@ -2206,17 +2234,19 @@ body {
     flex-direction: column;
     align-items: flex-start;
 }
+
 .fb-chat-message {
     background: #fff;
     padding: 10px 12px;
     border-radius: 18px 18px 18px 4px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     font-size: 14px;
     color: #1c1e21;
     max-width: 90%;
     margin-bottom: 10px;
     word-wrap: break-word;
 }
+
 .chat-time {
     display: block;
     font-size: 11px;
@@ -2234,7 +2264,7 @@ body {
     height: 450px;
     background: white;
     border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     display: none;
     flex-direction: column;
     z-index: 9999;
@@ -2314,26 +2344,29 @@ body {
     margin: 0 auto 30px auto;
     overflow: hidden;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     background: #f1f5f9;
 }
 
 .carousel-track {
     display: flex;
     transition: transform 0.5s ease-in-out;
-    height: 350px; /* Adjust based on image aspect ratio */
+    height: 500px;
+    /* Increased to better fit vertical flyers */
 }
 
 .carousel-slide {
     min-width: 100%;
     height: 100%;
     position: relative;
+    background-color: #e2e8f0;
+    /* Gentle background for empty spaces */
 }
 
 .carousel-slide img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     display: block;
 }
 
@@ -2342,7 +2375,7 @@ body {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(0,0,0,0.4);
+    background: rgba(0, 0, 0, 0.4);
     color: white;
     border: none;
     width: 40px;
@@ -2357,11 +2390,16 @@ body {
 }
 
 .carousel-btn:hover {
-    background: rgba(0,0,0,0.8);
+    background: rgba(0, 0, 0, 0.8);
 }
 
-.prev-btn { left: 15px; }
-.next-btn { right: 15px; }
+.prev-btn {
+    left: 15px;
+}
+
+.next-btn {
+    right: 15px;
+}
 
 /* Indicadores */
 .carousel-indicators {
@@ -2377,7 +2415,7 @@ body {
 .carousel-indicators .indicator {
     width: 25px;
     height: 4px;
-    background: rgba(255,255,255,0.5);
+    background: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     transition: background 0.3s, width 0.3s;
     border-radius: 2px;

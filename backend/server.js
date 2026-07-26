@@ -39,6 +39,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend')));
 // Servir la carpeta de uploads de manera estática
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Servir imágenes y flyers generales
+app.use('/files', express.static(path.join(__dirname, 'files')));
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/usuario', require('./routes/usuario.routes'));
 app.use('/api/posgrado', require('./routes/posgrado.routes'));

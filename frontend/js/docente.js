@@ -382,15 +382,15 @@ function seleccionarAspirante(id) {
         if (doc.estado === 'aprobado') {
             estadoClass = 'state-aprobado';
             badgeClass = 'status-aprobado';
-            estadoTexto = '<i class="fa-solid fa-check-circle"></i> Aprobado';
+            estadoTexto = '<i class="fa-solid"></i> Aprobado';
         } else if (doc.estado === 'rechazado') {
             estadoClass = 'state-rechazado';
             badgeClass = 'status-rechazado';
-            estadoTexto = `<i class="fa-solid fa-circle-xmark"></i> Rechazado`;
+            estadoTexto = `<i class="fa-solid"></i> Rechazado`;
         } else {
             estadoClass = 'state-pendiente';
             badgeClass = 'status-pendiente';
-            estadoTexto = '<i class="fa-solid fa-clock"></i> Pendiente';
+            estadoTexto = '<i class="fa-solid"></i> Pendiente';
         }
 
         html += `
