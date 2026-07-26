@@ -18,8 +18,33 @@ socket.on('actualizacionGlobal', () => {
     }
 });
 
+// Manejo y persistencia de estado de la barra lateral (Sidebar)
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    if (!sidebar) return;
+
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    if (mainContent) {
+        mainContent.classList.toggle('expanded', isCollapsed);
+    }
+    localStorage.setItem('sidebarCollapsed', isCollapsed ? 'true' : 'false');
+}
+
+function restaurarEstadoSidebar() {
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (isCollapsed) {
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        if (sidebar) sidebar.classList.add('collapsed');
+        if (mainContent) mainContent.classList.add('expanded');
+    }
+}
+
 // Comprobación de Sesión y Estado de Registro al inicializar la página
 document.addEventListener("DOMContentLoaded", async function () {
+    restaurarEstadoSidebar();
+
     const token = sessionStorage.getItem('token');
     const usuarioStr = sessionStorage.getItem('usuario');
     const programaElegido = sessionStorage.getItem('programaPendiente');
@@ -65,14 +90,8 @@ document.addEventListener("DOMContentLoaded", async function () {
                 if (sidebarNombre) sidebarNombre.innerText = nombreCompleto;
                 if (sidebarIniciales) sidebarIniciales.innerText = iniciales;
 
-                // Menú Perfil Antiguo (Dropdown)
-                const lblNombre = document.getElementById('perfil-nombre');
-                const lblCorreo = document.getElementById('perfil-correo');
-                const lblTelefono = document.getElementById('perfil-telefono');
+                // Menú Perfil Antiguo removido, ya no es necesario inyectar datos al dropdown
 
-                if (lblNombre) lblNombre.innerText = `${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido}`;
-                if (lblCorreo) lblCorreo.innerText = usuario.correo;
-                if (lblTelefono) lblTelefono.innerText = aspiranteData.telefono;
 
                 // Cargar modalidades de admisión dinámicas
                 cargarModalidadesAdmision();
@@ -308,21 +327,73 @@ async function cargarNotificaciones() {
 }
 
 /**
- * Muestra u oculta el menú de perfil
+ * Muestra el modal de perfil con la información del aspirante
  */
-function toggleProfileMenu(event) {
-    event.stopPropagation();
-    const menu = document.getElementById('profile-dropdown');
-    const notifMenu = document.getElementById('notification-dropdown');
+function abrirModalPerfil() {
+    const usuarioStr = sessionStorage.getItem('usuario');
+    if (!usuarioStr || !aspiranteData) return;
+    const usuario = JSON.parse(usuarioStr);
+    
+    // Función de ayuda para formatear fechas sin desfase horario
+    const formatDate = (dateString) => {
+        if (!dateString) return 'No registrada';
+        const d = new Date(dateString);
+        return new Date(d.getTime() + Math.abs(d.getTimezoneOffset() * 60000)).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+    };
 
-    // Si el menú de notificaciones está abierto, lo cerramos
-    if (notifMenu && notifMenu.classList.contains('show')) {
-        notifMenu.classList.remove('show');
-    }
+    let fechaNac = formatDate(aspiranteData.fechaNacimiento);
+    let fechaEgreso = formatDate(aspiranteData.fechaEgreso);
+    let fechaTitulacion = formatDate(aspiranteData.fechaTitulacion);
+    
+    Swal.fire({
+        title: 'Mi Perfil',
+        html: `
+            <div style="text-align: left; font-size: 14px; line-height: 1.5; color: #334155; padding-right: 15px;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: #1e293b; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">
+                        ${document.getElementById('topbar-iniciales') ? document.getElementById('topbar-iniciales').innerText : 'U'}
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; color: #0f172a; font-size: 18px;">${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido || ''}</h4>
+                        <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">Aspirante</span>
+                    </div>
+                </div>
+                
+                <h5 style="margin: 10px 0 10px; color: #8a1c24; font-weight: 700; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px;"><i class="fa-solid fa-address-card"></i> Datos Personales</h5>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                    <p style="margin: 0; word-break: break-all;"><strong>Correo:</strong> <br>${usuario.correo || 'No registrado'}</p>
+                    <p style="margin: 0;"><strong>Teléfono:</strong> <br>${aspiranteData.telefono || 'No registrado'}</p>
+                    <p style="margin: 0;"><strong>CURP:</strong> <br>${aspiranteData.curp || 'No registrado'}</p>
+                    <p style="margin: 0;"><strong>Nacimiento:</strong> <br>${fechaNac}</p>
+                    <p style="margin: 0;"><strong>Estado Civil:</strong> <br>${aspiranteData.estadoCivil || 'No registrado'}</p>
+                    <p style="margin: 0;"><strong>Código Postal:</strong> <br>${aspiranteData.direccionPostal || 'No registrado'}</p>
+                    <p style="margin: 0; grid-column: span 2;"><strong>Dirección:</strong> <br>${aspiranteData.direccion || 'No registrada'}</p>
+                </div>
 
-    if (menu) {
-        menu.classList.toggle('show');
-    }
+                <h5 style="margin: 15px 0 10px; color: #8a1c24; font-weight: 700; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px;"><i class="fa-solid fa-graduation-cap"></i> Formación Académica</h5>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                    <p style="margin: 0; grid-column: span 2;"><strong>Licenciatura:</strong> <br>${aspiranteData.licenciatura || 'No registrada'}</p>
+                    <p style="margin: 0; grid-column: span 2;"><strong>Institución:</strong> <br>${aspiranteData.institucionLicenciatura || 'No registrada'}</p>
+                    <p style="margin: 0;"><strong>Fecha Egreso:</strong> <br>${fechaEgreso}</p>
+                    <p style="margin: 0;"><strong>Fecha Titulación:</strong> <br>${fechaTitulacion}</p>
+                    <p style="margin: 0;"><strong>Promedio:</strong> <br>${aspiranteData.promedio || 'No registrado'}</p>
+                    <p style="margin: 0;"><strong>Otros Estudios:</strong> <br>${aspiranteData.otrosEstudios || 'Ninguno'}</p>
+                </div>
+
+                <h5 style="margin: 15px 0 10px; color: #8a1c24; font-weight: 700; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px;"><i class="fa-solid fa-briefcase"></i> Datos Laborales</h5>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                    <p style="margin: 0;"><strong>Ocupación:</strong> <br>${aspiranteData.ocupacion || 'No registrada'}</p>
+                    <p style="margin: 0;"><strong>Ciudad:</strong> <br>${aspiranteData.ciudadOcupacion || 'No registrada'}</p>
+                    <p style="margin: 0;"><strong>Estado:</strong> <br>${aspiranteData.estadoOcupacion || 'No registrado'}</p>
+                    <p style="margin: 0;"><strong>Teléfono Laboral:</strong> <br>${aspiranteData.telefonoOcupacion || 'No registrado'}</p>
+                </div>
+            </div>
+        `,
+        showConfirmButton: true,
+        confirmButtonText: 'Cerrar',
+        confirmButtonColor: '#8a1c24',
+        width: '1050px'
+    });
 }
 
 /**
@@ -331,12 +402,6 @@ function toggleProfileMenu(event) {
 function toggleNotificationMenu(event) {
     event.stopPropagation(); // Evitar que se propague al document
     const menu = document.getElementById('notification-dropdown');
-    const profileMenu = document.getElementById('profile-dropdown');
-
-    // Si el menú de perfil está abierto, lo cerramos
-    if (profileMenu && profileMenu.classList.contains('show')) {
-        profileMenu.classList.remove('show');
-    }
 
     if (menu) {
         menu.classList.toggle('show');
@@ -346,14 +411,9 @@ function toggleNotificationMenu(event) {
 // Cerrar los menús al hacer click fuera
 document.addEventListener('click', function (event) {
     const notificationMenu = document.getElementById('notification-dropdown');
-    const profileMenu = document.getElementById('profile-dropdown');
 
     if (notificationMenu && notificationMenu.classList.contains('show') && !event.target.closest('.notification-container')) {
         notificationMenu.classList.remove('show');
-    }
-
-    if (profileMenu && profileMenu.classList.contains('show') && !event.target.closest('.profile-container')) {
-        profileMenu.classList.remove('show');
     }
 });
 

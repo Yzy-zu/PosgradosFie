@@ -24,23 +24,38 @@
 
     <nav class="sidebar">
         <div class="sidebar-header">
-            <div class="sidebar-logo">IE</div>
+            <div class="sidebar-logo" style="background: transparent;">
+                <img src="css/posgradofie.png" alt="Logo"
+                    style="width: 200%; height: 200%; object-fit: contain; cursor: pointer;" onclick="toggleSidebar()">
+            </div>
             <div style="display: flex; flex-direction: column; justify-content: center;">
-                <span class="text" style="font-size: 14px; font-weight: 800; color: #f8fafc; margin-left: 10px; line-height: 1.2;">Posgrado FIE</span>
-                <span class="text" style="font-size: 10px; color: #94a3b8; margin-left: 10px; font-weight: 400;">Sistema de Gestión</span>
+                <span class="text"
+                    style="font-size: 14px; font-weight: 800; color: #f8fafc; margin-left: 10px; line-height: 1.2;">
+                    FIE</span>
+                <span class="text" style="font-size: 10px; color: #94a3b8; margin-left: 10px; font-weight: 400;">
+                    Division de
+                    Posgrados</span>
             </div>
         </div>
-        
-        <div class="nav-label" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #4b5563; padding: 10px 15px; margin-top: 10px; font-weight: 800;">PRINCIPAL</div>
-        
-        <a id="nav-inicio" href="#inicio" class="active"><i class="fa-solid fa-house"></i> <span class="text">Inicio</span></a>
+
+        <div class="nav-label"
+            style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #4b5563; padding: 10px 15px; margin-top: 10px; font-weight: 800;">
+            PRINCIPAL</div>
+
+        <a id="nav-inicio" href="#inicio" class="active"><i class="fa-solid fa-house"></i> <span
+                class="text">Inicio</span></a>
         <a id="nav-proceso" href="#proceso"><i class="fa-solid fa-chart-pie"></i> <span class="text">Proceso</span></a>
-        <a id="nav-convocatorias" href="#convocatorias"><i class="fa-solid fa-bullhorn"></i> <span class="text">Convocatorias</span></a>
-        <a id="nav-documentos" href="#documentos" class="hidden"><i class="fa-solid fa-folder-open"></i> <span class="text">Documentos</span></a>
-        
-        <div style="margin-top: auto; display: flex; justify-content: flex-end; margin-bottom: 20px; padding-right: 15px;">
-            <div class="sidebar-settings" onclick="abrirDrawerAjustes()" title="Ajustes" style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8; transition: background 0.3s, color 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.color='#94a3b8';">
+        <a id="nav-convocatorias" href="#convocatorias"><i class="fa-solid fa-bullhorn"></i> <span
+                class="text">Convocatorias</span></a>
+        <a id="nav-documentos" href="#documentos" class="hidden"><i class="fa-solid fa-folder-open"></i> <span
+                class="text">Documentos</span></a>
+
+        <div class="sidebar-actions">
+            <div class="sidebar-settings" onclick="abrirDrawerAjustes()" title="Ajustes">
                 <i class="fa-solid fa-gear" style="font-size: 18px;"></i>
+            </div>
+            <div class="sidebar-logout" onclick="cerrarSesion()" title="Cerrar Sesión">
+                <i class="fa-solid fa-right-from-bracket" style="font-size: 18px;"></i>
             </div>
         </div>
     </nav>
@@ -56,9 +71,11 @@
             <div style="display: flex; align-items: center; gap: 15px; margin-left: auto;">
                 <!-- Menú de Mensajes (Solo la campana con el punto) -->
                 <div class="notification-container" onclick="toggleNotificationMenu(event)" style="position: relative;">
-                    <div class="notification-trigger" style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; color: #94a3b8; background: #fff;">
+                    <div class="notification-trigger"
+                        style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; color: #94a3b8; background: #fff;">
                         <i class="fa-regular fa-bell"></i>
-                        <span id="notification-badge" class="notification-badge" style="display: none; top: -2px; right: -2px; width: 8px; height: 8px; min-width: auto; padding: 0;"></span>
+                        <span id="notification-badge" class="notification-badge"
+                            style="display: none; top: -2px; right: -2px; width: 8px; height: 8px; min-width: auto; padding: 0;"></span>
                     </div>
                     <!-- Mega Dropdown Messages (se mantiene su funcionalidad) -->
                     <div id="notification-dropdown" class="messages-mega-dropdown" onclick="event.stopPropagation();">
@@ -95,34 +112,16 @@
                     </div>
                 </div>
 
-                <!-- Menú de Perfil Pill -->
+                <!-- Botón Mi Perfil -->
                 <div class="profile-container" style="position: relative;">
-                    <div class="profile-trigger" style="border: 1px solid #e2e8f0; border-radius: 20px; padding: 4px 12px 4px 4px; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #fff;" onclick="toggleProfileMenu(event)">
-                        <div style="width: 28px; height: 28px; border-radius: 50%; background: #1e293b; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;" id="topbar-iniciales">
+                    <div class="profile-trigger"
+                        style="border: 1px solid #e2e8f0; border-radius: 20px; padding: 4px 12px 4px 4px; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #fff;"
+                        onclick="abrirModalPerfil()">
+                        <div style="width: 28px; height: 28px; border-radius: 50%; background: #1e293b; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;"
+                            id="topbar-iniciales">
                             --
                         </div>
                         <span style="font-size: 13px; font-weight: 600; color: #334155;">Mi Perfil</span>
-                    </div>
-
-                    <!-- Menú Desplegable de Perfil -->
-                    <div id="profile-dropdown" class="profile-menu" style="top: 45px; right: 0; position: absolute; width: 240px;">
-                        <!-- Encabezado con Información Detallada del Usuario -->
-                        <div class="profile-user-details">
-                            <div class="user-role-badge"> Aspirante</div>
-                            <h4 class="user-full-name" id="perfil-nombre">Cargando...</h4>
-                            <p class="user-info-text"><i class="fa-regular fa-envelope"></i> <span
-                                    id="perfil-correo">Cargando...</span></p>
-                            <p class="user-info-text"><i class="fa-solid fa-phone"></i> <span
-                                    id="perfil-telefono">Cargando...</span></p>
-                        </div>
-                        <hr>
-                        <a class="menu-link" onclick="abrirModalCambiarPassword()"
-                            style="cursor:pointer; display:block; padding:10px 15px; color:#333; text-decoration:none;"><i
-                                class="fa-solid fa-key"></i> Restablecer contraseña</a>
-                        <a class="logout-link" onclick="cerrarSesion()"
-                            style="cursor:pointer; display:block; padding:10px 15px; color:#e74c3c; text-decoration:none;"><i
-                                class="fa-solid fa-right-from-bracket"></i>
-                            Cerrar Sesión</a>
                     </div>
                 </div>
             </div> <!-- Flex container end -->
@@ -164,20 +163,26 @@
             </div>
 
             <!-- Avisos y Comunicados -->
-            <div style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;">Avisos y Comunicados</div>
-            <div class="carousel-container" id="inicio-carousel" style="border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); background: linear-gradient(135deg, #1e3a34, #111827); border: none; margin-bottom: 0;">
+            <div
+                style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;">
+                Avisos y Comunicados</div>
+            <div class="carousel-container" id="inicio-carousel"
+                style="border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); background: linear-gradient(135deg, #1e3a34, #111827); border: none; margin-bottom: 0;">
                 <div class="carousel-track" id="inicio-carousel-track">
                     <!-- Banner Principal -->
                     <div class="carousel-slide">
-                        <img src="/files/FIE-Banner-Principal-1.jpg" alt="Aviso 1" style="object-fit: cover; width: 100%; height: 100%;">
+                        <img src="/files/FIE-Banner-Principal-1.jpg" alt="Aviso 1"
+                            style="object-fit: cover; width: 100%; height: 100%;">
                     </div>
                     <!-- Flyer Nuevo Ingreso -->
                     <div class="carousel-slide">
-                        <img src="/files/flyer-nuevo-ingreso-26.jpeg" alt="Aviso 2" style="object-fit: cover; width: 100%; height: 100%;">
+                        <img src="/files/flyer-nuevo-ingreso-26.jpeg" alt="Aviso 2"
+                            style="object-fit: cover; width: 100%; height: 100%;">
                     </div>
                     <!-- Flyer Reingreso -->
                     <div class="carousel-slide">
-                        <img src="/files/flyer-reingreso-2026.jpeg" alt="Aviso 3" style="object-fit: cover; width: 100%; height: 100%;">
+                        <img src="/files/flyer-reingreso-2026.jpeg" alt="Aviso 3"
+                            style="object-fit: cover; width: 100%; height: 100%;">
                     </div>
                 </div>
 
@@ -448,38 +453,42 @@
 
         <!-- Overlay for Settings Drawer -->
         <div id="settings-drawer-overlay" class="drawer-overlay" onclick="cerrarDrawerAjustes()"></div>
-        
+
         <!-- Settings Drawer -->
         <div id="settings-drawer" class="settings-drawer">
             <div class="drawer-header">
                 <h3><i class="fa-solid fa-gear"></i> Ajustes</h3>
-                <button class="btn-close-drawer" onclick="cerrarDrawerAjustes()"><i class="fa-solid fa-xmark"></i></button>
+                <button class="btn-close-drawer" onclick="cerrarDrawerAjustes()"><i
+                        class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="drawer-body">
-                
+
                 <div class="settings-section">
                     <h4><i class="fa-solid fa-shield-halved"></i> Cuenta y Seguridad</h4>
-                    
+
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-title">Cambiar contraseña</span>
                             <span class="setting-desc">Actualiza tu credencial de acceso</span>
                         </div>
-                        <button class="btn-secondary btn-sm" onclick="abrirModalCambiarPassword(); cerrarDrawerAjustes();">Cambiar</button>
+                        <button class="btn-secondary btn-sm"
+                            onclick="abrirModalCambiarPassword(); cerrarDrawerAjustes();">Cambiar</button>
                     </div>
-                    
+
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-title">Cerrar otras sesiones</span>
                             <span class="setting-desc">Desconecta otros dispositivos activos</span>
                         </div>
-                        <button class="btn-secondary btn-sm text-danger" onclick="Swal.fire('Sesiones', 'Funcionalidad en desarrollo', 'info')">Cerrar Sesiones</button>
+                        <button class="btn-secondary btn-sm text-danger"
+                            onclick="Swal.fire('Sesiones', 'Funcionalidad en desarrollo', 'info')">Cerrar
+                            Sesiones</button>
                     </div>
                 </div>
 
                 <div class="settings-section">
                     <h4><i class="fa-solid fa-palette"></i> Apariencia</h4>
-                    
+
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-title">Tema Visual</span>
@@ -491,7 +500,7 @@
                             <option>Sistema</option>
                         </select>
                     </div>
-                    
+
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-title">Densidad de Interfaz</span>
@@ -506,7 +515,7 @@
 
                 <div class="settings-section">
                     <h4><i class="fa-solid fa-globe"></i> Regional</h4>
-                    
+
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-title">Idioma</span>
@@ -521,7 +530,7 @@
 
                 <div class="settings-section">
                     <h4><i class="fa-solid fa-bell"></i> Notificaciones</h4>
-                    
+
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-title">Notificaciones Push</span>
@@ -543,7 +552,7 @@
                             <span class="slider round"></span>
                         </label>
                     </div>
-                    
+
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-title">Boletines FIE</span>
@@ -558,7 +567,9 @@
 
             </div>
             <div class="drawer-footer">
-                <button class="btn-primary w-100" onclick="cerrarDrawerAjustes()" style="padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px;">Guardar Cambios</button>
+                <button class="btn-primary w-100" onclick="cerrarDrawerAjustes()"
+                    style="padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px;">Guardar
+                    Cambios</button>
             </div>
         </div>
 

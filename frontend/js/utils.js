@@ -41,10 +41,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // ==== MANEJO DE SESIÓN ====
 function cerrarSesion() {
-    if (confirm("¿Desea cerrar sesión?")) {
-        sessionStorage.clear();
-        window.location.href = 'login.html';
-    }
+    Swal.fire({
+        title: '¿Cerrar sesión?',
+        text: '¿Estás seguro de que deseas salir del sistema?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#8a1c24',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="fa-solid fa-right-from-bracket"></i> Sí, salir',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    });
 }
 
 // ==== MANEJO DEL PERFIL DESPLEGABLE ====
