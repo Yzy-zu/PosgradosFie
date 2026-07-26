@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             if (docente.status === 401 || docente.status === 403) {
                 console.warn("Token expirado o inválido según el backend. Cerrando sesión...");
                 sessionStorage.clear();
-                window.location.href = 'index.html';
+                window.location.href = 'login.html';
                 return null;
             }
             const data = await docente.json()
@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     if (!tokenObj || !tokenStr) {
         console.warn("Sesión expirada o no encontrada, redirigiendo al login.");
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
         return;
     }
 
@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         datitos = await cargarDocente(usuario.id);
     } catch (e) {
         console.error("Error al cargar datos del docente", e);
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
         return;
     }
     console.log(datitos);
