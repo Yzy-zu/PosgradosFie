@@ -196,13 +196,13 @@ function switchView(viewId) {
         }
     }
 
-    // Controlar la visibilidad del toast de revisión (solo visible en documentos)
-    const toast = document.getElementById('revision-toast');
-    if (toast) {
+    // Controlar la visibilidad del banner flotante de revisión (solo visible en documentos)
+    const floatingBanner = document.getElementById('revision-floating-banner');
+    if (floatingBanner) {
         if (viewId === 'documentos') {
-            toast.style.display = 'flex';
+            floatingBanner.style.display = 'flex';
         } else {
-            toast.style.display = 'none';
+            floatingBanner.style.display = 'none';
         }
     }
 
@@ -352,9 +352,9 @@ function abrirModalPerfil() {
         title: typeof t === 'function' ? t('prof_title') : 'Mi Perfil',
         html: `
             <div style="text-align: left; font-size: 14px; line-height: 1.5; color: var(--color-text); padding-right: 15px;">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--color-border);">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 5px; padding-bottom: 5px;">
                     <div style="width: 50px; height: 50px; border-radius: 50%; background: #1e293b; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">
-                        ${document.getElementById('topbar-iniciales') ? document.getElementById('topbar-iniciales').innerText : 'U'}
+                        <i class="fa-solid fa-user"></i>
                     </div>
                     <div>
                         <h4 style="margin: 0; color: var(--color-text); font-size: 18px;">${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido || ''}</h4>
@@ -362,40 +362,43 @@ function abrirModalPerfil() {
                     </div>
                 </div>
                 
-                <h5 style="margin: 10px 0 10px; color: var(--color-guinda); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 5px;"><i class="fa-solid fa-address-card"></i> ${typeof t === 'function' ? t('prof_personal') : 'Datos Personales'}</h5>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-                    <p style="margin: 0; word-break: break-all;"><strong>${typeof t === 'function' ? t('prof_correo') : 'Correo:'}</strong> <br>${usuario.correo || noReg}</p>
-                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_tel') : 'Teléfono:'}</strong> <br>${aspiranteData.telefono || noReg}</p>
-                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_curp') : 'CURP:'}</strong> <br>${aspiranteData.curp || noReg}</p>
-                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_nacimiento') : 'Nacimiento:'}</strong> <br>${fechaNac}</p>
-                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_estado_civil') : 'Estado Civil:'}</strong> <br>${aspiranteData.estadoCivil || noReg}</p>
-                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_cp') : 'Código Postal:'}</strong> <br>${aspiranteData.direccionPostal || noReg}</p>
-                    <p style="margin: 0; grid-column: span 2;"><strong>${typeof t === 'function' ? t('prof_direccion') : 'Dirección:'}</strong> <br>${aspiranteData.direccion || noReg}</p>
+                <h5 class="profile-section-title" style="margin-top: 10px;"><i class="fa-solid fa-address-card"></i> ${typeof t === 'function' ? t('prof_personal') : 'Datos Personales'}</h5>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_correo') : 'Correo'}</span> <span class="profile-info-value">${usuario.correo || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_tel') : 'Teléfono'}</span> <span class="profile-info-value">${aspiranteData.telefono || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_curp') : 'CURP'}</span> <span class="profile-info-value">${aspiranteData.curp || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_nacimiento') : 'Nacimiento'}</span> <span class="profile-info-value">${fechaNac}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_estado_civil') : 'Estado Civil'}</span> <span class="profile-info-value">${aspiranteData.estadoCivil || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_cp') : 'Cód. Postal'}</span> <span class="profile-info-value">${aspiranteData.direccionPostal || noReg}</span></div>
+                    <div class="profile-info-box" style="grid-column: span 2;"><span class="profile-info-label">${typeof t === 'function' ? t('prof_direccion') : 'Dirección'}</span> <span class="profile-info-value">${aspiranteData.direccion || noReg}</span></div>
                 </div>
 
-                <h5 style="margin: 20px 0 10px; color: var(--color-guinda); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 5px;"><i class="fa-solid fa-graduation-cap"></i> ${typeof t === 'function' ? t('prof_academica') : 'Formación Académica'}</h5>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-                    <p style="margin: 0; grid-column: span 2;"><strong>${typeof t === 'function' ? t('prof_lic') : 'Licenciatura:'}</strong> <br>${aspiranteData.licenciatura || noReg}</p>
-                    <p style="margin: 0; grid-column: span 2;"><strong>${typeof t === 'function' ? t('prof_inst') : 'Institución:'}</strong> <br>${aspiranteData.institucionLicenciatura || noReg}</p>
-                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_egreso') : 'Fecha Egreso:'}</strong> <br>${fechaEgreso}</p>
-                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_titulacion') : 'Fecha Titulación:'}</strong> <br>${fechaTitulacion}</p>
-                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_promedio') : 'Promedio:'}</strong> <br>${aspiranteData.promedio || noReg}</p>
-                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_otros') : 'Otros Estudios:'}</strong> <br>${aspiranteData.otrosEstudios || ninguno}</p>
+                <h5 class="profile-section-title"><i class="fa-solid fa-graduation-cap"></i> ${typeof t === 'function' ? t('prof_academica') : 'Formación Académica'}</h5>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                    <div class="profile-info-box" style="grid-column: span 2;"><span class="profile-info-label">${typeof t === 'function' ? t('prof_lic') : 'Licenciatura'}</span> <span class="profile-info-value">${aspiranteData.licenciatura || noReg}</span></div>
+                    <div class="profile-info-box" style="grid-column: span 2;"><span class="profile-info-label">${typeof t === 'function' ? t('prof_inst') : 'Institución'}</span> <span class="profile-info-value">${aspiranteData.institucionLicenciatura || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_egreso') : 'Fecha Egreso'}</span> <span class="profile-info-value">${fechaEgreso}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_titulacion') : 'Titulación'}</span> <span class="profile-info-value">${fechaTitulacion}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_promedio') : 'Promedio'}</span> <span class="profile-info-value">${aspiranteData.promedio || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_otros') : 'Otros Estudios'}</span> <span class="profile-info-value">${aspiranteData.otrosEstudios || ninguno}</span></div>
                 </div>
 
-                <h5 style="margin: 20px 0 10px; color: var(--color-guinda); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 5px;"><i class="fa-solid fa-briefcase"></i> ${typeof t === 'function' ? t('prof_laborales') : 'Datos Laborales'}</h5>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_ocupacion') : 'Ocupación:'}</strong> <br>${aspiranteData.ocupacion || noReg}</p>
-                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_ciudad') : 'Ciudad:'}</strong> <br>${aspiranteData.ciudadOcupacion || noReg}</p>
-                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_estado') : 'Estado:'}</strong> <br>${aspiranteData.estadoOcupacion || noReg}</p>
-                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_tel_lab') : 'Teléfono Laboral:'}</strong> <br>${aspiranteData.telefonoOcupacion || noReg}</p>
+                <h5 class="profile-section-title"><i class="fa-solid fa-briefcase"></i> ${typeof t === 'function' ? t('prof_laborales') : 'Datos Laborales'}</h5>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_ocupacion') : 'Ocupación'}</span> <span class="profile-info-value">${aspiranteData.ocupacion || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_ciudad') : 'Ciudad'}</span> <span class="profile-info-value">${aspiranteData.ciudadOcupacion || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_estado') : 'Estado'}</span> <span class="profile-info-value">${aspiranteData.estadoOcupacion || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_tel_lab') : 'Tel. Laboral'}</span> <span class="profile-info-value">${aspiranteData.telefonoOcupacion || noReg}</span></div>
                 </div>
             </div>
         `,
         showConfirmButton: true,
         confirmButtonText: typeof t === 'function' ? t('prof_btn_cerrar') : 'Cerrar',
         confirmButtonColor: '#8a1c24',
-        width: '1050px'
+        width: '1050px',
+        customClass: {
+            popup: 'profile-modal-bg'
+        }
     });
 }
 
@@ -894,12 +897,46 @@ async function bloquearInterfazPorRevision() {
     const banner = document.getElementById('banner-revision');
     const encabezado = document.getElementById('encabezado-documentos');
 
-    // 1. Inyectar el toast flotante en el body (si no existe ya)
-    if (!document.getElementById('revision-toast')) {
-        const toast = document.createElement('div');
-        toast.id = 'revision-toast';
-        toast.className = 'revision-toast-flotante';
-        toast.innerHTML = `
+    // 1. Eliminar cualquier toast flotante anterior al pie de página
+    const oldToast = document.getElementById('revision-toast');
+    if (oldToast) oldToast.remove();
+
+    // 2. Construir la vista integrada dentro de banner-revision (banner superior + barra de progreso + grid sin caja exterior)
+    if (banner) {
+        banner.style.cssText = 'display:block; background:transparent; border:none; box-shadow:none; padding:0;';
+        banner.innerHTML = `
+            <!-- Barra de Progreso Respirable con Conteo -->
+            <div class="progress-card-v2">
+                <div class="progress-card-v2-header">
+                    <span class="progress-card-v2-label" data-i18n="doc_docs_aprobados">${typeof t === 'function' ? t('doc_docs_aprobados') : 'Documentos aprobados'}</span>
+                    <span id="txt-conteo-aprobados" class="progress-card-v2-count">0 / 0</span>
+                </div>
+                <div class="progress-card-v2-track">
+                    <div id="barra-progreso-fill" class="progress-card-v2-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Contenedor Directo de Tarjetas (Sin caja exterior con borde) -->
+            <div id="docs-dinamicos-container" style="margin-top: 15px; padding-bottom: 80px;">
+                <div class="docs-empty-state">
+                    <i class="fa-solid fa-folder-open fa-3x mb-3 text-muted"></i>
+                    <p class="text-muted" data-i18n="doc_no_encontrado">${typeof t === 'function' ? t('doc_no_encontrado') : 'No se encontraron documentos adjuntos.'}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    // Banner Integrado Fijo al Tope Inferior de la Pantalla (Inyectado al body para evitar saltos en el DOM)
+    let floatingBanner = document.getElementById('revision-floating-banner');
+    if (!floatingBanner) {
+        floatingBanner = document.createElement('div');
+        floatingBanner.id = 'revision-floating-banner';
+        floatingBanner.className = 'revision-integrated-banner';
+        document.body.appendChild(floatingBanner);
+    }
+    
+    floatingBanner.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 14px;">
             <div class="revision-toast-icon">
                 <i class="fa-solid fa-lock"></i>
             </div>
@@ -907,46 +944,9 @@ async function bloquearInterfazPorRevision() {
                 <span class="revision-toast-title">${typeof t === 'function' ? t('toast_rev_title') : 'Expediente bajo revisión'}</span>
                 <span class="revision-toast-sub">${typeof t === 'function' ? t('toast_rev_sub') : 'Serás notificado si se requiere alguna corrección'}</span>
             </div>
-            <span class="revision-toast-badge">${typeof t === 'function' ? t('toast_rev_badge') : 'EN REVISIÓN'}</span>
-        `;
-        document.body.appendChild(toast);
-    }
-
-    // Asegurar que el toast solo se muestre si la pestaña actual es documentos
-    const toast = document.getElementById('revision-toast');
-    if (toast) {
-        const currentView = window.location.hash.replace('#', '') || 'inicio';
-        if (currentView === 'documentos') {
-            toast.style.display = 'flex';
-        } else {
-            toast.style.display = 'none';
-        }
-    }
-
-    // 2. Convertir el banner-revision en contenedor de progreso + docs (sin el banner viejo)
-    if (banner) {
-        banner.style.cssText = 'display:block; background:transparent; border:none; box-shadow:none; padding:0;';
-        banner.innerHTML = `
-            <div class="progress-card-v2-header">
-                <span class="progress-card-v2-label" data-i18n="doc_docs_aprobados">${typeof t === 'function' ? t('doc_docs_aprobados') : 'Documentos aprobados'}</span>
-            </div>
-            <div class="progress-card-v2-stats">
-                <div class="progress-card-v2-track">
-                    <div id="barra-progreso-fill" class="progress-card-v2-fill" style="width: 0%;"></div>
-                </div>
-                <span id="txt-conteo-aprobados" class="progress-card-v2-count">0 / 0</span>
-            </div>
-
-            <div class="docs-scroll-card">
-                <div class="docs-scroll-inner" id="docs-dinamicos-container">
-                    <div class="docs-empty-state">
-                        <i class="fa-solid fa-folder-open fa-3x mb-3 text-muted"></i>
-                        <p class="text-muted" data-i18n="doc_no_encontrado">${typeof t === 'function' ? t('doc_no_encontrado') : 'No se encontraron documentos adjuntos.'}</p>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
+        </div>
+        <span class="revision-toast-badge">${typeof t === 'function' ? t('toast_rev_badge') : 'EN REVISIÓN'}</span>
+    `;
 
     if (encabezado) encabezado.style.display = 'none';
 
@@ -1017,23 +1017,32 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
         }
     });
 
-    // Helper fecha
     const formatearFecha = (raw) => {
-        if (!raw) return 'Subido recientemente';
+        if (!raw) return typeof t === 'function' ? t('doc_subido_reciente') : 'Subido recientemente';
         try {
             const date = new Date(raw);
-            if (isNaN(date.getTime())) return `Subido el ${raw.split('T')[0]}`;
-            const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-            return `Subido el ${date.getDate()} ${meses[date.getMonth()]} ${date.getFullYear()}`;
+            if (isNaN(date.getTime())) return `${typeof t === 'function' ? t('doc_subido_el') : 'Subido el'} ${raw.split('T')[0]}`;
+            
+            const isEn = typeof getIdiomaActual === 'function' && getIdiomaActual() === 'en';
+            const langCode = isEn ? 'en-US' : 'es-ES';
+            const dateStr = date.toLocaleDateString(langCode, { day: 'numeric', month: 'short', year: 'numeric' });
+            return `${typeof t === 'function' ? t('doc_subido_el') : 'Subido el'} ${dateStr}`;
         } catch (e) {
-            return 'Subido recientemente';
+            return typeof t === 'function' ? t('doc_subido_reciente') : 'Subido recientemente';
         }
+    };
+
+    const catKeyMap = {
+        'IDENTIDAD Y GENERALES': 'cat_identidad',
+        'ANTECEDENTES ACADÉMICOS': 'cat_academico',
+        'EVALUACIÓN Y OTROS': 'cat_evaluacion'
     };
 
     for (const [catNombre, docsGrupo] of Object.entries(grupos)) {
         if (docsGrupo.length === 0) continue;
 
-        html += `<div style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; margin-top: 18px;">${catNombre}</div>`;
+        const catTraducida = typeof t === 'function' ? (t(catKeyMap[catNombre]) || catNombre) : catNombre;
+        html += `<div style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; margin-top: 18px;">${catTraducida}</div>`;
         html += `<div class="docs-grid-v2">`;
 
         docsGrupo.forEach(doc => {

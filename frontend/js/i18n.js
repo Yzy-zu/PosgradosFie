@@ -42,6 +42,9 @@ const translations = {
         "st_btn_guardar": "Guardar Cambios",
 
         // Dynamic Texts (Documents)
+        "cat_identidad": "IDENTIDAD Y GENERALES",
+        "cat_academico": "ANTECEDENTES ACADÉMICOS",
+        "cat_evaluacion": "EVALUACIÓN Y OTROS",
         "doc_aprobado": "APROBADO",
         "doc_rechazado": "RECHAZADO",
         "doc_pendiente": "PENDIENTE",
@@ -221,6 +224,9 @@ const translations = {
         "st_btn_guardar": "Save Changes",
 
         // Dynamic Texts (Documents)
+        "cat_identidad": "IDENTITY & GENERAL DATA",
+        "cat_academico": "ACADEMIC BACKGROUND",
+        "cat_evaluacion": "EVALUATION & OTHER",
         "doc_aprobado": "APPROVED",
         "doc_rechazado": "REJECTED",
         "doc_pendiente": "PENDING",

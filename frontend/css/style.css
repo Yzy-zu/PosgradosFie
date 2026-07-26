@@ -23,14 +23,21 @@
 }
 
 body.dark-mode {
-    --color-bg: #0f172a; /* Slate 900 - Fondo principal profundo */
-    --color-text: #ffffff; /* Blanco puro para máxima legibilidad */
-    --color-text-muted: #cbd5e1; /* Slate 300 - Textos secundarios súper claros */
-    --color-primary: #3b82f6; /* Azul brillante */
+    --color-bg: #0f172a;
+    /* Slate 900 - Fondo principal profundo */
+    --color-text: #ffffff;
+    /* Blanco puro para máxima legibilidad */
+    --color-text-muted: #cbd5e1;
+    /* Slate 300 - Textos secundarios súper claros */
+    --color-primary: #3b82f6;
+    /* Azul brillante */
     --color-primary-hover: #60a5fa;
-    --color-card-bg: #1e293b; /* Slate 800 - Tarjetas y Paneles elevados */
-    --color-border: #334155; /* Slate 700 - Bordes suaves */
-    --color-input-bg: #0f172a; /* Entradas de texto oscuras */
+    --color-card-bg: #1e293b;
+    /* Slate 800 - Tarjetas y Paneles elevados */
+    --color-border: #334155;
+    /* Slate 700 - Bordes suaves */
+    --color-input-bg: #0f172a;
+    /* Entradas de texto oscuras */
 }
 
 * {
@@ -350,15 +357,15 @@ body {
 
 /* --- NUEVAS CLASES PARA EL REDISEÑO (ASPIRANTE) --- */
 .topbar-modern {
-    position: sticky; 
-    top: 0; 
-    height: 70px; 
-    background: #fff; 
-    z-index: 100; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 0 30px; 
+    position: sticky;
+    top: 0;
+    height: 70px;
+    background: #fff;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
     margin: -40px -40px 20px -40px;
     border-bottom: 1px solid #e2e8f0;
 }
@@ -396,7 +403,7 @@ body {
     display: flex;
     align-items: center;
     gap: 15px;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
 }
 
 .stat-card-icon {
@@ -446,7 +453,7 @@ body {
 }
 
 .sidebar-profile-pill:hover {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .sidebar-profile-avatar {
@@ -2526,15 +2533,27 @@ body {
     background: white;
     border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    display: none;
+    display: flex;
     flex-direction: column;
     z-index: 9999;
     border: 1px solid #e2e8f0;
     overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px) scale(0.98);
+    transform-origin: top right;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .messages-mega-dropdown.show {
-    display: flex;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+#messages-empty-pane .messages-empty-state {
+    justify-content: flex-end;
+    padding-bottom: 50px;
 }
 
 .messages-mega-header {
@@ -2567,6 +2586,30 @@ body {
     background: #fff;
     display: flex;
     flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+.messages-mega-read::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 60%;
+    height: 60%;
+    transform: translate(-50%, -50%);
+    background-image: url('umsnhLogo.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.30;
+    z-index: 0;
+    pointer-events: none;
+}
+
+body.dark-mode .messages-mega-read::before {
+    opacity: 0.08;
+    /* or adjust if user prefers a different dark mode opacity */
 }
 
 .messages-mega-read-header {
@@ -2574,14 +2617,18 @@ body {
     border-bottom: 1px solid #e2e8f0;
     font-weight: bold;
     background: #f1f5f9;
+    position: relative;
+    z-index: 1;
 }
 
 .messages-mega-read-body {
     flex: 1;
     padding: 15px;
     overflow-y: auto;
-    background-color: #f8fafc;
-    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e2e8f0' fill-opacity='0.4' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
+    background-color: transparent !important;
+    background-image: none !important;
+    position: relative;
+    z-index: 1;
 }
 
 .messages-empty-state {
@@ -2754,45 +2801,89 @@ body {
     letter-spacing: 0.5px;
 }
 
-.progress-card-v2 {
-    background: #fff;
-    border: 1px solid #f1f5f9;
-    border-radius: 12px;
+.revision-integrated-banner {
+    position: fixed !important;
+    bottom: 0;
+    left: 220px;
+    right: 0;
+    z-index: 1100;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    border-left: 5px solid #8a1c24;
+    border-radius: 14px 14px 0 0;
     padding: 14px 24px;
     display: flex;
     align-items: center;
-    gap: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    justify-content: space-between;
+    gap: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(8px);
+    transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease;
+    animation: floatUpBanner 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes floatUpBanner {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sidebar.close~.revision-integrated-banner {
+    left: 70px;
+}
+
+.progress-card-v2 {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+.progress-card-v2-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
 }
 
 .progress-card-v2-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #64748b;
+    font-size: 14px;
+    font-weight: 700;
+    color: #334155;
+    white-space: nowrap;
+}
+
+.progress-card-v2-count {
+    font-size: 15px;
+    font-weight: 800;
+    color: #8a1c24;
     white-space: nowrap;
 }
 
 .progress-card-v2-track {
-    flex: 1;
-    height: 6px;
-    background: #f1f5f9;
-    border-radius: 3px;
+    width: 100%;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
     overflow: hidden;
 }
 
 .progress-card-v2-fill {
     height: 100%;
     background: #10b981;
-    border-radius: 3px;
+    border-radius: 4px;
     transition: width 0.4s ease;
-}
-
-.progress-card-v2-count {
-    font-size: 14px;
-    font-weight: 800;
-    color: #0f172a;
-    white-space: nowrap;
 }
 
 .docs-grid-v2 {
@@ -2842,14 +2933,14 @@ body {
 .doc-card-v2-title {
     font-size: 13px;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--color-text);
     margin-bottom: 2px;
     line-height: 1.2;
 }
 
 .doc-card-v2-date {
     font-size: 11px;
-    color: #94a3b8;
+    color: var(--color-text-muted);
 }
 
 .doc-card-v2-footer {
@@ -2962,6 +3053,7 @@ body {
         opacity: 0;
         transform: translateX(-50%) translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
@@ -2990,13 +3082,13 @@ body {
 .revision-toast-title {
     font-size: 13px;
     font-weight: 700;
-    color: #f8fafc;
+    color: var(--color-text);
     letter-spacing: 0.1px;
 }
 
 .revision-toast-sub {
     font-size: 11px;
-    color: #94a3b8;
+    color: var(--color-text-muted);
 }
 
 .revision-toast-badge {
@@ -3082,7 +3174,7 @@ body {
     width: 400px;
     height: 100vh;
     background: #ffffff;
-    box-shadow: -5px 0 25px rgba(0,0,0,0.1);
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.1);
     z-index: 10001;
     display: flex;
     flex-direction: column;
@@ -3112,7 +3204,7 @@ body {
 }
 
 .btn-close-drawer {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
     border: none;
     color: white;
     width: 32px;
@@ -3126,7 +3218,7 @@ body {
 }
 
 .btn-close-drawer:hover {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .drawer-body {
@@ -3142,7 +3234,7 @@ body {
     border-radius: 12px;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .settings-section h4 {
@@ -3224,7 +3316,7 @@ body {
     flex-shrink: 0;
 }
 
-.switch input { 
+.switch input {
     opacity: 0;
     width: 0;
     height: 0;
@@ -3250,14 +3342,15 @@ body {
     bottom: 3px;
     background-color: white;
     transition: .4s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-input:checked + .slider {
-    background-color: #10b981; /* Verde success */
+input:checked+.slider {
+    background-color: #10b981;
+    /* Verde success */
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
     transform: translateX(20px);
 }
 
@@ -3268,6 +3361,7 @@ input:checked + .slider:before {
 .slider.round:before {
     border-radius: 50%;
 }
+
 /* ==== MODAL DOC CLASSES ==== */
 .modal-doc-info-box {
     background: #f8fafc;
@@ -3281,18 +3375,21 @@ input:checked + .slider:before {
     flex-wrap: wrap;
     gap: 12px;
 }
+
 .modal-doc-title {
     color: #0f172a;
     margin: 0 0 6px 0;
     font-size: 17px;
     font-weight: 700;
 }
+
 .modal-doc-comments-box {
     background: #f1f5f9;
     border-radius: 12px;
     padding: 18px;
     margin-bottom: 20px;
 }
+
 .modal-doc-comments-title {
     margin: 0 0 8px 0;
     color: #334155;
@@ -3303,6 +3400,7 @@ input:checked + .slider:before {
     width: 100%;
     font-weight: 600;
 }
+
 .modal-doc-comments-text {
     margin: 0;
     color: #475569;
@@ -3392,6 +3490,7 @@ body.dark-mode .swal2-content {
 body.dark-mode #global-loader {
     background: rgba(15, 23, 42, 0.9);
 }
+
 body.dark-mode #global-loader p {
     color: var(--color-text) !important;
 }
@@ -3401,11 +3500,13 @@ body.dark-mode .sidebar {
     background-color: var(--color-card-bg);
     border-right: 1px solid var(--color-border);
 }
+
 body.dark-mode .sidebar .text {
     color: var(--color-text) !important;
 }
 
 /* ==== DOCUMENTOS DARK MODE OVERRIDES ==== */
+body.dark-mode .revision-integrated-banner,
 body.dark-mode .progress-card-v2,
 body.dark-mode .docs-scroll-card,
 body.dark-mode .doc-card-v2 {
@@ -3414,13 +3515,22 @@ body.dark-mode .doc-card-v2 {
     border-color: var(--color-border);
 }
 
+body.dark-mode .revision-integrated-banner {
+    border-left-color: var(--color-guinda);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
 body.dark-mode .doc-card-v2-title,
 body.dark-mode .progress-card-v2-label {
     color: var(--color-text);
 }
 
+body.dark-mode .progress-card-v2-count {
+    color: #f87171;
+}
+
 body.dark-mode .doc-card-v2:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* ==== MODAL DOCS DARK MODE OVERRIDES ==== */
@@ -3450,7 +3560,8 @@ body.dark-mode .messages-mega-read-header {
 
 body.dark-mode .messages-mega-read-body {
     background-color: var(--color-input-bg);
-    background-image: none; /* Quitamos el patrón de puntos claros en dark mode, o lo cambiamos */
+    background-image: none;
+    /* Quitamos el patrón de puntos claros en dark mode, o lo cambiamos */
 }
 
 body.dark-mode .messages-mega-read-header,
@@ -3471,4 +3582,60 @@ body.dark-mode .file-box.file-selected {
 
 body.dark-mode .file-box.file-selected label i {
     color: #10b981;
+}
+
+/* Modal Profile Styling */
+.profile-section-title {
+    margin: 10px 0 10px;
+    color: #ef4444;
+    /* Brighter red for visibility */
+    font-weight: 700;
+    border-bottom: 2px solid var(--color-border);
+    padding-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-info-box {
+    background-color: var(--color-input-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.profile-info-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.profile-info-value {
+    font-size: 14px;
+    color: var(--color-text);
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.profile-modal-bg {
+    position: relative;
+    overflow: hidden;
+}
+
+
+body.dark-mode .profile-modal-bg::before {
+    opacity: 0.08;
+}
+
+.profile-modal-bg .swal2-title,
+.profile-modal-bg .swal2-html-container,
+.profile-modal-bg .swal2-actions {
+    position: relative;
+    z-index: 1;
 }

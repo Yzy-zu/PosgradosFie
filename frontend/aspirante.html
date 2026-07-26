@@ -43,7 +43,8 @@
         </div>
 
         <div class="nav-label"
-            style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #4b5563; padding: 10px 15px; margin-top: 10px; font-weight: 800;" data-i18n="sb_label_principal">
+            style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #4b5563; padding: 10px 15px; margin-top: 10px; font-weight: 800;"
+            data-i18n="sb_label_principal">
             PRINCIPAL</div>
 
         <ul class="side-menu top">
@@ -74,10 +75,12 @@
         </ul>
 
         <div class="sidebar-actions">
-            <div class="sidebar-settings" onclick="abrirDrawerAjustes()" title="Ajustes" data-i18n-title="sb_ajustes" id="btn-sb-ajustes">
+            <div class="sidebar-settings" onclick="abrirDrawerAjustes()" title="Ajustes" data-i18n-title="sb_ajustes"
+                id="btn-sb-ajustes">
                 <i class="fa-solid fa-gear" style="font-size: 18px;"></i>
             </div>
-            <div class="sidebar-logout" onclick="cerrarSesion()" title="Cerrar Sesión" data-i18n-title="sb_cerrar_sesion" id="btn-sb-logout">
+            <div class="sidebar-logout" onclick="cerrarSesion()" title="Cerrar Sesión"
+                data-i18n-title="sb_cerrar_sesion" id="btn-sb-logout">
                 <i class="fa-solid fa-right-from-bracket" style="font-size: 18px;"></i>
             </div>
         </div>
@@ -111,7 +114,8 @@
                             <!-- Lista de chats (Izquierda) -->
                             <div class="messages-mega-list" id="notification-list">
                                 <div class="messages-empty-state">
-                                    <i class="fa-solid fa-spinner fa-spin mb-2"></i> <span data-i18n="tb_cargando">Cargando...</span>
+                                    <i class="fa-solid fa-spinner fa-spin mb-2"></i> <span
+                                        data-i18n="tb_cargando">Cargando...</span>
                                 </div>
                             </div>
                             <!-- Vista de lectura de chat (Derecha) -->
@@ -127,8 +131,9 @@
                             <!-- Vista vacía de lectura (Derecha) -->
                             <div class="messages-mega-read" id="messages-empty-pane">
                                 <div class="messages-empty-state">
-                                    <i class="fa-regular fa-comments fa-3x mb-3 opacity-25"></i>
-                                    <p data-i18n="tb_selecciona_msj">Selecciona un mensaje<br>para ver la conversación</p>
+                                    <i class="fa-regular fa-7x mb-3 opacity-55"></i>
+                                    <p data-i18n="tb_selecciona_msj"><strong>Selecciona un mensaje</strong><br>para ver
+                                        la conversación</p>
                                 </div>
                             </div>
                         </div>
@@ -144,7 +149,8 @@
                             id="topbar-iniciales">
                             --
                         </div>
-                        <span style="font-size: 13px; font-weight: 600; color: var(--color-text);" data-i18n="tb_perfil">Mi Perfil</span>
+                        <span style="font-size: 13px; font-weight: 600; color: var(--color-text);"
+                            data-i18n="tb_perfil">Mi Perfil</span>
                     </div>
                 </div>
             </div> <!-- Flex container end -->
@@ -160,7 +166,8 @@
                     <div class="stat-card-info">
                         <span class="stat-label" data-i18n="dash_docs">Documentos</span>
                         <span class="stat-value" id="dash-docs-count">- / -</span>
-                        <span class="stat-sub" id="dash-docs-sub" data-i18n="dash_esperando_datos">Esperando datos...</span>
+                        <span class="stat-sub" id="dash-docs-sub" data-i18n="dash_esperando_datos">Esperando
+                            datos...</span>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -236,12 +243,15 @@
                     </div>
 
                     <div class="chart-legend">
-                        <div class="legend-item"><span class="dot approved"></span> <span data-i18n="proc_aprobados">Aprobados</span> (<strong
-                                id="lbl-aprobados">0</strong>)</div>
-                        <div class="legend-item"><span class="dot rejected"></span> <span data-i18n="proc_rechazados">Rechazados</span> (<strong
-                                id="lbl-rechazados">0</strong>)</div>
-                        <div class="legend-item"><span class="dot pending"></span> <span data-i18n="proc_pendientes">Pendientes</span> (<strong
-                                id="lbl-pendientes">5</strong>)</div>
+                        <div class="legend-item"><span class="dot approved"></span> <span
+                                data-i18n="proc_aprobados">Aprobados</span> (<strong id="lbl-aprobados">0</strong>)
+                        </div>
+                        <div class="legend-item"><span class="dot rejected"></span> <span
+                                data-i18n="proc_rechazados">Rechazados</span> (<strong id="lbl-rechazados">0</strong>)
+                        </div>
+                        <div class="legend-item"><span class="dot pending"></span> <span
+                                data-i18n="proc_pendientes">Pendientes</span> (<strong id="lbl-pendientes">5</strong>)
+                        </div>
                     </div>
                 </div>
             </div>
@@ -267,10 +277,12 @@
                 <!-- 🚀 NUEVO BOTÓN DE RETORNO INSTITUCIONAL -->
                 <button onclick="regresarAConvocatorias()"
                     style="background-color: #8a1c24; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 14px; cursor: pointer; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 8px; font-weight: bold; transition: background 0.2s;">
-                    <i class="fa-solid fa-arrow-left"></i> <span data-i18n="conv_cambiar_prog">Cambiar de Programa / Volver</span>
+                    <i class="fa-solid fa-arrow-left"></i> <span data-i18n="conv_cambiar_prog">Cambiar de Programa /
+                        Volver</span>
                 </button>
 
-                <p data-i18n="conv_msg_desbloqueo">Has iniciado sesión y desbloqueado los accesos para el registro formal al programa seleccionado.</p>
+                <p data-i18n="conv_msg_desbloqueo">Has iniciado sesión y desbloqueado los accesos para el registro
+                    formal al programa seleccionado.</p>
                 <br>
                 <div id="contenedor-tarjetas-programas"></div>
             </div>
@@ -282,26 +294,35 @@
 
             <div id="encabezado-documentos"
                 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px;">
-                <p data-i18n="doc_msg_completar" style="margin: 0; color: var(--color-text-muted);">Completa cada una de las estaciones requeridas para enviar tu postulación a revisión administrativa.
+                <p data-i18n="doc_msg_completar" style="margin: 0; color: var(--color-text-muted);">Completa cada una de
+                    las estaciones requeridas para enviar tu postulación a revisión administrativa.
                 </p>
-                <button type="button" id="btn-cancelar-solicitud"
-                    onclick="cancelarSolicitudActual()" style="background-color: var(--color-danger); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'"><i
-                        class="fa-solid fa-trash"></i> <span data-i18n="doc_btn_cancelar">Cancelar Solicitud</span></button>
+                <button type="button" id="btn-cancelar-solicitud" onclick="cancelarSolicitudActual()"
+                    style="background-color: var(--color-danger); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; transition: transform 0.2s;"
+                    onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'"><i
+                        class="fa-solid fa-trash"></i> <span data-i18n="doc_btn_cancelar">Cancelar
+                        Solicitud</span></button>
             </div>
             <br>
 
             <div class="stepper-wrapper">
-                <div class="step-node active" id="node-0">0<span class="step-label" data-i18n="doc_step_admision">Admisión</span></div>
-                <div class="step-node" id="node-1">1<span class="step-label" id="lbl-step-1" data-i18n="doc_step_identidad">Identidad y
+                <div class="step-node active" id="node-0">0<span class="step-label"
+                        data-i18n="doc_step_admision">Admisión</span></div>
+                <div class="step-node" id="node-1">1<span class="step-label" id="lbl-step-1"
+                        data-i18n="doc_step_identidad">Identidad y
                         Generales</span></div>
-                <div class="step-node" id="node-2">2<span class="step-label" id="lbl-step-2" data-i18n="doc_step_academicos">Académicos</span></div>
-                <div class="step-node" id="node-3">3<span class="step-label" id="lbl-step-3" data-i18n="doc_step_evaluacion">Evaluación</span></div>
+                <div class="step-node" id="node-2">2<span class="step-label" id="lbl-step-2"
+                        data-i18n="doc_step_academicos">Académicos</span></div>
+                <div class="step-node" id="node-3">3<span class="step-label" id="lbl-step-3"
+                        data-i18n="doc_step_evaluacion">Evaluación</span></div>
             </div>
 
             <div id="panel-estacion-0" class="station-panel active-panel">
                 <div class="card">
-                    <h3><i class="fa-solid fa-circle-info" style="color:#8a1c24;"></i> <span data-i18n="doc_est0_titulo">Estación 0: Mecanismo de Admisión Seleccionado</span></h3>
-                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est0_desc">De acuerdo a la normativa institucional, selecciona tu
+                    <h3><i class="fa-solid fa-circle-info" style="color:#8a1c24;"></i> <span
+                            data-i18n="doc_est0_titulo">Estación 0: Mecanismo de Admisión Seleccionado</span></h3>
+                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est0_desc">De acuerdo
+                        a la normativa institucional, selecciona tu
                         modalidad de ingreso:</p>
 
                     <div id="opciones-admision-maestria" class="modalidad-opciones">
@@ -324,12 +345,14 @@
                         <div id="contenedor-detalles-admision" style="margin-top: 10px; display: none;">
                             <button type="button" class="btn-secondary" style="font-size: 13px;"
                                 onclick="mostrarDetallesAdmision()">
-                                <i class="fa-solid fa-circle-info"></i> <span data-i18n="doc_est0_btn_detalles">Más Detalles de esta Modalidad</span>
+                                <i class="fa-solid fa-circle-info"></i> <span data-i18n="doc_est0_btn_detalles">Más
+                                    Detalles de esta Modalidad</span>
                             </button>
                         </div>
                         <br>
                         <button type="button" class="btn-primary" id="btn-next-0"
-                            style="width: auto; padding: 12px 30px;" onclick="avanzarEstacion(1)"><span data-i18n="doc_est0_btn_confirmar">Confirmar y Continuar</span>
+                            style="width: auto; padding: 12px 30px;" onclick="avanzarEstacion(1)"><span
+                                data-i18n="doc_est0_btn_confirmar">Confirmar y Continuar</span>
                             <i class="fa-solid fa-arrow-right"></i></button>
                     </form>
                 </div>
@@ -337,8 +360,10 @@
 
             <div id="panel-estacion-1" class="station-panel">
                 <div class="card">
-                    <h3><i class="fa-solid fa-address-card" style="color:#8a1c24;"></i> <span data-i18n="doc_est1_titulo">Estación 1: Identidad y Datos Generales</span></h3>
-                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est1_desc">Sube los documentos oficiales de identificación y datos
+                    <h3><i class="fa-solid fa-address-card" style="color:#8a1c24;"></i> <span
+                            data-i18n="doc_est1_titulo">Estación 1: Identidad y Datos Generales</span></h3>
+                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est1_desc">Sube los
+                        documentos oficiales de identificación y datos
                         generales. Los campos con asterisco (*) son obligatorios.</p>
                     <form id="form-estacion-1">
                         <div id="grid-dinamico-identidad" class="file-grid">
@@ -347,10 +372,12 @@
                         <br>
                         <div style="display:flex; gap:15px;">
                             <button type="button" class="btn-secondary" onclick="cambiarEstacion(0)"><i
-                                    class="fa-solid fa-arrow-left"></i> <span data-i18n="doc_btn_volver">Volver</span></button>
+                                    class="fa-solid fa-arrow-left"></i> <span
+                                    data-i18n="doc_btn_volver">Volver</span></button>
                             <button type="button" class="btn-primary" id="btn-next-1"
-                                style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(2)"><span data-i18n="doc_btn_siguiente">Siguiente
-                                Estación</span> <i class="fa-solid fa-arrow-right"></i></button>
+                                style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(2)"><span
+                                    data-i18n="doc_btn_siguiente">Siguiente
+                                    Estación</span> <i class="fa-solid fa-arrow-right"></i></button>
                         </div>
                     </form>
                 </div>
@@ -358,8 +385,10 @@
 
             <div id="panel-estacion-2" class="station-panel">
                 <div class="card">
-                    <h3><i class="fa-solid fa-user-tie" style="color:#8a1c24;"></i> <span data-i18n="doc_est2_titulo">Estación 2: Antecedentes Académicos</span></h3>
-                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est2_desc">Carga tus títulos, certificados e historial académico oficial.</p>
+                    <h3><i class="fa-solid fa-user-tie" style="color:#8a1c24;"></i> <span
+                            data-i18n="doc_est2_titulo">Estación 2: Antecedentes Académicos</span></h3>
+                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est2_desc">Carga tus
+                        títulos, certificados e historial académico oficial.</p>
                     <form id="form-estacion-2">
                         <div id="grid-dinamico-academico" class="file-grid">
                             <!-- Los requisitos ACADEMICOS se inyectan aquí -->
@@ -367,10 +396,12 @@
                         <br>
                         <div style="display:flex; gap:15px;">
                             <button type="button" class="btn-secondary" onclick="cambiarEstacion(1)"><i
-                                    class="fa-solid fa-arrow-left"></i> <span data-i18n="doc_btn_volver">Volver</span></button>
+                                    class="fa-solid fa-arrow-left"></i> <span
+                                    data-i18n="doc_btn_volver">Volver</span></button>
                             <button type="button" class="btn-primary" id="btn-next-2"
-                                style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(3)"><span data-i18n="doc_btn_siguiente">Siguiente
-                                Estación</span> <i class="fa-solid fa-arrow-right"></i></button>
+                                style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(3)"><span
+                                    data-i18n="doc_btn_siguiente">Siguiente
+                                    Estación</span> <i class="fa-solid fa-arrow-right"></i></button>
                         </div>
                     </form>
                 </div>
@@ -378,8 +409,10 @@
 
             <div id="panel-estacion-3" class="station-panel">
                 <div class="card">
-                    <h3><i class="fa-solid fa-square-poll-vertical" style="color:#8a1c24;"></i> <span data-i18n="doc_est3_titulo">Estación 3: Evaluación y Cartas</span></h3>
-                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est3_desc">Sube los resultados de tus certificaciones, exámenes y
+                    <h3><i class="fa-solid fa-square-poll-vertical" style="color:#8a1c24;"></i> <span
+                            data-i18n="doc_est3_titulo">Estación 3: Evaluación y Cartas</span></h3>
+                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est3_desc">Sube los
+                        resultados de tus certificaciones, exámenes y
                         cartas de recomendación.</p>
                     <form id="form-estacion-3">
                         <div id="grid-dinamico-evaluacion" class="file-grid">
@@ -390,7 +423,8 @@
                             <label style="display:flex; align-items:start; gap:10px; cursor:pointer;">
                                 <input type="checkbox" id="chk-protesta" style="margin-top:3px;"
                                     onchange="verificarArchivosEstacion(3)">
-                                <span data-i18n="doc_est3_protesta"><strong>Bajo protesta de decir verdad</strong>, declaro que la información y
+                                <span data-i18n="doc_est3_protesta"><strong>Bajo protesta de decir verdad</strong>,
+                                    declaro que la información y
                                     documentación proporcionada es auténtica y verídica. Entiendo que al enviar este
                                     expediente no podré modificarlo después.</span>
                             </label>
@@ -398,11 +432,12 @@
                         <br>
                         <div id="botones-estacion-3" style="display:flex; gap:15px;">
                             <button type="button" class="btn-secondary" onclick="cambiarEstacion(2)"><i
-                                    class="fa-solid fa-arrow-left"></i> <span data-i18n="doc_btn_volver">Volver</span></button>
+                                    class="fa-solid fa-arrow-left"></i> <span
+                                    data-i18n="doc_btn_volver">Volver</span></button>
                             <button type="button" class="btn-primary" id="btn-finalizar"
                                 style="width:auto; padding:12px 30px; background-color: var(--color-success);" disabled
-                                onclick="finalizarProcesoEstaciones()"><span data-i18n="doc_btn_concluir">Concluir y Enviar Expediente</span> <i
-                                    class="fa-solid fa-paper-plane"></i></button>
+                                onclick="finalizarProcesoEstaciones()"><span data-i18n="doc_btn_concluir">Concluir y
+                                    Enviar Expediente</span> <i class="fa-solid fa-paper-plane"></i></button>
                         </div>
                     </form>
                 </div>
@@ -477,24 +512,29 @@
             <div class="drawer-body">
 
                 <div class="settings-section">
-                    <h4><i class="fa-solid fa-shield-halved"></i> <span data-i18n="st_cuenta_seguridad">Cuenta y Seguridad</span></h4>
+                    <h4><i class="fa-solid fa-shield-halved"></i> <span data-i18n="st_cuenta_seguridad">Cuenta y
+                            Seguridad</span></h4>
 
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-title" data-i18n="st_cambiar_pass">Cambiar contraseña</span>
-                            <span class="setting-desc" data-i18n="st_actualiza_cred">Actualiza tu credencial de acceso</span>
+                            <span class="setting-desc" data-i18n="st_actualiza_cred">Actualiza tu credencial de
+                                acceso</span>
                         </div>
                         <button class="btn-secondary btn-sm"
-                            onclick="abrirModalCambiarPassword(); cerrarDrawerAjustes();" data-i18n="st_btn_cambiar">Cambiar</button>
+                            onclick="abrirModalCambiarPassword(); cerrarDrawerAjustes();"
+                            data-i18n="st_btn_cambiar">Cambiar</button>
                     </div>
 
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-title" data-i18n="st_cerrar_sesiones">Cerrar otras sesiones</span>
-                            <span class="setting-desc" data-i18n="st_desconecta_otros">Desconecta otros dispositivos activos</span>
+                            <span class="setting-desc" data-i18n="st_desconecta_otros">Desconecta otros dispositivos
+                                activos</span>
                         </div>
                         <button class="btn-secondary btn-sm text-danger"
-                            onclick="Swal.fire('Sesiones', 'Funcionalidad en desarrollo', 'info')" data-i18n="st_btn_cerrar">Cerrar
+                            onclick="Swal.fire('Sesiones', 'Funcionalidad en desarrollo', 'info')"
+                            data-i18n="st_btn_cerrar">Cerrar
                             Sesiones</button>
                     </div>
                 </div>
@@ -505,7 +545,8 @@
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-title" data-i18n="st_tema_visual">Tema Visual</span>
-                            <span class="setting-desc" data-i18n="st_elige_tema">Elige claro, oscuro o del sistema</span>
+                            <span class="setting-desc" data-i18n="st_elige_tema">Elige claro, oscuro o del
+                                sistema</span>
                         </div>
                         <select id="setting-tema" class="form-select setting-select" onchange="cambiarTema(this.value)">
                             <option value="Claro">Claro</option>
@@ -534,7 +575,8 @@
                             <span class="setting-title" data-i18n="st_idioma">Idioma</span>
                             <span class="setting-desc" data-i18n="st_idioma_desc">Idioma de la plataforma</span>
                         </div>
-                        <select id="setting-idioma" class="form-select setting-select" onchange="cambiarIdioma(this.value)">
+                        <select id="setting-idioma" class="form-select setting-select"
+                            onchange="cambiarIdioma(this.value)">
                             <option value="Español (México)">Español (México)</option>
                             <option value="English (US)">English (US)</option>
                         </select>
