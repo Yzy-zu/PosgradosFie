@@ -177,6 +177,16 @@ function switchView(viewId) {
         }
     }
 
+    // Controlar la visibilidad del toast de revisión (solo visible en documentos)
+    const toast = document.getElementById('revision-toast');
+    if (toast) {
+        if (viewId === 'documentos') {
+            toast.style.display = 'flex';
+        } else {
+            toast.style.display = 'none';
+        }
+    }
+
     // Actualizar estados visuales en la barra de navegación lateral
     const navLinks = document.querySelectorAll('.sidebar a');
     navLinks.forEach(link => link.classList.remove('active'));
@@ -817,6 +827,17 @@ async function bloquearInterfazPorRevision() {
             <span class="revision-toast-badge">EN REVISIÓN</span>
         `;
         document.body.appendChild(toast);
+    }
+
+    // Asegurar que el toast solo se muestre si la pestaña actual es documentos
+    const toast = document.getElementById('revision-toast');
+    if (toast) {
+        const currentView = window.location.hash.replace('#', '') || 'inicio';
+        if (currentView === 'documentos') {
+            toast.style.display = 'flex';
+        } else {
+            toast.style.display = 'none';
+        }
     }
 
     // 2. Convertir el banner-revision en contenedor de progreso + docs (sin el banner viejo)
@@ -1770,3 +1791,16 @@ document.addEventListener('DOMContentLoaded', () => {
         startAutoSlide();
     }
 });
+
+// ==========================================
+// FUNCIONES DEL PANEL LATERAL DE AJUSTES
+// ==========================================
+function abrirDrawerAjustes() {
+    document.getElementById('settings-drawer').classList.add('open');
+    document.getElementById('settings-drawer-overlay').classList.add('show');
+}
+
+function cerrarDrawerAjustes() {
+    document.getElementById('settings-drawer').classList.remove('open');
+    document.getElementById('settings-drawer-overlay').classList.remove('show');
+}

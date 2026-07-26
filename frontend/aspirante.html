@@ -39,7 +39,7 @@
         <a id="nav-documentos" href="#documentos" class="hidden"><i class="fa-solid fa-folder-open"></i> <span class="text">Documentos</span></a>
         
         <div style="margin-top: auto; display: flex; justify-content: flex-end; margin-bottom: 20px; padding-right: 15px;">
-            <div class="sidebar-settings" onclick="abrirModalCambiarPassword()" title="Cambiar Contraseña / Ajustes" style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8; transition: background 0.3s, color 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.color='#94a3b8';">
+            <div class="sidebar-settings" onclick="abrirDrawerAjustes()" title="Ajustes" style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8; transition: background 0.3s, color 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.color='#94a3b8';">
                 <i class="fa-solid fa-gear" style="font-size: 18px;"></i>
             </div>
         </div>
@@ -443,6 +443,122 @@
                     <div id="modal-doc-resubir-container" style="display: none; text-align: center; padding-top: 10px;">
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Overlay for Settings Drawer -->
+        <div id="settings-drawer-overlay" class="drawer-overlay" onclick="cerrarDrawerAjustes()"></div>
+        
+        <!-- Settings Drawer -->
+        <div id="settings-drawer" class="settings-drawer">
+            <div class="drawer-header">
+                <h3><i class="fa-solid fa-gear"></i> Ajustes</h3>
+                <button class="btn-close-drawer" onclick="cerrarDrawerAjustes()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="drawer-body">
+                
+                <div class="settings-section">
+                    <h4><i class="fa-solid fa-shield-halved"></i> Cuenta y Seguridad</h4>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-title">Cambiar contraseña</span>
+                            <span class="setting-desc">Actualiza tu credencial de acceso</span>
+                        </div>
+                        <button class="btn-secondary btn-sm" onclick="abrirModalCambiarPassword(); cerrarDrawerAjustes();">Cambiar</button>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-title">Cerrar otras sesiones</span>
+                            <span class="setting-desc">Desconecta otros dispositivos activos</span>
+                        </div>
+                        <button class="btn-secondary btn-sm text-danger" onclick="Swal.fire('Sesiones', 'Funcionalidad en desarrollo', 'info')">Cerrar Sesiones</button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h4><i class="fa-solid fa-palette"></i> Apariencia</h4>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-title">Tema Visual</span>
+                            <span class="setting-desc">Elige claro, oscuro o del sistema</span>
+                        </div>
+                        <select class="form-select setting-select">
+                            <option>Claro</option>
+                            <option>Oscuro</option>
+                            <option>Sistema</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-title">Densidad de Interfaz</span>
+                            <span class="setting-desc">Espaciado de los elementos</span>
+                        </div>
+                        <select class="form-select setting-select">
+                            <option>Cómoda</option>
+                            <option>Compacta</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h4><i class="fa-solid fa-globe"></i> Regional</h4>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-title">Idioma</span>
+                            <span class="setting-desc">Idioma de la plataforma</span>
+                        </div>
+                        <select class="form-select setting-select">
+                            <option>Español (México)</option>
+                            <option>English (US)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h4><i class="fa-solid fa-bell"></i> Notificaciones</h4>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-title">Notificaciones Push</span>
+                            <span class="setting-desc">Avisos dentro de la plataforma</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-title">Alertas por Correo</span>
+                            <span class="setting-desc">Actualizaciones de tu expediente</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-title">Boletines FIE</span>
+                            <span class="setting-desc">Noticias e información relevante</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+            <div class="drawer-footer">
+                <button class="btn-primary w-100" onclick="cerrarDrawerAjustes()" style="padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px;">Guardar Cambios</button>
             </div>
         </div>
 
