@@ -24,7 +24,6 @@
     <nav class="sidebar">
         <div class="sidebar-header">
             <img src="css/umsnh-logo.png" alt="Logo" class="sidebar-logo" onclick="toggleSidebar()">
-            <span class="text">FIE DOCENTE</span>
         </div>
         <a id="nav-inicio" onclick="switchView('inicio')" class="active"><i class="fa-solid fa-chalkboard-user"></i>
             <span class="text">Inicio</span>
@@ -50,7 +49,8 @@
                     <div id="notification-dropdown" class="messages-mega-dropdown" onclick="event.stopPropagation();">
                         <div class="messages-mega-header">
                             <span>Bandeja de Mensajes</span>
-                            <i class="fa-solid fa-check-double" style="cursor: pointer; color: #94a3b8;" title="Marcar todos como leídos" onclick="alert('En desarrollo')"></i>
+                            <i class="fa-solid fa-check-double" style="cursor: pointer; color: #94a3b8;"
+                                title="Marcar todos como leídos" onclick="alert('En desarrollo')"></i>
                         </div>
                         <div class="messages-mega-body">
                             <!-- Lista de chats (Izquierda) -->
@@ -62,7 +62,8 @@
                             <!-- Vista de lectura de chat (Derecha) -->
                             <div class="messages-mega-read" id="messages-read-pane" style="display: none;">
                                 <div class="messages-mega-read-header">
-                                    <i class="fa-solid fa-user me-2"></i> <span id="messages-read-title">Gestión Posgrados</span>
+                                    <i class="fa-solid fa-user me-2"></i> <span id="messages-read-title">Gestión
+                                        Posgrados</span>
                                 </div>
                                 <div class="messages-mega-read-body" id="messages-read-body">
                                     <!-- Burbuja de mensaje inyectada por JS -->
@@ -242,46 +243,71 @@
 
     <!-- Modal Maestro de Evaluación Documental -->
     <div class="modal-overlay" id="modal-evaluacion-doc" style="display: none;">
-        <div class="modal-card" style="width: 85%; max-width: 1200px; height: 90vh; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+        <div class="modal-card"
+            style="width: 85%; max-width: 1200px; height: 90vh; display: flex; flex-direction: column;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
                 <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-                    <h3 style="margin: 0;"><i class="fa-solid fa-file-contract" style="color: var(--color-info);"></i> <span id="eval-modal-titulo">Nombre Documento</span></h3>
+                    <h3 style="margin: 0;"><i class="fa-solid fa-file-contract" style="color: var(--color-info);"></i>
+                        <span id="eval-modal-titulo">Nombre Documento</span></h3>
                     <div style="display: flex; gap: 10px; margin-left: 20px; flex-wrap: wrap;">
-                        <button class="modal-tab-btn active" onclick="cambiarTabEvaluacion('documento')" id="btn-tab-documento" style="padding: 5px 15px; border: none; background: #e2e8f0; border-radius: 20px; cursor: pointer; font-weight: bold; color: #334155;">Documento</button>
-                        <button class="modal-tab-btn" onclick="cambiarTabEvaluacion('comentarios')" id="btn-tab-comentarios" style="padding: 5px 15px; border: none; background: transparent; border-radius: 20px; cursor: pointer; color: #64748b;">Comentarios</button>
-                        <button class="modal-tab-btn" onclick="cambiarTabEvaluacion('historial')" id="btn-tab-historial" style="padding: 5px 15px; border: none; background: transparent; border-radius: 20px; cursor: pointer; color: #64748b;">Historial</button>
+                        <button class="modal-tab-btn active" onclick="cambiarTabEvaluacion('documento')"
+                            id="btn-tab-documento"
+                            style="padding: 5px 15px; border: none; background: #e2e8f0; border-radius: 20px; cursor: pointer; font-weight: bold; color: #334155;">Documento</button>
+                        <button class="modal-tab-btn" onclick="cambiarTabEvaluacion('comentarios')"
+                            id="btn-tab-comentarios"
+                            style="padding: 5px 15px; border: none; background: transparent; border-radius: 20px; cursor: pointer; color: #64748b;">Comentarios</button>
+                        <button class="modal-tab-btn" onclick="cambiarTabEvaluacion('historial')" id="btn-tab-historial"
+                            style="padding: 5px 15px; border: none; background: transparent; border-radius: 20px; cursor: pointer; color: #64748b;">Historial</button>
                     </div>
                 </div>
-                <button onclick="cerrarModalEvaluacion()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #c0392b; font-weight: bold;"><i class="fa-solid fa-xmark"></i> Cerrar</button>
+                <button onclick="cerrarModalEvaluacion()"
+                    style="background: none; border: none; font-size: 20px; cursor: pointer; color: #c0392b; font-weight: bold;"><i
+                        class="fa-solid fa-xmark"></i> Cerrar</button>
             </div>
-            
+
             <!-- Contenido de las pestañas -->
-            <div id="eval-tab-documento" class="eval-tab-content" style="flex: 1; overflow: auto; background-color: #f1f2f6; border-radius: 4px; display: flex; justify-content: center; align-items: center; margin-bottom: 15px;">
+            <div id="eval-tab-documento" class="eval-tab-content"
+                style="flex: 1; overflow: auto; background-color: #f1f2f6; border-radius: 4px; display: flex; justify-content: center; align-items: center; margin-bottom: 15px;">
                 <!-- Iframe o img inyectado aquí -->
             </div>
 
-            <div id="eval-tab-comentarios" class="eval-tab-content" style="display: none; flex: 1; overflow: auto; background-color: #fff; border-radius: 4px; border: 1px solid #ddd; padding: 20px; margin-bottom: 15px;">
+            <div id="eval-tab-comentarios" class="eval-tab-content"
+                style="display: none; flex: 1; overflow: auto; background-color: #fff; border-radius: 4px; border: 1px solid #ddd; padding: 20px; margin-bottom: 15px;">
                 <!-- Comentarios inyectados aquí -->
             </div>
 
-            <div id="eval-tab-historial" class="eval-tab-content" style="display: none; flex: 1; overflow: auto; background-color: #fff; border-radius: 4px; border: 1px solid #ddd; padding: 20px; margin-bottom: 15px;">
+            <div id="eval-tab-historial" class="eval-tab-content"
+                style="display: none; flex: 1; overflow: auto; background-color: #fff; border-radius: 4px; border: 1px solid #ddd; padding: 20px; margin-bottom: 15px;">
                 <!-- Historial inyectado aquí -->
             </div>
 
             <!-- Controles de Evaluación -->
-            <div id="eval-controles-wrapper" style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 15px;">
+            <div id="eval-controles-wrapper"
+                style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 15px;">
                 <div style="display: flex; justify-content: flex-end; gap: 15px;" id="eval-botones-container">
-                    <button class="btn" onclick="aprobarDocumentoModal()" style="padding: 10px 20px; font-weight: bold; background-color: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer;"><i class="fa-solid fa-check"></i> Aprobar Documento</button>
-                    <button class="btn" onclick="mostrarOpcionesRechazo()" style="padding: 10px 20px; font-weight: bold; background-color: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer;"><i class="fa-solid fa-xmark"></i> Rechazar...</button>
+                    <button class="btn" onclick="aprobarDocumentoModal()"
+                        style="padding: 10px 20px; font-weight: bold; background-color: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer;"><i
+                            class="fa-solid fa-check"></i> Aprobar Documento</button>
+                    <button class="btn" onclick="mostrarOpcionesRechazo()"
+                        style="padding: 10px 20px; font-weight: bold; background-color: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer;"><i
+                            class="fa-solid fa-xmark"></i> Rechazar...</button>
                 </div>
 
                 <!-- Panel oculto para rechazo -->
                 <div id="eval-panel-rechazo" style="display: none; border-top: 1px dashed #cbd5e1; padding-top: 15px;">
-                    <p style="margin: 0 0 10px 0; color: #334155; font-size: 14px; font-weight: bold;">Motivo del rechazo:</p>
-                    <textarea id="eval-modal-nota" placeholder="Escribe aquí el motivo detallado del rechazo para que el aspirante pueda corregirlo..." style="width: 100%; height: 80px; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-family: inherit; margin-bottom: 10px; box-sizing: border-box;"></textarea>
+                    <p style="margin: 0 0 10px 0; color: #334155; font-size: 14px; font-weight: bold;">Motivo del
+                        rechazo:</p>
+                    <textarea id="eval-modal-nota"
+                        placeholder="Escribe aquí el motivo detallado del rechazo para que el aspirante pueda corregirlo..."
+                        style="width: 100%; height: 80px; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-family: inherit; margin-bottom: 10px; box-sizing: border-box;"></textarea>
                     <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                        <button onclick="ocultarOpcionesRechazo()" style="padding: 8px 15px; background-color: #e2e8f0; color: #475569; border: none; border-radius: 6px; cursor: pointer;">Cancelar Rechazo</button>
-                        <button onclick="rechazarDocumentoModal()" style="padding: 8px 15px; background-color: #ef4444; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Confirmar Rechazo Definitivo</button>
+                        <button onclick="ocultarOpcionesRechazo()"
+                            style="padding: 8px 15px; background-color: #e2e8f0; color: #475569; border: none; border-radius: 6px; cursor: pointer;">Cancelar
+                            Rechazo</button>
+                        <button onclick="rechazarDocumentoModal()"
+                            style="padding: 8px 15px; background-color: #ef4444; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Confirmar
+                            Rechazo Definitivo</button>
                     </div>
                 </div>
             </div>
