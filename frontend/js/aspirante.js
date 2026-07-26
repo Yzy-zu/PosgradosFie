@@ -188,9 +188,9 @@ function switchView(viewId) {
         } else {
             if (topbarSubtitulo) topbarSubtitulo.style.display = 'none';
             const titulos = {
-                'proceso': 'Proceso',
-                'convocatorias': 'Convocatorias',
-                'documentos': 'Documentos'
+                'proceso': typeof t === 'function' ? t('sb_proceso') : 'Proceso',
+                'convocatorias': typeof t === 'function' ? t('sb_convocatorias') : 'Convocatorias',
+                'documentos': typeof t === 'function' ? t('sb_documentos') : 'Documentos'
             };
             topbarNombre.innerText = titulos[viewId] || (viewId.charAt(0).toUpperCase() + viewId.slice(1));
         }
@@ -336,7 +336,7 @@ function abrirModalPerfil() {
     
     // Función de ayuda para formatear fechas sin desfase horario
     const formatDate = (dateString) => {
-        if (!dateString) return 'No registrada';
+        if (!dateString) return typeof t === 'function' ? t('prof_no_reg') : 'No registrada';
         const d = new Date(dateString);
         return new Date(d.getTime() + Math.abs(d.getTimezoneOffset() * 60000)).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
     };
@@ -344,9 +344,12 @@ function abrirModalPerfil() {
     let fechaNac = formatDate(aspiranteData.fechaNacimiento);
     let fechaEgreso = formatDate(aspiranteData.fechaEgreso);
     let fechaTitulacion = formatDate(aspiranteData.fechaTitulacion);
+
+    const noReg = typeof t === 'function' ? t('prof_no_reg') : 'No registrado/a';
+    const ninguno = typeof t === 'function' ? t('prof_ninguno') : 'Ninguno';
     
     Swal.fire({
-        title: 'Mi Perfil',
+        title: typeof t === 'function' ? t('prof_title') : 'Mi Perfil',
         html: `
             <div style="text-align: left; font-size: 14px; line-height: 1.5; color: var(--color-text); padding-right: 15px;">
                 <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--color-border);">
@@ -355,42 +358,42 @@ function abrirModalPerfil() {
                     </div>
                     <div>
                         <h4 style="margin: 0; color: var(--color-text); font-size: 18px;">${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido || ''}</h4>
-                        <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">Aspirante</span>
+                        <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">${typeof t === 'function' ? t('prof_badge') : 'Aspirante'}</span>
                     </div>
                 </div>
                 
-                <h5 style="margin: 10px 0 10px; color: var(--color-guinda); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 5px;"><i class="fa-solid fa-address-card"></i> Datos Personales</h5>
+                <h5 style="margin: 10px 0 10px; color: var(--color-guinda); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 5px;"><i class="fa-solid fa-address-card"></i> ${typeof t === 'function' ? t('prof_personal') : 'Datos Personales'}</h5>
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-                    <p style="margin: 0; word-break: break-all;"><strong>Correo:</strong> <br>${usuario.correo || 'No registrado'}</p>
-                    <p style="margin: 0;"><strong>Teléfono:</strong> <br>${aspiranteData.telefono || 'No registrado'}</p>
-                    <p style="margin: 0;"><strong>CURP:</strong> <br>${aspiranteData.curp || 'No registrado'}</p>
-                    <p style="margin: 0;"><strong>Nacimiento:</strong> <br>${fechaNac}</p>
-                    <p style="margin: 0;"><strong>Estado Civil:</strong> <br>${aspiranteData.estadoCivil || 'No registrado'}</p>
-                    <p style="margin: 0;"><strong>Código Postal:</strong> <br>${aspiranteData.direccionPostal || 'No registrado'}</p>
-                    <p style="margin: 0; grid-column: span 2;"><strong>Dirección:</strong> <br>${aspiranteData.direccion || 'No registrada'}</p>
+                    <p style="margin: 0; word-break: break-all;"><strong>${typeof t === 'function' ? t('prof_correo') : 'Correo:'}</strong> <br>${usuario.correo || noReg}</p>
+                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_tel') : 'Teléfono:'}</strong> <br>${aspiranteData.telefono || noReg}</p>
+                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_curp') : 'CURP:'}</strong> <br>${aspiranteData.curp || noReg}</p>
+                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_nacimiento') : 'Nacimiento:'}</strong> <br>${fechaNac}</p>
+                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_estado_civil') : 'Estado Civil:'}</strong> <br>${aspiranteData.estadoCivil || noReg}</p>
+                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_cp') : 'Código Postal:'}</strong> <br>${aspiranteData.direccionPostal || noReg}</p>
+                    <p style="margin: 0; grid-column: span 2;"><strong>${typeof t === 'function' ? t('prof_direccion') : 'Dirección:'}</strong> <br>${aspiranteData.direccion || noReg}</p>
                 </div>
 
-                <h5 style="margin: 20px 0 10px; color: var(--color-guinda); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 5px;"><i class="fa-solid fa-graduation-cap"></i> Formación Académica</h5>
+                <h5 style="margin: 20px 0 10px; color: var(--color-guinda); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 5px;"><i class="fa-solid fa-graduation-cap"></i> ${typeof t === 'function' ? t('prof_academica') : 'Formación Académica'}</h5>
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-                    <p style="margin: 0; grid-column: span 2;"><strong>Licenciatura:</strong> <br>${aspiranteData.licenciatura || 'No registrada'}</p>
-                    <p style="margin: 0; grid-column: span 2;"><strong>Institución:</strong> <br>${aspiranteData.institucionLicenciatura || 'No registrada'}</p>
-                    <p style="margin: 0;"><strong>Fecha Egreso:</strong> <br>${fechaEgreso}</p>
-                    <p style="margin: 0;"><strong>Fecha Titulación:</strong> <br>${fechaTitulacion}</p>
-                    <p style="margin: 0;"><strong>Promedio:</strong> <br>${aspiranteData.promedio || 'No registrado'}</p>
-                    <p style="margin: 0;"><strong>Otros Estudios:</strong> <br>${aspiranteData.otrosEstudios || 'Ninguno'}</p>
+                    <p style="margin: 0; grid-column: span 2;"><strong>${typeof t === 'function' ? t('prof_lic') : 'Licenciatura:'}</strong> <br>${aspiranteData.licenciatura || noReg}</p>
+                    <p style="margin: 0; grid-column: span 2;"><strong>${typeof t === 'function' ? t('prof_inst') : 'Institución:'}</strong> <br>${aspiranteData.institucionLicenciatura || noReg}</p>
+                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_egreso') : 'Fecha Egreso:'}</strong> <br>${fechaEgreso}</p>
+                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_titulacion') : 'Fecha Titulación:'}</strong> <br>${fechaTitulacion}</p>
+                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_promedio') : 'Promedio:'}</strong> <br>${aspiranteData.promedio || noReg}</p>
+                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_otros') : 'Otros Estudios:'}</strong> <br>${aspiranteData.otrosEstudios || ninguno}</p>
                 </div>
 
-                <h5 style="margin: 20px 0 10px; color: var(--color-guinda); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 5px;"><i class="fa-solid fa-briefcase"></i> Datos Laborales</h5>
+                <h5 style="margin: 20px 0 10px; color: var(--color-guinda); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 5px;"><i class="fa-solid fa-briefcase"></i> ${typeof t === 'function' ? t('prof_laborales') : 'Datos Laborales'}</h5>
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-                    <p style="margin: 0;"><strong>Ocupación:</strong> <br>${aspiranteData.ocupacion || 'No registrada'}</p>
-                    <p style="margin: 0;"><strong>Ciudad:</strong> <br>${aspiranteData.ciudadOcupacion || 'No registrada'}</p>
-                    <p style="margin: 0;"><strong>Estado:</strong> <br>${aspiranteData.estadoOcupacion || 'No registrado'}</p>
-                    <p style="margin: 0;"><strong>Teléfono Laboral:</strong> <br>${aspiranteData.telefonoOcupacion || 'No registrado'}</p>
+                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_ocupacion') : 'Ocupación:'}</strong> <br>${aspiranteData.ocupacion || noReg}</p>
+                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_ciudad') : 'Ciudad:'}</strong> <br>${aspiranteData.ciudadOcupacion || noReg}</p>
+                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_estado') : 'Estado:'}</strong> <br>${aspiranteData.estadoOcupacion || noReg}</p>
+                    <p style="margin: 0;"><strong>${typeof t === 'function' ? t('prof_tel_lab') : 'Teléfono Laboral:'}</strong> <br>${aspiranteData.telefonoOcupacion || noReg}</p>
                 </div>
             </div>
         `,
         showConfirmButton: true,
-        confirmButtonText: 'Cerrar',
+        confirmButtonText: typeof t === 'function' ? t('prof_btn_cerrar') : 'Cerrar',
         confirmButtonColor: '#8a1c24',
         width: '1050px'
     });
@@ -881,10 +884,10 @@ async function bloquearInterfazPorRevision() {
                 <i class="fa-solid fa-lock"></i>
             </div>
             <div class="revision-toast-body">
-                <span class="revision-toast-title">Expediente bajo revisión</span>
-                <span class="revision-toast-sub">Serás notificado si se requiere alguna corrección</span>
+                <span class="revision-toast-title">${typeof t === 'function' ? t('toast_rev_title') : 'Expediente bajo revisión'}</span>
+                <span class="revision-toast-sub">${typeof t === 'function' ? t('toast_rev_sub') : 'Serás notificado si se requiere alguna corrección'}</span>
             </div>
-            <span class="revision-toast-badge">EN REVISIÓN</span>
+            <span class="revision-toast-badge">${typeof t === 'function' ? t('toast_rev_badge') : 'EN REVISIÓN'}</span>
         `;
         document.body.appendChild(toast);
     }
@@ -904,8 +907,10 @@ async function bloquearInterfazPorRevision() {
     if (banner) {
         banner.style.cssText = 'display:block; background:transparent; border:none; box-shadow:none; padding:0;';
         banner.innerHTML = `
-            <div class="progress-card-v2">
-                <span class="progress-card-v2-label">Documentos aprobados</span>
+            <div class="progress-card-v2-header">
+                <span class="progress-card-v2-label" data-i18n="doc_docs_aprobados">${typeof t === 'function' ? t('doc_docs_aprobados') : 'Documentos aprobados'}</span>
+            </div>
+            <div class="progress-card-v2-stats">
                 <div class="progress-card-v2-track">
                     <div id="barra-progreso-fill" class="progress-card-v2-fill" style="width: 0%;"></div>
                 </div>
@@ -914,8 +919,9 @@ async function bloquearInterfazPorRevision() {
 
             <div class="docs-scroll-card">
                 <div class="docs-scroll-inner" id="docs-dinamicos-container">
-                    <div style="text-align:center; padding: 30px; color:#94a3b8;">
-                        <i class="fa-solid fa-spinner fa-spin"></i> Cargando tus documentos...
+                    <div class="docs-empty-state">
+                        <i class="fa-solid fa-folder-open fa-3x mb-3 text-muted"></i>
+                        <p class="text-muted" data-i18n="doc_no_encontrado">${typeof t === 'function' ? t('doc_no_encontrado') : 'No se encontraron documentos adjuntos.'}</p>
                     </div>
                 </div>
             </div>
@@ -1043,18 +1049,18 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
 
             switch (doc.estadoValidacion) {
                 case 'APROBADO':
-                    badgeHtml = `<span class="doc-badge-aprobado">APROBADO</span>`;
+                    badgeHtml = `<span class="doc-badge-aprobado">${typeof t === 'function' ? t('doc_aprobado') : 'APROBADO'}</span>`;
                     break;
                 case 'RECHAZADO':
-                    badgeHtml = `<span class="doc-badge-rechazado">RECHAZADO (${numIntentos}/3)</span>`;
+                    badgeHtml = `<span class="doc-badge-rechazado">${typeof t === 'function' ? t('doc_rechazado') : 'RECHAZADO'}</span>`;
                     break;
                 default:
-                    badgeHtml = `<span class="doc-badge-pendiente">PENDIENTE</span>`;
+                    badgeHtml = `<span class="doc-badge-pendiente">${typeof t === 'function' ? t('doc_pendiente') : 'PENDIENTE'}</span>`;
                     break;
             }
 
             const docDataStr = encodeURIComponent(JSON.stringify(doc));
-            const fechaTxt = formatearFecha(doc.fechaSubida || doc.creadoEn || doc.fecha_actualizacion);
+            const fechaSubidaStr = formatearFecha(doc.fechaSubida || doc.creadoEn || doc.fecha_actualizacion);
 
             html += `
                 <div class="doc-card-v2" onclick="abrirModalDoc('${docDataStr}')">
@@ -1063,13 +1069,13 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
                             <i class="fa-solid ${iconClass}"></i>
                         </div>
                         <div>
-                            <div class="doc-card-v2-title">${doc.requisitoNombre || 'Documento adjunto'}</div>
-                            <div class="doc-card-v2-date">${fechaTxt}</div>
+                            <div class="doc-card-v2-title">${doc.requisitoNombre ? (typeof t === 'function' ? t(doc.requisitoNombre) : doc.requisitoNombre) : (typeof t === 'function' ? t('doc_doc_adjunto') : 'Documento adjunto')}</div>
+                            <div class="doc-card-v2-date">${fechaSubidaStr}</div>
                         </div>
                     </div>
                     <div class="doc-card-v2-footer">
                         ${badgeHtml}
-                        <span class="doc-action-ver">Ver</span>
+                        <span class="doc-action-ver">${typeof t === 'function' ? t('doc_ver_doc') : 'Ver Documento'}</span>
                     </div>
                 </div>
             `;
@@ -1085,8 +1091,8 @@ function abrirModalDoc(docStr) {
     try {
         const doc = JSON.parse(decodeURIComponent(docStr));
 
-        document.getElementById('modal-doc-titulo').innerText = 'Detalles del Documento';
-        document.getElementById('modal-doc-requisito').innerText = doc.requisitoNombre || 'Documento adjunto';
+        document.getElementById('modal-doc-titulo').innerText = typeof t === 'function' ? t('doc_detalles') : 'Detalles del Documento';
+        document.getElementById('modal-doc-requisito').innerText = doc.requisitoNombre ? (typeof t === 'function' ? t(doc.requisitoNombre) : doc.requisitoNombre) : (typeof t === 'function' ? t('doc_doc_adjunto') : 'Documento adjunto');
 
         const numIntentos = doc.intentos || 1;
         const badge = document.getElementById('modal-doc-estado');
@@ -1100,13 +1106,20 @@ function abrirModalDoc(docStr) {
         if (doc.historial && doc.historial.length > 0) {
             let historialHtml = '';
             doc.historial.forEach((h, idx) => {
+                let comTxt = h.comentarios || (typeof t === 'function' ? t('doc_sin_obs') : 'Sin observaciones por parte del evaluador en esta solicitud.');
                 const colorState = h.estadoValidacion === 'APROBADO' ? '#10b981' : (h.estadoValidacion === 'RECHAZADO' ? '#ef4444' : '#f59e0b');
-                const comTxt = (h.comentarios && h.comentarios.trim() !== '') ? h.comentarios : 'Sin observaciones por parte del evaluador en esta solicitud.';
+                
+                let stateText = h.estadoValidacion;
+                if (typeof t === 'function') {
+                    if (stateText === 'APROBADO') stateText = t('doc_aprobado');
+                    else if (stateText === 'RECHAZADO') stateText = t('doc_rechazado');
+                    else stateText = t('doc_pendiente');
+                }
 
                 historialHtml += `
                     <div style="margin-bottom: 12px; padding-bottom: 10px; ${idx < doc.historial.length - 1 ? 'border-bottom: 1px dashed #cbd5e1;' : ''}">
                         <div class="modal-doc-comments-title" style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 2px;">
-                            <span>Solicitud ${h.intentos} - ${h.estadoValidacion}</span>
+                            <span>${typeof t === 'function' ? t('doc_solicitud') : 'Solicitud'} ${h.intentos} - ${stateText}</span>
                         </div>
                         <p class="modal-doc-comments-text" style="margin: 0; font-size: 13.5px; line-height: 1.4; white-space: pre-wrap;">${comTxt}</p>
                     </div>
@@ -1117,12 +1130,12 @@ function abrirModalDoc(docStr) {
 
         if (doc.estadoValidacion === 'APROBADO') {
             badge.classList.add('status-aprobado');
-            badge.innerHTML = '<i class="fa-solid"></i> Aprobado';
+            badge.innerHTML = `<i class="fa-solid"></i> ${typeof t === 'function' ? t('doc_aprobado') : 'Aprobado'}`;
             if (resubirContainer) resubirContainer.style.display = 'none';
 
         } else if (doc.estadoValidacion === 'RECHAZADO') {
             badge.classList.add('status-rechazado');
-            badge.innerHTML = `<i class="fa-solid"></i> Rechazado en la Solicitud ${numIntentos}`;
+            badge.innerHTML = `<i class="fa-solid"></i> ${typeof t === 'function' ? t('doc_rechazado') : 'Rechazado'}`;
 
             if (resubirContainer) {
                 resubirContainer.style.display = 'block';
@@ -1130,13 +1143,13 @@ function abrirModalDoc(docStr) {
                     const reqNombreSanitized = encodeURIComponent(doc.requisitoNombre || 'Documento');
                     resubirContainer.innerHTML = `
                         <button onclick="iniciarReSubidaDocumento(${doc.idDocumento}, '${reqNombreSanitized}', ${numIntentos})" style="background-color: #8a1c24; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; font-size: 15px; box-shadow: 0 4px 10px rgba(138, 28, 36, 0.2); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> Re-subir (Será tu Intento ${numIntentos + 1} de 3)
+                            <i class="fa-solid fa-cloud-arrow-up"></i> ${typeof t === 'function' ? t('doc_resubir_btn') : 'Re-subir'} ${typeof t === 'function' ? t('doc_intento_txt1') : '(Será tu Intento'} ${numIntentos + 1} ${typeof t === 'function' ? t('doc_intento_txt2') : 'de 3)'}
                         </button>
                     `;
                 } else {
                     resubirContainer.innerHTML = `
                         <div style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
-                            <i class="fa-solid fa-ban"></i> Se ha alcanzado el límite máximo de 3 intentos para este documento.
+                            <i class="fa-solid fa-ban"></i> ${typeof t === 'function' ? t('doc_limite_alcanzado') : 'Se ha alcanzado el límite máximo de 3 intentos para este documento.'}
                         </div>
                     `;
                 }
@@ -1144,7 +1157,7 @@ function abrirModalDoc(docStr) {
 
         } else {
             badge.classList.add('status-pendiente');
-            badge.innerHTML = '<i class="fa-solid fa-clock"></i> En Revisión';
+            badge.innerHTML = '<i class="fa-solid fa-clock"></i> ' + (typeof t === 'function' ? t('doc_en_revision') : 'En Revisión');
             if (resubirContainer) resubirContainer.style.display = 'none';
         }
 
@@ -1455,7 +1468,7 @@ function bloquearConvocatorias(soliData = null) {
                         <i class="fa-solid fa-lock" style="font-size: 24px; color: var(--color-guinda);"></i>
                     </div>
                     
-                    <h3 style="font-size: 22px; font-weight: 700; color: var(--color-primary); margin-bottom: 20px;">Trámite de Admisión en Curso</h3>
+                    <h3 style="font-size: 22px; font-weight: 700; color: var(--color-primary); margin-bottom: 20px;">${typeof t === 'function' ? t('conv_tramite_curso') : 'Trámite de Admisión en Curso'}</h3>
                     
                     <!-- CONTENEDOR SLIDER HORIZONTAL -->
                     <div style="display: grid; width: 100%;">
@@ -1463,18 +1476,18 @@ function bloquearConvocatorias(soliData = null) {
                         <!-- VISTA A: Resumen -->
                         <div id="view-a" class="slide-view" style="transform: translateX(0); opacity: 1;">
                             <p style="font-size: 15px; color: var(--color-text); line-height: 1.6; margin-bottom: 25px; max-width: 800px; margin-left: auto; margin-right: auto;">
-                                Actualmente estás participando en el proceso de selección institucional para el:<br>
+                                ${typeof t === 'function' ? t('conv_participando') : 'Actualmente estás participando en el proceso de selección institucional para el:'}<br>
                                 <strong style="color: var(--color-primary); font-size: 16px; display: inline-block; margin-top: 8px;">Programa de ${nivel} en Ciencias en Ingeniería Eléctrica</strong><br>
-                                <span style="font-size: 14px; color: #64748b;">Opción seleccionada: <strong>${opcionElegida}</strong></span>
+                                <span style="font-size: 14px; color: #64748b;">${typeof t === 'function' ? t('conv_opcion_sel') : 'Opción seleccionada:'} <strong>${opcionElegida}</strong></span>
                             </p>
                             
                             <button class="btn-primary" onclick="switchView('documentos')" style="padding: 12px 30px; border-radius: 6px; font-size: 15px; font-weight: 500; margin-bottom: 25px; min-width: 250px;">
-                                <i class="fa-solid" style="margin-right: 8px;"></i> Continuar mi Trámite
+                                <i class="fa-solid" style="margin-right: 8px;"></i> ${typeof t === 'function' ? t('conv_btn_continuar') : 'Continuar mi Trámite'}
                             </button>
                             
                             <div>
                                 <button onclick="mostrarVistaDetalles()" style="background: none; border: none; color: var(--color-guinda); font-size: 14px; font-weight: 600; cursor: pointer; padding: 5px;">
-                                    Ver fechas y detalles del proceso <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i>
+                                    ${typeof t === 'function' ? t('conv_btn_fechas') : 'Ver fechas y detalles del proceso'} <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i>
                                 </button>
                             </div>
                         </div>
@@ -1482,37 +1495,37 @@ function bloquearConvocatorias(soliData = null) {
                         <!-- VISTA B: Detalles -->
                         <div id="view-b" class="slide-view" style="transform: translateX(100%); opacity: 0; pointer-events: none; text-align: left;">
                             <div style="display: flex; gap: 30px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--color-border); justify-content: center;">
-                                <div><i class="fa-solid fa-clock" style="color:var(--color-primary);"></i> Duración: <strong>${soliData.duracion || '4'} semestres</strong></div>
-                                <div><i class="fa-solid fa-globe" style="color:var(--color-primary);"></i> Modalidad: <strong>${soliData.modalidad || 'Escolarizada'}</strong></div>
+                                <div><i class="fa-solid fa-clock" style="color:var(--color-primary);"></i> ${typeof t === 'function' ? t('conv_duracion') : 'Duración:'} <strong>${soliData.duracion || '4'} semestres</strong></div>
+                                <div><i class="fa-solid fa-globe" style="color:var(--color-primary);"></i> ${typeof t === 'function' ? t('conv_modalidad') : 'Modalidad:'} <strong>${soliData.modalidad || 'Escolarizada'}</strong></div>
                             </div>
                             
                             <div style="display: flex; justify-content: space-between; gap: 15px; text-align: left; width: 100%; margin-bottom: 25px;">
                                 <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; flex: 1;">
-                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-circle-check" style="color:var(--color-guinda);"></i> Apertura</span>
+                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-circle-check" style="color:var(--color-guinda);"></i> ${typeof t === 'function' ? t('conv_apertura') : 'Apertura'}</span>
                                     <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fecha_inicio)}</div>
                                 </div>
                                 <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; flex: 1;">
-                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-file-arrow-up" style="color:var(--color-guinda);"></i> Documentos</span>
+                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-file-arrow-up" style="color:var(--color-guinda);"></i> ${typeof t === 'function' ? t('conv_docs') : 'Documentos'}</span>
                                     <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fechaFinDocumentos)}</div>
                                 </div>
                                 ${nivel === 'Doctorado' ? `
                                 <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; flex: 1;">
-                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-comments" style="color:var(--color-guinda);"></i> Entrevistas</span>
+                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-comments" style="color:var(--color-guinda);"></i> ${typeof t === 'function' ? t('conv_entrevistas') : 'Entrevistas'}</span>
                                     <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fechaEntrevistaInicio)}</div>
                                 </div>` : ''}
                                 <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; flex: 1;">
-                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-bullhorn" style="color:var(--color-guinda);"></i> Resultados</span>
+                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-bullhorn" style="color:var(--color-guinda);"></i> ${typeof t === 'function' ? t('conv_resultados') : 'Resultados'}</span>
                                     <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fecha_resultados)}</div>
                                 </div>
                                 <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; flex: 1;">
-                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-calendar-days" style="color:var(--color-guinda);"></i> Semestre</span>
+                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-calendar-days" style="color:var(--color-guinda);"></i> ${typeof t === 'function' ? t('conv_semestre') : 'Semestre'}</span>
                                     <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fechaInicioEscolar)}</div>
                                 </div>
                             </div>
 
                             <div style="text-align: center;">
                                 <button onclick="ocultarVistaDetalles()" style="background: none; border: none; color: var(--color-guinda); font-size: 14px; font-weight: 600; cursor: pointer; padding: 5px;">
-                                    <i class="fa-solid fa-arrow-left" style="margin-right: 5px;"></i> Volver al resumen
+                                    <i class="fa-solid fa-arrow-left" style="margin-right: 5px;"></i> ${typeof t === 'function' ? t('conv_volver_resumen') : 'Volver al resumen'}
                                 </button>
                             </div>
                         </div>
@@ -1594,10 +1607,10 @@ async function cargarModalidadesAdmision() {
                 const checkedStr = index === 0 ? 'checked' : '';
 
                 contenedor.innerHTML += `
-                    <label class="radio-card" style="display:block; flex: 1 1 220px; min-width: 220px; position:relative; padding:20px; border-radius:10px; border:2px dashed #8a1c24; cursor:pointer; text-align:center; background-color:#f8f9fa; margin: 10px;">
+                    <label class="radio-card" style="display:block; flex: 1 1 220px; min-width: 220px; position:relative; padding:20px; border-radius:10px; border:2px dashed var(--color-guinda); cursor:pointer; text-align:center; background-color: var(--color-card-bg); margin: 10px;">
                         <input type="radio" name="modalidad" value="${mod}" ${checkedStr} onchange="actualizarCostosAdmision()" style="position:absolute; opacity:0; width:0; height:0;">
                         <div class="radio-content" style="pointer-events:none;">
-                            <strong style="display:block; font-size:16px; color:#8a1c24; margin-bottom:5px;">${index + 1}. ${titulo}</strong>
+                            <strong style="display:block; font-size:16px; color: var(--color-guinda); margin-bottom:5px;">${index + 1}. ${typeof t === 'function' ? t('mod_' + mod.toLowerCase()) : titulo}</strong>
                         </div>
                     </label>
                 `;
