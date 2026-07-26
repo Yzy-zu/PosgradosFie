@@ -348,18 +348,18 @@ function abrirModalPerfil() {
     Swal.fire({
         title: 'Mi Perfil',
         html: `
-            <div style="text-align: left; font-size: 14px; line-height: 1.5; color: #334155; padding-right: 15px;">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
+            <div style="text-align: left; font-size: 14px; line-height: 1.5; color: var(--color-text); padding-right: 15px;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--color-border);">
                     <div style="width: 50px; height: 50px; border-radius: 50%; background: #1e293b; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">
                         ${document.getElementById('topbar-iniciales') ? document.getElementById('topbar-iniciales').innerText : 'U'}
                     </div>
                     <div>
-                        <h4 style="margin: 0; color: #0f172a; font-size: 18px;">${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido || ''}</h4>
+                        <h4 style="margin: 0; color: var(--color-text); font-size: 18px;">${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido || ''}</h4>
                         <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">Aspirante</span>
                     </div>
                 </div>
                 
-                <h5 style="margin: 10px 0 10px; color: #8a1c24; font-weight: 700; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px;"><i class="fa-solid fa-address-card"></i> Datos Personales</h5>
+                <h5 style="margin: 10px 0 10px; color: var(--color-guinda); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 5px;"><i class="fa-solid fa-address-card"></i> Datos Personales</h5>
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
                     <p style="margin: 0; word-break: break-all;"><strong>Correo:</strong> <br>${usuario.correo || 'No registrado'}</p>
                     <p style="margin: 0;"><strong>Teléfono:</strong> <br>${aspiranteData.telefono || 'No registrado'}</p>
@@ -370,7 +370,7 @@ function abrirModalPerfil() {
                     <p style="margin: 0; grid-column: span 2;"><strong>Dirección:</strong> <br>${aspiranteData.direccion || 'No registrada'}</p>
                 </div>
 
-                <h5 style="margin: 15px 0 10px; color: #8a1c24; font-weight: 700; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px;"><i class="fa-solid fa-graduation-cap"></i> Formación Académica</h5>
+                <h5 style="margin: 20px 0 10px; color: var(--color-guinda); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 5px;"><i class="fa-solid fa-graduation-cap"></i> Formación Académica</h5>
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
                     <p style="margin: 0; grid-column: span 2;"><strong>Licenciatura:</strong> <br>${aspiranteData.licenciatura || 'No registrada'}</p>
                     <p style="margin: 0; grid-column: span 2;"><strong>Institución:</strong> <br>${aspiranteData.institucionLicenciatura || 'No registrada'}</p>
@@ -380,7 +380,7 @@ function abrirModalPerfil() {
                     <p style="margin: 0;"><strong>Otros Estudios:</strong> <br>${aspiranteData.otrosEstudios || 'Ninguno'}</p>
                 </div>
 
-                <h5 style="margin: 15px 0 10px; color: #8a1c24; font-weight: 700; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px;"><i class="fa-solid fa-briefcase"></i> Datos Laborales</h5>
+                <h5 style="margin: 20px 0 10px; color: var(--color-guinda); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 5px;"><i class="fa-solid fa-briefcase"></i> Datos Laborales</h5>
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
                     <p style="margin: 0;"><strong>Ocupación:</strong> <br>${aspiranteData.ocupacion || 'No registrada'}</p>
                     <p style="margin: 0;"><strong>Ciudad:</strong> <br>${aspiranteData.ciudadOcupacion || 'No registrada'}</p>
@@ -429,7 +429,7 @@ function abrirNotificacion(remitenteKey, element) {
 
         // Marcar activo en la lista
         document.querySelectorAll('#notification-list .chat-item').forEach(el => el.style.background = 'transparent');
-        if (element) element.style.background = '#e2e8f0';
+        if (element) element.style.background = 'var(--color-border)';
 
         // Mostrar paneles
         document.getElementById('messages-empty-pane').style.display = 'none';
@@ -459,7 +459,7 @@ function abrirNotificacion(remitenteKey, element) {
             if (dateStr !== lastDateStr) {
                 chatHtml += `
                     <div style="text-align: center; margin-bottom: 15px; margin-top: 15px;">
-                        <span style="background: #e2e8f0; padding: 2px 8px; border-radius: 12px; font-size: 11px; color: #64748b; font-weight: bold;">${dateStr}</span>
+                        <span style="background: var(--color-border); padding: 2px 8px; border-radius: 12px; font-size: 11px; color: #64748b; font-weight: bold;">${dateStr}</span>
                     </div>
                 `;
                 lastDateStr = dateStr;
@@ -1105,10 +1105,10 @@ function abrirModalDoc(docStr) {
 
                 historialHtml += `
                     <div style="margin-bottom: 12px; padding-bottom: 10px; ${idx < doc.historial.length - 1 ? 'border-bottom: 1px dashed #cbd5e1;' : ''}">
-                        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 2px; color: #000;">
+                        <div class="modal-doc-comments-title" style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 2px;">
                             <span>Solicitud ${h.intentos} - ${h.estadoValidacion}</span>
                         </div>
-                        <p style="margin: 0; font-size: 13.5px; color: #334155; line-height: 1.4; white-space: pre-wrap;">${comTxt}</p>
+                        <p class="modal-doc-comments-text" style="margin: 0; font-size: 13.5px; line-height: 1.4; white-space: pre-wrap;">${comTxt}</p>
                     </div>
                 `;
             });
@@ -1449,7 +1449,7 @@ function bloquearConvocatorias(soliData = null) {
                         transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
                     }
                 </style>
-                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 40px; text-align: center; width: 100%; margin: 20px 0; box-shadow: var(--shadow-sm); font-family: 'Inter', Arial, sans-serif; overflow: hidden;">
+                <div style="background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 8px; padding: 40px; text-align: center; width: 100%; margin: 20px 0; box-shadow: var(--shadow-sm); font-family: 'Inter', Arial, sans-serif; overflow: hidden;">
                     
                     <div style="background: #fcf0f1; border: 1px solid #f3d8da; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
                         <i class="fa-solid fa-lock" style="font-size: 24px; color: var(--color-guinda);"></i>
@@ -1481,30 +1481,30 @@ function bloquearConvocatorias(soliData = null) {
 
                         <!-- VISTA B: Detalles -->
                         <div id="view-b" class="slide-view" style="transform: translateX(100%); opacity: 0; pointer-events: none; text-align: left;">
-                            <div style="display: flex; gap: 30px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; justify-content: center;">
+                            <div style="display: flex; gap: 30px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--color-border); justify-content: center;">
                                 <div><i class="fa-solid fa-clock" style="color:var(--color-primary);"></i> Duración: <strong>${soliData.duracion || '4'} semestres</strong></div>
                                 <div><i class="fa-solid fa-globe" style="color:var(--color-primary);"></i> Modalidad: <strong>${soliData.modalidad || 'Escolarizada'}</strong></div>
                             </div>
                             
                             <div style="display: flex; justify-content: space-between; gap: 15px; text-align: left; width: 100%; margin-bottom: 25px;">
-                                <div style="background: var(--color-bg); border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; flex: 1;">
+                                <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; flex: 1;">
                                     <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-circle-check" style="color:var(--color-guinda);"></i> Apertura</span>
                                     <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fecha_inicio)}</div>
                                 </div>
-                                <div style="background: var(--color-bg); border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; flex: 1;">
+                                <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; flex: 1;">
                                     <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-file-arrow-up" style="color:var(--color-guinda);"></i> Documentos</span>
                                     <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fechaFinDocumentos)}</div>
                                 </div>
                                 ${nivel === 'Doctorado' ? `
-                                <div style="background: var(--color-bg); border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; flex: 1;">
+                                <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; flex: 1;">
                                     <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-comments" style="color:var(--color-guinda);"></i> Entrevistas</span>
                                     <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fechaEntrevistaInicio)}</div>
                                 </div>` : ''}
-                                <div style="background: var(--color-bg); border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; flex: 1;">
+                                <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; flex: 1;">
                                     <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-bullhorn" style="color:var(--color-guinda);"></i> Resultados</span>
                                     <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fecha_resultados)}</div>
                                 </div>
-                                <div style="background: var(--color-bg); border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; flex: 1;">
+                                <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; flex: 1;">
                                     <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-calendar-days" style="color:var(--color-guinda);"></i> Semestre</span>
                                     <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fechaInicioEscolar)}</div>
                                 </div>

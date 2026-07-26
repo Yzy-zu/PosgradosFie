@@ -72,7 +72,7 @@
                 <!-- Menú de Mensajes (Solo la campana con el punto) -->
                 <div class="notification-container" onclick="toggleNotificationMenu(event)" style="position: relative;">
                     <div class="notification-trigger"
-                        style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; color: #94a3b8; background: #fff;">
+                        style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; color: var(--color-text); background: var(--color-card-bg);">
                         <i class="fa-regular fa-bell"></i>
                         <span id="notification-badge" class="notification-badge"
                             style="display: none; top: -2px; right: -2px; width: 8px; height: 8px; min-width: auto; padding: 0;"></span>
@@ -115,13 +115,13 @@
                 <!-- Botón Mi Perfil -->
                 <div class="profile-container" style="position: relative;">
                     <div class="profile-trigger"
-                        style="border: 1px solid #e2e8f0; border-radius: 20px; padding: 4px 12px 4px 4px; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #fff;"
+                        style="border: 1px solid var(--color-border); border-radius: 20px; padding: 4px 12px 4px 4px; display: flex; align-items: center; gap: 8px; cursor: pointer; background: var(--color-card-bg);"
                         onclick="abrirModalPerfil()">
                         <div style="width: 28px; height: 28px; border-radius: 50%; background: #1e293b; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;"
                             id="topbar-iniciales">
                             --
                         </div>
-                        <span style="font-size: 13px; font-weight: 600; color: #334155;">Mi Perfil</span>
+                        <span style="font-size: 13px; font-weight: 600; color: var(--color-text);">Mi Perfil</span>
                     </div>
                 </div>
             </div> <!-- Flex container end -->
@@ -288,7 +288,7 @@
 
                     <form id="form-estacion-0">
                         <div id="opciones-admision-doctorado" class="file-box"
-                            style="display:none; border-color:#8a1c24; background-color:#fff9f9;">
+                            style="display:none; border-color:#8a1c24; background-color: var(--color-bg);">
                             <label style="color:#8a1c24; font-size:16px;"><i class="fa-solid fa-file-pdf"></i> Requisito
                                 Esencial: Tener Grado de Maestría Académica *</label>
                             <p style="font-size:13px; color:#555; margin-bottom:10px;">El sistema detectó tu historial
@@ -415,13 +415,11 @@
                 </div>
 
                 <div
-                    style="padding: 25px; color: var(--color-text); font-size: 15px; background: #ffffff; overflow-y: auto; flex: 1;">
+                    style="padding: 25px; color: var(--color-text); font-size: 15px; background: var(--color-card-bg); overflow-y: auto; flex: 1;">
                     <!-- Caja informativa del documento -->
-                    <div
-                        style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div class="modal-doc-info-box">
                         <div>
-                            <h4 id="modal-doc-requisito"
-                                style="color: #0f172a; margin: 0 0 6px 0; font-size: 17px; font-weight: 700;">Nombre
+                            <h4 id="modal-doc-requisito" class="modal-doc-title">Nombre
                                 Requisito</h4>
                             <span id="modal-doc-estado" class="status-badge">ESTADO</span>
                         </div>
@@ -432,14 +430,11 @@
                     </div>
 
                     <!-- Caja de comentarios y observaciones -->
-                    <div id="modal-doc-comentarios-wrapper"
-                        style="background: #f1f5f9; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
-                        <h5
-                            style="margin: 0 0 8px 0; color: #334155; font-size: 14px; display: flex; align-items: center; justify-content: center; width: 100%; font-weight: 600;">
+                    <div id="modal-doc-comentarios-wrapper" class="modal-doc-comments-box">
+                        <h5 class="modal-doc-comments-title">
                             Comentarios
                         </h5>
-                        <div id="modal-doc-comentarios"
-                            style="margin: 0; color: #475569; font-size: 14px; line-height: 1.5;">
+                        <div id="modal-doc-comentarios" class="modal-doc-comments-text">
                             El documento se encuentra actualmente bajo revisión.
                         </div>
                     </div>
@@ -494,10 +489,10 @@
                             <span class="setting-title">Tema Visual</span>
                             <span class="setting-desc">Elige claro, oscuro o del sistema</span>
                         </div>
-                        <select class="form-select setting-select">
-                            <option>Claro</option>
-                            <option>Oscuro</option>
-                            <option>Sistema</option>
+                        <select id="setting-tema" class="form-select setting-select" onchange="cambiarTema(this.value)">
+                            <option value="Claro">Claro</option>
+                            <option value="Oscuro">Oscuro</option>
+                            <option value="Sistema">Sistema</option>
                         </select>
                     </div>
 

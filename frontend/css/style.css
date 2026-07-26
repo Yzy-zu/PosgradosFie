@@ -2,6 +2,7 @@
 :root {
     --color-bg: #f8fafc;
     --color-text: #334155;
+    --color-text-muted: #64748b;
     --color-primary: #1e293b;
     --color-primary-hover: #334155;
     --color-guinda: #8a1c24;
@@ -9,6 +10,9 @@
     --color-success: #10b981;
     --color-danger: #ef4444;
     --color-info: #3b82f6;
+    --color-card-bg: #ffffff;
+    --color-border: #e2e8f0;
+    --color-input-bg: #ffffff;
 
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -16,6 +20,17 @@
 
     --radius-md: 8px;
     --radius-lg: 12px;
+}
+
+body.dark-mode {
+    --color-bg: #0f172a; /* Slate 900 - Fondo principal profundo */
+    --color-text: #ffffff; /* Blanco puro para máxima legibilidad */
+    --color-text-muted: #cbd5e1; /* Slate 300 - Textos secundarios súper claros */
+    --color-primary: #3b82f6; /* Azul brillante */
+    --color-primary-hover: #60a5fa;
+    --color-card-bg: #1e293b; /* Slate 800 - Tarjetas y Paneles elevados */
+    --color-border: #334155; /* Slate 700 - Bordes suaves */
+    --color-input-bg: #0f172a; /* Entradas de texto oscuras */
 }
 
 * {
@@ -3247,4 +3262,193 @@ input:checked + .slider:before {
 
 .slider.round:before {
     border-radius: 50%;
+}
+/* ==== MODAL DOC CLASSES ==== */
+.modal-doc-info-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.modal-doc-title {
+    color: #0f172a;
+    margin: 0 0 6px 0;
+    font-size: 17px;
+    font-weight: 700;
+}
+.modal-doc-comments-box {
+    background: #f1f5f9;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 20px;
+}
+.modal-doc-comments-title {
+    margin: 0 0 8px 0;
+    color: #334155;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    font-weight: 600;
+}
+.modal-doc-comments-text {
+    margin: 0;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* =========================================
+   DARK MODE OVERRIDES
+   ========================================= */
+body.dark-mode {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+}
+
+body.dark-mode .card,
+body.dark-mode .login-card,
+body.dark-mode .stat-card,
+body.dark-mode .dashboard-card,
+body.dark-mode .settings-drawer,
+body.dark-mode .settings-section,
+body.dark-mode .drawer-header,
+body.dark-mode .drawer-body,
+body.dark-mode .drawer-footer,
+body.dark-mode .topbar-modern,
+body.dark-mode .messages-mega-dropdown,
+body.dark-mode .profile-dropdown,
+body.dark-mode .modal-content,
+body.dark-mode .convocatoria-item,
+body.dark-mode .grid-card {
+    background-color: var(--color-card-bg);
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea,
+body.dark-mode .form-select,
+body.dark-mode .form-control {
+    background-color: var(--color-input-bg);
+    color: var(--color-text);
+    border-color: var(--color-border);
+}
+
+body.dark-mode .text-muted,
+body.dark-mode p {
+    color: var(--color-text-muted);
+}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6 {
+    color: var(--color-text);
+}
+
+body.dark-mode th,
+body.dark-mode td {
+    border-color: var(--color-border);
+}
+
+body.dark-mode .setting-title,
+body.dark-mode .setting-desc {
+    color: var(--color-text);
+}
+
+body.dark-mode .setting-item:not(:last-child) {
+    border-bottom-color: var(--color-border);
+}
+
+/* ==== SWEETALERT2 DARK MODE OVERRIDES ==== */
+body.dark-mode .swal2-popup {
+    background-color: var(--color-card-bg);
+    color: var(--color-text);
+}
+
+body.dark-mode .swal2-title,
+body.dark-mode .swal2-html-container,
+body.dark-mode .swal2-content {
+    color: var(--color-text);
+}
+
+/* ==== LOADER DARK MODE OVERRIDES ==== */
+body.dark-mode #global-loader {
+    background: rgba(15, 23, 42, 0.9);
+}
+body.dark-mode #global-loader p {
+    color: var(--color-text) !important;
+}
+
+/* ==== SIDEBAR DARK MODE OVERRIDES ==== */
+body.dark-mode .sidebar {
+    background-color: var(--color-card-bg);
+    border-right: 1px solid var(--color-border);
+}
+body.dark-mode .sidebar .text {
+    color: var(--color-text) !important;
+}
+
+/* ==== DOCUMENTOS DARK MODE OVERRIDES ==== */
+body.dark-mode .progress-card-v2,
+body.dark-mode .docs-scroll-card,
+body.dark-mode .doc-card-v2 {
+    background: var(--color-card-bg);
+    background-color: var(--color-card-bg);
+    border-color: var(--color-border);
+}
+
+body.dark-mode .doc-card-v2-title,
+body.dark-mode .progress-card-v2-label {
+    color: var(--color-text);
+}
+
+body.dark-mode .doc-card-v2:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* ==== MODAL DOCS DARK MODE OVERRIDES ==== */
+body.dark-mode .modal-doc-info-box,
+body.dark-mode .modal-doc-comments-box {
+    background: var(--color-input-bg);
+    border: 1px solid var(--color-border);
+}
+
+body.dark-mode .modal-doc-title,
+body.dark-mode .modal-doc-comments-title,
+body.dark-mode .modal-doc-comments-text {
+    color: var(--color-text);
+}
+
+/* ==== MESSAGES MEGA DROPDOWN DARK MODE OVERRIDES ==== */
+body.dark-mode .messages-mega-list,
+body.dark-mode .messages-mega-read {
+    background: var(--color-card-bg);
+    border-color: var(--color-border);
+}
+
+body.dark-mode .messages-mega-read-header {
+    background: var(--color-input-bg);
+    border-color: var(--color-border);
+}
+
+body.dark-mode .messages-mega-read-body {
+    background-color: var(--color-input-bg);
+    background-image: none; /* Quitamos el patrón de puntos claros en dark mode, o lo cambiamos */
+}
+
+body.dark-mode .messages-mega-read-header,
+body.dark-mode .messages-empty-state {
+    color: var(--color-text);
 }

@@ -28,14 +28,25 @@ function toggleSidebar() {
     if (mainContent) mainContent.classList.toggle('expanded');
 }
 
-// Inicializar estado del sidebar al cargar
+// Inicializar estado de interfaz al cargar (Sidebar y Tema)
 document.addEventListener("DOMContentLoaded", () => {
+    // Restaurar Sidebar
     const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
     if (isCollapsed) {
         const sidebar = document.querySelector('.sidebar');
         const mainContent = document.querySelector('.main-content');
         if (sidebar) sidebar.classList.add('collapsed');
         if (mainContent) mainContent.classList.add('expanded');
+    }
+
+    // Restaurar Tema
+    const temaSeleccionado = localStorage.getItem('temaSeleccionado') || 'Claro';
+    cambiarTema(temaSeleccionado);
+    
+    // Sincronizar el select del UI si existe
+    const selectTema = document.getElementById('setting-tema');
+    if (selectTema) {
+        selectTema.value = temaSeleccionado;
     }
 });
 
@@ -184,4 +195,32 @@ async function abrirModalCambiarPassword() {
         }
     }
 }
+
+// ==== MANEJO DEL TEMA VISUAL (MODO OSCURO) ====
+function cambiarTema(tema) {
+    if (tema === 'Oscuro') {
+        document.body.classList.add('dark-mode');
+    } else if (tema === 'Claro') {
+        document.body.classList.remove('dark-mode');
+    } else if (tema === 'Sistema') {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+    }
+    localStorage.setItem('temaSeleccionado', tema);
+}
+
+// Escuchar cambios a nivel de sistema operativo si está en modo "Sistema"
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    const tema = localStorage.getItem('temaSeleccionado') || 'Claro';
+    if (tema === 'Sistema') {
+        if (e.matches) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+    }
+});
 
