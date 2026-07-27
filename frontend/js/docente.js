@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             if (docente.status === 401 || docente.status === 403) {
                 console.warn("Token expirado o inválido según el backend. Cerrando sesión...");
                 sessionStorage.clear();
-                window.location.href = 'index.html';
+                window.location.href = 'login.html';
                 return null;
             }
             const data = await docente.json()
@@ -43,29 +43,29 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     if (!tokenObj || !tokenStr) {
         console.warn("Sesión expirada o no encontrada, redirigiendo al login.");
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
         return;
     }
 
     const usuario = JSON.parse(tokenObj);
     const saludo = document.getElementById('saludo-usuario');
 
-    let datitos;
     try {
-        datitos = await cargarDocente(usuario.id);
+        window.docenteData = await cargarDocente(usuario.id);
     } catch (e) {
         console.error("Error al cargar datos del docente", e);
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
         return;
     }
-    console.log(datitos);
-    if (saludo) {
-        saludo.innerText = `Hola Bienvenid@, ${datitos.nombre}`;
-        const lblNombre = document.getElementById('menu-nombre-docente');
-        const lblCorreo = document.getElementById('menu-correo-docente');
-        if (lblNombre) lblNombre.innerText = `${datitos.nombre}`;
-        if (lblCorreo) lblCorreo.innerText = `${usuario.correo}`;
+    const d = window.docenteData;
+    if (d) {
+        const topbarIniciales = document.getElementById('topbar-iniciales');
+        const topbarFirstName = document.getElementById('topbar-first-name');
+        const iniciales = (d.nombre.charAt(0) + (d.primerApellido ? d.primerApellido.charAt(0) : '')).toUpperCase();
+        const primerNombre = d.nombre.trim().split(' ')[0];
 
+        if (topbarIniciales) topbarIniciales.innerText = iniciales;
+        if (topbarFirstName) topbarFirstName.innerText = primerNombre;
     }
 
     await cargarAspirantesAPI();
@@ -374,38 +374,68 @@ function seleccionarAspirante(id) {
     let html = '';
 
     asp.documentos.forEach(doc => {
-        let estadoClass = '';
-        let badgeClass = '';
-        let estadoTexto = '';
+        let badgeHtml = '';
         let iconClass = 'fa-file-lines';
+        let iconBg = '#e0e7ff';
+        let iconColor = '#4338ca';
+
+        const reqLower = (doc.nombre || '').toLowerCase();
+        if (reqLower.includes('acta')) {
+            iconClass = 'fa-id-card';
+            iconBg = '#dbeafe';
+            iconColor = '#1d4ed8';
+        } else if (reqLower.includes('identifica') || reqLower.includes('curp')) {
+            iconClass = 'fa-address-card';
+            iconBg = '#f3e8ff';
+            iconColor = '#7e22ce';
+        } else if (reqLower.includes('título') || reqLower.includes('titulo') || reqLower.includes('cedula') || reqLower.includes('cédula')) {
+            iconClass = 'fa-graduation-cap';
+            iconBg = '#dcfce7';
+            iconColor = '#15803d';
+        } else if (reqLower.includes('certifica') || reqLower.includes('kardex') || reqLower.includes('promedio')) {
+            iconClass = 'fa-file-signature';
+            iconBg = '#ffedd5';
+            iconColor = '#c2410c';
+        } else if (reqLower.includes('cv') || reqLower.includes('curriculum')) {
+            iconClass = 'fa-user-tie';
+            iconBg = '#e0f2fe';
+            iconColor = '#0369a1';
+        } else if (reqLower.includes('carta') || reqLower.includes('motivos')) {
+            iconClass = 'fa-envelope-open-text';
+            iconBg = '#fce7f3';
+            iconColor = '#be185d';
+        } else if (reqLower.includes('foto')) {
+            iconClass = 'fa-image-portrait';
+            iconBg = '#fef08a';
+            iconColor = '#a16207';
+        } else if (reqLower.includes('idioma')) {
+            iconClass = 'fa-language';
+            iconBg = '#fef08a';
+            iconColor = '#a16207';
+        }
 
         if (doc.estado === 'aprobado') {
-            estadoClass = 'state-aprobado';
-            badgeClass = 'status-aprobado';
-            estadoTexto = '<i class="fa-solid fa-check-circle"></i> Aprobado';
+            badgeHtml = `<span class="doc-badge-aprobado"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> APROBADO</span>`;
         } else if (doc.estado === 'rechazado') {
-            estadoClass = 'state-rechazado';
-            badgeClass = 'status-rechazado';
-            estadoTexto = `<i class="fa-solid fa-circle-xmark"></i> Rechazado`;
+            badgeHtml = `<span class="doc-badge-rechazado"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> RECHAZADO</span>`;
         } else {
-            estadoClass = 'state-pendiente';
-            badgeClass = 'status-pendiente';
-            estadoTexto = '<i class="fa-solid fa-clock"></i> Pendiente';
+            badgeHtml = `<span class="doc-badge-pendiente"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> PENDIENTE</span>`;
         }
 
         html += `
-            <div class="doc-card-modern ${estadoClass}" onclick="abrirModalEvaluacion('${doc.id}')" style="cursor: pointer;">
-                <div class="doc-card-header">
-                    <div class="doc-card-icon">
+            <div class="doc-card-v2" onclick="abrirModalEvaluacion('${doc.id}')" style="cursor: pointer;">
+                <div class="doc-card-v2-header">
+                    <div class="doc-card-v2-icon" style="background: ${iconBg}; color: ${iconColor};">
                         <i class="fa-solid ${iconClass}"></i>
                     </div>
-                    <div style="flex: 1;">
-                        <h4 class="doc-card-title">${doc.nombre || 'Documento adjunto'}</h4>
+                    <div>
+                        <div class="doc-card-v2-title">${doc.nombre || 'Documento adjunto'}</div>
+                        <div class="doc-card-v2-date">${doc.estado === 'aprobado' ? 'Aprobado recientemente' : 'Evaluar Documento'}</div>
                     </div>
                 </div>
-                <div class="doc-card-footer">
-                    <span class="status-badge ${badgeClass}">${estadoTexto}</span>
-                    <span class="doc-card-action">Evaluar / Ver <i class="fa-solid fa-chevron-right" style="font-size:10px;"></i></span>
+                <div class="doc-card-v2-footer">
+                    ${badgeHtml}
+                    <span class="doc-action-ver">Ver Documento</span>
                 </div>
             </div>
         `;
@@ -523,7 +553,7 @@ function abrirNotificacion(remitenteKey, element) {
 
         // Marcar activo en la lista
         document.querySelectorAll('#notification-list .chat-item').forEach(el => el.style.background = 'transparent');
-        if (element) element.style.background = '#e2e8f0';
+        if (element) element.style.background = 'var(--color-border)';
 
         // Mostrar paneles
         document.getElementById('messages-empty-pane').style.display = 'none';
@@ -553,17 +583,17 @@ function abrirNotificacion(remitenteKey, element) {
             if (dateStr !== lastDateStr) {
                 chatHtml += `
                     <div style="text-align: center; margin-bottom: 15px; margin-top: 15px;">
-                        <span style="background: #e2e8f0; padding: 2px 8px; border-radius: 12px; font-size: 11px; color: #64748b; font-weight: bold;">${dateStr}</span>
+                        <span style="background: var(--color-border); padding: 2px 8px; border-radius: 12px; font-size: 11px; color: var(--color-text-muted); font-weight: bold;">${dateStr}</span>
                     </div>
                 `;
                 lastDateStr = dateStr;
             }
 
             chatHtml += `
-                <div style="background: white; padding: 12px 15px; border-radius: 18px 18px 18px 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 14px; color: #1c1e21; max-width: 90%; margin-bottom: 10px; word-wrap: break-word; align-self: flex-start;">
+                <div style="background: var(--color-card-bg); border: 1px solid var(--color-border); padding: 12px 15px; border-radius: 18px 18px 18px 4px; box-shadow: var(--shadow-sm); font-size: 14px; color: var(--color-text); max-width: 90%; margin-bottom: 10px; word-wrap: break-word; align-self: flex-start;">
                     <div style="font-weight: bold; color: var(--color-primary); margin-bottom: 5px; font-size: 12px;">${notif.nombre}</div>
                     ${notif.mensaje}
-                    <div style="font-size: 10px; color: #94a3b8; margin-top: 5px; text-align: right;">${timeStr} ${editadoHtml}</div>
+                    <div style="font-size: 10px; color: var(--color-text-muted); margin-top: 5px; text-align: right;">${timeStr} ${editadoHtml}</div>
                 </div>
             `;
         });
@@ -768,16 +798,16 @@ async function cargarNotificaciones() {
                     const remitenteKey = encodeURIComponent(grupo.remitente);
 
                     html += `
-                    <div class="chat-item p-3 border-bottom" style="cursor: pointer; display: flex; gap: 10px; align-items: center;" onclick="abrirNotificacion('${remitenteKey}', this)">
+                    <div class="chat-item p-3 border-bottom" style="cursor: pointer; display: flex; gap: 10px; align-items: center; border-color: var(--color-border) !important;" onclick="abrirNotificacion('${remitenteKey}', this)">
                         <div class="chat-avatar ${bgClass} text-white rounded-circle d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; flex-shrink: 0;">
                             <i class="fa-solid fa-user"></i>
                         </div>
                         <div class="chat-details" style="flex: 1; overflow: hidden;">
                             <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
-                                <div style="font-weight: bold; font-size: 13px; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${grupo.remitente}</div>
-                                <div style="font-size: 11px; color: #94a3b8; flex-shrink: 0;">${formattedDate}</div>
+                                <div style="font-weight: bold; font-size: 13px; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${grupo.remitente}</div>
+                                <div style="font-size: 11px; color: var(--color-text-muted); flex-shrink: 0;">${formattedDate}</div>
                             </div>
-                            <div style="font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><strong>${ultMsg.nombre}</strong> - ${ultMsg.mensaje}</div>
+                            <div style="font-size: 12px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><strong>${ultMsg.nombre}</strong> - ${ultMsg.mensaje}</div>
                         </div>
                     </div>`;
                 });
@@ -823,3 +853,64 @@ document.addEventListener('click', function (event) {
         profileMenu.classList.remove('show');
     }
 });
+
+// FUNCIONES DEL PANEL LATERAL DE AJUSTES
+// ==========================================
+function abrirDrawerAjustes() {
+    document.getElementById('settings-drawer').classList.add('open');
+    document.getElementById('settings-drawer-overlay').classList.add('show');
+}
+
+function cerrarDrawerAjustes() {
+    document.getElementById('settings-drawer').classList.remove('open');
+    document.getElementById('settings-drawer-overlay').classList.remove('show');
+}
+
+// ==== PERFIL DOCENTE ====
+function abrirModalPerfilDocente() {
+    const usuarioStr = sessionStorage.getItem('usuario');
+    if (!usuarioStr || !window.docenteData) return;
+    const usuario = JSON.parse(usuarioStr);
+    const d = window.docenteData;
+    const iniciales = (d.nombre.charAt(0) + (d.primerApellido ? d.primerApellido.charAt(0) : '')).toUpperCase();
+
+    const noReg = 'No registrado';
+
+    Swal.fire({
+        title: 'Mi Perfil',
+        html: `
+            <div style="text-align: left; font-size: 14px; line-height: 1.5; color: var(--color-text); padding-right: 15px;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--color-border);">
+                    <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; flex-shrink: 0;">
+                        ${iniciales}
+                    </div>
+                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start;">
+                        <h4 style="margin: 0; color: var(--color-text); font-size: 18px; text-transform: capitalize; line-height: 1.2;">${d.nombre} ${d.primerApellido || ''} ${d.segundoApellido || ''}</h4>
+                        <span style="background: #fce7f3; color: #be185d; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-top: 6px; letter-spacing: 0.5px;">Docente / Revisor</span>
+                    </div>
+                </div>
+
+                <h5 class="profile-section-title"><i class="fa-solid fa-address-card"></i> Datos de Contacto</h5>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 15px; margin-bottom: 25px;">
+                    <div class="profile-info-box"><span class="profile-info-label">Correo</span> <span class="profile-info-value" style="text-transform: none;">${usuario.correo}</span></div>
+                </div>
+                
+                <h5 class="profile-section-title"><i class="fa-solid fa-graduation-cap"></i> Información Académica</h5>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 15px; margin-bottom: 25px;">
+                    <div class="profile-info-box"><span class="profile-info-label">Cargo</span> <span class="profile-info-value" style="text-transform: capitalize;">${d.cargo || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">Especialidad</span> <span class="profile-info-value" style="text-transform: capitalize;">${d.especialidad || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">Cubículo</span> <span class="profile-info-value">${d.cubiculo || noReg}</span></div>
+                </div>
+            </div>
+        `,
+        showConfirmButton: true,
+        confirmButtonText: 'Cerrar',
+        buttonsStyling: false,
+        width: '900px',
+        customClass: {
+            popup: 'profile-modal-bg',
+            confirmButton: 'profile-btn-close'
+        }
+    });
+}
+

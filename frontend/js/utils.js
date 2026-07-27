@@ -28,8 +28,9 @@ function toggleSidebar() {
     if (mainContent) mainContent.classList.toggle('expanded');
 }
 
-// Inicializar estado del sidebar al cargar
+// Inicializar estado de interfaz al cargar (Sidebar y Tema)
 document.addEventListener("DOMContentLoaded", () => {
+    // Restaurar Sidebar
     const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
     if (isCollapsed) {
         const sidebar = document.querySelector('.sidebar');
@@ -37,14 +38,37 @@ document.addEventListener("DOMContentLoaded", () => {
         if (sidebar) sidebar.classList.add('collapsed');
         if (mainContent) mainContent.classList.add('expanded');
     }
+
+    // Restaurar Tema
+    const temaSeleccionado = localStorage.getItem('temaSeleccionado') || 'Claro';
+    cambiarTema(temaSeleccionado);
+    
+    // Sincronizar el select del UI si existe
+    const selectTema = document.getElementById('setting-tema');
+    if (selectTema) {
+        selectTema.value = temaSeleccionado;
+    }
 });
 
 // ==== MANEJO DE SESIÓN ====
 function cerrarSesion() {
-    if (confirm("¿Desea cerrar sesión?")) {
-        sessionStorage.clear();
-        window.location.href = 'login.html';
-    }
+    Swal.fire({
+        title: '¿Cerrar sesión?',
+        text: '¿Estás seguro de que deseas salir del sistema?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#8a1c24',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="fa-solid fa-right-from-bracket"></i> Sí, salir',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    });
 }
 
 // ==== MANEJO DEL PERFIL DESPLEGABLE ====
@@ -171,4 +195,32 @@ async function abrirModalCambiarPassword() {
         }
     }
 }
+
+// ==== MANEJO DEL TEMA VISUAL (MODO OSCURO) ====
+function cambiarTema(tema) {
+    if (tema === 'Oscuro') {
+        document.body.classList.add('dark-mode');
+    } else if (tema === 'Claro') {
+        document.body.classList.remove('dark-mode');
+    } else if (tema === 'Sistema') {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+    }
+    localStorage.setItem('temaSeleccionado', tema);
+}
+
+// Escuchar cambios a nivel de sistema operativo si está en modo "Sistema"
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    const tema = localStorage.getItem('temaSeleccionado') || 'Claro';
+    if (tema === 'Sistema') {
+        if (e.matches) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+    }
+});
 

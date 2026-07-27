@@ -18,8 +18,33 @@ socket.on('actualizacionGlobal', () => {
     }
 });
 
+// Manejo y persistencia de estado de la barra lateral (Sidebar)
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    if (!sidebar) return;
+
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    if (mainContent) {
+        mainContent.classList.toggle('expanded', isCollapsed);
+    }
+    localStorage.setItem('sidebarCollapsed', isCollapsed ? 'true' : 'false');
+}
+
+function restaurarEstadoSidebar() {
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (isCollapsed) {
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        if (sidebar) sidebar.classList.add('collapsed');
+        if (mainContent) mainContent.classList.add('expanded');
+    }
+}
+
 // Comprobación de Sesión y Estado de Registro al inicializar la página
 document.addEventListener("DOMContentLoaded", async function () {
+    restaurarEstadoSidebar();
+
     const token = sessionStorage.getItem('token');
     const usuarioStr = sessionStorage.getItem('usuario');
     const programaElegido = sessionStorage.getItem('programaPendiente');
@@ -31,7 +56,14 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     const usuario = JSON.parse(usuarioStr);
-    const saludo = document.getElementById('saludo-usuario');
+
+    // Función auxiliar para iniciales
+    const getIniciales = (nombre, apellido) => {
+        let inits = "";
+        if (nombre) inits += nombre.charAt(0).toUpperCase();
+        if (apellido) inits += apellido.charAt(0).toUpperCase();
+        return inits || "U";
+    };
 
     // Obtener datos del aspirante real
     try {
@@ -42,16 +74,33 @@ document.addEventListener("DOMContentLoaded", async function () {
             aspiranteData = listaAspirantes.find(a => a.idUsuario === usuario.id);
 
             if (aspiranteData) {
-                if (saludo) saludo.innerText = `Hola Bienvenid@, ${aspiranteData.nombre} ${aspiranteData.primerApellido}`;
+                // Función auxiliar para capitalizar nombres
+                const capitalizarNombre = (str) => {
+                    if (!str) return "";
+                    return str.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+                };
+                const nombreCapitalizado = capitalizarNombre(aspiranteData.nombre);
+                const apellidoCapitalizado = capitalizarNombre(aspiranteData.primerApellido);
+                const nombreCompleto = `${nombreCapitalizado} ${apellidoCapitalizado}`;
+                window.nombreAspiranteCompleto = nombreCompleto;
+                const iniciales = getIniciales(nombreCapitalizado, apellidoCapitalizado);
 
-                // Actualizar menú de perfil
-                const lblNombre = document.getElementById('perfil-nombre');
-                const lblCorreo = document.getElementById('perfil-correo');
-                const lblTelefono = document.getElementById('perfil-telefono');
+                // Topbar
+                const topbarNombre = document.getElementById('topbar-nombre-usuario');
+                const topbarIniciales = document.getElementById('topbar-iniciales');
+                const topbarFirstName = document.getElementById('topbar-first-name');
+                if (topbarNombre) topbarNombre.innerText = nombreCompleto;
+                if (topbarIniciales) topbarIniciales.innerText = iniciales;
+                if (topbarFirstName) topbarFirstName.innerText = nombreCapitalizado.split(' ')[0];
 
-                if (lblNombre) lblNombre.innerText = `${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido}`;
-                if (lblCorreo) lblCorreo.innerText = usuario.correo;
-                if (lblTelefono) lblTelefono.innerText = aspiranteData.telefono;
+                // Sidebar
+                const sidebarNombre = document.getElementById('sidebar-nombre');
+                const sidebarIniciales = document.getElementById('sidebar-iniciales');
+                if (sidebarNombre) sidebarNombre.innerText = nombreCompleto;
+                if (sidebarIniciales) sidebarIniciales.innerText = iniciales;
+
+                // Menú Perfil Antiguo removido, ya no es necesario inyectar datos al dropdown
+
 
                 // Cargar modalidades de admisión dinámicas
                 cargarModalidadesAdmision();
@@ -86,8 +135,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                 }
                 // -------------------------------------
 
-            } else {
-                if (saludo) saludo.innerText = `Hola Bienvenid@, Aspirante`;
             }
         }
     } catch (e) {
@@ -114,6 +161,13 @@ document.addEventListener("DOMContentLoaded", async function () {
  * Control del cambio de paneles (Navegación lateral con Hash Router)
  */
 function switchView(viewId) {
+    if (viewId === 'documentos' && !currentSolicitudId) {
+        // Redirigir a inicio o convocatorias si intenta forzar la URL sin tener una solicitud activa
+        Swal.fire('Acceso Denegado', 'Debes seleccionar una convocatoria primero.', 'warning');
+        window.location.hash = 'convocatorias';
+        return;
+    }
+
     if (window.location.hash !== `#${viewId}`) {
         window.location.hash = viewId;
         return; // El evento onhashchange se encargará de hacer el render
@@ -137,6 +191,38 @@ function switchView(viewId) {
         targetSection.classList.add('fade-in');
     }
 
+    // Controlar título/saludo en la barra superior
+    const topbarGreeting = document.querySelector('.topbar-greeting');
+    const topbarSubtitulo = document.getElementById('topbar-subtitulo');
+    const topbarNombre = document.getElementById('topbar-nombre-usuario');
+
+    if (topbarGreeting && topbarNombre) {
+        topbarGreeting.style.display = 'flex';
+        if (viewId === 'inicio') {
+            if (topbarSubtitulo) topbarSubtitulo.style.display = 'block';
+            topbarNombre.innerText = window.nombreAspiranteCompleto || 'Cargando...';
+            cargarStatsInicio();
+        } else {
+            if (topbarSubtitulo) topbarSubtitulo.style.display = 'none';
+            const titulos = {
+                'proceso': typeof t === 'function' ? t('sb_proceso') : 'Proceso',
+                'convocatorias': typeof t === 'function' ? t('sb_convocatorias') : 'Convocatorias',
+                'documentos': typeof t === 'function' ? t('sb_documentos') : 'Documentos'
+            };
+            topbarNombre.innerText = titulos[viewId] || (viewId.charAt(0).toUpperCase() + viewId.slice(1));
+        }
+    }
+
+    // Controlar la visibilidad del banner flotante de revisión (solo visible en documentos)
+    const floatingBanner = document.getElementById('revision-floating-banner');
+    if (floatingBanner) {
+        if (viewId === 'documentos') {
+            floatingBanner.style.display = 'flex';
+        } else {
+            floatingBanner.style.display = 'none';
+        }
+    }
+
     // Actualizar estados visuales en la barra de navegación lateral
     const navLinks = document.querySelectorAll('.sidebar a');
     navLinks.forEach(link => link.classList.remove('active'));
@@ -145,11 +231,6 @@ function switchView(viewId) {
     if (targetNavLink) {
         targetNavLink.classList.add('active');
     }
-
-    // Cargar notificaciones al abrir el dropdown, o mantenerlo en DOMContentLoaded
-    // if (viewId === 'notificaciones') {
-    //     cargarNotificaciones();
-    // }
 
     setTimeout(() => {
         ocultarLoader();
@@ -161,6 +242,99 @@ window.addEventListener('hashchange', () => {
     const hash = window.location.hash.replace('#', '') || 'inicio';
     switchView(hash);
 });
+
+/**
+ * Carga las estadísticas reales de la API para el dashboard de inicio
+ */
+async function cargarStatsInicio() {
+    try {
+        if (!aspiranteData || !aspiranteData.id) return;
+
+        const statDocsCount = document.getElementById('dash-docs-count');
+        const statDocsSub = document.getElementById('dash-docs-sub');
+        const statExpStatus = document.getElementById('dash-exp-status');
+        const statExpSub = document.getElementById('dash-exp-sub');
+        const statConvName = document.getElementById('dash-conv-name');
+        const statConvSub = document.getElementById('dash-conv-sub');
+
+        if (statDocsSub) { statDocsSub.style.display = 'block'; statDocsSub.innerText = 'Cargando...'; }
+        if (statExpSub) { statExpSub.style.display = 'block'; statExpSub.innerText = 'Cargando...'; }
+        if (statConvSub) { statConvSub.style.display = 'block'; statConvSub.innerText = 'Cargando...'; }
+
+        const resSoli = await fetch(`/api/solicitud/activa/${aspiranteData.id}`);
+        if (resSoli.ok) {
+            const soliData = await resSoli.json();
+
+            if (soliData.existe) {
+                // 1. Estado de Expediente
+                if (statExpStatus) {
+                    if (soliData.estado === 'RECHAZADO') {
+                        statExpStatus.innerText = 'Expediente Rechazado';
+                        statExpStatus.style.color = 'var(--color-danger)';
+                    } else if (soliData.estado === 'APROBADO') {
+                        statExpStatus.innerText = 'Expediente Aprobado';
+                        statExpStatus.style.color = 'var(--color-info)'; // azul/info
+                    } else {
+                        statExpStatus.innerText = 'Expediente Activo';
+                        statExpStatus.style.color = '#10b981'; // verde
+                    }
+                }
+                if (statExpSub) {
+                    const estado = soliData.estado === 'NUEVO' ? 'Fase Inicial' : 
+                                   (soliData.estado === 'EN_REVISION' ? 'En Revisión' : 
+                                   (soliData.estado === 'RECHAZADO' ? 'Requiere Atención' : soliData.estado));
+                    statExpSub.innerText = estado;
+                }
+
+                // 2. Convocatoria y Documentos
+                const currentSolicitudId = soliData.idSolicitud || soliData.id;
+                
+                // Fetch Convocatorias para el nombre
+                const resConv = await fetch('/api/convocatorias');
+                if (resConv.ok) {
+                    const convocatorias = await resConv.json();
+                    const convActual = convocatorias.find(c => c.id === soliData.idConvocatoria);
+                    if (convActual) {
+                        if (statConvName) statConvName.innerText = convActual.nombre;
+                        if (statConvSub) statConvSub.innerText = convActual.nivel === 'DOCTORADO' ? 'Doctorado FIE' : 'Maestría FIE';
+                    }
+                }
+
+                // Fetch Documentos subidos del aspirante
+                const resExp = await fetch(`/api/aspirante/${aspiranteData.id}/expediente`);
+                if (resExp.ok) {
+                    const expData = await resExp.json();
+                    const soliActiva = expData.solicitudes?.find(s => s.idSolicitud === currentSolicitudId);
+                    if (soliActiva && soliActiva.documentos) {
+                        const docsSubidos = soliActiva.documentos.filter(d => d.rutaArchivo).length;
+                        if (statDocsCount) statDocsCount.innerText = `${docsSubidos} documentos subidos`;
+                        if (statDocsSub) statDocsSub.innerText = 'Revisar progreso';
+                    } else {
+                        if (statDocsCount) statDocsCount.innerText = '0 documentos subidos';
+                        if (statDocsSub) statDocsSub.innerText = 'Comenzar a subir';
+                    }
+                }
+            } else {
+                // No hay solicitud activa
+                if (statExpStatus) {
+                    statExpStatus.innerText = 'Sin expediente activo';
+                    statExpStatus.style.color = 'var(--color-text)'; 
+                }
+                if (statExpSub) {
+                    statExpSub.innerText = 'Visita Convocatorias';
+                }
+
+                if (statConvName) statConvName.innerText = 'Ninguna seleccionada';
+                if (statConvSub) statConvSub.style.display = 'none';
+
+                if (statDocsCount) statDocsCount.innerText = '0 documentos subidos';
+                if (statDocsSub) statDocsSub.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error("Error al cargar stats de inicio:", error);
+    }
+}
 
 /**
  * Carga las notificaciones desde la API
@@ -192,7 +366,7 @@ async function cargarNotificaciones() {
             // Update Badge
             if (badge) {
                 if (notificaciones.length > 0) {
-                    badge.style.display = 'block';
+                    badge.style.display = 'flex';
                     badge.innerText = notificaciones.length;
                 } else {
                     badge.style.display = 'none';
@@ -207,7 +381,7 @@ async function cargarNotificaciones() {
                 notificaciones.forEach(notif => {
                     const isGeneral = notif.destino === 'todos';
                     const remitente = notif.nombreRemitente ? `${notif.rolRemitente || 'ADMIN'} - ${notif.nombreRemitente}` : (isGeneral ? 'Comité Técnico' : 'Administración Posgrados');
-                    
+
                     if (!grupos[remitente]) {
                         grupos[remitente] = {
                             remitente: remitente,
@@ -230,23 +404,23 @@ async function cargarNotificaciones() {
                 Object.values(grupos).forEach(grupo => {
                     const ultMsg = grupo.mensajes[grupo.mensajes.length - 1]; // Último mensaje
                     const bgClass = grupo.isGeneral ? 'bg-primary' : 'bg-info';
-                    
+
                     const dateObj = ultMsg.creado_en ? new Date(ultMsg.creado_en) : new Date();
                     const formattedDate = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 
                     const remitenteKey = encodeURIComponent(grupo.remitente);
 
                     html += `
-                    <div class="chat-item p-3 border-bottom" style="cursor: pointer; display: flex; gap: 10px; align-items: center;" onclick="abrirNotificacion('${remitenteKey}', this)">
-                        <div class="chat-avatar ${bgClass} text-white rounded-circle d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; flex-shrink: 0;">
+                    <div class="chat-item p-3 border-bottom" style="cursor: pointer; display: flex; gap: 10px; align-items: center; border-color: var(--color-border) !important;" onclick="abrirNotificacion('${remitenteKey}', this)">
+                        <div class="chat-avatar ${bgClass} text-white rounded-circle d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; flex-shrink: 0; background-color: var(--color-text-muted) !important;">
                             <i class="fa-solid fa-user"></i>
                         </div>
                         <div class="chat-details" style="flex: 1; overflow: hidden;">
                             <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
-                                <div style="font-weight: bold; font-size: 13px; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${grupo.remitente}</div>
-                                <div style="font-size: 11px; color: #94a3b8; flex-shrink: 0;">${formattedDate}</div>
+                                <div style="font-weight: bold; font-size: 13px; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${grupo.remitente.replace('Administracion', 'Administración')}</div>
+                                <div style="font-size: 11px; color: var(--color-text-muted); flex-shrink: 0;">${formattedDate}</div>
                             </div>
-                            <div style="font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><strong>${ultMsg.nombre}</strong> - ${ultMsg.mensaje}</div>
+                            <div style="font-size: 12px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><strong style="text-transform: capitalize;">${ultMsg.nombre}</strong> - <span style="text-transform: capitalize;">${ultMsg.mensaje}</span></div>
                         </div>
                     </div>`;
                 });
@@ -263,17 +437,88 @@ async function cargarNotificaciones() {
 }
 
 /**
+ * Muestra el modal de perfil con la información del aspirante
+ */
+function abrirModalPerfil() {
+    const usuarioStr = sessionStorage.getItem('usuario');
+    if (!usuarioStr || !aspiranteData) return;
+    const usuario = JSON.parse(usuarioStr);
+
+    // Función de ayuda para formatear fechas sin desfase horario
+    const formatDate = (dateString) => {
+        if (!dateString) return typeof t === 'function' ? t('prof_no_reg') : 'No registrada';
+        const d = new Date(dateString);
+        return new Date(d.getTime() + Math.abs(d.getTimezoneOffset() * 60000)).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+    };
+
+    let fechaNac = formatDate(aspiranteData.fechaNacimiento);
+    let fechaEgreso = formatDate(aspiranteData.fechaEgreso);
+    let fechaTitulacion = formatDate(aspiranteData.fechaTitulacion);
+
+    const noReg = typeof t === 'function' ? t('prof_no_reg') : 'No registrado/a';
+    const ninguno = typeof t === 'function' ? t('prof_ninguno') : 'Ninguno';
+
+    Swal.fire({
+        title: typeof t === 'function' ? t('prof_title') : 'Mi Perfil',
+        html: `
+            <div style="text-align: left; font-size: 14px; line-height: 1.5; color: var(--color-text); padding-right: 15px;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--color-border);">
+                    <div style="width: 56px; height: 56px; border-radius: 50%; background: #1e293b; color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; flex-shrink: 0;">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start;">
+                        <h4 style="margin: 0; color: var(--color-text); font-size: 18px; text-transform: capitalize; line-height: 1.2;">${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido || ''}</h4>
+                        <span style="background: #e0f2fe; color: #0369a1; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-top: 6px; letter-spacing: 0.5px;">${typeof t === 'function' ? t('prof_badge') : 'Aspirante'}</span>
+                    </div>
+                </div>
+                
+                <h5 class="profile-section-title"><i class="fa-solid fa-address-card"></i> ${typeof t === 'function' ? t('prof_personal') : 'Datos Personales'}</h5>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 15px; margin-bottom: 25px;">
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_correo') : 'Correo'}</span> <span class="profile-info-value" style="text-transform: none;">${usuario.correo || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_tel') : 'Teléfono'}</span> <span class="profile-info-value">${aspiranteData.telefono || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_curp') : 'CURP'}</span> <span class="profile-info-value" style="text-transform: uppercase;">${aspiranteData.curp || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_nacimiento') : 'Nacimiento'}</span> <span class="profile-info-value">${fechaNac}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_estado_civil') : 'Estado Civil'}</span> <span class="profile-info-value">${aspiranteData.estadoCivil || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_cp') : 'Cód. Postal'}</span> <span class="profile-info-value">${aspiranteData.direccionPostal || noReg}</span></div>
+                    <div class="profile-info-box" style="grid-column: span 3;"><span class="profile-info-label">${typeof t === 'function' ? t('prof_direccion') : 'Dirección'}</span> <span class="profile-info-value">${aspiranteData.direccion || noReg}</span></div>
+                </div>
+
+                <h5 class="profile-section-title"><i class="fa-solid fa-graduation-cap"></i> ${typeof t === 'function' ? t('prof_academica') : 'Formación Académica'}</h5>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 15px; margin-bottom: 25px;">
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_lic') : 'Licenciatura'}</span> <span class="profile-info-value">${aspiranteData.licenciatura || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_inst') : 'Institución'}</span> <span class="profile-info-value">${aspiranteData.institucionLicenciatura || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_promedio') : 'Promedio'}</span> <span class="profile-info-value">${aspiranteData.promedio || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_egreso') : 'Fecha Egreso'}</span> <span class="profile-info-value">${fechaEgreso}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_titulacion') : 'Titulación'}</span> <span class="profile-info-value">${fechaTitulacion}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_otros') : 'Otros Estudios'}</span> <span class="profile-info-value">${aspiranteData.otrosEstudios || ninguno}</span></div>
+                </div>
+
+                <h5 class="profile-section-title"><i class="fa-solid fa-briefcase"></i> ${typeof t === 'function' ? t('prof_laborales') : 'Datos Laborales'}</h5>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 15px;">
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_ocupacion') : 'Ocupación'}</span> <span class="profile-info-value">${aspiranteData.ocupacion || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_ciudad') : 'Ciudad'}</span> <span class="profile-info-value">${aspiranteData.ciudadOcupacion || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_estado') : 'Estado'}</span> <span class="profile-info-value">${aspiranteData.estadoOcupacion || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_tel_lab') : 'Tel. Laboral'}</span> <span class="profile-info-value">${aspiranteData.telefonoOcupacion || noReg}</span></div>
+                </div>
+            </div>
+        `,
+        showConfirmButton: true,
+        confirmButtonText: typeof t === 'function' ? t('prof_btn_cerrar') : 'Cerrar',
+        buttonsStyling: false,
+        width: '900px',
+        customClass: {
+            popup: 'profile-modal-bg',
+            confirmButton: 'profile-btn-close'
+        }
+    });
+}
+
+/**
  * Muestra u oculta el menú de notificaciones
  */
 function toggleNotificationMenu(event) {
     event.stopPropagation(); // Evitar que se propague al document
     const menu = document.getElementById('notification-dropdown');
-    const profileMenu = document.getElementById('profile-dropdown');
-
-    // Si el menú de perfil está abierto, lo cerramos
-    if (profileMenu && profileMenu.classList.contains('show')) {
-        profileMenu.classList.remove('show');
-    }
 
     if (menu) {
         menu.classList.toggle('show');
@@ -283,14 +528,9 @@ function toggleNotificationMenu(event) {
 // Cerrar los menús al hacer click fuera
 document.addEventListener('click', function (event) {
     const notificationMenu = document.getElementById('notification-dropdown');
-    const profileMenu = document.getElementById('profile-dropdown');
 
     if (notificationMenu && notificationMenu.classList.contains('show') && !event.target.closest('.notification-container')) {
         notificationMenu.classList.remove('show');
-    }
-
-    if (profileMenu && profileMenu.classList.contains('show') && !event.target.closest('.profile-container')) {
-        profileMenu.classList.remove('show');
     }
 });
 
@@ -301,29 +541,29 @@ function abrirNotificacion(remitenteKey, element) {
     try {
         const remitenteName = decodeURIComponent(remitenteKey);
         const grupo = window.mensajesAgrupados ? window.mensajesAgrupados[remitenteName] : null;
-        
+
         if (!grupo) return;
-        
+
         // Marcar activo en la lista
         document.querySelectorAll('#notification-list .chat-item').forEach(el => el.style.background = 'transparent');
-        if(element) element.style.background = '#e2e8f0';
+        if (element) element.style.background = 'var(--color-border)';
 
         // Mostrar paneles
         document.getElementById('messages-empty-pane').style.display = 'none';
         const readPane = document.getElementById('messages-read-pane');
         readPane.style.display = 'flex';
-        
-        document.getElementById('messages-read-title').innerText = grupo.remitente;
-        
+
+        document.getElementById('messages-read-title').innerText = grupo.remitente.replace('Administracion', 'Administración');
+
         const body = document.getElementById('messages-read-body');
         let chatHtml = '';
-        
+
         let lastDateStr = '';
         grupo.mensajes.forEach(notif => {
             const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
             const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
             const dateStr = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
-            
+
             let editadoHtml = '';
             if (notif.editado_en && notif.creado_en && notif.editado_en !== notif.creado_en) {
                 const editDate = new Date(notif.editado_en);
@@ -331,33 +571,33 @@ function abrirNotificacion(remitenteKey, element) {
                     editadoHtml = `<span class="ms-1 text-muted fst-italic">(Editado)</span>`;
                 }
             }
-            
+
             // Si cambió de día, ponemos un separador de fecha
             if (dateStr !== lastDateStr) {
                 chatHtml += `
                     <div style="text-align: center; margin-bottom: 15px; margin-top: 15px;">
-                        <span style="background: #e2e8f0; padding: 2px 8px; border-radius: 12px; font-size: 11px; color: #64748b; font-weight: bold;">${dateStr}</span>
+                        <span style="background: var(--color-border); padding: 2px 10px; border-radius: 12px; font-size: 11px; color: var(--color-text-muted); font-weight: bold;">${dateStr}</span>
                     </div>
                 `;
                 lastDateStr = dateStr;
             }
 
             chatHtml += `
-                <div style="background: white; padding: 12px 15px; border-radius: 18px 18px 18px 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 14px; color: #1c1e21; max-width: 90%; margin-bottom: 10px; word-wrap: break-word; align-self: flex-start;">
-                    <div style="font-weight: bold; color: var(--color-primary); margin-bottom: 5px; font-size: 12px;">${notif.nombre}</div>
+                <div style="background: var(--color-card-bg); border: 1px solid var(--color-border); padding: 12px 15px; border-radius: 14px 14px 14px 4px; box-shadow: var(--shadow-sm); font-size: 13.5px; color: var(--color-text); max-width: 90%; margin-bottom: 10px; word-wrap: break-word; align-self: flex-start;">
+                    <div style="font-weight: bold; color: var(--color-text); margin-bottom: 5px; font-size: 13px; text-transform: capitalize;">${notif.nombre}</div>
                     ${notif.mensaje}
-                    <div style="font-size: 10px; color: #94a3b8; margin-top: 5px; text-align: right;">${timeStr} ${editadoHtml}</div>
+                    <div style="font-size: 10px; color: var(--color-text-muted); margin-top: 5px; text-align: right;">${timeStr} ${editadoHtml}</div>
                 </div>
             `;
         });
-        
+
         body.innerHTML = chatHtml;
-        
+
         // Auto scroll al final del chat
         setTimeout(() => {
             body.scrollTop = body.scrollHeight;
         }, 50);
-        
+
     } catch (error) {
         console.error("Error al abrir notificación", error);
     }
@@ -394,18 +634,24 @@ function seleccionarPrograma(nombrePrograma) {
  * Modifica la lista de convocatorias e inyecta la lógica adaptativa según el nivel (Maestría / Doctorado)
  */
 async function activarModulosPostRegistro(nombrePrograma) {
-    const navDocumentos = document.getElementById('nav-documentos');
+    const navDocumentos = document.getElementById('li-nav-documentos');
     if (navDocumentos) {
         navDocumentos.style.display = 'none';
-        navDocumentos.classList.add('hidden');
     }
 
     const panelSeleccion = document.getElementById('seleccion-programa');
     const panelListaAbierta = document.getElementById('lista-programas-abiertos');
     const contenedorTarjetas = document.getElementById('contenedor-tarjetas-programas');
 
-    if (panelSeleccion) panelSeleccion.style.display = 'none';
-    if (panelListaAbierta) panelListaAbierta.style.display = 'block';
+    if (panelSeleccion) {
+        panelSeleccion.style.display = 'none';
+        panelSeleccion.classList.remove('fade-in');
+    }
+    if (panelListaAbierta) {
+        panelListaAbierta.style.display = 'block';
+        void panelListaAbierta.offsetWidth;
+        panelListaAbierta.classList.add('fade-in');
+    }
 
     if (contenedorTarjetas) {
         contenedorTarjetas.innerHTML = "<p>Cargando convocatorias...</p>";
@@ -420,21 +666,34 @@ async function activarModulosPostRegistro(nombrePrograma) {
                 const activas = convocatorias.filter(c => c.estado === 'Activa' && c.tipo === nivel);
                 window.convocatoriasDisponibles = activas;
 
-                htmlConvocatorias = `<h3>Oferta Académica Desbloqueada: ${nivel === 'DOCTORADO' ? 'Doctorados' : 'Maestrías'} FIE</h3><br>`;
+                const ofertaTxt = typeof t === 'function' ? t('conv_oferta_desbloqueada') : 'Oferta Académica Desbloqueada:';
+                const nivelTxt = nivel === 'DOCTORADO' ? (typeof t === 'function' ? t('sb_doctorados') || 'Doctorados' : 'Doctorados') : (typeof t === 'function' ? t('sb_maestrias') || 'Maestrías' : 'Maestrías');
+                htmlConvocatorias = `<h3 style="color: var(--color-text); font-weight: 700; margin-bottom: 15px;">${ofertaTxt} ${nivelTxt} FIE</h3>`;
+
                 if (activas.length === 0) {
-                    htmlConvocatorias += `<p style="color: #555;">No hay convocatorias abiertas en este momento para este nivel.</p>`;
+                    htmlConvocatorias += `<p style="color: var(--color-text-muted);">${typeof t === 'function' ? t('conv_sin_abiertas') : 'No hay convocatorias abiertas en este momento para este nivel.'}</p>`;
                 } else {
                     activas.forEach(c => {
                         // Formatear fechas
-                        const fechaCierre = new Date(c.fecha_fin).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+                        const langCode = (typeof getIdiomaActual === 'function' && getIdiomaActual() === 'en') ? 'en-US' : 'es-ES';
+                        const fechaCierre = new Date(c.fecha_fin).toLocaleDateString(langCode, { day: 'numeric', month: 'long' });
 
                         htmlConvocatorias += `
-                            <div class="convocatoria-item" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 4px;">
-                                <h4>${c.nombre}</h4>
-                                <p style="margin: 5px 0; color: #555; font-size: 0.95rem;"><strong>${c.posgrado_nombre || ''}</strong></p>
-                                <p style="margin: 5px 0; color: #555;">${c.descripcion || 'Sin descripción disponible.'}</p>
-                                <p style="font-size: 14px; color: #8a1c24; margin-bottom: 10px;"><strong>Estado:</strong> Abierta | <strong>Cierre:</strong> ${fechaCierre}</p>
-                                <button class="btn-primary" style="width:auto; padding:6px 15px; font-size:13px;" onclick="prepararFlujoEstaciones('${nivelAcademicoSeleccionado}', ${c.id})">Iniciar Proceso de Registro</button>
+                            <div class="convocatoria-item" style="margin-bottom: 20px; padding: 20px; border: 1px solid var(--color-border); border-radius: 10px; background-color: var(--color-card-bg); box-shadow: var(--shadow-sm); transition: transform 0.2s, box-shadow 0.2s;">
+                                <h4 style="margin: 0 0 8px 0; color: var(--color-text); font-size: 1.15rem; font-weight: 700;">${c.nombre}</h4>
+                                <p style="margin: 0 0 8px 0; color: var(--color-text-muted); font-size: 0.95rem;"><strong>${c.posgrado_nombre || ''}</strong></p>
+                                <p style="margin: 0 0 15px 0; color: var(--color-text-muted); font-size: 0.9rem; line-height: 1.5;">${c.descripcion || (typeof t === 'function' ? t('conv_sin_desc') : 'Sin descripción disponible.')}</p>
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-top: 1px solid var(--color-border); padding-top: 15px;">
+                                    <div style="font-size: 13.5px; color: var(--color-text-muted);">
+                                        <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 4px 12px; border-radius: 12px; font-weight: 600; font-size: 12px; margin-right: 10px; display: inline-flex; align-items: center; gap: 6px;">
+                                            <i class="fa-solid fa-circle-check"></i> ${typeof t === 'function' ? t('conv_abierta') : 'Abierta'}
+                                        </span>
+                                        <strong>${typeof t === 'function' ? t('conv_cierre') : 'Cierre'}:</strong> ${fechaCierre}
+                                    </div>
+                                    <button class="btn-primary" style="width: auto; padding: 8px 18px; font-size: 13.5px; font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;" onclick="prepararFlujoEstaciones('${nivelAcademicoSeleccionado}', ${c.id})">
+                                        <i class="fa-solid fa-pen-to-square"></i> ${typeof t === 'function' ? t('conv_btn_iniciar') : 'Iniciar Proceso de Registro'}
+                                    </button>
+                                </div>
                             </div>
                         `;
                     });
@@ -521,7 +780,7 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
         if (respuestaSoli.ok) {
             const dataSoli = await respuestaSoli.json();
             currentSolicitudId = dataSoli.idSolicitud;
-            
+
             // Re-hidratar la UI para traer toda la info de la solicitud y de la convocatoria
             try {
                 const resReFetch = await fetch(`/api/solicitud/activa/${aspiranteData.id}`);
@@ -534,7 +793,7 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
             } catch (err) {
                 bloquearConvocatorias();
             }
-            
+
         } else if (respuestaSoli.status === 409) {
             const errData = await respuestaSoli.json();
             Swal.fire('Aviso', errData.mensaje, 'warning');
@@ -553,73 +812,13 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
     nivelAcademicoSeleccionado = nivel;
 
     // Mostrar pestaña de Documentos ahora que ya seleccionó convocatoria
-    const navDocumentos = document.getElementById('nav-documentos');
+    const navDocumentos = document.getElementById('li-nav-documentos');
     if (navDocumentos) {
         navDocumentos.style.display = 'block';
-        navDocumentos.classList.remove('hidden');
     }
 
-    // Elementos generales
-    const titulo = document.getElementById('titulo-flujo-documentos');
-    const boxCostos = document.getElementById('box-costos-desglose');
-
-    if (nivel === "Doctorado") {
-        if (titulo) titulo.innerText = "Continuidad de Expediente Académico: Doctorado FIE";
-
-        // Ajustar labels del Stepper
-        if (document.getElementById('lbl-step-1')) document.getElementById('lbl-step-1').innerText = "CV (Heredado)";
-        if (document.getElementById('lbl-step-2')) document.getElementById('lbl-step-2').innerText = "Propuesta Proyecto";
-        if (document.getElementById('lbl-step-3')) document.getElementById('lbl-step-3').innerText = "Idioma / Cartas";
-        if (document.getElementById('lbl-step-4')) document.getElementById('lbl-step-4').innerText = "Entrevista Sínodo";
-
-        // Cambiar paneles visibles dentro de las estaciones
-        if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'none';
-        if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'block';
-        if (document.getElementById('grid-maestria-2')) document.getElementById('grid-maestria-2').style.display = 'none';
-        if (document.getElementById('grid-doctorado-2')) document.getElementById('grid-doctorado-2').style.display = 'block';
-        if (document.getElementById('grid-maestria-3')) document.getElementById('grid-maestria-3').style.display = 'none';
-        if (document.getElementById('grid-doctorado-3')) document.getElementById('grid-doctorado-3').style.display = 'block';
-        if (document.getElementById('grid-maestria-4')) document.getElementById('grid-maestria-4').style.display = 'none';
-        if (document.getElementById('grid-doctorado-4')) document.getElementById('grid-doctorado-4').style.display = 'block';
-
-        if (boxCostos) {
-            boxCostos.innerHTML = `
-                <h4>Aranceles y Conceptos de Pago (Doctorado)</h4>
-                <div class="costo-linea"><span style="color:#27ae60;">✓ Exención por Continuidad FIE:</span> <strong>$ 0.00 MXN</strong></div>
-                <small style="color:#777;">Al ser egresado directo del posgrado FIE, los derechos de examen interno quedan exentos.</small>
-            `;
-        }
-
-        if (document.getElementById('btn-next-0')) {
-            document.getElementById('btn-next-0').disabled = true;
-        }
-    } else {
-        // Restaurar estado inicial de Maestría
-        if (titulo) titulo.innerText = "Seguimiento de Trámites y Requisitos de Ingreso";
-        if (document.getElementById('lbl-step-1')) document.getElementById('lbl-step-1').innerText = "Personales";
-        if (document.getElementById('lbl-step-2')) document.getElementById('lbl-step-2').innerText = "Académicos";
-        if (document.getElementById('lbl-step-3')) document.getElementById('lbl-step-3').innerText = "Cartas";
-        if (document.getElementById('lbl-step-4')) document.getElementById('lbl-step-4').innerText = "CENEVAL";
-
-        if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'block';
-        if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'none';
-        if (document.getElementById('grid-maestria-2')) document.getElementById('grid-maestria-2').style.display = 'flex';
-        if (document.getElementById('grid-doctorado-2')) document.getElementById('grid-doctorado-2').style.display = 'none';
-        if (document.getElementById('grid-maestria-3')) document.getElementById('grid-maestria-3').style.display = 'flex';
-        if (document.getElementById('grid-doctorado-3')) document.getElementById('grid-doctorado-3').style.display = 'none';
-        if (document.getElementById('grid-maestria-4')) document.getElementById('grid-maestria-4').style.display = 'block';
-        if (document.getElementById('grid-doctorado-4')) document.getElementById('grid-doctorado-4').style.display = 'none';
-
-        if (document.getElementById('btn-next-0')) {
-            document.getElementById('btn-next-0').disabled = false;
-        }
-        actualizarCostosAdmision();
-    }
-
-    // Cargar Requisitos Documentales para la estación 1 basados en la convocatoria
-    if (idConvocatoria) {
-        cargarRequisitosDocumentales(idConvocatoria);
-    }
+    // Configurar paneles según nivel (lógica centralizada en configurarPanelesNivel)
+    configurarPanelesNivel(nivel, idConvocatoria);
 
     // Redirigir a la vista de documentos
     switchView('documentos');
@@ -727,16 +926,16 @@ function actualizarCostosAdmision() {
 
         if (input.checked) {
             // Estilo seleccionado (sólido)
-            card.style.backgroundColor = '#8a1c24';
-            card.style.borderColor = '#8a1c24';
+            card.style.backgroundColor = 'var(--color-guinda)';
+            card.style.borderColor = 'var(--color-guinda)';
             card.style.borderStyle = 'solid';
             if (strongText) strongText.style.color = '#ffffff';
         } else {
             // Estilo normal (punteado)
-            card.style.backgroundColor = '#f8f9fa';
-            card.style.borderColor = '#8a1c24';
+            card.style.backgroundColor = 'var(--color-card-bg)';
+            card.style.borderColor = 'var(--color-guinda)';
             card.style.borderStyle = 'dashed';
-            if (strongText) strongText.style.color = '#8a1c24';
+            if (strongText) strongText.style.color = 'var(--color-text)';
         }
     });
 
@@ -750,7 +949,12 @@ function actualizarCostosAdmision() {
 function mostrarDetallesAdmision() {
     const inputs = document.querySelector('input[name="modalidad"]:checked');
     if (inputs) {
-        alert("Aquí irán los detalles (Costos, descripción, fechas) de la modalidad: " + inputs.value);
+        Swal.fire({
+            title: 'Detalles de Modalidad',
+            text: `Modalidad seleccionada: ${inputs.value.replace(/_/g, ' ')}`,
+            icon: 'info',
+            confirmButtonColor: '#8a1c24'
+        });
     }
 }
 
@@ -797,47 +1001,118 @@ function verificarArchivosEstacion(estacion) {
     }
 }
 
-// Bloquear toda la UI de carga cuando el expediente esté bajo revisión
-async function bloquearInterfazPorRevision() {
-    // 1. Mostrar banner y ocultar encabezado normal
+// Bloquear toda la UI de carga cuando el expediente esté bajo revisión o con dictamen
+async function bloquearInterfazPorRevision(estadoActual = 'EN_REVISION') {
     const banner = document.getElementById('banner-revision');
     const encabezado = document.getElementById('encabezado-documentos');
+
+    // 1. Eliminar cualquier toast flotante anterior al pie de página
+    const oldToast = document.getElementById('revision-toast');
+    if (oldToast) oldToast.remove();
+
+    // 2. Construir la vista integrada dentro de banner-revision (banner superior + barra de progreso + grid sin caja exterior)
     if (banner) {
-        banner.style.display = 'block';
-        banner.className = ''; // Quitamos la clase estática para evitar conflictos
-        banner.style.background = 'transparent';
-        banner.style.border = 'none';
-        banner.style.boxShadow = 'none';
-        banner.style.padding = '0';
+        banner.style.cssText = 'display:block; background:transparent; border:none; box-shadow:none; padding:0; margin-bottom: 20px;';
+        
+        let textBanner = 'Expediente bajo revisión';
+        let textSub = 'Serás notificado si se requiere alguna corrección';
+        let badge = 'EN REVISIÓN';
+        let bgColor = '#fffbeb';
+        let borderColor = '#fcd34d';
+        let iconBgColor = '#fef3c7';
+        let iconColor = '#d97706';
+        let titleColor = '#92400e';
+        let subColor = '#b45309';
+        let badgeBgColor = '#fef08a';
+        let badgeColor = '#854d0e';
+        let iconClass = 'fa-solid fa-lock';
+
+        if (estadoActual === 'RECHAZADO') {
+            textBanner = 'Expediente Rechazado';
+            textSub = 'Revisa los comentarios y corrige los documentos necesarios';
+            badge = 'RECHAZADO';
+            bgColor = '#fef2f2';
+            borderColor = '#fca5a5';
+            iconBgColor = '#fee2e2';
+            iconColor = '#ef4444';
+            titleColor = '#991b1b';
+            subColor = '#b91c1c';
+            badgeBgColor = '#fecaca';
+            badgeColor = '#991b1b';
+            iconClass = 'fa-solid fa-circle-xmark';
+        } else if (estadoActual === 'APROBADO') {
+            textBanner = 'Expediente Aprobado';
+            textSub = 'Felicidades, tu expediente ha sido validado satisfactoriamente';
+            badge = 'APROBADO';
+            bgColor = '#f0fdf4';
+            borderColor = '#86efac';
+            iconBgColor = '#dcfce7';
+            iconColor = '#22c55e';
+            titleColor = '#166534';
+            subColor = '#15803d';
+            badgeBgColor = '#bbf7d0';
+            badgeColor = '#166534';
+            iconClass = 'fa-solid fa-circle-check';
+        }
+
         banner.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 5px; margin-top: 15px; margin-bottom: 2px; flex-wrap: wrap;">
-                <span class="badge" style="background-color: #3b82f6; color: white; margin-left: 0;">Bajo Revisión, permanece pendiente para cualquier modificacion acerca de tus documentos.</span>
-                <span id="banner-opcion-seleccionada" class="badge bg-light text-dark border" style="display:none;"><i class="fa-solid fa-layer-group text-primary me-1"></i> Opción: </span>
+            <!-- Banner Integrado Dinámico -->
+            <div style="background-color: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 8px; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; box-shadow: var(--shadow-sm);">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="background-color: ${iconBgColor}; color: ${iconColor}; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px;">
+                        <i class="${iconClass}"></i>
+                    </div>
+                    <div>
+                        <div style="color: ${titleColor}; font-weight: 700; font-size: 15px;">${textBanner}</div>
+                        <div style="color: ${subColor}; font-size: 13px;">${textSub}</div>
+                    </div>
+                </div>
+                <div>
+                    <span style="background-color: ${badgeBgColor}; color: ${badgeColor}; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800;">${badge}</span>
+                </div>
             </div>
 
-            <div id="docs-dinamicos-container" class="docs-revision-grid">
-                <div style="text-align:center; padding: 20px; grid-column: 1 / -1; color:#777;">
-                    <i class="fa-solid fa-spinner fa-spin"></i> Cargando tus documentos...
+            <!-- Barra de Progreso Respirable con Conteo -->
+            <div class="progress-card-v2">
+                <div class="progress-card-v2-header">
+                    <span class="progress-card-v2-label" data-i18n="doc_docs_aprobados">${typeof t === 'function' ? t('doc_docs_aprobados') : 'Documentos aprobados'}</span>
+                    <span id="txt-conteo-aprobados" class="progress-card-v2-count">0 / 0</span>
+                </div>
+                <div class="progress-card-v2-track">
+                    <div id="barra-progreso-fill" class="progress-card-v2-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Contenedor Directo de Tarjetas (Sin caja exterior con borde) -->
+            <div id="docs-dinamicos-container" style="margin-top: 15px; padding-bottom: 80px;">
+                <div class="docs-empty-state">
+                    <i class="fa-solid fa-folder-open fa-3x mb-3 text-muted"></i>
+                    <p class="text-muted" data-i18n="doc_no_encontrado">${typeof t === 'function' ? t('doc_no_encontrado') : 'No se encontraron documentos adjuntos.'}</p>
                 </div>
             </div>
         `;
     }
+
+    // Ya no inyectamos revision-floating-banner en el body para mantener el flujo en el DOM
+    let oldFloating = document.getElementById('revision-floating-banner');
+    if (oldFloating) oldFloating.style.display = 'none';
+
     if (encabezado) encabezado.style.display = 'none';
 
-    // 2. Ocultar el stepper
+    // 3. Ocultar el stepper
     const stepper = document.querySelector('.stepper-wrapper');
     if (stepper) stepper.style.display = 'none';
 
-    // 3. Ocultar todos los paneles de estación de documentos
+    // 4. Ocultar todos los paneles de estación
     document.querySelectorAll('.station-panel').forEach(panel => {
         panel.style.display = 'none';
     });
 
-    // 4. Asegurarse de ocultar panel 0 (Admisión general) si existe, u ocultar sus inputs
+    // 5. Ocultar panel 0 explícitamente
     const panel0 = document.getElementById('panel-estacion-0');
     if (panel0) panel0.style.display = 'none';
 
-    // Cargar documentos desde la API para el panel dinámico
+    // 6. Cargar documentos desde la API para el panel dinámico
     if (aspiranteData && aspiranteData.id) {
         try {
             const res = await fetch(`/api/aspirante/${aspiranteData.id}/expediente`);
@@ -845,18 +1120,12 @@ async function bloquearInterfazPorRevision() {
                 const data = await res.json();
                 const solicitudActiva = data.solicitudes.find(s => s.idSolicitud === currentSolicitudId);
 
-                const bannerOpcion = document.getElementById('banner-opcion-seleccionada');
-                if (bannerOpcion && solicitudActiva && solicitudActiva.opcionNombre) {
-                    bannerOpcion.innerHTML = `<i class="fa-solid fa-layer-group text-primary me-1"></i> Opción: ${solicitudActiva.opcionNombre}`;
-                    bannerOpcion.style.display = 'inline-flex';
-                }
-
                 const container = document.getElementById('docs-dinamicos-container');
                 if (container) {
                     if (solicitudActiva && solicitudActiva.documentos && solicitudActiva.documentos.length > 0) {
                         renderizarVistaDinamicaDocumentos(solicitudActiva.documentos, container);
                     } else {
-                        container.innerHTML = '<p style="grid-column:1/-1;text-align:center;">No se encontraron documentos adjuntos.</p>';
+                        container.innerHTML = '<p style="text-align:center; padding:20px; color:#94a3b8;">No se encontraron documentos adjuntos.</p>';
                     }
                 }
             }
@@ -869,52 +1138,131 @@ async function bloquearInterfazPorRevision() {
 function renderizarVistaDinamicaDocumentos(documentos, container) {
     let html = '';
 
+    // Actualizar Barra de Progreso
+    const aprobados = documentos.filter(d => d.estadoValidacion === 'APROBADO').length;
+    const total = documentos.length;
+    const porcentaje = total > 0 ? (aprobados / total) * 100 : 0;
+
+    const fillBar = document.getElementById('barra-progreso-fill');
+    const txtCount = document.getElementById('txt-conteo-aprobados');
+    if (fillBar) fillBar.style.width = `${porcentaje}%`;
+    if (txtCount) txtCount.innerText = `${aprobados} / ${total}`;
+
+    // Agrupar por Categorías
+    const grupos = {
+        'IDENTIDAD Y GENERALES': [],
+        'ANTECEDENTES ACADÉMICOS': [],
+        'EVALUACIÓN Y OTROS': []
+    };
+
     documentos.forEach(doc => {
-        let estadoClass = '';
-        let badgeClass = '';
-        let estadoTexto = '';
-        let iconClass = 'fa-file-lines';
-
-        const numIntentos = doc.intentos || 1;
-
-        switch (doc.estadoValidacion) {
-            case 'APROBADO':
-                estadoClass = 'state-aprobado';
-                badgeClass = 'status-aprobado';
-                estadoTexto = '<i class="fa-solid fa-check-circle"></i> Aprobado';
-                break;
-            case 'RECHAZADO':
-                estadoClass = 'state-rechazado';
-                badgeClass = 'status-rechazado';
-                estadoTexto = `<i class="fa-solid fa-circle-xmark"></i> Rechazado (${numIntentos}/3)`;
-                break;
-            default:
-                estadoClass = 'state-pendiente';
-                badgeClass = 'status-pendiente';
-                estadoTexto = '<i class="fa-solid fa-clock"></i> Pendiente';
-                break;
+        const reqLower = (doc.requisitoNombre || '').toLowerCase();
+        if (reqLower.includes('acta') || reqLower.includes('curp') || reqLower.includes('identificación') || reqLower.includes('ine') || reqLower.includes('fotograf') || reqLower.includes('domicilio')) {
+            grupos['IDENTIDAD Y GENERALES'].push(doc);
+        } else if (reqLower.includes('título') || reqLower.includes('titulo') || reqLower.includes('cédula') || reqLower.includes('cedula') || reqLower.includes('idioma') || reqLower.includes('certificado') || reqLower.includes('grado')) {
+            grupos['ANTECEDENTES ACADÉMICOS'].push(doc);
+        } else {
+            grupos['EVALUACIÓN Y OTROS'].push(doc);
         }
-
-        // Serializar los datos para el onClick
-        const docDataStr = encodeURIComponent(JSON.stringify(doc));
-
-        html += `
-            <div class="doc-card-modern ${estadoClass}" onclick="abrirModalDoc('${docDataStr}')">
-                <div class="doc-card-header">
-                    <div class="doc-card-icon">
-                        <i class="fa-solid ${iconClass}"></i>
-                    </div>
-                    <div style="flex: 1;">
-                        <h4 class="doc-card-title">${doc.requisitoNombre || 'Documento adjunto'}</h4>
-                    </div>
-                </div>
-                <div class="doc-card-footer">
-                    <span class="status-badge ${badgeClass}">${estadoTexto}</span>
-                    <span class="doc-card-action">Ver Detalles <i class="fa-solid fa-chevron-right" style="font-size:10px;"></i></span>
-                </div>
-            </div>
-        `;
     });
+
+    const formatearFecha = (raw, estado, peso) => {
+        if (estado === 'APROBADO') {
+            try {
+                if (!raw) return 'Aprobado recientemente';
+                const date = new Date(raw);
+                if (isNaN(date.getTime())) return `Aprobado el ${raw.split('T')[0]}`;
+                const isEn = typeof getIdiomaActual === 'function' && getIdiomaActual() === 'en';
+                const langCode = isEn ? 'en-US' : 'es-ES';
+                const dateStr = date.toLocaleDateString(langCode, { day: 'numeric', month: 'short', year: 'numeric' });
+                return `Aprobado el ${dateStr}`;
+            } catch (e) {
+                return 'Aprobado recientemente';
+            }
+        }
+        return `PDF - ${peso || '1.2'} MB`;
+    };
+
+    const catKeyMap = {
+        'IDENTIDAD Y GENERALES': 'cat_identidad',
+        'ANTECEDENTES ACADÉMICOS': 'cat_academico',
+        'EVALUACIÓN Y OTROS': 'cat_evaluacion'
+    };
+
+    for (const [catNombre, docsGrupo] of Object.entries(grupos)) {
+        if (docsGrupo.length === 0) continue;
+
+        const catTraducida = typeof t === 'function' ? (t(catKeyMap[catNombre]) || catNombre) : catNombre;
+        html += `<div style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; margin-top: 18px;">${catTraducida}</div>`;
+        html += `<div class="docs-grid-v2">`;
+
+        docsGrupo.forEach(doc => {
+            let badgeHtml = '';
+            let iconBg = '#eef2ff';
+            let iconColor = '#6366f1';
+            let iconClass = 'fa-file-lines';
+
+            const reqLower = (doc.requisitoNombre || '').toLowerCase();
+            if (reqLower.includes('acta') || reqLower.includes('ine') || reqLower.includes('identificación')) {
+                iconClass = 'fa-address-card';
+                iconBg = '#eef2ff';
+                iconColor = '#6366f1';
+            } else if (reqLower.includes('curp')) {
+                iconClass = 'fa-id-badge';
+                iconBg = '#eef2ff';
+                iconColor = '#6366f1';
+            } else if (reqLower.includes('título') || reqLower.includes('titulo') || reqLower.includes('grado')) {
+                iconClass = 'fa-graduation-cap';
+                iconBg = '#fef08a';
+                iconColor = '#a16207';
+            } else if (reqLower.includes('cédula') || reqLower.includes('cedula') || reqLower.includes('certificado')) {
+                iconClass = 'fa-certificate';
+                iconBg = '#fef08a';
+                iconColor = '#a16207';
+            } else if (reqLower.includes('idioma')) {
+                iconClass = 'fa-language';
+                iconBg = '#fef08a';
+                iconColor = '#a16207';
+            }
+
+            const numIntentos = doc.intentos || 1;
+
+            switch (doc.estadoValidacion) {
+                case 'APROBADO':
+                    badgeHtml = `<span class="doc-badge-aprobado">${typeof t === 'function' ? t('doc_aprobado') : 'APROBADO'}</span>`;
+                    break;
+                case 'RECHAZADO':
+                    badgeHtml = `<span class="doc-badge-rechazado">${typeof t === 'function' ? t('doc_rechazado') : 'RECHAZADO'}</span>`;
+                    break;
+                default:
+                    badgeHtml = `<span class="doc-badge-pendiente">${typeof t === 'function' ? t('doc_pendiente') : 'PENDIENTE'}</span>`;
+                    break;
+            }
+
+            const docDataStr = encodeURIComponent(JSON.stringify(doc));
+            const fechaSubidaStr = formatearFecha(doc.fechaSubida || doc.creadoEn || doc.fecha_actualizacion, doc.estadoValidacion, doc.peso || null);
+
+            html += `
+                <div class="doc-card-v2" onclick="abrirModalDoc('${docDataStr}')">
+                    <div class="doc-card-v2-header">
+                        <div class="doc-card-v2-icon" style="background: ${iconBg}; color: ${iconColor};">
+                            <i class="fa-solid ${iconClass}"></i>
+                        </div>
+                        <div>
+                            <div class="doc-card-v2-title">${doc.requisitoNombre ? (typeof t === 'function' ? t(doc.requisitoNombre) : doc.requisitoNombre) : (typeof t === 'function' ? t('doc_doc_adjunto') : 'Documento adjunto')}</div>
+                            <div class="doc-card-v2-date">${fechaSubidaStr}</div>
+                        </div>
+                    </div>
+                    <div class="doc-card-v2-footer">
+                        ${badgeHtml}
+                        <span class="doc-action-ver">${typeof t === 'function' ? t('doc_ver_doc') : 'Ver Documento'}</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+    }
 
     container.innerHTML = html;
 }
@@ -923,8 +1271,8 @@ function abrirModalDoc(docStr) {
     try {
         const doc = JSON.parse(decodeURIComponent(docStr));
 
-        document.getElementById('modal-doc-titulo').innerText = 'Detalles del Documento';
-        document.getElementById('modal-doc-requisito').innerText = doc.requisitoNombre || 'Documento adjunto';
+        document.getElementById('modal-doc-titulo').innerText = typeof t === 'function' ? t('doc_detalles') : 'Detalles del Documento';
+        document.getElementById('modal-doc-requisito').innerText = doc.requisitoNombre ? (typeof t === 'function' ? t(doc.requisitoNombre) : doc.requisitoNombre) : (typeof t === 'function' ? t('doc_doc_adjunto') : 'Documento adjunto');
 
         const numIntentos = doc.intentos || 1;
         const badge = document.getElementById('modal-doc-estado');
@@ -938,16 +1286,22 @@ function abrirModalDoc(docStr) {
         if (doc.historial && doc.historial.length > 0) {
             let historialHtml = '';
             doc.historial.forEach((h, idx) => {
-                const iconoState = h.estadoValidacion === 'APROBADO' ? 'fa-circle-check' : (h.estadoValidacion === 'RECHAZADO' ? 'fa-circle-xmark' : 'fa-clock');
+                let comTxt = h.comentarios || (typeof t === 'function' ? t('doc_sin_obs') : 'Sin observaciones por parte del evaluador en esta solicitud.');
                 const colorState = h.estadoValidacion === 'APROBADO' ? '#10b981' : (h.estadoValidacion === 'RECHAZADO' ? '#ef4444' : '#f59e0b');
-                const comTxt = (h.comentarios && h.comentarios.trim() !== '') ? h.comentarios : 'Sin observaciones por parte del evaluador en este intento.';
+
+                let stateText = h.estadoValidacion;
+                if (typeof t === 'function') {
+                    if (stateText === 'APROBADO') stateText = t('doc_aprobado');
+                    else if (stateText === 'RECHAZADO') stateText = t('doc_rechazado');
+                    else stateText = t('doc_pendiente');
+                }
 
                 historialHtml += `
                     <div style="margin-bottom: 12px; padding-bottom: 10px; ${idx < doc.historial.length - 1 ? 'border-bottom: 1px dashed #cbd5e1;' : ''}">
-                        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: ${colorState};">
-                            <span><i class="fa-solid ${iconoState}"></i> Intento ${h.intentos} - ${h.estadoValidacion}</span>
+                        <div class="modal-doc-comments-title" style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 2px;">
+                            <span>${typeof t === 'function' ? t('doc_solicitud') : 'Solicitud'} ${h.intentos} - ${stateText}</span>
                         </div>
-                        <p style="margin: 0; font-size: 13.5px; color: #334155; line-height: 1.4; white-space: pre-wrap;">${comTxt}</p>
+                        <p class="modal-doc-comments-text" style="margin: 0; font-size: 13.5px; line-height: 1.4; white-space: pre-wrap;">${comTxt}</p>
                     </div>
                 `;
             });
@@ -956,14 +1310,12 @@ function abrirModalDoc(docStr) {
 
         if (doc.estadoValidacion === 'APROBADO') {
             badge.classList.add('status-aprobado');
-            badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Aprobado';
-            if (comentariosWrapper) comentariosWrapper.style.borderLeftColor = '#10b981';
+            badge.innerHTML = `<i class="fa-solid"></i> ${typeof t === 'function' ? t('doc_aprobado') : 'Aprobado'}`;
             if (resubirContainer) resubirContainer.style.display = 'none';
 
         } else if (doc.estadoValidacion === 'RECHAZADO') {
             badge.classList.add('status-rechazado');
-            badge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Rechazado en el Intento ${numIntentos}`;
-            if (comentariosWrapper) comentariosWrapper.style.borderLeftColor = '#ef4444';
+            badge.innerHTML = `<i class="fa-solid"></i> ${typeof t === 'function' ? t('doc_rechazado') : 'Rechazado'}`;
 
             if (resubirContainer) {
                 resubirContainer.style.display = 'block';
@@ -971,13 +1323,13 @@ function abrirModalDoc(docStr) {
                     const reqNombreSanitized = encodeURIComponent(doc.requisitoNombre || 'Documento');
                     resubirContainer.innerHTML = `
                         <button onclick="iniciarReSubidaDocumento(${doc.idDocumento}, '${reqNombreSanitized}', ${numIntentos})" style="background-color: #8a1c24; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; font-size: 15px; box-shadow: 0 4px 10px rgba(138, 28, 36, 0.2); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> Re-subir (Será tu Intento ${numIntentos + 1} de 3)
+                            <i class="fa-solid fa-cloud-arrow-up"></i> ${typeof t === 'function' ? t('doc_resubir_btn') : 'Re-subir'} ${typeof t === 'function' ? t('doc_intento_txt1') : '(Será tu Intento'} ${numIntentos + 1} ${typeof t === 'function' ? t('doc_intento_txt2') : 'de 3)'}
                         </button>
                     `;
                 } else {
                     resubirContainer.innerHTML = `
                         <div style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
-                            <i class="fa-solid fa-ban"></i> Se ha alcanzado el límite máximo de 3 intentos para este documento.
+                            <i class="fa-solid fa-ban"></i> ${typeof t === 'function' ? t('doc_limite_alcanzado') : 'Se ha alcanzado el límite máximo de 3 intentos para este documento.'}
                         </div>
                     `;
                 }
@@ -985,8 +1337,7 @@ function abrirModalDoc(docStr) {
 
         } else {
             badge.classList.add('status-pendiente');
-            badge.innerHTML = '<i class="fa-solid fa-clock"></i> En Revisión';
-            if (comentariosWrapper) comentariosWrapper.style.borderLeftColor = '#f59e0b';
+            badge.innerHTML = '<i class="fa-solid fa-clock"></i> ' + (typeof t === 'function' ? t('doc_en_revision') : 'En Revisión');
             if (resubirContainer) resubirContainer.style.display = 'none';
         }
 
@@ -1194,47 +1545,23 @@ async function finalizarProcesoEstaciones() {
     switchView('proceso');
 }
 
-// Base de datos local simulada para el estatus de los documentos del alumno
-let estadosDocumentos = {
-    acta: 'pendiente',
-    ine: 'pendiente',
-    certificado: 'pendiente',
-    cartas: 'pendiente',
-    ceneval: 'pendiente'
-};
-
 /**
- * Cambia el estado de un documento concreto y dispara el rediseño de la gráfica
+ * Actualiza la gráfica de proceso con datos reales del expediente
+ * @param {number} aprobados - Documentos aprobados
+ * @param {number} rechazados - Documentos rechazados
+ * @param {number} total - Total de documentos
  */
-function cambiarEstadoDocumento(documento, nuevoEstado) {
-    estadosDocumentos[documento] = nuevoEstado;
-    actualizarGraficaProceso();
-}
-
-/**
- * Procesa matemáticamente las proporciones y redibuja la gráfica mediante CSS dinámico
- */
-function actualizarGraficaProceso() {
-    let totalDocs = 5;
-    let aprobados = 0;
-    let rechazados = 0;
-    let pendientes = 0;
-
-    for (let doc in estadosDocumentos) {
-        if (estadosDocumentos[doc] === 'aprobado') aprobados++;
-        else if (estadosDocumentos[doc] === 'rechazado') rechazados++;
-        else pendientes++;
-    }
+function actualizarGraficaProceso(aprobados = 0, rechazados = 0, total = 5) {
+    const pendientes = total - aprobados - rechazados;
 
     if (document.getElementById('lbl-aprobados')) document.getElementById('lbl-aprobados').innerText = aprobados;
     if (document.getElementById('lbl-rechazados')) document.getElementById('lbl-rechazados').innerText = rechazados;
     if (document.getElementById('lbl-pendientes')) document.getElementById('lbl-pendientes').innerText = pendientes;
 
-    let porcAprobado = (aprobados / totalDocs) * 100;
-    let porcRechazado = (rechazados / totalDocs) * 100;
-
-    let finAprobados = porcAprobado;
-    let finRechazados = finAprobados + porcRechazado;
+    const porcAprobado = total > 0 ? (aprobados / total) * 100 : 0;
+    const porcRechazado = total > 0 ? (rechazados / total) * 100 : 0;
+    const finAprobados = porcAprobado;
+    const finRechazados = finAprobados + porcRechazado;
 
     const grafica = document.getElementById('grafica-pastel');
     if (grafica) {
@@ -1257,17 +1584,24 @@ function actualizarGraficaProceso() {
 function regresarAConvocatorias() {
 
 
-    // 1. Volvemos a mostrar el contenedor con las dos tarjetas originales
-    document.getElementById('seleccion-programa').style.display = 'flex';
+    const panelSeleccion = document.getElementById('seleccion-programa');
+    const panelListaAbierta = document.getElementById('lista-programas-abiertos');
 
-    // 2. Ocultamos la lista detallada y el botón de regreso
-    document.getElementById('lista-programas-abiertos').style.display = 'none';
+    if (panelListaAbierta) {
+        panelListaAbierta.style.display = 'none';
+        panelListaAbierta.classList.remove('fade-in');
+    }
+
+    if (panelSeleccion) {
+        panelSeleccion.style.display = 'flex';
+        void panelSeleccion.offsetWidth;
+        panelSeleccion.classList.add('fade-in');
+    }
 
     // 3. Ocultar la pestaña de documentos si nos regresamos
-    const navDocumentos = document.getElementById('nav-documentos');
+    const navDocumentos = document.getElementById('li-nav-documentos');
     if (navDocumentos) {
         navDocumentos.style.display = 'none';
-        navDocumentos.classList.add('hidden');
     }
 }
 
@@ -1282,7 +1616,7 @@ function bloquearConvocatorias(soliData = null) {
     if (lista) lista.style.display = 'none';
     if (bloqueo) {
         bloqueo.style.display = 'block';
-        
+
         // Si pasamos los datos, dibujamos la tarjeta con info
         if (soliData && soliData.convocatoriaTitulo) {
             // Función robusta para formatear fechas y evitar el "1899" o "0000-00-00"
@@ -1290,11 +1624,11 @@ function bloquearConvocatorias(soliData = null) {
                 if (!dateStr || dateStr.startsWith('0000-00-00')) return 'Por definir';
                 const d = new Date(dateStr);
                 if (isNaN(d.getTime()) || d.getFullYear() < 2000) return 'Por definir';
-                
+
                 const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
                 return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
             };
-            
+
             const titulo = soliData.convocatoriaTitulo || 'Convocatoria Activa';
             const nivel = soliData.nivel === 'DOCTORADO' ? 'Doctorado' : 'Maestría';
             const opcionElegida = soliData.opcionElegida ? soliData.opcionElegida : 'Programa General';
@@ -1304,10 +1638,10 @@ function bloquearConvocatorias(soliData = null) {
                 const entInicio = formatDateSafe(soliData.fechaEntrevistaInicio);
                 const entFin = formatDateSafe(soliData.fechaEntrevistaFin);
                 const entRango = (entInicio !== 'Por definir') ? `${entInicio} ${entFin !== 'Por definir' ? 'al ' + entFin : ''}` : 'Por definir';
-                
+
                 entrevistasHtml = `<li><i class="fa-solid fa-comments" style="color:var(--color-guinda); margin-right:8px; width:16px;"></i> Entrevistas: <strong>${entRango}</strong></li>`;
             }
-            
+
             const infoHtml = `
                 <style>
                     .slide-view {
@@ -1315,13 +1649,13 @@ function bloquearConvocatorias(soliData = null) {
                         transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
                     }
                 </style>
-                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 40px; text-align: center; width: 100%; margin: 20px 0; box-shadow: var(--shadow-sm); font-family: 'Inter', Arial, sans-serif; overflow: hidden;">
+                <div style="background: var(--color-card-bg); border: none; border-radius: 12px; padding: 40px; text-align: center; width: 100%; max-width: 900px; margin: 20px auto; box-shadow: var(--shadow-md); font-family: 'Inter', Arial, sans-serif; overflow: hidden;">
                     
-                    <div style="background: #fcf0f1; border: 1px solid #f3d8da; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                        <i class="fa-solid fa-lock" style="font-size: 24px; color: var(--color-guinda);"></i>
+                    <div style="background: #fef3c7; border: 1px solid #fcd34d; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                        <i class="fa-solid fa-arrows-rotate fa-spin-pulse" style="font-size: 24px; color: #d97706; --fa-animation-duration: 3s;"></i>
                     </div>
                     
-                    <h3 style="font-size: 22px; font-weight: 700; color: var(--color-primary); margin-bottom: 20px;">Trámite de Admisión en Curso</h3>
+                    <h3 style="font-size: 22px; font-weight: 700; color: var(--color-text); margin-bottom: 20px;">${typeof t === 'function' ? t('conv_tramite_curso') : 'Trámite de Admisión en Curso'}</h3>
                     
                     <!-- CONTENEDOR SLIDER HORIZONTAL -->
                     <div style="display: grid; width: 100%;">
@@ -1329,63 +1663,63 @@ function bloquearConvocatorias(soliData = null) {
                         <!-- VISTA A: Resumen -->
                         <div id="view-a" class="slide-view" style="transform: translateX(0); opacity: 1;">
                             <p style="font-size: 15px; color: var(--color-text); line-height: 1.6; margin-bottom: 25px; max-width: 800px; margin-left: auto; margin-right: auto;">
-                                Actualmente estás participando en el proceso de selección institucional para el:<br>
-                                <strong style="color: var(--color-primary); font-size: 16px; display: inline-block; margin-top: 8px;">Programa de ${nivel} en Ciencias en Ingeniería Eléctrica</strong><br>
-                                <span style="font-size: 14px; color: #64748b;">Opción seleccionada: <strong>${opcionElegida}</strong></span>
+                                ${typeof t === 'function' ? t('conv_participando') : 'Actualmente estás participando en el proceso de selección institucional para el:'}<br>
+                                <strong style="color: var(--color-text); font-size: 16px; display: inline-block; margin-top: 8px;">Programa de ${nivel} en Ciencias en Ingeniería Eléctrica</strong><br>
+                                <span style="font-size: 14px; color: var(--color-text-muted);">${typeof t === 'function' ? t('conv_opcion_sel') : 'Opción seleccionada:'} <strong>${opcionElegida}</strong></span>
                             </p>
                             
-                            <button class="btn-primary" onclick="switchView('documentos')" style="padding: 12px 30px; border-radius: 6px; font-size: 15px; font-weight: 500; margin-bottom: 25px; min-width: 250px;">
-                                <i class="fa-solid fa-folder-open" style="margin-right: 8px;"></i> Continuar mi Trámite
+                            <button class="btn-primary" onclick="switchView('documentos')" style="background-color: #1e293b; color: #ffffff; padding: 12px 30px; border-radius: 6px; font-size: 15px; font-weight: 600; margin-bottom: 25px; min-width: 250px; border: none; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#0f172a'" onmouseout="this.style.backgroundColor='#1e293b'">
+                                <i class="fa-solid fa-arrow-right" style="margin-right: 8px;"></i> ${typeof t === 'function' ? t('conv_btn_continuar') : 'Continuar mi Trámite'}
                             </button>
                             
                             <div>
-                                <button onclick="document.getElementById('view-a').style.transform = 'translateX(-100%)'; document.getElementById('view-a').style.opacity = '0'; document.getElementById('view-a').style.pointerEvents = 'none'; document.getElementById('view-b').style.transform = 'translateX(0)'; document.getElementById('view-b').style.opacity = '1'; document.getElementById('view-b').style.pointerEvents = 'auto';" style="background: none; border: none; color: var(--color-guinda); font-size: 14px; font-weight: 600; cursor: pointer; padding: 5px;">
-                                    Ver fechas y detalles del proceso <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i>
+                                <button onclick="mostrarVistaDetalles()" style="background: none; border: none; color: var(--color-info); font-size: 14px; font-weight: 600; cursor: pointer; padding: 5px; transition: color 0.2s;" onmouseover="this.style.color='var(--color-primary-hover)'" onmouseout="this.style.color='var(--color-info)'">
+                                    ${typeof t === 'function' ? t('conv_btn_fechas') : 'Ver fechas y detalles del proceso'} <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i>
                                 </button>
                             </div>
                         </div>
 
                         <!-- VISTA B: Detalles -->
                         <div id="view-b" class="slide-view" style="transform: translateX(100%); opacity: 0; pointer-events: none; text-align: left;">
-                            <div style="display: flex; gap: 30px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; justify-content: center;">
-                                <div><i class="fa-solid fa-clock" style="color:var(--color-primary);"></i> Duración: <strong>${soliData.duracion || '4'} semestres</strong></div>
-                                <div><i class="fa-solid fa-globe" style="color:var(--color-primary);"></i> Modalidad: <strong>${soliData.modalidad || 'Escolarizada'}</strong></div>
+                            <div style="display: flex; gap: 30px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--color-border); justify-content: center;">
+                                <div><i class="fa-solid fa-clock" style="color:var(--color-text-muted);"></i> <span style="color:var(--color-text-muted);">${typeof t === 'function' ? t('conv_duracion') : 'Duración:'}</span> <strong style="color:var(--color-text);">${soliData.duracion || '4'} semestres</strong></div>
+                                <div><i class="fa-solid fa-globe" style="color:var(--color-text-muted);"></i> <span style="color:var(--color-text-muted);">${typeof t === 'function' ? t('conv_modalidad') : 'Modalidad:'}</span> <strong style="color:var(--color-text);">${soliData.modalidad || 'Escolarizada'}</strong></div>
                             </div>
                             
                             <div style="display: flex; justify-content: space-between; gap: 15px; text-align: left; width: 100%; margin-bottom: 25px;">
-                                <div style="background: var(--color-bg); border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; flex: 1;">
-                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-circle-check" style="color:var(--color-guinda);"></i> Apertura</span>
-                                    <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fecha_inicio)}</div>
+                                <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; flex: 1;">
+                                    <span style="font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-circle-check" style="color:var(--color-text-muted);"></i> ${typeof t === 'function' ? t('conv_apertura') : 'Apertura'}</span>
+                                    <div style="font-size: 14px; margin-top: 6px; color: var(--color-text); font-weight: 600;">${formatDateSafe(soliData.fecha_inicio)}</div>
                                 </div>
-                                <div style="background: var(--color-bg); border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; flex: 1;">
-                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-file-arrow-up" style="color:var(--color-guinda);"></i> Documentos</span>
-                                    <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fechaFinDocumentos)}</div>
+                                <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; flex: 1;">
+                                    <span style="font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-file-arrow-up" style="color:var(--color-text-muted);"></i> ${typeof t === 'function' ? t('conv_docs') : 'Documentos'}</span>
+                                    <div style="font-size: 14px; margin-top: 6px; color: var(--color-text); font-weight: 600;">${formatDateSafe(soliData.fechaFinDocumentos)}</div>
                                 </div>
                                 ${nivel === 'Doctorado' ? `
-                                <div style="background: var(--color-bg); border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; flex: 1;">
-                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-comments" style="color:var(--color-guinda);"></i> Entrevistas</span>
-                                    <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fechaEntrevistaInicio)}</div>
+                                <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; flex: 1;">
+                                    <span style="font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-comments" style="color:var(--color-text-muted);"></i> ${typeof t === 'function' ? t('conv_entrevistas') : 'Entrevistas'}</span>
+                                    <div style="font-size: 14px; margin-top: 6px; color: var(--color-text); font-weight: 600;">${formatDateSafe(soliData.fechaEntrevistaInicio)}</div>
                                 </div>` : ''}
-                                <div style="background: var(--color-bg); border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; flex: 1;">
-                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-bullhorn" style="color:var(--color-guinda);"></i> Resultados</span>
-                                    <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fecha_resultados)}</div>
+                                <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; flex: 1;">
+                                    <span style="font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-bullhorn" style="color:var(--color-text-muted);"></i> ${typeof t === 'function' ? t('conv_resultados') : 'Resultados'}</span>
+                                    <div style="font-size: 14px; margin-top: 6px; color: var(--color-text); font-weight: 600;">${formatDateSafe(soliData.fecha_resultados)}</div>
                                 </div>
-                                <div style="background: var(--color-bg); border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; flex: 1;">
-                                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-calendar-days" style="color:var(--color-guinda);"></i> Semestre</span>
-                                    <div style="font-size: 14px; margin-top: 6px; color: var(--color-primary); font-weight: 600;">${formatDateSafe(soliData.fechaInicioEscolar)}</div>
+                                <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; flex: 1;">
+                                    <span style="font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: bold;"><i class="fa-solid fa-calendar-days" style="color:var(--color-text-muted);"></i> ${typeof t === 'function' ? t('conv_semestre') : 'Semestre'}</span>
+                                    <div style="font-size: 14px; margin-top: 6px; color: var(--color-text); font-weight: 600;">${formatDateSafe(soliData.fechaInicioEscolar)}</div>
                                 </div>
                             </div>
 
-                            <div style="text-align: center;">
-                                <button onclick="document.getElementById('view-b').style.transform = 'translateX(100%)'; document.getElementById('view-b').style.opacity = '0'; document.getElementById('view-b').style.pointerEvents = 'none'; document.getElementById('view-a').style.transform = 'translateX(0)'; document.getElementById('view-a').style.opacity = '1'; document.getElementById('view-a').style.pointerEvents = 'auto';" style="background: none; border: none; color: var(--color-guinda); font-size: 14px; font-weight: 600; cursor: pointer; padding: 5px;">
-                                    <i class="fa-solid fa-arrow-left" style="margin-right: 5px;"></i> Volver al resumen
+                            <div style="text-align: center; margin-top: 30px;">
+                                <button onclick="ocultarVistaDetalles()" style="background: none; border: none; color: var(--color-text-muted); font-size: 14px; font-weight: 600; cursor: pointer; padding: 10px; transition: color 0.2s;" onmouseover="this.style.color='var(--color-text)'" onmouseout="this.style.color='var(--color-text-muted)'">
+                                    <i class="fa-solid fa-arrow-left" style="margin-right: 5px;"></i> ${typeof t === 'function' ? t('conv_volver_resumen') : 'Volver al resumen'}
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
-            
+
             let infoContainer = document.getElementById('bloqueo-info-convocatoria');
             if (!infoContainer) {
                 infoContainer = document.createElement('div');
@@ -1432,16 +1766,16 @@ async function cancelarSolicitudActual() {
             if (bloqueo) bloqueo.style.display = 'none';
 
             // Ocultar sección de documentos
-            document.getElementById('nav-documentos').classList.add('hidden');
+            document.getElementById('li-nav-documentos').style.display = 'none';
 
             // Regresar a la vista de convocatorias
             switchView('convocatorias');
         } else {
-            alert("Hubo un error al cancelar la solicitud.");
+            Swal.fire('Error', 'Hubo un error al cancelar la solicitud.', 'error');
         }
     } catch (e) {
         console.error(e);
-        alert("Error de red al intentar cancelar.");
+        Swal.fire('Error', 'Error de red al intentar cancelar.', 'error');
     }
 }
 
@@ -1460,10 +1794,10 @@ async function cargarModalidadesAdmision() {
                 const checkedStr = index === 0 ? 'checked' : '';
 
                 contenedor.innerHTML += `
-                    <label class="radio-card" style="display:block; flex: 1 1 220px; min-width: 220px; position:relative; padding:20px; border-radius:10px; border:2px dashed #8a1c24; cursor:pointer; text-align:center; background-color:#f8f9fa; margin: 10px;">
+                    <label class="radio-card" style="display:block; flex: 1 1 220px; min-width: 220px; position:relative; padding:20px; border-radius:10px; border:2px dashed var(--color-guinda); cursor:pointer; text-align:center; background-color: var(--color-card-bg); margin: 10px;">
                         <input type="radio" name="modalidad" value="${mod}" ${checkedStr} onchange="actualizarCostosAdmision()" style="position:absolute; opacity:0; width:0; height:0;">
                         <div class="radio-content" style="pointer-events:none;">
-                            <strong style="display:block; font-size:16px; color:#8a1c24; margin-bottom:5px;">${index + 1}. ${titulo}</strong>
+                            <strong style="display:block; font-size:16px; color: var(--color-guinda); margin-bottom:5px;">${index + 1}. ${typeof t === 'function' ? t('mod_' + mod.toLowerCase()) : titulo}</strong>
                         </div>
                     </label>
                 `;
@@ -1522,11 +1856,11 @@ async function cargarRequisitosDocumentales(idConvocatoria) {
             verificarArchivosEstacion(3);
         } else {
             console.error('Error al cargar los requisitos de la convocatoria.');
-            alert('Error al cargar los requisitos de la convocatoria.');
+            Swal.fire('Error', 'Error al cargar los requisitos de la convocatoria.', 'error');
         }
     } catch (e) {
         console.error("Error cargando requisitos:", e);
-        alert('Error de conexión al cargar requisitos.');
+        Swal.fire('Error', 'Error de conexión al cargar requisitos.', 'error');
     }
 }
 
@@ -1540,10 +1874,9 @@ function hidratarUI(soliData) {
 
     // Desbloquear navegación
     bloquearConvocatorias(soliData);
-    const navDocumentos = document.getElementById('nav-documentos');
+    const navDocumentos = document.getElementById('li-nav-documentos');
     if (navDocumentos) {
         navDocumentos.style.display = 'block';
-        navDocumentos.classList.remove('hidden');
     }
 
     // Configurar paneles según el nivel
@@ -1556,7 +1889,7 @@ function hidratarUI(soliData) {
 
     // Bloquear si está en revisión, rechazado o aprobado
     if (['EN_REVISION', 'RECHAZADO', 'APROBADO'].includes(soliData.estado)) {
-        bloquearInterfazPorRevision();
+        bloquearInterfazPorRevision(soliData.estado);
     }
 }
 
@@ -1570,7 +1903,7 @@ function configurarPanelesNivel(nivel, idConvocatoria) {
     const boxCostos = document.getElementById('box-costos-desglose');
 
     if (nivel === "Doctorado") {
-        if (titulo) titulo.innerText = "Integración de Expediente: Doctorado FIE";
+        if (titulo) titulo.innerText = "Expediente: Doctorado FIE";
         if (document.getElementById('lbl-step-1')) document.getElementById('lbl-step-1').innerText = "Identidad y Generales";
         if (document.getElementById('lbl-step-2')) document.getElementById('lbl-step-2').innerText = "Académicos";
         if (document.getElementById('lbl-step-3')) document.getElementById('lbl-step-3').innerText = "Evaluación / Cartas";
@@ -1583,7 +1916,7 @@ function configurarPanelesNivel(nivel, idConvocatoria) {
         }
         if (document.getElementById('btn-next-0')) document.getElementById('btn-next-0').disabled = true;
     } else {
-        if (titulo) titulo.innerText = "Integración de Expediente: Maestría FIE";
+        if (titulo) titulo.innerText = "Expediente: Maestría FIE";
         if (document.getElementById('lbl-step-1')) document.getElementById('lbl-step-1').innerText = "Identidad y Generales";
         if (document.getElementById('lbl-step-2')) document.getElementById('lbl-step-2').innerText = "Académicos";
         if (document.getElementById('lbl-step-3')) document.getElementById('lbl-step-3').innerText = "Evaluación / Cartas";
@@ -1632,25 +1965,73 @@ document.addEventListener('change', function (e) {
 });
 
 /* ==========================================================================
+   Slider de Vista Convocatoria (Vista A / Vista B)
+   ========================================================================== */
+
+/**
+ * Muestra la vista B (detalles) del slider de convocatoria activa
+ */
+function mostrarVistaDetalles() {
+    const viewA = document.getElementById('view-a');
+    const viewB = document.getElementById('view-b');
+    if (!viewA || !viewB) return;
+    viewA.style.transform = 'translateX(-100%)';
+    viewA.style.opacity = '0';
+    viewA.style.pointerEvents = 'none';
+    viewB.style.transform = 'translateX(0)';
+    viewB.style.opacity = '1';
+    viewB.style.pointerEvents = 'auto';
+}
+
+/**
+ * Muestra la vista A (resumen) del slider de convocatoria activa
+ */
+function ocultarVistaDetalles() {
+    const viewA = document.getElementById('view-a');
+    const viewB = document.getElementById('view-b');
+    if (!viewA || !viewB) return;
+    viewB.style.transform = 'translateX(100%)';
+    viewB.style.opacity = '0';
+    viewB.style.pointerEvents = 'none';
+    viewA.style.transform = 'translateX(0)';
+    viewA.style.opacity = '1';
+    viewA.style.pointerEvents = 'auto';
+}
+
+/* ==========================================================================
    Carousel Logic (Aspirante Inicio)
    ========================================================================== */
 let currentSlide = 0;
-const slides = document.querySelectorAll('.carousel-slide');
-const totalSlides = slides.length;
-const track = document.getElementById('inicio-carousel-track');
-const indicators = document.querySelectorAll('#inicio-carousel-indicators .indicator');
+let totalSlides = 0;
+let carouselTrack = null;
+let carouselIndicators = [];
 let autoSlideInterval;
 
 function updateCarousel() {
-    if (!track) return;
-    track.style.transform = `translateX(-${currentSlide * 100}%)`;
-    indicators.forEach((ind, index) => {
+    if (!carouselTrack) return;
+    carouselTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+    carouselIndicators.forEach((ind, index) => {
         if (index === currentSlide) ind.classList.add('active');
         else ind.classList.remove('active');
     });
+
+    // Actualización dinámica de altura
+    const container = document.getElementById('inicio-carousel');
+    const slides = document.querySelectorAll('.carousel-slide img');
+    if (container && slides[currentSlide]) {
+        const activeImg = slides[currentSlide];
+        if (activeImg.complete) {
+            container.style.height = activeImg.clientHeight + 'px';
+        } else {
+            activeImg.onload = () => {
+                container.style.height = activeImg.clientHeight + 'px';
+            };
+        }
+    }
 }
 
 function moveCarousel(direction) {
+    if (totalSlides === 0) return;
     currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
     updateCarousel();
     resetAutoSlide();
@@ -1665,7 +2046,7 @@ function goToSlide(index) {
 function startAutoSlide() {
     autoSlideInterval = setInterval(() => {
         moveCarousel(1);
-    }, 5000); // Cambia de slide cada 5 segundos
+    }, 5000);
 }
 
 function resetAutoSlide() {
@@ -1673,7 +2054,37 @@ function resetAutoSlide() {
     startAutoSlide();
 }
 
-// Iniciar carrusel al cargar si existe
-if (track) {
-    startAutoSlide();
+// Iniciar carrusel después de que el DOM esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    carouselTrack = document.getElementById('inicio-carousel-track');
+    carouselIndicators = Array.from(document.querySelectorAll('#inicio-carousel-indicators .indicator'));
+    totalSlides = document.querySelectorAll('.carousel-slide').length;
+
+    if (carouselTrack && totalSlides > 0) {
+        // Asegurarse de que el primer slide asigne la altura inicial correctamente
+        const firstImg = document.querySelector('.carousel-slide img');
+        if (firstImg) {
+            if (firstImg.complete) {
+                updateCarousel();
+            } else {
+                firstImg.onload = () => updateCarousel();
+            }
+        } else {
+            updateCarousel();
+        }
+        startAutoSlide();
+    }
+});
+
+// ==========================================
+// FUNCIONES DEL PANEL LATERAL DE AJUSTES
+// ==========================================
+function abrirDrawerAjustes() {
+    document.getElementById('settings-drawer').classList.add('open');
+    document.getElementById('settings-drawer-overlay').classList.add('show');
+}
+
+function cerrarDrawerAjustes() {
+    document.getElementById('settings-drawer').classList.remove('open');
+    document.getElementById('settings-drawer-overlay').classList.remove('show');
 }
