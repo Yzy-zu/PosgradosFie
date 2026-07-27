@@ -113,12 +113,12 @@ async function cargarAspirantesAPI() {
 
                 return {
                     id: asp.id,
-                    nombre: `${asp.nombre || ''} ${asp.primerApellido || ''} ${asp.segundoApellido || ''}`.trim() || "Sin nombre",
-                    programa: sol ? sol.convocatoriaNombre : "Sin Solicitud",
-                    correo: asp.correo || "Sin correo",
+                    nombre: `${asp.nombre || ''} ${asp.primerApellido || ''} ${asp.segundoApellido || ''}`.trim() || (typeof t === 'function' ? t('docente_sin_nombre') : "Sin nombre"),
+                    programa: sol ? sol.convocatoriaNombre : (typeof t === 'function' ? t('docente_sin_solicitud') : "Sin Solicitud"),
+                    correo: asp.correo || (typeof t === 'function' ? t('docente_sin_correo') : "Sin correo"),
                     fechaRegistro: sol ? new Date(sol.creadoEn).toISOString().split('T')[0] : (asp.fechaNacimiento ? asp.fechaNacimiento.split('T')[0] : "N/A"),
                     mecanismo: sol ? sol.tipoAdmision.replace(/_/g, ' ') : "N/A",
-                    nivel: sol && sol.posgrado_id == 2 ? "Doctorado" : (sol && sol.posgrado_id == 1 ? "Maestría" : "Por asignar"),
+                    nivel: sol && sol.posgrado_id == 2 ? (typeof t === 'function' ? t('sb_doctorado') : "Doctorado") : (sol && sol.posgrado_id == 1 ? (typeof t === 'function' ? t('sb_maestria') : "Maestría") : (typeof t === 'function' ? t('docente_por_asignar') : "Por asignar")),
                     documentos: docList
                 };
             });
@@ -304,11 +304,11 @@ function renderizarListaAspirantes(lista) {
 
         let badgeHtml = "";
         if (tieneRechazados) {
-            badgeHtml = `<span class="badge badge-rechazado">Rechazado / Inc.</span>`;
+            badgeHtml = `<span class="badge badge-rechazado">${typeof t === 'function' ? t('docente_estado_incompletos') : 'Rechazado / Inc.'}</span>`;
         } else if (tienePendientes) {
-            badgeHtml = `<span class="badge badge-pendiente">Pendiente (${asp.documentos.filter(d => d.estado === 'pendiente').length})</span>`;
+            badgeHtml = `<span class="badge badge-pendiente">${typeof t === 'function' ? t('docente_estado_pendientes') : 'Pendiente'} (${asp.documentos.filter(d => d.estado === 'pendiente').length})</span>`;
         } else {
-            badgeHtml = `<span class="badge badge-aprobado">Exp. Completo</span>`;
+            badgeHtml = `<span class="badge badge-aprobado">${typeof t === 'function' ? t('docente_completos') : 'Exp. Completo'}</span>`;
         }
 
         const item = document.createElement('div');
@@ -317,7 +317,7 @@ function renderizarListaAspirantes(lista) {
 
         item.innerHTML = `
             <h4>${asp.nombre}</h4>
-            <p><strong>Nivel:</strong> ${asp.nivel}</p>
+            <p><strong>${typeof t === 'function' ? t('det_nivel') || 'Nivel' : 'Nivel'}:</strong> ${asp.nivel}</p>
             <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${asp.programa}</p>
             ${badgeHtml}
         `;
@@ -357,13 +357,13 @@ function seleccionarAspirante(id) {
     badgeEstado.className = "badge";
     if (tieneRechazados) {
         badgeEstado.classList.add('badge-rechazado');
-        badgeEstado.innerText = "Rechazado / Incompleto";
+        badgeEstado.innerText = typeof t === 'function' ? t('docente_estado_incompletos') : "Rechazado / Incompleto";
     } else if (tienePendientes) {
         badgeEstado.classList.add('badge-pendiente');
-        badgeEstado.innerText = "Pendiente de Revisión";
+        badgeEstado.innerText = typeof t === 'function' ? t('docente_estado_pendientes') : "Pendiente de Revisión";
     } else {
         badgeEstado.classList.add('badge-aprobado');
-        badgeEstado.innerText = "Expediente Completo";
+        badgeEstado.innerText = typeof t === 'function' ? t('docente_completos') : "Expediente Completo";
     }
 
     // Ocultar previsualización de documentos previos
@@ -415,11 +415,11 @@ function seleccionarAspirante(id) {
         }
 
         if (doc.estado === 'aprobado') {
-            badgeHtml = `<span class="doc-badge-aprobado"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> APROBADO</span>`;
+            badgeHtml = `<span class="doc-badge-aprobado"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> ${typeof t === 'function' ? t('doc_aprobado') : 'APROBADO'}</span>`;
         } else if (doc.estado === 'rechazado') {
-            badgeHtml = `<span class="doc-badge-rechazado"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> RECHAZADO</span>`;
+            badgeHtml = `<span class="doc-badge-rechazado"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> ${typeof t === 'function' ? t('doc_rechazado') : 'RECHAZADO'}</span>`;
         } else {
-            badgeHtml = `<span class="doc-badge-pendiente"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> PENDIENTE</span>`;
+            badgeHtml = `<span class="doc-badge-pendiente"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> ${typeof t === 'function' ? t('doc_pendiente') : 'PENDIENTE'}</span>`;
         }
 
         html += `
@@ -429,13 +429,13 @@ function seleccionarAspirante(id) {
                         <i class="fa-solid ${iconClass}"></i>
                     </div>
                     <div>
-                        <div class="doc-card-v2-title">${doc.nombre || 'Documento adjunto'}</div>
-                        <div class="doc-card-v2-date">${doc.estado === 'aprobado' ? 'Aprobado recientemente' : 'Evaluar Documento'}</div>
+                        <div class="doc-card-v2-title">${doc.nombre || 'Documento'}</div>
+                        <div class="doc-card-v2-date">${doc.estado === 'aprobado' ? (typeof t === 'function' ? t('doc_subido_reciente') : 'Aprobado') : (typeof t === 'function' ? t('docente_btn_evaluar') : 'Evaluar Documento')}</div>
                     </div>
                 </div>
                 <div class="doc-card-v2-footer">
                     ${badgeHtml}
-                    <span class="doc-action-ver">Ver Documento</span>
+                    <span class="doc-action-ver">${typeof t === 'function' ? t('doc_ver_doc') : 'Ver Documento'}</span>
                 </div>
             </div>
         `;
@@ -664,11 +664,11 @@ async function aprobarDocumentoModal() {
             });
         } else {
             const err = await res.json();
-            alert("No se pudo aprobar el documento: " + (err.mensaje || "Error"));
+            alert((typeof t === 'function' ? t('docente_err_aprobar') : "No se pudo aprobar el documento: ") + (err.mensaje || "Error"));
         }
     } catch (e) {
         console.error("Error al aprobar documento:", e);
-        alert("Ocurrió un error al comunicarse con el servidor.");
+        alert(typeof t === 'function' ? t('docente_err_servidor') : "Ocurrió un error al comunicarse con el servidor.");
     }
 }
 
@@ -677,7 +677,7 @@ async function rechazarDocumentoModal() {
     const noteText = document.getElementById('eval-modal-nota').value.trim();
 
     if (noteText === "") {
-        alert("Por favor, ingresa el motivo detallado del rechazo.");
+        alert(typeof t === 'function' ? t('docente_err_motivo') : "Por favor, ingresa el motivo detallado del rechazo.");
         return;
     }
 
@@ -715,11 +715,11 @@ async function rechazarDocumentoModal() {
             });
         } else {
             const err = await res.json();
-            alert("No se pudo rechazar el documento: " + (err.mensaje || "Error"));
+            alert((typeof t === 'function' ? t('docente_err_rechazar') : "No se pudo rechazar el documento: ") + (err.mensaje || "Error"));
         }
     } catch (e) {
         console.error("Error al rechazar documento:", e);
-        alert("Ocurrió un error al comunicarse con el servidor.");
+        alert(typeof t === 'function' ? t('docente_err_servidor') : "Ocurrió un error al comunicarse con el servidor.");
     }
 }
 
@@ -874,10 +874,10 @@ function abrirModalPerfilDocente() {
     const d = window.docenteData;
     const iniciales = (d.nombre.charAt(0) + (d.primerApellido ? d.primerApellido.charAt(0) : '')).toUpperCase();
 
-    const noReg = 'No registrado';
+    const noReg = typeof t === 'function' ? t('prof_no_reg') : 'No registrado';
 
     Swal.fire({
-        title: 'Mi Perfil',
+        title: typeof t === 'function' ? t('docente_perfil') : 'Mi Perfil',
         html: `
             <div style="text-align: left; font-size: 14px; line-height: 1.5; color: var(--color-text); padding-right: 15px;">
                 <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--color-border);">
@@ -886,25 +886,25 @@ function abrirModalPerfilDocente() {
                     </div>
                     <div style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start;">
                         <h4 style="margin: 0; color: var(--color-text); font-size: 18px; text-transform: capitalize; line-height: 1.2;">${d.nombre} ${d.primerApellido || ''} ${d.segundoApellido || ''}</h4>
-                        <span style="background: #fce7f3; color: #be185d; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-top: 6px; letter-spacing: 0.5px;">Docente / Revisor</span>
+                        <span style="background: #fce7f3; color: #be185d; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-top: 6px; letter-spacing: 0.5px;">${typeof t === 'function' ? t('docente_revisor') : 'Docente / Revisor'}</span>
                     </div>
                 </div>
 
-                <h5 class="profile-section-title"><i class="fa-solid fa-address-card"></i> Datos de Contacto</h5>
+                <h5 class="profile-section-title"><i class="fa-solid fa-address-card"></i> ${typeof t === 'function' ? t('docente_info_contacto') : 'Datos de Contacto'}</h5>
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 15px; margin-bottom: 25px;">
-                    <div class="profile-info-box"><span class="profile-info-label">Correo</span> <span class="profile-info-value" style="text-transform: none;">${usuario.correo}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_correo') : 'Correo'}</span> <span class="profile-info-value" style="text-transform: none;">${usuario.correo}</span></div>
                 </div>
                 
-                <h5 class="profile-section-title"><i class="fa-solid fa-graduation-cap"></i> Información Académica</h5>
+                <h5 class="profile-section-title"><i class="fa-solid fa-graduation-cap"></i> ${typeof t === 'function' ? t('docente_info_academica') : 'Información Académica'}</h5>
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 15px; margin-bottom: 25px;">
-                    <div class="profile-info-box"><span class="profile-info-label">Cargo</span> <span class="profile-info-value" style="text-transform: capitalize;">${d.cargo || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">Especialidad</span> <span class="profile-info-value" style="text-transform: capitalize;">${d.especialidad || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">Cubículo</span> <span class="profile-info-value">${d.cubiculo || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('docente_cargo') : 'Cargo'}</span> <span class="profile-info-value" style="text-transform: capitalize;">${d.cargo || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('docente_especialidad') : 'Especialidad'}</span> <span class="profile-info-value" style="text-transform: capitalize;">${d.especialidad || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('docente_cubiculo') : 'Cubículo'}</span> <span class="profile-info-value">${d.cubiculo || noReg}</span></div>
                 </div>
             </div>
         `,
         showConfirmButton: true,
-        confirmButtonText: 'Cerrar',
+        confirmButtonText: typeof t === 'function' ? t('docente_modal_cerrar') : 'Cerrar',
         buttonsStyling: false,
         width: '900px',
         customClass: {
