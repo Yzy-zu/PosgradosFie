@@ -11,6 +11,7 @@
     --color-danger: #ef4444;
     --color-info: #3b82f6;
     --color-card-bg: #ffffff;
+    --color-card-bg-glass: rgba(255, 255, 255, 0.8);
     --color-border: #e2e8f0;
     --color-input-bg: #ffffff;
 
@@ -33,6 +34,7 @@ body.dark-mode {
     /* Azul brillante */
     --color-primary-hover: #60a5fa;
     --color-card-bg: #1e293b;
+    --color-card-bg-glass: rgba(30, 41, 59, 0.8);
     /* Slate 800 - Tarjetas y Paneles elevados */
     --color-border: #334155;
     /* Slate 700 - Bordes suaves */
@@ -1450,29 +1452,29 @@ body {
 /* Scrollbar styling */
 .aspirantes-list::-webkit-scrollbar,
 .aspirante-detail::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 
 .aspirantes-list::-webkit-scrollbar-track,
 .aspirante-detail::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: transparent;
 }
 
 .aspirantes-list::-webkit-scrollbar-thumb,
 .aspirante-detail::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 3px;
+    background: rgba(128, 128, 128, 0.4);
+    border-radius: 4px;
 }
 
 .aspirantes-list::-webkit-scrollbar-thumb:hover,
 .aspirante-detail::-webkit-scrollbar-thumb:hover {
-    background: #8a1c24;
+    background: rgba(128, 128, 128, 0.6);
 }
 
 .aspirante-item {
     padding: 12px;
-    background: #f9f9f9;
-    border: 1px solid #e0e0e0;
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-border);
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -1483,27 +1485,28 @@ body {
 }
 
 .aspirante-item:hover {
-    background: #f5f5f5;
-    border-color: #c0c0c0;
+    background: var(--color-bg);
+    border-color: var(--color-border);
     transform: translateY(-1px);
 }
 
 .aspirante-item.active {
-    background: #fdf5f6;
-    border-color: #8a1c24;
-    border-left: 4px solid #8a1c24;
+    background: var(--color-bg);
+    border-color: var(--color-border);
+    border-left: 4px solid var(--color-info);
 }
 
 .aspirante-item h4 {
     margin: 0;
     font-size: 14px;
-    color: #1a1f2c;
+    color: var(--color-text);
+    text-transform: capitalize;
 }
 
 .aspirante-item p {
     margin: 0;
     font-size: 11px;
-    color: #666;
+    color: var(--color-text-muted);
 }
 
 .aspirante-item .badge {
@@ -1571,7 +1574,11 @@ body {
 }
 
 .info-block strong {
-    color: #333;
+    color: var(--color-text-muted);
+}
+
+#det-nombre {
+    text-transform: capitalize;
 }
 
 /* Badges de Estado */
@@ -1959,15 +1966,15 @@ body {
 }
 
 .doc-card-modern {
-    background: rgba(255, 255, 255, 0.8);
+    background: var(--color-card-bg-glass);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     padding: 20px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+    box-shadow: var(--shadow-sm);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     position: relative;
@@ -3677,4 +3684,9 @@ body.dark-mode .profile-modal-bg::before {
 .profile-modal-bg .swal2-actions {
     position: relative;
     z-index: 1;
+}
+
+/* Atenuación de PDFs en modo oscuro */
+body.dark-mode #eval-tab-documento iframe {
+    filter: invert(0.9) hue-rotate(180deg) brightness(0.8) contrast(1.2);
 }
