@@ -201,6 +201,7 @@ function switchView(viewId) {
         if (viewId === 'inicio') {
             if (topbarSubtitulo) topbarSubtitulo.style.display = 'block';
             topbarNombre.innerText = window.nombreAspiranteCompleto || 'Cargando...';
+            cargarStatsInicio();
         } else {
             if (topbarSubtitulo) topbarSubtitulo.style.display = 'none';
             const titulos = {
@@ -241,6 +242,99 @@ window.addEventListener('hashchange', () => {
     const hash = window.location.hash.replace('#', '') || 'inicio';
     switchView(hash);
 });
+
+/**
+ * Carga las estadísticas reales de la API para el dashboard de inicio
+ */
+async function cargarStatsInicio() {
+    try {
+        if (!aspiranteData || !aspiranteData.id) return;
+
+        const statDocsCount = document.getElementById('dash-docs-count');
+        const statDocsSub = document.getElementById('dash-docs-sub');
+        const statExpStatus = document.getElementById('dash-exp-status');
+        const statExpSub = document.getElementById('dash-exp-sub');
+        const statConvName = document.getElementById('dash-conv-name');
+        const statConvSub = document.getElementById('dash-conv-sub');
+
+        if (statDocsSub) { statDocsSub.style.display = 'block'; statDocsSub.innerText = 'Cargando...'; }
+        if (statExpSub) { statExpSub.style.display = 'block'; statExpSub.innerText = 'Cargando...'; }
+        if (statConvSub) { statConvSub.style.display = 'block'; statConvSub.innerText = 'Cargando...'; }
+
+        const resSoli = await fetch(`/api/solicitud/activa/${aspiranteData.id}`);
+        if (resSoli.ok) {
+            const soliData = await resSoli.json();
+
+            if (soliData.existe) {
+                // 1. Estado de Expediente
+                if (statExpStatus) {
+                    if (soliData.estado === 'RECHAZADO') {
+                        statExpStatus.innerText = 'Expediente Rechazado';
+                        statExpStatus.style.color = 'var(--color-danger)';
+                    } else if (soliData.estado === 'APROBADO') {
+                        statExpStatus.innerText = 'Expediente Aprobado';
+                        statExpStatus.style.color = 'var(--color-info)'; // azul/info
+                    } else {
+                        statExpStatus.innerText = 'Expediente Activo';
+                        statExpStatus.style.color = '#10b981'; // verde
+                    }
+                }
+                if (statExpSub) {
+                    const estado = soliData.estado === 'NUEVO' ? 'Fase Inicial' : 
+                                   (soliData.estado === 'EN_REVISION' ? 'En Revisión' : 
+                                   (soliData.estado === 'RECHAZADO' ? 'Requiere Atención' : soliData.estado));
+                    statExpSub.innerText = estado;
+                }
+
+                // 2. Convocatoria y Documentos
+                const currentSolicitudId = soliData.idSolicitud || soliData.id;
+                
+                // Fetch Convocatorias para el nombre
+                const resConv = await fetch('/api/convocatorias');
+                if (resConv.ok) {
+                    const convocatorias = await resConv.json();
+                    const convActual = convocatorias.find(c => c.id === soliData.idConvocatoria);
+                    if (convActual) {
+                        if (statConvName) statConvName.innerText = convActual.nombre;
+                        if (statConvSub) statConvSub.innerText = convActual.nivel === 'DOCTORADO' ? 'Doctorado FIE' : 'Maestría FIE';
+                    }
+                }
+
+                // Fetch Documentos subidos del aspirante
+                const resExp = await fetch(`/api/aspirante/${aspiranteData.id}/expediente`);
+                if (resExp.ok) {
+                    const expData = await resExp.json();
+                    const soliActiva = expData.solicitudes?.find(s => s.idSolicitud === currentSolicitudId);
+                    if (soliActiva && soliActiva.documentos) {
+                        const docsSubidos = soliActiva.documentos.filter(d => d.rutaArchivo).length;
+                        if (statDocsCount) statDocsCount.innerText = `${docsSubidos} documentos subidos`;
+                        if (statDocsSub) statDocsSub.innerText = 'Revisar progreso';
+                    } else {
+                        if (statDocsCount) statDocsCount.innerText = '0 documentos subidos';
+                        if (statDocsSub) statDocsSub.innerText = 'Comenzar a subir';
+                    }
+                }
+            } else {
+                // No hay solicitud activa
+                if (statExpStatus) {
+                    statExpStatus.innerText = 'Sin expediente activo';
+                    statExpStatus.style.color = 'var(--color-text)'; 
+                }
+                if (statExpSub) {
+                    statExpSub.innerText = 'Visita Convocatorias';
+                }
+
+                if (statConvName) statConvName.innerText = 'Ninguna seleccionada';
+                if (statConvSub) statConvSub.style.display = 'none';
+
+                if (statDocsCount) statDocsCount.innerText = '0 documentos subidos';
+                if (statDocsSub) statDocsSub.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error("Error al cargar stats de inicio:", error);
+    }
+}
 
 /**
  * Carga las notificaciones desde la API
@@ -907,8 +1001,8 @@ function verificarArchivosEstacion(estacion) {
     }
 }
 
-// Bloquear toda la UI de carga cuando el expediente esté bajo revisión
-async function bloquearInterfazPorRevision() {
+// Bloquear toda la UI de carga cuando el expediente esté bajo revisión o con dictamen
+async function bloquearInterfazPorRevision(estadoActual = 'EN_REVISION') {
     const banner = document.getElementById('banner-revision');
     const encabezado = document.getElementById('encabezado-documentos');
 
@@ -920,24 +1014,61 @@ async function bloquearInterfazPorRevision() {
     if (banner) {
         banner.style.cssText = 'display:block; background:transparent; border:none; box-shadow:none; padding:0; margin-bottom: 20px;';
         
-        const textBanner = typeof t === 'function' ? t('toast_rev_title') : 'Expediente bajo revisión';
-        const textSub = typeof t === 'function' ? t('toast_rev_sub') : 'Serás notificado si se requiere alguna corrección';
-        const badge = typeof t === 'function' ? t('toast_rev_badge') : 'EN REVISIÓN';
+        let textBanner = 'Expediente bajo revisión';
+        let textSub = 'Serás notificado si se requiere alguna corrección';
+        let badge = 'EN REVISIÓN';
+        let bgColor = '#fffbeb';
+        let borderColor = '#fcd34d';
+        let iconBgColor = '#fef3c7';
+        let iconColor = '#d97706';
+        let titleColor = '#92400e';
+        let subColor = '#b45309';
+        let badgeBgColor = '#fef08a';
+        let badgeColor = '#854d0e';
+        let iconClass = 'fa-solid fa-lock';
+
+        if (estadoActual === 'RECHAZADO') {
+            textBanner = 'Expediente Rechazado';
+            textSub = 'Revisa los comentarios y corrige los documentos necesarios';
+            badge = 'RECHAZADO';
+            bgColor = '#fef2f2';
+            borderColor = '#fca5a5';
+            iconBgColor = '#fee2e2';
+            iconColor = '#ef4444';
+            titleColor = '#991b1b';
+            subColor = '#b91c1c';
+            badgeBgColor = '#fecaca';
+            badgeColor = '#991b1b';
+            iconClass = 'fa-solid fa-circle-xmark';
+        } else if (estadoActual === 'APROBADO') {
+            textBanner = 'Expediente Aprobado';
+            textSub = 'Felicidades, tu expediente ha sido validado satisfactoriamente';
+            badge = 'APROBADO';
+            bgColor = '#f0fdf4';
+            borderColor = '#86efac';
+            iconBgColor = '#dcfce7';
+            iconColor = '#22c55e';
+            titleColor = '#166534';
+            subColor = '#15803d';
+            badgeBgColor = '#bbf7d0';
+            badgeColor = '#166534';
+            iconClass = 'fa-solid fa-circle-check';
+        }
 
         banner.innerHTML = `
-            <!-- Banner Integrado Ámbar/Amarillo -->
-            <div style="background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; box-shadow: var(--shadow-sm);">
+            <!-- Banner Integrado Dinámico -->
+            <div style="background-color: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 8px; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; box-shadow: var(--shadow-sm);">
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <div style="background-color: #fef3c7; color: #d97706; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px;">
-                        <i class="fa-solid fa-lock"></i>
+                    <div style="background-color: ${iconBgColor}; color: ${iconColor}; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px;">
+                        <i class="${iconClass}"></i>
                     </div>
                     <div>
-                        <div style="color: #92400e; font-weight: 700; font-size: 15px;">${textBanner}</div>
-                        <div style="color: #b45309; font-size: 13px;">${textSub}</div>
+                        <div style="color: ${titleColor}; font-weight: 700; font-size: 15px;">${textBanner}</div>
+                        <div style="color: ${subColor}; font-size: 13px;">${textSub}</div>
                     </div>
                 </div>
                 <div>
-                    <span style="background-color: #fef08a; color: #854d0e; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800;">${badge}</span>
+                    <span style="background-color: ${badgeBgColor}; color: ${badgeColor}; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800;">${badge}</span>
                 </div>
             </div>
 
@@ -1758,7 +1889,7 @@ function hidratarUI(soliData) {
 
     // Bloquear si está en revisión, rechazado o aprobado
     if (['EN_REVISION', 'RECHAZADO', 'APROBADO'].includes(soliData.estado)) {
-        bloquearInterfazPorRevision();
+        bloquearInterfazPorRevision(soliData.estado);
     }
 }
 

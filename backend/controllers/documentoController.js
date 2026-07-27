@@ -126,17 +126,28 @@ const evaluarDocumento = async (req, res) => {
         );
 
         // Lógica automática para actualizar el estado general de la solicitud
-        // Obtener todos los documentos de la solicitud
-        const [todosDocs] = await db.query('SELECT estadoValidacion FROM solicitud_documentos WHERE idSolicitud = ?', [idSolicitud]);
+        // Obtener sólo los últimos intentos de todos los documentos de la solicitud
+        const [ultimosDocs] = await db.query(
+            `SELECT sd1.estadoValidacion 
+             FROM solicitud_documentos sd1
+             INNER JOIN (
+                 SELECT idRequisito, MAX(intentos) as maxIntentos
+                 FROM solicitud_documentos
+                 WHERE idSolicitud = ?
+                 GROUP BY idRequisito
+             ) sd2 ON sd1.idRequisito = sd2.idRequisito AND sd1.intentos = sd2.maxIntentos
+             WHERE sd1.idSolicitud = ?`,
+            [idSolicitud, idSolicitud]
+        );
         
         let nuevoEstadoSolicitud = 'EN_REVISION';
         
-        const tieneRechazados = todosDocs.some(d => d.estadoValidacion === 'RECHAZADO');
-        const todosAprobados = todosDocs.every(d => d.estadoValidacion === 'APROBADO');
+        const tieneRechazados = ultimosDocs.some(d => d.estadoValidacion === 'RECHAZADO');
+        const todosAprobados = ultimosDocs.every(d => d.estadoValidacion === 'APROBADO');
         
         if (tieneRechazados) {
             nuevoEstadoSolicitud = 'RECHAZADO';
-        } else if (todosAprobados && todosDocs.length > 0) {
+        } else if (todosAprobados && ultimosDocs.length > 0) {
             nuevoEstadoSolicitud = 'APROBADO';
         } else {
             nuevoEstadoSolicitud = 'EN_REVISION';
