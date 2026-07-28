@@ -1,15 +1,12 @@
 // Variables de Estado Global de la Interfaz
 let aspirantes = [];
 let idAspiranteActivo = null;
-let documentoARechazar = null;
 
 // Conexión Socket.io
 const socket = io();
 socket.on('actualizacionGlobal', () => {
     // Recargar vista actual si hay un cambio (ej. aspirante sube nuevo documento)
-    if (typeof cargarExpedientesAspirantes === 'function') {
-        cargarExpedientesAspirantes();
-    }
+    cargarAspirantesAPI();
 });
 
 // Inicialización de la Aplicación
@@ -48,7 +45,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     const usuario = JSON.parse(tokenObj);
-    const saludo = document.getElementById('saludo-usuario');
 
     try {
         window.docenteData = await cargarDocente(usuario.id);
@@ -70,6 +66,12 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     await cargarAspirantesAPI();
     cargarNotificaciones();
+
+    // Restaurar estado del toggle de notificaciones push
+    const toggleNotiPush = document.getElementById('toggle-notificaciones-push');
+    if (toggleNotiPush) {
+        toggleNotiPush.checked = localStorage.getItem('notificacionesPush') !== 'false';
+    }
 
     // Restaurar vista desde la URL (Persistencia)
     const currentHash = window.location.hash.replace("#", "");
@@ -96,7 +98,7 @@ async function cargarAspirantesAPI() {
                 const asp = exp.perfil;
                 // Buscar la solicitud activa (en revision o pendiente) o la primera (que será la más reciente gracias al ORDER BY)
                 const sol = exp.solicitudes && exp.solicitudes.length > 0
-                    ? (exp.solicitudes.find(s => ['EN_REVISION', 'PENDIENTE', 'RECHAZADO', 'INCOMPLETO', 'APROBADO'].includes(s.estado)) || exp.solicitudes[0])
+                    ? (exp.solicitudes.find(s => ['EN_REVISION', 'PENDIENTE', 'RECHAZADO', 'APROBADO'].includes(s.estado)) || exp.solicitudes[0])
                     : null;
 
                 let docList = [];
@@ -166,10 +168,6 @@ function switchView(viewId) {
         ocultarLoader();
     }, 300);
 }
-
-/**
- * Cierre de Sesión Limpiando Variables No Persistentes de Login
- */
 
 
 /**
@@ -539,10 +537,7 @@ function cambiarTabEvaluacion(tabName) {
     }
 }
 
-function ocultarPanelNotificaciones() {
-    const p = document.getElementById('panel-notificaciones');
-    if (p) p.style.display = 'none';
-}
+
 
 function abrirNotificacion(remitenteKey, element) {
     try {
@@ -664,11 +659,11 @@ async function aprobarDocumentoModal() {
             });
         } else {
             const err = await res.json();
-            alert((typeof t === 'function' ? t('docente_err_aprobar') : "No se pudo aprobar el documento: ") + (err.mensaje || "Error"));
+            Swal.fire({ icon: 'error', title: 'Error', text: (typeof t === 'function' ? t('docente_err_aprobar') : 'No se pudo aprobar el documento: ') + (err.mensaje || 'Error'), confirmButtonColor: '#ef4444' });
         }
     } catch (e) {
         console.error("Error al aprobar documento:", e);
-        alert(typeof t === 'function' ? t('docente_err_servidor') : "Ocurrió un error al comunicarse con el servidor.");
+        Swal.fire({ icon: 'error', title: 'Error de conexión', text: typeof t === 'function' ? t('docente_err_servidor') : 'Ocurrió un error al comunicarse con el servidor.', confirmButtonColor: '#ef4444' });
     }
 }
 
@@ -677,7 +672,7 @@ async function rechazarDocumentoModal() {
     const noteText = document.getElementById('eval-modal-nota').value.trim();
 
     if (noteText === "") {
-        alert(typeof t === 'function' ? t('docente_err_motivo') : "Por favor, ingresa el motivo detallado del rechazo.");
+        Swal.fire({ icon: 'warning', title: 'Campo requerido', text: typeof t === 'function' ? t('docente_err_motivo') : 'Por favor, ingresa el motivo detallado del rechazo.', confirmButtonColor: '#f59e0b' });
         return;
     }
 
@@ -715,11 +710,11 @@ async function rechazarDocumentoModal() {
             });
         } else {
             const err = await res.json();
-            alert((typeof t === 'function' ? t('docente_err_rechazar') : "No se pudo rechazar el documento: ") + (err.mensaje || "Error"));
+            Swal.fire({ icon: 'error', title: 'Error', text: (typeof t === 'function' ? t('docente_err_rechazar') : 'No se pudo rechazar el documento: ') + (err.mensaje || 'Error'), confirmButtonColor: '#ef4444' });
         }
     } catch (e) {
         console.error("Error al rechazar documento:", e);
-        alert(typeof t === 'function' ? t('docente_err_servidor') : "Ocurrió un error al comunicarse con el servidor.");
+        Swal.fire({ icon: 'error', title: 'Error de conexión', text: typeof t === 'function' ? t('docente_err_servidor') : 'Ocurrió un error al comunicarse con el servidor.', confirmButtonColor: '#ef4444' });
     }
 }
 
@@ -866,6 +861,10 @@ function cerrarDrawerAjustes() {
     document.getElementById('settings-drawer-overlay').classList.remove('show');
 }
 
+function guardarToggleNotificaciones(activado) {
+    localStorage.setItem('notificacionesPush', activado ? 'true' : 'false');
+}
+
 // ==== PERFIL DOCENTE ====
 function abrirModalPerfilDocente() {
     const usuarioStr = sessionStorage.getItem('usuario');
@@ -893,6 +892,8 @@ function abrirModalPerfilDocente() {
                 <h5 class="profile-section-title"><i class="fa-solid fa-address-card"></i> ${typeof t === 'function' ? t('docente_info_contacto') : 'Datos de Contacto'}</h5>
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 15px; margin-bottom: 25px;">
                     <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_correo') : 'Correo'}</span> <span class="profile-info-value" style="text-transform: none;">${usuario.correo}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_telefono') : 'Teléfono'}</span> <span class="profile-info-value">${d.telefono || noReg}</span></div>
+                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_nombre') : 'Nombre completo'}</span> <span class="profile-info-value" style="text-transform: capitalize;">${d.nombre || ''} ${d.primerApellido || ''} ${d.segundoApellido || ''}</span></div>
                 </div>
                 
                 <h5 class="profile-section-title"><i class="fa-solid fa-graduation-cap"></i> ${typeof t === 'function' ? t('docente_info_academica') : 'Información Académica'}</h5>

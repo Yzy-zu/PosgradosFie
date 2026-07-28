@@ -18,7 +18,7 @@ const translations = {
         "tb_bandeja": "Bandeja de Mensajes",
         "tb_cargando": "Cargando...",
         "tb_selecciona_msj": "Selecciona un mensaje<br>para ver la conversación",
-        
+
         // Modal & Loader
         "global_cargando": "Cargando información, por favor espera...",
 
@@ -64,7 +64,7 @@ const translations = {
         "doc_intento_txt1": "(Será tu Intento",
         "doc_intento_txt2": "de 3)",
         "doc_limite_alcanzado": "Se ha alcanzado el límite máximo de 3 intentos para este documento.",
-        
+
         // Toast Revisión
         "toast_rev_title": "Expediente bajo revisión",
         "toast_rev_sub": "Serás notificado si se requiere alguna corrección",
@@ -162,7 +162,7 @@ const translations = {
         "prof_ninguno": "Ninguno",
 
         // Docente
-        "docente_dist_doc": "Distribución de Documentos Evaluados",
+        "docente_dist_doc": "Documentos Evaluados",
         "docente_dist_doc_desc": "Porcentaje general de documentos revisados en la plataforma.",
         "docente_perfil": "Perfil",
         "docente_revisor": "Docente / Revisor",
@@ -207,8 +207,8 @@ const translations = {
         "docente_err_motivo": "Por favor, ingresa el motivo detallado del rechazo.",
         "prof_fecha_registro": "Fecha Registro",
         "det_nivel": "Nivel",
-        "docente_archivos": "Archivos y Documentos Digitales",
-        "docente_revisa_doc": "Revisa el documento haciendo clic en 'Ver'. Posteriormente, define si el documento es aprobado o rechazado.",
+        "docente_archivos": "Archivos del Aspirante",
+        "docente_revisa_doc": "Revisa el documento haciendo clic en 'Ver'.",
         "tb_marcar_leidos": "Marcar todos como leídos",
         "docente_sin_nombre": "Sin nombre",
         "docente_sin_solicitud": "Sin Solicitud",
@@ -256,7 +256,7 @@ const translations = {
         "tb_bandeja": "Messages Inbox",
         "tb_cargando": "Loading...",
         "tb_selecciona_msj": "Select a message<br>to view the conversation",
-        
+
         // Modal & Loader
         "global_cargando": "Loading information, please wait...",
 
@@ -536,7 +536,7 @@ function cambiarIdioma(langValue) {
     } else {
         langCode = 'es';
     }
-    
+
     if (langCode !== getIdiomaActual()) {
         localStorage.setItem('idioma', langCode);
         location.reload(); // Recarga limpia para asegurar que todo el JS dinámico se regenere
@@ -546,7 +546,7 @@ function cambiarIdioma(langValue) {
 // Escuchar cuando el DOM esté listo para aplicar las traducciones
 document.addEventListener('DOMContentLoaded', () => {
     aplicarTraduccionesDOM();
-    
+
     // Seleccionar el dropdown de idioma correcto si existe
     const selectIdioma = document.getElementById('setting-idioma');
     if (selectIdioma) {

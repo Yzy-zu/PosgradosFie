@@ -26,7 +26,7 @@ router.post('/registro', registrarAspirante);
 router.get('/me', verificarToken, getAspiranteMe);
 
 // Rutas protegidas: requieren token para acceder
-router.get('/expedientes/todos', verificarToken, obtenerTodosLosExpedientes);
+router.get('/expedientes/todos', verificarToken, validarRol('ADMIN', 'DOCENTE', 'COORDINADOR', 'SECRETARIO'), obtenerTodosLosExpedientes);
 router.get('/:id/expediente', verificarToken, obtenerExpediente);
 router.get('/:id', verificarToken, obtenerAspirantePorId);
 

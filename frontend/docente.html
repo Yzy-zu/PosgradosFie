@@ -2,15 +2,15 @@
 <html lang="es">
 
 <head>
-    <script src="js/authInterceptor.js"></script>
-    <script src="js/utils.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIE</title>
+    <title>Portal Docente — FIE Posgrados</title>
     <link rel="shortcut icon" href="css/favico.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/authInterceptor.js"></script>
+    <script src="js/utils.js"></script>
 </head>
 
 <body>
@@ -111,7 +111,8 @@
                             <!-- Vista vacía de lectura (Derecha) -->
                             <div class="messages-mega-read" id="messages-empty-pane">
                                 <div class="messages-empty-state">
-                                    <i class="fa-regular fa-comments fa-3x mb-3 opacity-25"></i>
+                                    <img src="css/umsnhLogo.png" alt="UMSNH"
+                                        style="width: 140px; height: auto; opacity: 0.5; margin-bottom: 20px;">
                                     <p data-i18n="tb_selecciona_msj">Selecciona un mensaje<br>para ver la conversación
                                     </p>
                                 </div>
@@ -238,7 +239,7 @@
                             <option value="" data-i18n="docente_estado_todos">Todos los estados</option>
                             <option value="pendiente" data-i18n="docente_estado_pendientes">Pendientes</option>
                             <option value="revisado" data-i18n="docente_estado_completos">Revisados (Completos)</option>
-                            <option value="incompleto" data-i18n="docente_estado_incompletos">Rechazados / Incompletos
+                            <option value="incompleto" data-i18n="docente_estado_incompletos">Rechazados
                             </option>
                         </select>
                     </div>
@@ -249,11 +250,12 @@
                 <div class="aspirante-detail" id="detalle-aspirante-panel"
                     style="background: var(--color-card-bg); border-color: var(--color-border);">
                     <div class="detail-placeholder" id="placeholder-detalle" style="color: var(--color-text-muted);">
-                        <img src="css/posgradofie.png" alt="UMSNH"
+                        <img src="css/umsnhLogo.png" alt="UMSNH"
                             style="width: 150px; height: auto; opacity: 0.5; margin-bottom: 20px;">
                         <h3 style="color: var(--color-text);" data-i18n="docente_selecciona_asp">Ningún aspirante
                             seleccionado</h3>
-                        <p data-i18n="docente_selecciona_asp">Haz clic en un registro de la lista de la izquierda para
+                        <p data-i18n="docente_instruccion_click">Haz clic en un registro de la lista de la izquierda
+                            para
                             comenzar con la auditoría documental.</p>
                     </div>
 
@@ -293,10 +295,9 @@
                             </div>
                         </div>
 
-                        <h3 data-i18n="docente_archivos">Archivos y Documentos Digitales</h3>
+                        <h3 data-i18n="docente_archivos">Archivos del Aspirante:</h3>
                         <p data-i18n="docente_revisa_doc" style="font-size: 13px; color: #666; margin-bottom: 10px;">
-                            Revisa el documento haciendo clic en "Ver". Posteriormente, define si el documento es
-                            aprobado o rechazado.
+                            Revisa el documento haciendo clic en "Ver".
                         </p>
 
                         <div id="docs-dinamicos-container" class="docs-revision-grid">
@@ -373,7 +374,8 @@
                             <span class="setting-desc" data-i18n="st_noti_desc">Avisos dentro de la plataforma</span>
                         </div>
                         <label class="switch">
-                            <input type="checkbox" checked>
+                            <input type="checkbox" id="toggle-notificaciones-push" checked
+                                onchange="guardarToggleNotificaciones(this.checked)">
                             <span class="slider round"></span>
                         </label>
                     </div>
@@ -381,8 +383,7 @@
             </div>
             <div class="drawer-footer">
                 <button class="btn-primary w-100" onclick="cerrarDrawerAjustes()"
-                    style="padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px;">Guardar
-                    Cambios</button>
+                    style="padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px;">Cerrar</button>
             </div>
         </div>
     </main>
