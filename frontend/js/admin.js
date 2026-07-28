@@ -55,17 +55,23 @@ function mostrarAdministrador() {
     let usuario = JSON.parse(sessionStorage.getItem("usuario"));
     if (!usuario) return; // Si no hay usuario, validarSesion() ya se encargó de redirigir al login
 
-    // Actualizar nombre en el header superior
-    const nombreHeader = document.getElementById("nombreAdministrador");
-    if (nombreHeader) {
-        nombreHeader.textContent = usuario.nombre || usuario.correo.split('@')[0];
+    const nombreMostrado = usuario.nombre || usuario.correo.split('@')[0];
+    const topbarFirstName = document.getElementById("topbar-first-name");
+    const topbarIniciales = document.getElementById("topbar-iniciales");
+    
+    if (topbarFirstName) {
+        topbarFirstName.textContent = nombreMostrado.split(' ')[0];
+    }
+    
+    if (topbarIniciales) {
+        topbarIniciales.textContent = nombreMostrado.substring(0, 2).toUpperCase();
     }
 
     // Actualizar información en el menú desplegable (perfil)
     const menuNombre = document.getElementById("menu-nombre-admin");
     const menuCorreo = document.getElementById("menu-correo-admin");
 
-    if (menuNombre) menuNombre.textContent = usuario.nombre || "Administrador";
+    if (menuNombre) menuNombre.textContent = nombreMostrado;
     if (menuCorreo) menuCorreo.textContent = usuario.correo || "";
 }
 
@@ -102,16 +108,17 @@ function activarSeccionPorHash() {
     }
 
     const enlaces = document.querySelectorAll("#sidebarMenu .nav-link");
-    const secciones = document.querySelectorAll(".content-section");
+    const secciones = document.querySelectorAll(".view-section");
     const tituloSeccion = document.getElementById("seccion-titulo");
     const descSeccion = document.getElementById("seccion-descripcion");
+    const subtituloSeccion = document.getElementById("topbar-subtitulo");
 
     // Remover estado activo de todos los enlaces en el menú
     enlaces.forEach(link => link.classList.remove("active"));
 
     // Ocultar todas las secciones del contenido y quitar fade-in
     secciones.forEach(sec => {
-        sec.classList.add("d-none");
+        sec.classList.remove("active");
         sec.classList.remove("fade-in");
     });
 
@@ -121,14 +128,16 @@ function activarSeccionPorHash() {
         enlaceActivo.classList.add("active");
 
         // Actualizar el título dinámicamente basado en el texto del enlace
-        const textoEnlace = enlaceActivo.textContent.trim();
-        if (tituloSeccion && descSeccion) {
+        const textoEnlace = enlaceActivo.querySelector(".text") ? enlaceActivo.querySelector(".text").textContent.trim() : enlaceActivo.textContent.trim();
+        if (tituloSeccion) {
             if (hash === "dashboard") {
                 tituloSeccion.textContent = "Panel de Administración";
-                descSeccion.textContent = "Bienvenido al sistema de gestión de Posgrados.";
+                if(descSeccion) descSeccion.textContent = "Bienvenido al sistema de gestión de Posgrados.";
+                if(subtituloSeccion) subtituloSeccion.textContent = "Bienvenido al sistema";
             } else {
                 tituloSeccion.textContent = "Gestión de " + textoEnlace;
-                descSeccion.textContent = "Administra la información de " + textoEnlace.toLowerCase() + ".";
+                if(descSeccion) descSeccion.textContent = "Administra la información de " + textoEnlace.toLowerCase() + ".";
+                if(subtituloSeccion) subtituloSeccion.textContent = "Sección Administrador";
             }
         }
     }
@@ -136,7 +145,7 @@ function activarSeccionPorHash() {
     // Mostrar la sección correspondiente en el HTML con fade-in
     const seccionMostrar = document.getElementById(`seccion-${hash}`);
     if (seccionMostrar) {
-        seccionMostrar.classList.remove("d-none");
+        seccionMostrar.classList.add("active");
         void seccionMostrar.offsetWidth; // Trigger reflow for animation
         seccionMostrar.classList.add("fade-in");
     }
@@ -273,39 +282,39 @@ function renderizarCamposRol(rol, detalles = {}) {
         html = `
             <h6 class="text-primary mb-3"><i class="fa-solid fa-user-graduate"></i> Detalles de Aspirante</h6>
             <div class="row" style="max-height: 400px; overflow-y: auto; overflow-x: hidden;">
-                <div class="col-md-4 mb-2"><label class="form-label small">Nombre <span class="text-danger">*</span></label><input type="text" id="det_nombre" class="form-control form-control-sm" value="${detalles.nombre || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Primer Apellido <span class="text-danger">*</span></label><input type="text" id="det_primerApellido" class="form-control form-control-sm" value="${detalles.primerApellido || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" value="${detalles.segundoApellido || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">CURP <span class="text-danger">*</span></label><input type="text" id="det_curp" class="form-control form-control-sm" value="${detalles.curp || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Teléfono <span class="text-danger">*</span></label><input type="text" id="det_telefono" class="form-control form-control-sm" value="${detalles.telefono || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Fecha Nacimiento <span class="text-danger">*</span></label><input type="date" id="det_fechaNacimiento" class="form-control form-control-sm" value="${detalles.fechaNacimiento ? detalles.fechaNacimiento.split('T')[0] : ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Nombre <span class="text-danger">*</span></label><input type="text" id="det_nombre" class="form-control form-control-sm" value="${detalles.nombre || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Primer Apellido <span class="text-danger">*</span></label><input type="text" id="det_primerApellido" class="form-control form-control-sm" value="${detalles.primerApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" value="${detalles.segundoApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">CURP <span class="text-danger">*</span></label><input type="text" id="det_curp" class="form-control form-control-sm" value="${detalles.curp || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Teléfono <span class="text-danger">*</span></label><input type="text" id="det_telefono" class="form-control form-control-sm" value="${detalles.telefono || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Fecha Nacimiento <span class="text-danger">*</span></label><input type="date" id="det_fechaNacimiento" class="form-control form-control-sm" value="${detalles.fechaNacimiento ? detalles.fechaNacimiento.split('T')[0] : ''}"></div>
                 <div class="col-md-4 mb-2">
-                    <label class="form-label small">Estado Civil</label>
+                    <label class="form-label small" style="color: #374151; font-weight: 600;">Estado Civil</label>
                     <select id="det_estadoCivil" class="form-select form-select-sm">
-                        <option value="SOLTERO" ${detalles.estadoCivil === 'SOLTERO' ? 'selected' : ''}>SOLTERO</option>
-                        <option value="CASADO" ${detalles.estadoCivil === 'CASADO' ? 'selected' : ''}>CASADO</option>
-                        <option value="UNION_LIBRE" ${detalles.estadoCivil === 'UNION_LIBRE' ? 'selected' : ''}>UNIÓN LIBRE</option>
-                        <option value="DIVORCIADO" ${detalles.estadoCivil === 'DIVORCIADO' ? 'selected' : ''}>DIVORCIADO</option>
-                        <option value="SEPARADO" ${detalles.estadoCivil === 'SEPARADO' ? 'selected' : ''}>SEPARADO</option>
-                        <option value="VIUDO" ${detalles.estadoCivil === 'VIUDO' ? 'selected' : ''}>VIUDO</option>
+                        <option value="SOLTERO" ${detalles.estadoCivil === 'SOLTERO' ? 'selected' : ''}>Soltero</option>
+                        <option value="CASADO" ${detalles.estadoCivil === 'CASADO' ? 'selected' : ''}>Casado</option>
+                        <option value="UNION_LIBRE" ${detalles.estadoCivil === 'UNION_LIBRE' ? 'selected' : ''}>Unión Libre</option>
+                        <option value="DIVORCIADO" ${detalles.estadoCivil === 'DIVORCIADO' ? 'selected' : ''}>Divorciado</option>
+                        <option value="SEPARADO" ${detalles.estadoCivil === 'SEPARADO' ? 'selected' : ''}>Separado</option>
+                        <option value="VIUDO" ${detalles.estadoCivil === 'VIUDO' ? 'selected' : ''}>Viudo</option>
                     </select>
                 </div>
-                <div class="col-md-8 mb-2"><label class="form-label small">Dirección</label><input type="text" id="det_direccion" class="form-control form-control-sm" value="${detalles.direccion || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Código Postal</label><input type="number" id="det_direccionPostal" class="form-control form-control-sm" value="${detalles.direccionPostal || ''}"></div>
+                <div class="col-md-8 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Dirección</label><input type="text" id="det_direccion" class="form-control form-control-sm" value="${detalles.direccion || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Código Postal</label><input type="number" id="det_direccionPostal" class="form-control form-control-sm" value="${detalles.direccionPostal || ''}"></div>
                 
-                <h6 class="text-secondary mt-3 mb-2 w-100 border-bottom pb-1"><i class="fa-solid fa-graduation-cap"></i> Antecedentes Académicos</h6>
-                <div class="col-md-6 mb-2"><label class="form-label small">Licenciatura <span class="text-danger">*</span></label><input type="text" id="det_licenciatura" class="form-control form-control-sm" value="${detalles.licenciatura || ''}"></div>
-                <div class="col-md-6 mb-2"><label class="form-label small">Institución (Licenciatura) <span class="text-danger">*</span></label><input type="text" id="det_institucionLicenciatura" class="form-control form-control-sm" value="${detalles.institucionLicenciatura || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Fecha de Egreso <span class="text-danger">*</span></label><input type="date" id="det_fechaEgreso" class="form-control form-control-sm" value="${detalles.fechaEgreso ? detalles.fechaEgreso.split('T')[0] : ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Fecha de Titulación <span class="text-danger">*</span></label><input type="date" id="det_fechaTitulacion" class="form-control form-control-sm" value="${detalles.fechaTitulacion ? detalles.fechaTitulacion.split('T')[0] : ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Promedio <span class="text-danger">*</span></label><input type="number" step="0.01" id="det_promedio" class="form-control form-control-sm" value="${detalles.promedio || ''}"></div>
-                <div class="col-md-12 mb-2"><label class="form-label small">Otros Estudios</label><input type="text" id="det_otrosEstudios" class="form-control form-control-sm" value="${detalles.otrosEstudios || ''}"></div>
+                <h6 class="text-secondary mt-4 mb-3 w-100 border-bottom pb-2" style="color: #1f2937 !important; font-weight: 600;"><i class="fa-solid fa-graduation-cap"></i> Antecedentes Académicos</h6>
+                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Licenciatura <span class="text-danger">*</span></label><input type="text" id="det_licenciatura" class="form-control form-control-sm" value="${detalles.licenciatura || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Institución (Licenciatura) <span class="text-danger">*</span></label><input type="text" id="det_institucionLicenciatura" class="form-control form-control-sm" value="${detalles.institucionLicenciatura || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Fecha de Egreso <span class="text-danger">*</span></label><input type="date" id="det_fechaEgreso" class="form-control form-control-sm" value="${detalles.fechaEgreso ? detalles.fechaEgreso.split('T')[0] : ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Fecha de Titulación <span class="text-danger">*</span></label><input type="date" id="det_fechaTitulacion" class="form-control form-control-sm" value="${detalles.fechaTitulacion ? detalles.fechaTitulacion.split('T')[0] : ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Promedio <span class="text-danger">*</span></label><input type="number" step="0.01" id="det_promedio" class="form-control form-control-sm" value="${detalles.promedio || ''}"></div>
+                <div class="col-md-12 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Otros Estudios</label><input type="text" id="det_otrosEstudios" class="form-control form-control-sm" value="${detalles.otrosEstudios || ''}"></div>
 
                 <h6 class="text-secondary mt-3 mb-2 w-100 border-bottom pb-1"><i class="fa-solid fa-briefcase"></i> Ocupación</h6>
-                <div class="col-md-6 mb-2"><label class="form-label small">Ocupación Actual</label><input type="text" id="det_ocupacion" class="form-control form-control-sm" value="${detalles.ocupacion || ''}"></div>
-                <div class="col-md-6 mb-2"><label class="form-label small">Teléfono (Ocupación)</label><input type="text" id="det_telefonoOcupacion" class="form-control form-control-sm" value="${detalles.telefonoOcupacion || ''}"></div>
-                <div class="col-md-6 mb-2"><label class="form-label small">Ciudad (Ocupación)</label><input type="text" id="det_ciudadOcupacion" class="form-control form-control-sm" value="${detalles.ciudadOcupacion || ''}"></div>
-                <div class="col-md-6 mb-2"><label class="form-label small">Estado (Ocupación)</label><input type="text" id="det_estadoOcupacion" class="form-control form-control-sm" value="${detalles.estadoOcupacion || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Ocupación Actual</label><input type="text" id="det_ocupacion" class="form-control form-control-sm" value="${detalles.ocupacion || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Teléfono (Ocupación)</label><input type="text" id="det_telefonoOcupacion" class="form-control form-control-sm" value="${detalles.telefonoOcupacion || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Ciudad (Ocupación)</label><input type="text" id="det_ciudadOcupacion" class="form-control form-control-sm" value="${detalles.ciudadOcupacion || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Estado (Ocupación)</label><input type="text" id="det_estadoOcupacion" class="form-control form-control-sm" value="${detalles.estadoOcupacion || ''}"></div>
             </div>
         `;
         contenedorBtn.style.display = "block";
@@ -313,12 +322,12 @@ function renderizarCamposRol(rol, detalles = {}) {
         html = `
             <h6 class="text-primary mb-3"><i class="fa-solid fa-chalkboard-user"></i> Detalles de Docente</h6>
             <div class="row">
-                <div class="col-md-4 mb-2"><label class="form-label small">Nombre</label><input type="text" id="det_nombre" class="form-control form-control-sm" value="${detalles.nombre || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Primer Apellido</label><input type="text" id="det_primerApellido" class="form-control form-control-sm" value="${detalles.primerApellido || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" value="${detalles.segundoApellido || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Cargo</label><input type="text" id="det_cargo" class="form-control form-control-sm" value="${detalles.cargo || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Especialidad</label><input type="text" id="det_especialidad" class="form-control form-control-sm" value="${detalles.especialidad || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small">Cubículo</label><input type="text" id="det_cubiculo" class="form-control form-control-sm" value="${detalles.cubiculo || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Nombre</label><input type="text" id="det_nombre" class="form-control form-control-sm" value="${detalles.nombre || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Primer Apellido</label><input type="text" id="det_primerApellido" class="form-control form-control-sm" value="${detalles.primerApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" value="${detalles.segundoApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Cargo</label><input type="text" id="det_cargo" class="form-control form-control-sm" value="${detalles.cargo || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Especialidad</label><input type="text" id="det_especialidad" class="form-control form-control-sm" value="${detalles.especialidad || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Cubículo</label><input type="text" id="det_cubiculo" class="form-control form-control-sm" value="${detalles.cubiculo || ''}"></div>
             </div>
         `;
         contenedorBtn.style.display = "block";
@@ -326,8 +335,8 @@ function renderizarCamposRol(rol, detalles = {}) {
         html = `
             <h6 class="text-primary mb-3"><i class="fa-solid fa-user-tie"></i> Detalles de Secretario</h6>
             <div class="row">
-                <div class="col-md-6 mb-2"><label class="form-label small">Área</label><input type="text" id="det_area" class="form-control form-control-sm" value="${detalles.area || ''}"></div>
-                <div class="col-md-6 mb-2"><label class="form-label small">Extensión</label><input type="text" id="det_extension" class="form-control form-control-sm" value="${detalles.extension || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Área</label><input type="text" id="det_area" class="form-control form-control-sm" value="${detalles.area || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Extensión</label><input type="text" id="det_extension" class="form-control form-control-sm" value="${detalles.extension || ''}"></div>
             </div>
         `;
         contenedorBtn.style.display = "block";
@@ -1692,3 +1701,95 @@ document.getElementById('notif_destino')?.addEventListener('change', async funct
         if (selectDestino) selectDestino.value = '';
     }
 });
+
+// ==== FUNCIONES DE UI MODERNAS ====
+
+function abrirDrawerAjustes() {
+    const overlay = document.getElementById('settings-drawer-overlay');
+    const drawer = document.getElementById('settings-drawer');
+    if (overlay) overlay.classList.add('active');
+    if (drawer) drawer.classList.add('active');
+}
+
+function cerrarDrawerAjustes() {
+    const overlay = document.getElementById('settings-drawer-overlay');
+    const drawer = document.getElementById('settings-drawer');
+    if (overlay) overlay.classList.remove('active');
+    if (drawer) drawer.classList.remove('active');
+}
+
+function toggleNotificationMenu(event) {
+    if(event) event.stopPropagation();
+    const menu = document.getElementById('notification-dropdown');
+    if (menu) {
+        menu.classList.toggle('show');
+    }
+}
+
+// Cerrar los menús al hacer click fuera
+document.addEventListener('click', function (event) {
+    const notificationMenu = document.getElementById('notification-dropdown');
+    if (notificationMenu && notificationMenu.classList.contains('show') && !event.target.closest('.notification-container')) {
+        notificationMenu.classList.remove('show');
+    }
+    
+    // profileDropdown ya puede estar manejado en utils.js, pero lo agregamos por seguridad
+    const profileDropdown = document.getElementById('profile-dropdown');
+    if (profileDropdown && profileDropdown.classList.contains('show') && !event.target.closest('.profile-container')) {
+        profileDropdown.classList.remove('show');
+    }
+});
+
+// ==== FUNCIONES DE PERFIL ====
+function abrirModalPerfilAdmin() {
+    let usuarioStr = sessionStorage.getItem("usuario");
+    if (!usuarioStr) return;
+    let usuario = JSON.parse(usuarioStr);
+    
+    let nombreCompleto = (usuario.nombre || 'Administrador').toLowerCase();
+    let correo = usuario.correo || 'admin@umich.mx';
+
+    Swal.fire({
+        title: typeof t === 'function' ? t('prof_title') : 'Mi Perfil',
+        html: `
+            <div style="text-align: left; font-size: 14px; line-height: 1.5; color: var(--color-text); padding-right: 15px;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--color-border);">
+                    <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; flex-shrink: 0;">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start;">
+                        <h4 style="margin: 0; color: var(--color-text); font-size: 18px; text-transform: capitalize; line-height: 1.2;">${nombreCompleto}</h4>
+                        <span style="background: rgba(var(--color-primary-rgb), 0.1); color: var(--color-primary); padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-top: 6px; letter-spacing: 0.5px;">Administrador</span>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 12px;">
+                    <strong style="display: block; font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 2px;">Correo Electrónico</strong>
+                    <span style="color: var(--color-text); font-size: 15px;">${correo}</span>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <strong style="display: block; font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 2px;">Rol del Sistema</strong>
+                    <span style="color: var(--color-text); font-size: 15px;">Acceso Total</span>
+                </div>
+                <hr style="border-color: var(--color-border); margin: 15px 0;">
+                <button onclick="abrirModalCambiarPassword(); Swal.close();" style="width: 100%; background: transparent; border: 1px solid var(--color-border); color: var(--color-text); padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.3s; text-align: center; margin-bottom: 10px;">
+                    <i class="fa-solid fa-key" style="margin-right: 5px;"></i> Restablecer Contraseña
+                </button>
+                <button onclick="cerrarSesion()" style="width: 100%; background: var(--color-danger); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.3s; text-align: center;">
+                    <i class="fa-solid fa-right-from-bracket" style="margin-right: 5px;"></i> Cerrar Sesión
+                </button>
+            </div>
+        `,
+        showConfirmButton: false,
+        showCloseButton: true,
+        background: 'var(--color-card-bg)',
+        customClass: {
+            title: 'swal-title-custom',
+            popup: 'swal-popup-custom',
+            closeButton: 'swal-close-custom'
+        },
+        padding: '1.5rem',
+        width: '400px'
+    });
+}

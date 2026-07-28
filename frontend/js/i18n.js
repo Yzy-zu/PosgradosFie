@@ -11,6 +11,11 @@ const translations = {
         "sb_doctorado": "Doctorado",
         "sb_ajustes": "Ajustes",
         "sb_cerrar_sesion": "Cerrar Sesión",
+        "sb_usuarios": "Usuarios",
+        "sb_posgrados": "Posgrados",
+        "sb_solicitudes": "Solicitudes",
+        "sb_reportes": "Reportes",
+        "sb_notificaciones": "Notificaciones",
 
         // Topbar
         "tb_bienvenido": "Bienvenido de vuelta",
@@ -249,6 +254,11 @@ const translations = {
         "sb_doctorado": "Doctorate (Ph.D.)",
         "sb_ajustes": "Settings",
         "sb_cerrar_sesion": "Log Out",
+        "sb_usuarios": "Users",
+        "sb_posgrados": "Postgraduate Programs",
+        "sb_solicitudes": "Requests",
+        "sb_reportes": "Reports",
+        "sb_notificaciones": "Notifications",
 
         // Topbar
         "tb_bienvenido": "Welcome back",

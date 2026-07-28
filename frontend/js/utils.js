@@ -197,17 +197,20 @@ async function abrirModalCambiarPassword() {
     }
 }
 
-// ==== MANEJO DEL TEMA VISUAL (MODO OSCURO) ====
 function cambiarTema(tema) {
     if (tema === 'Oscuro') {
         document.body.classList.add('dark-mode');
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
     } else if (tema === 'Claro') {
         document.body.classList.remove('dark-mode');
+        document.documentElement.removeAttribute('data-bs-theme');
     } else if (tema === 'Sistema') {
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
             document.body.classList.add('dark-mode');
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
         } else {
             document.body.classList.remove('dark-mode');
+            document.documentElement.removeAttribute('data-bs-theme');
         }
     }
     localStorage.setItem('temaSeleccionado', tema);
@@ -219,8 +222,10 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
     if (tema === 'Sistema') {
         if (e.matches) {
             document.body.classList.add('dark-mode');
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
         } else {
             document.body.classList.remove('dark-mode');
+            document.documentElement.removeAttribute('data-bs-theme');
         }
     }
 });

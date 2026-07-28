@@ -274,16 +274,16 @@ async function cargarStatsInicio() {
                     }
                 }
                 if (statExpSub) {
-                    const estado = soliData.estado === 'NUEVO' ? 'Fase Inicial' : 
-                                   (soliData.estado === 'EN_REVISION' ? 'En Revisión' : 
-                                   (soliData.estado === 'RECHAZADO' ? 'Requiere Atención' : soliData.estado));
+                    const estado = soliData.estado === 'NUEVO' ? 'Fase Inicial' :
+                        (soliData.estado === 'EN_REVISION' ? 'En Revisión' :
+                            (soliData.estado === 'RECHAZADO' ? 'Requiere Atención' : soliData.estado));
                     statExpSub.innerText = estado;
                 }
 
                 // 2. Convocatoria y Documentos
                 // Bug 9 Fix: renombrar variable local para no ocultar la global
                 const idSolicitudActual = soliData.idSolicitud || soliData.id;
-                
+
                 // Fetch Convocatorias para el nombre
                 const resConv = await fetch('/api/convocatorias');
                 if (resConv.ok) {
@@ -314,7 +314,7 @@ async function cargarStatsInicio() {
                 // No hay solicitud activa
                 if (statExpStatus) {
                     statExpStatus.innerText = 'Sin expediente activo';
-                    statExpStatus.style.color = 'var(--color-text)'; 
+                    statExpStatus.style.color = 'var(--color-text)';
                 }
                 if (statExpSub) {
                     statExpSub.innerText = 'Visita Convocatorias';
@@ -1056,7 +1056,7 @@ async function bloquearInterfazPorRevision(estadoActual = 'EN_REVISION') {
     // 2. Construir la vista integrada dentro de banner-revision (banner superior + barra de progreso + grid sin caja exterior)
     if (banner) {
         banner.style.cssText = 'display:block; background:transparent; border:none; box-shadow:none; padding:0; margin-bottom: 20px;';
-        
+
         let textBanner = 'Expediente bajo revisión';
         let textSub = 'Serás notificado si se requiere alguna corrección';
         let badge = 'EN REVISIÓN';
