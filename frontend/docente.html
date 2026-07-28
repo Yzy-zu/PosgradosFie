@@ -59,10 +59,10 @@
 
         <div class="sidebar-actions">
             <div class="sidebar-settings" onclick="abrirDrawerAjustes()" title="Ajustes" id="btn-sb-ajustes">
-                <i class="fa-solid fa-gear" style="font-size: 18px;"></i>
+                <i class="fa-solid fa-gear icon-anim-gear" style="font-size: 18px;"></i>
             </div>
             <div class="sidebar-logout" onclick="cerrarSesion()" title="Cerrar Sesión" id="btn-sb-logout">
-                <i class="fa-solid fa-right-from-bracket" style="font-size: 18px;"></i>
+                <i class="fa-solid fa-right-from-bracket icon-anim-logout" style="font-size: 18px;"></i>
             </div>
         </div>
     </nav>
@@ -80,7 +80,7 @@
                 <div class="notification-container" onclick="toggleNotificationMenu(event)" style="position: relative;">
                     <div class="notification-trigger"
                         style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; color: var(--color-text); background: var(--color-card-bg);">
-                        <i class="fa-regular fa-bell"></i>
+                        <i class="fa-regular fa-bell icon-anim-bell"></i>
                         <span id="notification-badge" class="notification-badge" style="display: none;"></span>
                     </div>
                     <!-- Mega Dropdown Messages -->
@@ -141,7 +141,7 @@
             <div class="stats-grid" id="inicio-stats" style="margin-bottom: 30px;">
                 <div class="stat-card" onclick="switchView('aspirantes')" style="cursor:pointer;">
                     <div class="stat-card-icon" style="background: #e0f2fe; color: #0284c7;">
-                        <i class="fa-solid fa-users"></i>
+                        <i class="fa-solid fa-users icon-anim-stat"></i>
                     </div>
                     <div class="stat-card-info">
                         <span class="stat-label" data-i18n="docente_total_aspirantes">Total Aspirantes</span>
@@ -152,7 +152,7 @@
 
                 <div class="stat-card" onclick="switchView('aspirantes')" style="cursor:pointer;">
                     <div class="stat-card-icon" style="background: #ecfdf5; color: #10b981;">
-                        <i class="fa-solid fa-circle-check"></i>
+                        <i class="fa-solid fa-circle-check icon-anim-stat"></i>
                     </div>
                     <div class="stat-card-info">
                         <span class="stat-label" data-i18n="docente_exp_aprobados">Revisados</span>
@@ -163,7 +163,7 @@
 
                 <div class="stat-card" onclick="switchView('aspirantes')" style="cursor:pointer;">
                     <div class="stat-card-icon" style="background: #fef2f2; color: #ef4444;">
-                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <i class="fa-solid fa-circle-exclamation icon-anim-stat"></i>
                     </div>
                     <div class="stat-card-info">
                         <span class="stat-label" data-i18n="docente_exp_rechazados">Incompletos</span>
@@ -175,7 +175,7 @@
 
                 <div class="stat-card" onclick="switchView('aspirantes')" style="cursor:pointer;">
                     <div class="stat-card-icon" style="background: #fffbeb; color: #f59e0b;">
-                        <i class="fa-solid fa-clock"></i>
+                        <i class="fa-solid fa-clock icon-anim-stat"></i>
                     </div>
                     <div class="stat-card-info">
                         <span class="stat-label" data-i18n="docente_exp_pendientes">Pendientes</span>
@@ -315,7 +315,7 @@
         <!-- Settings Drawer -->
         <div id="settings-drawer" class="settings-drawer">
             <div class="drawer-header">
-                <h3><i class="fa-solid fa-gear"></i> <span data-i18n="st_ajustes">Ajustes</span></h3>
+                <h3><i class="fa-solid fa-gear icon-anim-gear"></i> <span data-i18n="st_ajustes">Ajustes</span></h3>
                 <button class="btn-close-drawer" onclick="cerrarDrawerAjustes()"><i
                         class="fa-solid fa-xmark"></i></button>
             </div>

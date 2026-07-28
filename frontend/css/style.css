@@ -3709,3 +3709,75 @@ body.dark-mode .profile-modal-bg::before {
 body.dark-mode #eval-tab-documento iframe {
     filter: invert(0.9) hue-rotate(180deg) brightness(0.8) contrast(1.2);
 }
+
+/* ====================================================================
+   FONT AWESOME ICON ANIMATIONS — Aspirante
+   ==================================================================== */
+
+/* Campana: beat suave al tener notificaciones */
+.icon-anim-bell {
+    --fa-animation-duration: 1.8s;
+    --fa-beat-scale: 1.18;
+    animation: fa-beat var(--fa-animation-duration) ease-in-out infinite;
+}
+
+/* Gear: gira al hacer hover sobre el botón de ajustes */
+.sidebar-settings:hover .icon-anim-gear,
+.drawer-header .icon-anim-gear {
+    --fa-animation-duration: 0.7s;
+    animation: fa-spin var(--fa-animation-duration) linear infinite;
+}
+
+/* Logout: shake al hover sobre el botón */
+.sidebar-logout:hover .icon-anim-logout {
+    --fa-animation-duration: 0.5s;
+    --fa-shake-rotation: 15deg;
+    animation: fa-shake var(--fa-animation-duration) ease-in-out infinite;
+}
+
+/* Stats cards: beat-fade suave continuo */
+.stat-card-icon .icon-anim-stat {
+    --fa-animation-duration: 3s;
+    --fa-beat-scale: 1.1;
+    --fa-fade-opacity: 0.65;
+    animation: fa-beat-fade var(--fa-animation-duration) ease-in-out infinite;
+}
+
+/* Program boxes: bounce al hover */
+.box-programa:hover .icon-anim-prog {
+    --fa-animation-duration: 0.6s;
+    --fa-bounce-start-scale-x: 1;
+    --fa-bounce-start-scale-y: 1;
+    --fa-bounce-jump-scale-x: 0.95;
+    --fa-bounce-jump-scale-y: 1.15;
+    --fa-bounce-land-scale-x: 1.05;
+    --fa-bounce-land-scale-y: 0.95;
+    animation: fa-bounce var(--fa-animation-duration) ease-in-out 1;
+}
+
+/* Flechas next: flip al hover sobre el botón */
+.btn-primary:not(:disabled):hover .icon-anim-next {
+    --fa-animation-duration: 0.5s;
+    animation: fa-flip var(--fa-animation-duration) ease-in-out 1;
+}
+
+/* Trash: shake al hover sobre el botón de cancelar */
+#btn-cancelar-solicitud:hover .icon-anim-trash {
+    --fa-animation-duration: 0.45s;
+    --fa-shake-rotation: 20deg;
+    animation: fa-shake var(--fa-animation-duration) ease-in-out infinite;
+}
+
+/* Send (paper plane): beat al hover sobre finalizar */
+#btn-finalizar:not(:disabled):hover .icon-anim-send {
+    --fa-animation-duration: 0.4s;
+    --fa-beat-scale: 1.25;
+    animation: fa-beat var(--fa-animation-duration) ease-in-out 2;
+}
+
+/* Envelope estado vacío: beat-fade continuo suave */
+.messages-empty-state .fa-beat-fade {
+    --fa-animation-duration: 2.5s;
+    --fa-beat-scale: 1.08;
+    --fa-fade-opacity: 0.3;
+}

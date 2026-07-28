@@ -80,11 +80,11 @@
         <div class="sidebar-actions">
             <div class="sidebar-settings" onclick="abrirDrawerAjustes()" title="Ajustes" data-i18n-title="sb_ajustes"
                 id="btn-sb-ajustes">
-                <i class="fa-solid fa-gear" style="font-size: 18px;"></i>
+                <i class="fa-solid fa-gear icon-anim-gear" style="font-size: 18px;"></i>
             </div>
             <div class="sidebar-logout" onclick="cerrarSesion()" title="Cerrar Sesión"
                 data-i18n-title="sb_cerrar_sesion" id="btn-sb-logout">
-                <i class="fa-solid fa-right-from-bracket" style="font-size: 18px;"></i>
+                <i class="fa-solid fa-right-from-bracket icon-anim-logout" style="font-size: 18px;"></i>
             </div>
         </div>
     </nav>
@@ -102,7 +102,7 @@
                 <div class="notification-container" onclick="toggleNotificationMenu(event)" style="position: relative;">
                     <div class="notification-trigger"
                         style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; color: var(--color-text); background: var(--color-card-bg);">
-                        <i class="fa-regular fa-bell"></i>
+                        <i class="fa-regular fa-bell icon-anim-bell"></i>
                         <span id="notification-badge" class="notification-badge" style="display: none;"></span>
                     </div>
                     <!-- Mega Dropdown Messages (se mantiene su funcionalidad) -->
@@ -133,7 +133,7 @@
                             <!-- Vista vacía de lectura (Derecha) -->
                             <div class="messages-mega-read" id="messages-empty-pane">
                                 <div class="messages-empty-state">
-                                    <i class="fa-regular fa-7x mb-3 opacity-55"></i>
+                                    <i class="fa-regular fa-envelope fa-beat-fade" style="font-size: 42px; opacity: 0.4; margin-bottom: 12px;"></i>
                                     <p data-i18n="tb_selecciona_msj"><strong>Selecciona un mensaje</strong><br>para ver
                                         la conversación</p>
                                 </div>
@@ -165,7 +165,7 @@
             <div class="stats-grid" id="inicio-stats">
                 <div class="stat-card">
                     <div class="stat-card-icon" style="background: #eef2ff; color: #6366f1;">
-                        <i class="fa-regular fa-file-lines"></i>
+                        <i class="fa-regular fa-file-lines icon-anim-stat"></i>
                     </div>
                     <div class="stat-card-info">
                         <span class="stat-label" data-i18n="dash_docs">Documentos</span>
@@ -177,7 +177,7 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-card-icon" style="background: #ecfdf5; color: #10b981;">
-                        <i class="fa-regular fa-folder-open"></i>
+                        <i class="fa-regular fa-folder-open icon-anim-stat"></i>
                     </div>
                     <div class="stat-card-info">
                         <span class="stat-label" data-i18n="dash_expediente">Expediente</span>
@@ -188,7 +188,7 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-card-icon" style="background: #fefce8; color: #d97706; border: 1px solid #fde047;">
-                        <i class="fa-solid fa-bullhorn"></i>
+                        <i class="fa-solid fa-bullhorn icon-anim-stat"></i>
                     </div>
                     <div class="stat-card-info">
                         <span class="stat-label" data-i18n="dash_convocatoria">Convocatoria</span>
@@ -224,10 +224,8 @@
                 </div>
 
                 <!-- Controls -->
-                <button class="carousel-btn prev-btn" onclick="moveCarousel(-1)"><i
-                        class="fa-solid fa-chevron-left"></i></button>
-                <button class="carousel-btn next-btn" onclick="moveCarousel(1)"><i
-                        class="fa-solid fa-chevron-right"></i></button>
+                <button class="carousel-btn prev-btn" onclick="moveCarousel(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="carousel-btn next-btn" onclick="moveCarousel(1)"><i class="fa-solid fa-chevron-right"></i></button>
 
                 <!-- Indicators -->
                 <div class="carousel-indicators" id="inicio-carousel-indicators">
@@ -272,10 +270,10 @@
             <!-- Contenedor 1: Selección inicial de tarjetas -->
             <div id="seleccion-programa" class="programas-container">
                 <div class="box-programa" onclick="seleccionarPrograma('Maestría en Ingeniería Eléctrica')">
-                    <i class="fa-solid fa-book-bookmark"></i><br><span data-i18n="sb_maestria">Maestría</span>
+                    <i class="fa-solid fa-book-bookmark icon-anim-prog"></i><br><span data-i18n="sb_maestria">Maestría</span>
                 </div>
                 <div class="box-programa" onclick="seleccionarPrograma('Doctorado en Ingeniería Eléctrica')">
-                    <i class="fa-solid fa-user-graduate"></i><br><span data-i18n="sb_doctorado">Doctorado</span>
+                    <i class="fa-solid fa-user-graduate icon-anim-prog"></i><br><span data-i18n="sb_doctorado">Doctorado</span>
                 </div>
             </div>
 
@@ -307,7 +305,7 @@
                 <button type="button" id="btn-cancelar-solicitud" onclick="cancelarSolicitudActual()"
                     style="background-color: var(--color-danger); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; transition: transform 0.2s;"
                     onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'"><i
-                        class="fa-solid fa-trash"></i> <span data-i18n="doc_btn_cancelar">Cancelar
+                        class="fa-solid fa-trash icon-anim-trash"></i> <span data-i18n="doc_btn_cancelar">Cancelar
                         Solicitud</span></button>
             </div>
             <br>
@@ -360,7 +358,7 @@
                         <button type="button" class="btn-primary" id="btn-next-0"
                             style="width: auto; padding: 12px 30px;" onclick="avanzarEstacion(1)"><span
                                 data-i18n="doc_est0_btn_confirmar">Confirmar y Continuar</span>
-                            <i class="fa-solid fa-arrow-right"></i></button>
+                            <i class="fa-solid fa-arrow-right icon-anim-next"></i></button>
                     </form>
                 </div>
             </div>
@@ -384,7 +382,7 @@
                             <button type="button" class="btn-primary" id="btn-next-1"
                                 style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(2)"><span
                                     data-i18n="doc_btn_siguiente">Siguiente
-                                    Estación</span> <i class="fa-solid fa-arrow-right"></i></button>
+                                    Estación</span> <i class="fa-solid fa-arrow-right icon-anim-next"></i></button>
                         </div>
                     </form>
                 </div>
@@ -408,7 +406,7 @@
                             <button type="button" class="btn-primary" id="btn-next-2"
                                 style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(3)"><span
                                     data-i18n="doc_btn_siguiente">Siguiente
-                                    Estación</span> <i class="fa-solid fa-arrow-right"></i></button>
+                                    Estación</span> <i class="fa-solid fa-arrow-right icon-anim-next"></i></button>
                         </div>
                     </form>
                 </div>
@@ -444,7 +442,7 @@
                             <button type="button" class="btn-primary" id="btn-finalizar"
                                 style="width:auto; padding:12px 30px; background-color: var(--color-success);" disabled
                                 onclick="finalizarProcesoEstaciones()"><span data-i18n="doc_btn_concluir">Concluir y
-                                    Enviar Expediente</span> <i class="fa-solid fa-paper-plane"></i></button>
+                                    Enviar Expediente</span> <i class="fa-solid fa-paper-plane icon-anim-send"></i></button>
                         </div>
                     </form>
                 </div>
@@ -463,7 +461,7 @@
                     style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; padding: 20px 25px; display: flex; justify-content: space-between; align-items: center;">
                     <h3
                         style="margin: 0; font-size: 18px; display: flex; align-items: center; gap: 10px; font-weight: 600; color: #f8fafc;">
-                        <i class="fa-solid" style="color: var(--color-info);"></i>
+                        <i class="fa-solid fa-magnifying-glass" style="color: var(--color-info);"></i>
                         <span id="modal-doc-titulo" data-i18n="doc_detalles">Detalles del Documento</span>
                     </h3>
                     <button onclick="cerrarModalDoc()"
@@ -512,7 +510,7 @@
         <!-- Settings Drawer -->
         <div id="settings-drawer" class="settings-drawer">
             <div class="drawer-header">
-                <h3><i class="fa-solid fa-gear"></i> <span data-i18n="st_ajustes">Ajustes</span></h3>
+                <h3><i class="fa-solid fa-gear icon-anim-gear"></i> <span data-i18n="st_ajustes">Ajustes</span></h3>
                 <button class="btn-close-drawer" onclick="cerrarDrawerAjustes()"><i
                         class="fa-solid fa-xmark"></i></button>
             </div>

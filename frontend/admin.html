@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -115,11 +115,11 @@
         <div class="sidebar-actions">
             <div class="sidebar-settings" onclick="abrirDrawerAjustes()" title="Ajustes" data-i18n-title="sb_ajustes"
                 id="btn-sb-ajustes">
-                <i class="fa-solid fa-gear" style="font-size: 18px;"></i>
+                <i class="fa-solid fa-gear icon-anim-gear" style="font-size: 18px;"></i>
             </div>
             <div class="sidebar-logout" onclick="cerrarSesion()" title="Cerrar Sesión"
                 data-i18n-title="sb_cerrar_sesion" id="btn-sb-logout">
-                <i class="fa-solid fa-right-from-bracket" style="font-size: 18px;"></i>
+                <i class="fa-solid fa-right-from-bracket icon-anim-logout" style="font-size: 18px;"></i>
             </div>
         </div>
     </nav>
@@ -138,7 +138,7 @@
                 <div class="notification-container" onclick="toggleNotificationMenu(event)" style="position: relative;">
                     <div class="notification-trigger"
                         style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; color: var(--color-text); background: var(--color-card-bg);">
-                        <i class="fa-regular fa-bell"></i>
+                        <i class="fa-regular fa-bell icon-anim-bell"></i>
                     </div>
                     <!-- Mega Dropdown Messages -->
                     <div id="notification-dropdown" class="messages-mega-dropdown" onclick="event.stopPropagation();">
@@ -174,7 +174,7 @@
                 <div class="stats-grid">
                     <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#usuarios'">
                         <div class="stat-card-icon" style="background: #eef2ff; color: #6366f1;">
-                            <i class="fa-solid fa-users"></i>
+                            <i class="fa-solid fa-users icon-anim-stat"></i>
                         </div>
                         <div class="stat-card-info">
                             <span class="stat-label">Usuarios</span>
@@ -184,7 +184,7 @@
 
                     <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#posgrados'">
                         <div class="stat-card-icon" style="background: #ecfdf5; color: #10b981;">
-                            <i class="fa-solid fa-graduation-cap"></i>
+                            <i class="fa-solid fa-graduation-cap icon-anim-stat"></i>
                         </div>
                         <div class="stat-card-info">
                             <span class="stat-label">Posgrados</span>
@@ -194,7 +194,7 @@
 
                     <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#aspirantes'">
                         <div class="stat-card-icon" style="background: #fffbeb; color: #f59e0b;">
-                            <i class="fa-solid fa-address-card"></i>
+                            <i class="fa-solid fa-address-card icon-anim-stat"></i>
                         </div>
                         <div class="stat-card-info">
                             <span class="stat-label">Aspirantes</span>
@@ -204,7 +204,7 @@
 
                     <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#solicitudes'">
                         <div class="stat-card-icon" style="background: #fef2f2; color: #ef4444;">
-                            <i class="fa-solid fa-file-contract"></i>
+                            <i class="fa-solid fa-file-contract icon-anim-stat"></i>
                         </div>
                         <div class="stat-card-info">
                             <span class="stat-label">Solicitudes</span>
@@ -214,7 +214,7 @@
 
                     <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#convocatorias'">
                         <div class="stat-card-icon" style="background: #fdf4ff; color: #d946ef;">
-                            <i class="fa-solid fa-bullhorn"></i>
+                            <i class="fa-solid fa-bullhorn icon-anim-stat"></i>
                         </div>
                         <div class="stat-card-info">
                             <span class="stat-label">Convocatorias</span>
@@ -224,7 +224,7 @@
 
                     <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#documentos'">
                         <div class="stat-card-icon" style="background: #fff7ed; color: #f97316;">
-                            <i class="fa-solid fa-folder-open"></i>
+                            <i class="fa-solid fa-folder-open icon-anim-stat"></i>
                         </div>
                         <div class="stat-card-info">
                             <span class="stat-label">Documentos</span>
@@ -543,7 +543,7 @@
                                 </div>
                                 <button type="submit" class="btn btn-primary px-4 rounded-pill shadow-sm"
                                     style="background-color: #25D366; border-color: #25D366;">
-                                    <i class="fa-solid fa-paper-plane me-2"></i> Enviar Notificación
+                                    <i class="fa-solid fa-paper-plane icon-anim-send me-2"></i> Enviar Notificación
                                 </button>
                             </div>
                         </form>
@@ -869,7 +869,7 @@
         <!-- Settings Drawer -->
         <div id="settings-drawer" class="settings-drawer">
             <div class="drawer-header">
-                <h3><i class="fa-solid fa-gear"></i> <span data-i18n="st_ajustes">Ajustes</span></h3>
+                <h3><i class="fa-solid fa-gear icon-anim-gear"></i> <span data-i18n="st_ajustes">Ajustes</span></h3>
                 <button class="btn-close-drawer" onclick="cerrarDrawerAjustes()"><i
                         class="fa-solid fa-xmark"></i></button>
             </div>
