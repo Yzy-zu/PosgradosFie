@@ -19,17 +19,8 @@ socket.on('actualizacionGlobal', () => {
 });
 
 // Manejo y persistencia de estado de la barra lateral (Sidebar)
-function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
-    if (!sidebar) return;
-
-    const isCollapsed = sidebar.classList.toggle('collapsed');
-    if (mainContent) {
-        mainContent.classList.toggle('expanded', isCollapsed);
-    }
-    localStorage.setItem('sidebarCollapsed', isCollapsed ? 'true' : 'false');
-}
+// Bug 5 Fix: toggleSidebar() es la versión canónica definida en utils.js
+// Se elimina la definición local para evitar duplicación.
 
 function restaurarEstadoSidebar() {
     const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
@@ -66,14 +57,13 @@ document.addEventListener("DOMContentLoaded", async function () {
     };
 
     // Obtener datos del aspirante real
+    // Bug 1 Fix: usar /api/aspirante/me en lugar de descargar toda la tabla
     try {
-        const resAspirantes = await fetch('/api/aspirante');
+        const resAspirantes = await fetch('/api/aspirante/me');
         if (resAspirantes.ok) {
-            const listaAspirantes = await resAspirantes.json();
-            // Buscar aspirante por idUsuario
-            aspiranteData = listaAspirantes.find(a => a.idUsuario === usuario.id);
+            aspiranteData = await resAspirantes.json();
 
-            if (aspiranteData) {
+            if (aspiranteData && aspiranteData.id) {
                 // Función auxiliar para capitalizar nombres
                 const capitalizarNombre = (str) => {
                     if (!str) return "";
@@ -210,6 +200,10 @@ function switchView(viewId) {
                 'documentos': typeof t === 'function' ? t('sb_documentos') : 'Documentos'
             };
             topbarNombre.innerText = titulos[viewId] || (viewId.charAt(0).toUpperCase() + viewId.slice(1));
+            // Bug 6 Fix: cargar datos reales para la gráfica de proceso
+            if (viewId === 'proceso') {
+                cargarDatosProceso();
+            }
         }
     }
 
@@ -287,7 +281,8 @@ async function cargarStatsInicio() {
                 }
 
                 // 2. Convocatoria y Documentos
-                const currentSolicitudId = soliData.idSolicitud || soliData.id;
+                // Bug 9 Fix: renombrar variable local para no ocultar la global
+                const idSolicitudActual = soliData.idSolicitud || soliData.id;
                 
                 // Fetch Convocatorias para el nombre
                 const resConv = await fetch('/api/convocatorias');
@@ -304,7 +299,8 @@ async function cargarStatsInicio() {
                 const resExp = await fetch(`/api/aspirante/${aspiranteData.id}/expediente`);
                 if (resExp.ok) {
                     const expData = await resExp.json();
-                    const soliActiva = expData.solicitudes?.find(s => s.idSolicitud === currentSolicitudId);
+                    // Bug 9 Fix: usar idSolicitudActual (variable local renombrada)
+                    const soliActiva = expData.solicitudes?.find(s => s.idSolicitud === idSolicitudActual);
                     if (soliActiva && soliActiva.documentos) {
                         const docsSubidos = soliActiva.documentos.filter(d => d.rutaArchivo).length;
                         if (statDocsCount) statDocsCount.innerText = `${docsSubidos} documentos subidos`;
@@ -333,6 +329,39 @@ async function cargarStatsInicio() {
         }
     } catch (error) {
         console.error("Error al cargar stats de inicio:", error);
+    }
+}
+
+/**
+ * Bug 6 Fix: Carga datos reales del expediente para actualizar la gráfica de proceso
+ */
+async function cargarDatosProceso() {
+    if (!aspiranteData || !aspiranteData.id || !currentSolicitudId) {
+        // Sin solicitud activa: mostrar gráfica en cero
+        actualizarGraficaProceso(0, 0, 0);
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/aspirante/${aspiranteData.id}/expediente`);
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const solicitudActiva = data.solicitudes?.find(s => s.idSolicitud === currentSolicitudId);
+
+        if (!solicitudActiva || !solicitudActiva.documentos || solicitudActiva.documentos.length === 0) {
+            actualizarGraficaProceso(0, 0, 0);
+            return;
+        }
+
+        const docs = solicitudActiva.documentos;
+        const total = docs.length;
+        const aprobados = docs.filter(d => d.estadoValidacion === 'APROBADO').length;
+        const rechazados = docs.filter(d => d.estadoValidacion === 'RECHAZADO').length;
+
+        actualizarGraficaProceso(aprobados, rechazados, total);
+    } catch (error) {
+        console.error('Error al cargar datos de proceso:', error);
     }
 }
 
@@ -871,6 +900,8 @@ async function avanzarEstacion(nuevaEstacion) {
 
     if (form && currentSolicitudId) {
         const formData = new FormData(form);
+        // Bug 8 Fix: rastrear fallos de subida y notificar al usuario
+        const fallos = [];
         // Iterar sobre los archivos seleccionados en este form
         for (let [name, file] of formData.entries()) {
             if (file && file.size > 0) {
@@ -888,11 +919,23 @@ async function avanzarEstacion(nuevaEstacion) {
 
                     if (!res.ok) {
                         console.error(`Error al subir documento ${name}`);
+                        fallos.push(file.name || name);
                     }
                 } catch (e) {
                     console.error("Error en petición de subida:", e);
+                    fallos.push(file.name || name);
                 }
             }
+        }
+        // Notificar al usuario si algún archivo falló
+        if (fallos.length > 0) {
+            ocultarLoader();
+            await Swal.fire({
+                title: 'Advertencia',
+                html: `Los siguientes archivos no pudieron subirse:<br><strong>${fallos.join('<br>')}</strong><br><br>Puedes intentar subirlos de nuevo más tarde.`,
+                icon: 'warning',
+                confirmButtonColor: '#8a1c24'
+            });
         }
     }
 
@@ -1343,7 +1386,9 @@ function abrirModalDoc(docStr) {
 
         const enlace = document.getElementById('modal-doc-enlace');
         if (doc.rutaArchivo) {
-            enlace.href = `/uploads/${doc.rutaArchivo}`;
+            // Bug 10 Fix: usar ruta autenticada en lugar de /uploads/ directo
+            const token = sessionStorage.getItem('token') || '';
+            enlace.href = `/api/files/${doc.rutaArchivo}?token=${encodeURIComponent(token)}`;
             enlace.style.display = 'inline-flex';
         } else {
             enlace.style.display = 'none';
@@ -1765,8 +1810,9 @@ async function cancelarSolicitudActual() {
             if (seleccion) seleccion.style.display = 'flex';
             if (bloqueo) bloqueo.style.display = 'none';
 
-            // Ocultar sección de documentos
-            document.getElementById('li-nav-documentos').style.display = 'none';
+            // Bug 7 Fix: null-check antes de acceder al elemento
+            const navDocumentos = document.getElementById('li-nav-documentos');
+            if (navDocumentos) navDocumentos.style.display = 'none';
 
             // Regresar a la vista de convocatorias
             switchView('convocatorias');
@@ -2014,20 +2060,7 @@ function updateCarousel() {
         if (index === currentSlide) ind.classList.add('active');
         else ind.classList.remove('active');
     });
-
-    // Actualización dinámica de altura
-    const container = document.getElementById('inicio-carousel');
-    const slides = document.querySelectorAll('.carousel-slide img');
-    if (container && slides[currentSlide]) {
-        const activeImg = slides[currentSlide];
-        if (activeImg.complete) {
-            container.style.height = activeImg.clientHeight + 'px';
-        } else {
-            activeImg.onload = () => {
-                container.style.height = activeImg.clientHeight + 'px';
-            };
-        }
-    }
+    // La altura la maneja CSS (aspect-ratio: 16/5) — sin dependencia de onload
 }
 
 function moveCarousel(direction) {

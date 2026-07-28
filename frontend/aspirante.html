@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión - Posgrado FIE</title>
+    <title>FIE</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -12,10 +12,12 @@
     <link rel="stylesheet" href="css/style.css">
     <!-- Script de Internacionalización -->
     <script src="js/i18n.js"></script>
-    <!-- Incluir utilidades compartidas -->
-    <script src="js/utils.js"></script>
-    <!-- SweetAlert2 para modales modernos -->
+    <!-- SweetAlert2 para modales modernos (debe cargarse en head para que authInterceptor lo use) -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Preload de imágenes del carrusel: se descargan inmediatamente sin esperar la navegación a #inicio -->
+    <link rel="preload" as="image" href="/files/FIE-Banner-Principal-1.jpg">
+    <link rel="preload" as="image" href="/files/flyer-nuevo-ingreso-26.jpeg">
+    <link rel="preload" as="image" href="/files/flyer-reingreso-2026.jpeg">
 </head>
 
 <body>
@@ -148,8 +150,10 @@
                             id="topbar-iniciales">
                             --
                         </div>
-                        <span id="topbar-first-name" style="font-size: 14px; font-weight: 500; color: var(--color-text);">Perfil</span>
-                        <i class="fa-solid fa-chevron-down" style="font-size: 12px; color: var(--color-text-muted);"></i>
+                        <span id="topbar-first-name"
+                            style="font-size: 14px; font-weight: 500; color: var(--color-text);">Perfil</span>
+                        <i class="fa-solid fa-chevron-down"
+                            style="font-size: 12px; color: var(--color-text-muted);"></i>
                     </div>
                 </div>
             </div> <!-- Flex container end -->
@@ -164,8 +168,10 @@
                     </div>
                     <div class="stat-card-info">
                         <span class="stat-label" data-i18n="dash_docs">Documentos</span>
-                        <span class="stat-value" id="dash-docs-count" style="font-size: 15px; margin-top: 4px;">0 documentos subidos</span>
-                        <span class="stat-sub" id="dash-docs-sub" data-i18n="dash_esperando_datos" style="display: none;">Esperando datos...</span>
+                        <span class="stat-value" id="dash-docs-count" style="font-size: 15px; margin-top: 4px;">0
+                            documentos subidos</span>
+                        <span class="stat-sub" id="dash-docs-sub" data-i18n="dash_esperando_datos"
+                            style="display: none;">Esperando datos...</span>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -174,7 +180,8 @@
                     </div>
                     <div class="stat-card-info">
                         <span class="stat-label" data-i18n="dash_expediente">Expediente</span>
-                        <span class="stat-value" id="dash-exp-status" style="font-size: 15px; margin-top: 4px;">Sin expediente activo</span>
+                        <span class="stat-value" id="dash-exp-status" style="font-size: 15px; margin-top: 4px;">Sin
+                            expediente activo</span>
                         <span class="stat-sub" id="dash-exp-sub" style="display: none;">--</span>
                     </div>
                 </div>
@@ -184,7 +191,8 @@
                     </div>
                     <div class="stat-card-info">
                         <span class="stat-label" data-i18n="dash_convocatoria">Convocatoria</span>
-                        <span class="stat-value" id="dash-conv-name" style="font-size: 15px; margin-top: 4px;">Ninguna seleccionada</span>
+                        <span class="stat-value" id="dash-conv-name" style="font-size: 15px; margin-top: 4px;">Ninguna
+                            seleccionada</span>
                         <span class="stat-sub" id="dash-conv-sub" style="display: none;">Maestría FIE</span>
                     </div>
                 </div>

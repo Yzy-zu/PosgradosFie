@@ -16,16 +16,17 @@ function ocultarLoader() {
 }
 
 // ==== SIDEBAR TOGGLE ====
+// Bug 5 Fix: implementación canónica con toggle sincronizado
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const mainContent = document.querySelector('.main-content');
-    
-    if (sidebar) {
-        sidebar.classList.toggle('collapsed');
-        const isCollapsed = sidebar.classList.contains('collapsed');
-        localStorage.setItem('sidebarCollapsed', isCollapsed);
+    if (!sidebar) return;
+
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    if (mainContent) {
+        mainContent.classList.toggle('expanded', isCollapsed);
     }
-    if (mainContent) mainContent.classList.toggle('expanded');
+    localStorage.setItem('sidebarCollapsed', isCollapsed ? 'true' : 'false');
 }
 
 // Inicializar estado de interfaz al cargar (Sidebar y Tema)

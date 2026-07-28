@@ -164,17 +164,61 @@ const actualizarEstacion = async (req, res) => {
     }
 };
 
-// Enviar expediente a revisión
+// Enviar expediente a revisión (Bug 2 Fix: validación server-side de documentos obligatorios)
 const enviarExpediente = async (req, res) => {
     try {
         const { id } = req.params;
+
+        // Obtener la solicitud y su convocatoria asociada
+        const [solicitudes] = await db.query('SELECT id, idConvocatoria, estado FROM solicitud WHERE id = ?', [id]);
+        if (solicitudes.length === 0) {
+            return res.status(404).json({ mensaje: 'La solicitud no existe.' });
+        }
+        const solicitud = solicitudes[0];
+
+        if (solicitud.estado !== 'PENDIENTE') {
+            return res.status(400).json({ mensaje: `La solicitud ya está en estado ${solicitud.estado} y no puede enviarse de nuevo.` });
+        }
+
+        // Obtener los requisitos OBLIGATORIOS de la convocatoria
+        const [requisitosObligatorios] = await db.query(
+            'SELECT id FROM catalogo_requisitos WHERE idConvocatoria = ? AND obligatorio = 1',
+            [solicitud.idConvocatoria]
+        );
+
+        if (requisitosObligatorios.length > 0) {
+            const idsRequeridos = requisitosObligatorios.map(r => r.id);
+
+            // Obtener qué requisitos YA tienen documento subido para esta solicitud
+            const [docsSubidos] = await db.query(
+                'SELECT DISTINCT idRequisito FROM solicitud_documentos WHERE idSolicitud = ? AND idRequisito IN (?)',
+                [id, idsRequeridos]
+            );
+
+            const idsSubidos = new Set(docsSubidos.map(d => d.idRequisito));
+            const faltantes = idsRequeridos.filter(reqId => !idsSubidos.has(reqId));
+
+            if (faltantes.length > 0) {
+                return res.status(400).json({
+                    mensaje: `Faltan ${faltantes.length} documento(s) obligatorio(s) para enviar el expediente.`,
+                    requisitasFaltantes: faltantes
+                });
+            }
+        }
+
+        // Todos los documentos obligatorios están presentes — cambiar estado
         await db.query("UPDATE solicitud SET estado = 'EN_REVISION', estacion_actual = 4 WHERE id = ?", [id]);
+
+        // Emitir evento global de actualización
+        req.app.get('io').emit('actualizacionGlobal');
+
         return res.status(200).json({ mensaje: 'Expediente enviado a revisión exitosamente.' });
     } catch (error) {
         console.error('Error en enviarExpediente:', error);
         return res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
     }
 };
+
 
 module.exports = {
     crearSolicitud,

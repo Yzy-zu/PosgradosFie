@@ -6,7 +6,7 @@
     <script src="js/utils.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Docente - Posgrado FIE</title>
+    <title>FIE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -87,7 +87,8 @@
                         <div class="messages-mega-header">
                             <span data-i18n="tb_bandeja">Bandeja de Mensajes</span>
                             <i class="fa-solid fa-check-double" style="cursor: pointer; color: white;"
-                                title="Marcar todos como leídos" data-i18n-title="tb_marcar_leidos" onclick="alert('En desarrollo')"></i>
+                                title="Marcar todos como leídos" data-i18n-title="tb_marcar_leidos"
+                                onclick="alert('En desarrollo')"></i>
                         </div>
                         <div class="messages-mega-body">
                             <!-- Lista de chats (Izquierda) -->
@@ -110,7 +111,8 @@
                             <div class="messages-mega-read" id="messages-empty-pane">
                                 <div class="messages-empty-state">
                                     <i class="fa-regular fa-comments fa-3x mb-3 opacity-25"></i>
-                                    <p data-i18n="tb_selecciona_msj">Selecciona un mensaje<br>para ver la conversación</p>
+                                    <p data-i18n="tb_selecciona_msj">Selecciona un mensaje<br>para ver la conversación
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -125,10 +127,12 @@
                             id="topbar-iniciales">
                             --
                         </div>
-                        <span id="topbar-first-name" data-i18n="docente_perfil" style="font-size: 14px; font-weight: 500; color: var(--color-text);">Perfil</span>
-                        <i class="fa-solid fa-chevron-down" style="font-size: 12px; color: var(--color-text-muted);"></i>
-                </div>
-            </div> <!-- Flex container end -->
+                        <span id="topbar-first-name" data-i18n="docente_perfil"
+                            style="font-size: 14px; font-weight: 500; color: var(--color-text);">Perfil</span>
+                        <i class="fa-solid fa-chevron-down"
+                            style="font-size: 12px; color: var(--color-text-muted);"></i>
+                    </div>
+                </div> <!-- Flex container end -->
         </header>
 
         <section id="view-inicio" class="view-section active">
@@ -183,7 +187,9 @@
                 <div class="card"
                     style="flex: 1; min-width: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px;">
                     <h3 data-i18n="docente_dist_doc">Distribución de Documentos Evaluados</h3>
-                    <p data-i18n="docente_dist_doc_desc" style="font-size: 13px; color: #666; margin-bottom: 20px; text-align: center;">Porcentaje general
+                    <p data-i18n="docente_dist_doc_desc"
+                        style="font-size: 13px; color: #666; margin-bottom: 20px; text-align: center;">Porcentaje
+                        general
                         de documentos revisados en la plataforma.</p>
 
                     <div id="grafica-pastel" class="pie-chart">
@@ -191,19 +197,23 @@
                     </div>
 
                     <div class="chart-legend">
-                        <div class="legend-item"><span class="dot approved"></span> <span data-i18n="proc_aprobados">Aprobados</span> (<strong
-                                id="lbl-aprobados">0</strong>)</div>
-                        <div class="legend-item"><span class="dot rejected"></span> <span data-i18n="proc_rechazados">Rechazados</span> (<strong
-                                id="lbl-rechazados">0</strong>)</div>
-                        <div class="legend-item"><span class="dot pending"></span> <span data-i18n="proc_pendientes">Pendientes</span> (<strong
-                                id="lbl-pendientes">0</strong>)</div>
+                        <div class="legend-item"><span class="dot approved"></span> <span
+                                data-i18n="proc_aprobados">Aprobados</span> (<strong id="lbl-aprobados">0</strong>)
+                        </div>
+                        <div class="legend-item"><span class="dot rejected"></span> <span
+                                data-i18n="proc_rechazados">Rechazados</span> (<strong id="lbl-rechazados">0</strong>)
+                        </div>
+                        <div class="legend-item"><span class="dot pending"></span> <span
+                                data-i18n="proc_pendientes">Pendientes</span> (<strong id="lbl-pendientes">0</strong>)
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
         <section id="view-aspirantes" class="view-section">
-            <h2><i class="fa-solid fa-folder-open"></i> <span data-i18n="docente_revision_expedientes">Revisión y Expedientes</span></h2>
+            <h2><i class="fa-solid fa-folder-open"></i> <span data-i18n="docente_revision_expedientes">Revisión y
+                    Expedientes</span></h2>
             <div class="aspirantes-layout">
                 <div class="aspirantes-sidebar"
                     style="background: var(--color-card-bg); border-color: var(--color-border);">
@@ -212,7 +222,8 @@
                             <i class="fa-solid fa-magnifying-glass"
                                 style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
                             <input type="text" id="filtro-nombre" class="form-control"
-                                placeholder="Buscar por nombre..." data-i18n-placeholder="docente_busqueda_ph" oninput="filtrarYMostrarAspirantes()"
+                                placeholder="Buscar por nombre..." data-i18n-placeholder="docente_busqueda_ph"
+                                oninput="filtrarYMostrarAspirantes()"
                                 style="padding-left: 35px; width: 100%; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
                         </div>
                         <select id="filtro-programa" class="form-select" onchange="filtrarYMostrarAspirantes()"
@@ -226,7 +237,8 @@
                             <option value="" data-i18n="docente_estado_todos">Todos los estados</option>
                             <option value="pendiente" data-i18n="docente_estado_pendientes">Pendientes</option>
                             <option value="revisado" data-i18n="docente_estado_completos">Revisados (Completos)</option>
-                            <option value="incompleto" data-i18n="docente_estado_incompletos">Rechazados / Incompletos</option>
+                            <option value="incompleto" data-i18n="docente_estado_incompletos">Rechazados / Incompletos
+                            </option>
                         </select>
                     </div>
                     <div class="aspirantes-list" id="contenedor-aspirantes" style="background: transparent;">
@@ -238,8 +250,10 @@
                     <div class="detail-placeholder" id="placeholder-detalle" style="color: var(--color-text-muted);">
                         <img src="css/posgradofie.png" alt="UMSNH"
                             style="width: 150px; height: auto; opacity: 0.5; margin-bottom: 20px;">
-                        <h3 style="color: var(--color-text);" data-i18n="docente_selecciona_asp">Ningún aspirante seleccionado</h3>
-                        <p data-i18n="docente_selecciona_asp">Haz clic en un registro de la lista de la izquierda para comenzar con la auditoría documental.</p>
+                        <h3 style="color: var(--color-text);" data-i18n="docente_selecciona_asp">Ningún aspirante
+                            seleccionado</h3>
+                        <p data-i18n="docente_selecciona_asp">Haz clic en un registro de la lista de la izquierda para
+                            comenzar con la auditoría documental.</p>
                     </div>
 
                     <div id="contenido-detalle" style="display: none;">
@@ -258,18 +272,22 @@
                             style="background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 8px; padding: 15px; margin-top: 15px;">
                             <div class="info-block" style="color: var(--color-text);">
                                 <p style="margin-bottom: 8px;"><strong><i class="fa-solid fa-envelope"
-                                            style="color: var(--color-primary);"></i> <span data-i18n="prof_correo">Correo</span>:</strong> <span
+                                            style="color: var(--color-primary);"></i> <span
+                                            data-i18n="prof_correo">Correo</span>:</strong> <span
                                         id="det-correo">juan@correo.com</span></p>
                                 <p style="margin-bottom: 0;"><strong><i class="fa-solid fa-calendar-days"
-                                            style="color: var(--color-primary);"></i> <span data-i18n="prof_fecha_registro">Fecha Registro</span>:</strong> <span
+                                            style="color: var(--color-primary);"></i> <span
+                                            data-i18n="prof_fecha_registro">Fecha Registro</span>:</strong> <span
                                         id="det-fecha">2026-06-15</span></p>
                             </div>
                             <div class="info-block" style="color: var(--color-text);">
                                 <p style="margin-bottom: 8px;"><strong><i class="fa-solid fa-handshake"
-                                            style="color: var(--color-primary);"></i> <span data-i18n="conv_modalidad">Mecanismo</span>:</strong> <span
+                                            style="color: var(--color-primary);"></i> <span
+                                            data-i18n="conv_modalidad">Mecanismo</span>:</strong> <span
                                         id="det-mecanismo">Curso Propedéutico</span></p>
                                 <p style="margin-bottom: 0;"><strong><i class="fa-solid fa-graduation-cap"
-                                            style="color: var(--color-primary);"></i> <span data-i18n="det_nivel">Nivel</span>:</strong> <span
+                                            style="color: var(--color-primary);"></i> <span
+                                            data-i18n="det_nivel">Nivel</span>:</strong> <span
                                         id="det-nivel">Maestría</span></p>
                             </div>
                         </div>
@@ -381,18 +399,18 @@
                     </h3>
                     <div style="display: flex; gap: 10px; margin-left: 20px; flex-wrap: wrap;">
                         <button class="modal-tab-btn active" onclick="cambiarTabEvaluacion('documento')"
-                            id="btn-tab-documento" data-i18n="docente_modal_documento"
+                            id="btn-tab-documento"
                             style="padding: 5px 15px; border: none; background: var(--color-primary); color: white; border-radius: 20px; cursor: pointer; font-weight: bold;">Documento</button>
                         <button class="modal-tab-btn" onclick="cambiarTabEvaluacion('comentarios')"
-                            id="btn-tab-comentarios" data-i18n="docente_modal_comentarios"
+                            id="btn-tab-comentarios"
                             style="padding: 5px 15px; border: none; background: transparent; color: var(--color-text-muted); border-radius: 20px; cursor: pointer;">Comentarios</button>
                         <button class="modal-tab-btn" onclick="cambiarTabEvaluacion('historial')" id="btn-tab-historial"
-                            data-i18n="docente_modal_historial" style="padding: 5px 15px; border: none; background: transparent; color: var(--color-text-muted); border-radius: 20px; cursor: pointer;">Historial</button>
+                            style="padding: 5px 15px; border: none; background: transparent; color: var(--color-text-muted); border-radius: 20px; cursor: pointer;">Historial</button>
                     </div>
                 </div>
-                <button onclick="cerrarModalEvaluacion()" data-i18n="docente_modal_cerrar"
-                    style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--color-danger); font-weight: bold;"><i
-                        class="fa-solid fa-xmark"></i> Cerrar</button>
+                <button onclick="cerrarModalEvaluacion()"
+                    style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--color-text-muted); font-weight: bold;"><i
+                        class="fa-solid fa-xmark"></i></button>
             </div>
 
             <!-- Contenido de las pestañas -->
@@ -426,16 +444,17 @@
                 <!-- Panel oculto para rechazo -->
                 <div id="eval-panel-rechazo"
                     style="display: none; border-top: 1px dashed var(--color-border); padding-top: 15px;">
-                    <p data-i18n="docente_motivo_rechazo" style="margin: 0 0 10px 0; color: var(--color-text); font-size: 14px; font-weight: bold;">Motivo del rechazo:</p>
-                    <textarea id="eval-modal-nota" data-i18n-placeholder="docente_motivo_ph"
-                        placeholder="Escribe aquí el motivo detallado del rechazo para que el aspirante pueda corregirlo..."
-                        class="form-control"
+                    <p style="margin: 0 0 10px 0; color: var(--color-text); font-size: 14px; font-weight: bold;">Motivo
+                        de rechazo:</p>
+                    <textarea id="eval-modal-nota"
+                        placeholder="Escriba detalladamente el motivo del rechazo del documento..." class="form-control"
                         style="width: 100%; height: 80px; padding: 10px; border-radius: 6px; border: 1px solid var(--color-border); font-family: inherit; margin-bottom: 10px; box-sizing: border-box; background: var(--color-input-bg); color: var(--color-text);"></textarea>
-                    <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                        <button class="btn-secondary" onclick="ocultarOpcionesRechazo()" data-i18n="docente_btn_cancelar_rech"
-                            style="padding: 8px 15px; border-radius: 6px; cursor: pointer;">Cancelar Rechazo</button>
-                        <button class="btn-primary" onclick="rechazarDocumentoModal()" data-i18n="docente_btn_confirmar_rech"
-                            style="padding: 8px 15px; background-color: var(--color-danger); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Confirmar Rechazo Definitivo</button>
+                    <div style="display: flex; gap: 16px; width: 100%;">
+                        <button class="btn-secondary" onclick="ocultarOpcionesRechazo()"
+                            style="flex: 1; height: 40px; padding: 8px 15px; border-radius: 6px; cursor: pointer; border: 1px solid var(--color-text-muted); background: transparent; color: var(--color-text-muted); font-weight: bold; display: flex; justify-content: center; align-items: center;">Cancelar</button>
+                        <button class="btn-primary" onclick="rechazarDocumentoModal()"
+                            style="flex: 1; height: 40px; padding: 8px 15px; background-color: var(--color-danger); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center;">Confirmar
+                            rechazo</button>
                     </div>
                 </div>
             </div>

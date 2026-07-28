@@ -79,6 +79,27 @@ const registrarAspirante = async (req, res) => {
     }
 };
 
+// Obtener el aspirante del usuario autenticado (usando idUsuario del JWT)
+const getAspiranteMe = async (req, res) => {
+    try {
+        const idUsuario = req.usuario?.id;
+        if (!idUsuario) {
+            return res.status(401).json({ success: false, mensaje: 'No se pudo identificar al usuario.' });
+        }
+
+        const [resultados] = await db.query('SELECT * FROM aspirante WHERE idUsuario = ?', [idUsuario]);
+
+        if (resultados.length === 0) {
+            return res.status(404).json({ success: false, mensaje: 'No se encontró el perfil de aspirante para este usuario.' });
+        }
+
+        return res.status(200).json(resultados[0]);
+    } catch (error) {
+        console.error('Error en getAspiranteMe:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error en el servidor.' });
+    }
+};
+
 // Obtener todos los aspirantes
 const obtenerAspirantes = async (req, res) => {
     try {
@@ -266,6 +287,7 @@ const obtenerTodosLosExpedientes = async (req, res) => {
 
 module.exports = {
     registrarAspirante,
+    getAspiranteMe,
     obtenerAspirantes,
     obtenerAspirantePorId,
     obtenerExpediente,
