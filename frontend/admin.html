@@ -247,13 +247,14 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle">
+                        <table class="table table-hover align-middle mb-0">
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Correo</th>
+                                    <th>Usuario / Correo</th>
                                     <th>Rol</th>
                                     <th>Estado</th>
+                                    <th class="text-end">Acción</th>
                                 </tr>
                             </thead>
                             <tbody id="tablaUsuarios"></tbody>
@@ -295,12 +296,13 @@
                         </h5>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle">
+                        <table class="table table-hover align-middle mb-0">
                             <thead>
                                 <tr>
                                     <th>Nombre</th>
                                     <th>Correo</th>
                                     <th>Estado</th>
+                                    <th class="text-end">Acción</th>
                                 </tr>
                             </thead>
                             <tbody id="tablaAspirantes"></tbody>
@@ -491,8 +493,7 @@
                     <!-- Modo Redacción -->
                     <div id="chatComposeMode" class="chat-compose"
                         style="display: none; flex-direction: column; height: 100%;">
-                        <div class="chat-header bg-light border-bottom mb-3"
-                            style="margin: -20px -20px 20px -20px; padding: 15px 20px;">
+                        <div class="chat-header" style="margin: -20px -20px 20px -20px; padding: 15px 20px;">
                             <h6 class="mb-0 fw-bold text-primary"><i class="fa-solid fa-pen-to-square me-2"></i> Nuevo
                                 Mensaje</h6>
                             <button class="btn-close" onclick="cerrarRedaccionNotificacion()"></button>

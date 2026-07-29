@@ -205,11 +205,23 @@ async function cargarUsuarios() {
             fila.style.cursor = "pointer";
             fila.onclick = () => editarUsuario(usuario.id);
 
+            const ini = (usuario.correo || 'U').charAt(0).toUpperCase();
+
             fila.innerHTML = `
-                <td>${usuario.id}</td>
-                <td>${usuario.correo}</td>
-                <td>${usuario.rol || 'Usuario'}</td>
-                <td><span class="badge bg-success">${usuario.activo ? 'Activo' : 'Inactivo'}</span></td>
+                <td><span class="fw-bold opacity-75">#${usuario.id}</span></td>
+                <td>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="table-avatar">${ini}</div>
+                        <span class="fw-bold">${usuario.correo}</span>
+                    </div>
+                </td>
+                <td><span class="soft-badge soft-badge-primary">${usuario.rol || 'Usuario'}</span></td>
+                <td><span class="soft-badge ${usuario.activo ? 'soft-badge-success' : 'soft-badge-danger'}">${usuario.activo ? 'Activo' : 'Inactivo'}</span></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px; padding: 0;">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                </td>
             `;
             tbody.appendChild(fila);
         });
@@ -1172,13 +1184,24 @@ async function cargarAspirantes() {
             }
 
             const correoReal = (await correoAspirante(aspirante.idUsuario)) || aspirante.correo || 'Sin correo';
+            const ini = (aspirante.nombre ? aspirante.nombre.charAt(0) : (correoReal ? correoReal.charAt(0) : 'A')).toUpperCase();
 
             tr.style.cursor = "pointer";
             tr.onclick = () => verExpedienteAspirante(aspirante.id);
             tr.innerHTML = `
-                <td>${nombreCompleto || 'Sin nombre'}</td>
-                <td>${correoReal}</td>
-                <td><span class="badge bg-secondary">Registrado</span></td>
+                <td>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="table-avatar table-avatar-info">${ini}</div>
+                        <span class="fw-bold">${nombreCompleto || 'Sin nombre'}</span>
+                    </div>
+                </td>
+                <td style="color: var(--color-text-muted);">${correoReal}</td>
+                <td><span class="soft-badge soft-badge-info"><i class="fa-solid fa-user-check me-1"></i> Registrado</span></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 text-nowrap" style="font-size: 0.8rem;">
+                        <i class="fa-solid fa-folder-open me-1"></i> Ver expediente
+                    </button>
+                </td>
             `;
             tbody.appendChild(tr);
         }
@@ -1500,7 +1523,7 @@ function mostrarLecturaNotificacion(id) {
     const body = document.getElementById("chatReadBody");
     body.innerHTML = `
         <div style="text-align: center; margin-bottom: 15px;">
-            <span style="background: #e2e8f0; padding: 2px 8px; border-radius: 12px; font-size: 11px; color: #64748b; font-weight: bold;">${dateStr}</span>
+            <span style="background: var(--color-border); padding: 2px 8px; border-radius: 12px; font-size: 11px; color: var(--color-text-muted); font-weight: bold;">${dateStr}</span>
         </div>
         <div class="chat-bubble">
             <div class="chat-bubble-title">${notif.nombre}</div>
