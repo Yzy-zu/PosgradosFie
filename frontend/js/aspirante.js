@@ -1744,7 +1744,7 @@ function bloquearConvocatorias(soliData = null) {
                         <i class="fa-solid fa-arrows-rotate fa-spin-pulse" style="font-size: 24px; color: #d97706; --fa-animation-duration: 3s;"></i>
                     </div>
                     
-                    <h3 style="font-size: 22px; font-weight: 700; color: var(--color-text); margin-bottom: 20px;">${typeof t === 'function' ? t('conv_tramite_curso') : 'Trámite de Admisión en Curso'}</h3>
+                    <h3 style="font-size: 22px; font-weight: 700; color: var(--color-text); margin-bottom: 20px;">${typeof t === 'function' ? t('conv_tramite_curso') : 'Solicitud de Admisión Activa'}</h3>
                     
                     <!-- CONTENEDOR SLIDER HORIZONTAL -->
                     <div style="display: grid; width: 100%;">
@@ -1752,18 +1752,18 @@ function bloquearConvocatorias(soliData = null) {
                         <!-- VISTA A: Resumen -->
                         <div id="view-a" class="slide-view" style="transform: translateX(0); opacity: 1;">
                             <p style="font-size: 15px; color: var(--color-text); line-height: 1.6; margin-bottom: 25px; max-width: 800px; margin-left: auto; margin-right: auto;">
-                                ${typeof t === 'function' ? t('conv_participando') : 'Actualmente estás participando en el proceso de selección institucional para el:'}<br>
+                                ${typeof t === 'function' ? t('conv_participando') : 'Te encuentras registrado en el proceso de admisión para:'}<br>
                                 <strong style="color: var(--color-text); font-size: 16px; display: inline-block; margin-top: 8px;">Programa de ${nivel} en Ciencias en Ingeniería Eléctrica</strong><br>
-                                <span style="font-size: 14px; color: var(--color-text-muted);">${typeof t === 'function' ? t('conv_opcion_sel') : 'Opción seleccionada:'} <strong>${opcionElegida}</strong></span>
+                                <span style="font-size: 14px; color: var(--color-text-muted);">${typeof t === 'function' ? t('conv_opcion_sel') : 'Modalidad:'} <strong>${opcionElegida}</strong></span>
                             </p>
                             
                             <button class="btn-primary" onclick="switchView('documentos')" style="background-color: #1e293b; color: #ffffff; padding: 12px 30px; border-radius: 6px; font-size: 15px; font-weight: 600; margin-bottom: 25px; min-width: 250px; border: none; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#0f172a'" onmouseout="this.style.backgroundColor='#1e293b'">
-                                <i class="fa-solid fa-arrow-right" style="margin-right: 8px;"></i> ${typeof t === 'function' ? t('conv_btn_continuar') : 'Continuar mi Trámite'}
+                                <i class="fa-solid fa-arrow-right" style="margin-right: 8px;"></i> ${typeof t === 'function' ? t('conv_btn_continuar') : 'Continuar Solicitud'}
                             </button>
                             
                             <div>
                                 <button onclick="mostrarVistaDetalles()" style="background: none; border: none; color: var(--color-info); font-size: 14px; font-weight: 600; cursor: pointer; padding: 5px; transition: color 0.2s;" onmouseover="this.style.color='var(--color-primary-hover)'" onmouseout="this.style.color='var(--color-info)'">
-                                    ${typeof t === 'function' ? t('conv_btn_fechas') : 'Ver fechas y detalles del proceso'} <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i>
+                                    ${typeof t === 'function' ? t('conv_btn_fechas') : 'Ver fechas del proceso'} <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i>
                                 </button>
                             </div>
                         </div>
