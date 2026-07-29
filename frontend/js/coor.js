@@ -251,11 +251,11 @@ async function cargarAspirantes() {
                             <div class="row align-items-center g-3">
                                 <div class="col-md-3">
                                     <small class="text-muted d-block fw-bold mb-1">TIPO DE ADMISIÓN</small>
-                                    <span class="badge bg-dark text-wrap">${asp.tipoAdmision || 'N/A'}</span>
+                                    <span class="badge bg-dark text-wrap">${asp.modalidadNombre || 'N/A'}</span>
                                 </div>
                                 <div class="col-md-2">
-                                    <small class="text-muted d-block fw-bold mb-1">ESTACIÓN ACTUAL</small>
-                                    <span class="badge bg-secondary">Estación ${asp.estacion_actual ?? 0}</span>
+                                    <small class="text-muted d-block fw-bold mb-1">ETAPA ACTUAL</small>
+                                    <span class="badge bg-secondary">${asp.etapaNombre || 'Sin Etapa'}</span>
                                 </div>
                                 <div class="col-md-3">
                                     <small class="text-muted d-block fw-bold mb-1">CONVOCATORIA</small>

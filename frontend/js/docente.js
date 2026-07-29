@@ -120,7 +120,7 @@ async function cargarAspirantesAPI() {
                     programa: sol ? sol.convocatoriaNombre : (typeof t === 'function' ? t('docente_sin_solicitud') : "Sin Solicitud"),
                     correo: asp.correo || (typeof t === 'function' ? t('docente_sin_correo') : "Sin correo"),
                     fechaRegistro: sol ? new Date(sol.creadoEn).toISOString().split('T')[0] : (asp.fechaNacimiento ? asp.fechaNacimiento.split('T')[0] : "N/A"),
-                    mecanismo: sol ? sol.tipoAdmision.replace(/_/g, ' ') : "N/A",
+                    mecanismo: sol ? sol.modalidadNombre : "N/A",
                     nivel: sol && sol.posgrado_id == 2 ? (typeof t === 'function' ? t('sb_doctorado') : "Doctorado") : (sol && sol.posgrado_id == 1 ? (typeof t === 'function' ? t('sb_maestria') : "Maestría") : (typeof t === 'function' ? t('docente_por_asignar') : "Por asignar")),
                     documentos: docList
                 };

@@ -1342,7 +1342,8 @@ async function verExpedienteAspirante(id) {
                                 <h5 class="fw-bold mb-1" style="color: var(--color-text);">${sol.convocatoriaNombre}</h5>
                                 ${sol.opcionNombre ? `<div class="mb-1"><span class="soft-badge soft-badge-secondary"><i class="fa-solid fa-layer-group me-1"></i> Opción: ${sol.opcionNombre}</span></div>` : ''}
                                 <div class="text-muted small mt-1" style="font-weight: 500;">
-                                    <span>Iniciado el: ${d}</span> &nbsp;&bull;&nbsp; <span>${sol.tipoAdmision}</span>
+                                    <span>Iniciado el: ${d}</span> &nbsp;&bull;&nbsp; <span>${sol.modalidadNombre || 'Sin modalidad'}</span>
+
                                 </div>
                             </div>
                             <span class="soft-badge ${badgeSolicitud} mt-1">${sol.estado}</span>

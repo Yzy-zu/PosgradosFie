@@ -196,12 +196,18 @@ const obtenerExpediente = async (req, res) => {
 
         // 2. Historial de solicitudes (convocatorias)
         const querySolicitudes = `
-            SELECT s.id as idSolicitud, s.estado, s.creadoEn, s.tipoAdmision, c.nombre as convocatoriaNombre, c.posgrado_id,
+            SELECT s.id as idSolicitud, s.estado, s.creadoEn, 
+                   mi.nombre AS modalidadNombre,
+                   ep.nombre AS etapaNombre,
+                   c.nombre as convocatoriaNombre, c.posgrado_id,
                    op.nombre as opcionNombre
             FROM solicitud s
             JOIN convocatorias c ON s.idConvocatoria = c.id
             LEFT JOIN convocatoria_opcion co ON s.idConvocatoriaOpcion = co.id
             LEFT JOIN opcion_posgrado op ON co.opcion_posgrado_id = op.id
+            LEFT JOIN modalidad_ingreso mi ON s.idModalidad = mi.id
+            LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
+            LEFT JOIN modalidad_etapa me ON s.idModalidad = me.modalidad_id AND s.idEtapaActual = me.etapa_id
             WHERE s.idAspi = ?
             ORDER BY s.creadoEn DESC
         `;
@@ -252,12 +258,18 @@ const obtenerTodosLosExpedientes = async (req, res) => {
         const idsAspirantes = aspirantes.map(a => a.id);
 
         const querySolicitudes = `
-            SELECT s.id as idSolicitud, s.idAspi, s.idConvocatoria, s.estado, s.creadoEn, s.tipoAdmision, c.nombre as convocatoriaNombre, c.posgrado_id,
+            SELECT s.id as idSolicitud, s.idAspi, s.idConvocatoria, s.estado, s.creadoEn, 
+                   mi.nombre AS modalidadNombre,
+                   ep.nombre AS etapaNombre,
+                   c.nombre as convocatoriaNombre, c.posgrado_id,
                    op.nombre as opcionNombre
             FROM solicitud s
             JOIN convocatorias c ON s.idConvocatoria = c.id
             LEFT JOIN convocatoria_opcion co ON s.idConvocatoriaOpcion = co.id
             LEFT JOIN opcion_posgrado op ON co.opcion_posgrado_id = op.id
+            LEFT JOIN modalidad_ingreso mi ON s.idModalidad = mi.id
+            LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
+            LEFT JOIN modalidad_etapa me ON s.idModalidad = me.modalidad_id AND s.idEtapaActual = me.etapa_id
             WHERE s.idAspi IN (?)
             ORDER BY s.creadoEn DESC
         `;

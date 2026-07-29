@@ -1,5 +1,5 @@
 const db = require('../database/db');
-
+const WorkflowService = require('../services/workflowService');
 // Crear una solicitud
 const crearSolicitud = async (req, res) => {
     try {
@@ -74,11 +74,17 @@ const getSolicitudActiva = async (req, res) => {
                     c.inicioExamen, c.finExamen,
                     c.inicioCurso, c.finCurso,
                     c.fechaInicioEscolar, c.modalidad, c.duracion,
-                    op.nombre AS opcionElegida
+                    op.nombre AS opcionElegida,
+                    mi.nombre AS modalidadNombre,
+                    ep.nombre AS etapaNombre,
+                    me.orden AS etapaOrden
              FROM solicitud s
              JOIN convocatorias c ON s.idConvocatoria = c.id
              LEFT JOIN convocatoria_opcion co ON s.idConvocatoriaOpcion = co.id
              LEFT JOIN opcion_posgrado op ON co.opcion_posgrado_id = op.id
+             LEFT JOIN modalidad_ingreso mi ON s.idModalidad = mi.id
+             LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
+             LEFT JOIN modalidad_etapa me ON s.idModalidad = me.modalidad_id AND s.idEtapaActual = me.etapa_id
              WHERE s.idAspi = ? AND s.estado != 'CANCELADO'
              ORDER BY s.creadoEn DESC LIMIT 1`,
             [idAspi]
@@ -107,38 +113,25 @@ const cancelarSolicitud = async (req, res) => {
     }
 };
 
-// Obtener las modalidades de admisión desde el ENUM de la BD
-const getModalidades = async (req, res) => {
-    try {
-        const [resultado] = await db.query("SHOW COLUMNS FROM solicitud LIKE 'tipoAdmision'");
-
-        if (resultado.length > 0) {
-            const enumStr = resultado[0].Type;
-            const matches = enumStr.match(/'([^']+)'/g);
-            if (matches) {
-                const opciones = matches.map(m => m.replace(/'/g, ''));
-                return res.status(200).json(opciones);
-            }
-        }
-
-        return res.status(404).json({ mensaje: 'No se encontraron modalidades.' });
-    } catch (error) {
-        console.error('Error en getModalidades:', error);
-        return res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
-    }
-};
-
 // Actualizar la modalidad seleccionada
 const actualizarModalidad = async (req, res) => {
     try {
         const { id } = req.params;
-        const { tipoAdmision } = req.body;
+        const { tipoAdmision } = req.body; // El frontend ahora envía el idModalidad aquí por retrocompatibilidad temporal de variable
+        const idModalidad = parseInt(tipoAdmision);
 
-        if (!tipoAdmision) {
-            return res.status(400).json({ mensaje: 'El tipo de admisión es requerido.' });
+        if (!idModalidad || isNaN(idModalidad)) {
+            return res.status(400).json({ mensaje: 'El ID de la modalidad es requerido.' });
         }
 
-        await db.query('UPDATE solicitud SET tipoAdmision = ? WHERE id = ?', [tipoAdmision, id]);
+        const [modalidades] = await db.query('SELECT id FROM modalidad_ingreso WHERE id = ?', [idModalidad]);
+        
+        if (modalidades.length === 0) {
+            return res.status(400).json({ mensaje: 'Modalidad no válida.' });
+        }
+
+        await WorkflowService.asignarModalidad(id, idModalidad);
+
         return res.status(200).json({ mensaje: 'Modalidad actualizada correctamente.' });
     } catch (error) {
         console.error('Error en actualizarModalidad:', error);
@@ -146,23 +139,6 @@ const actualizarModalidad = async (req, res) => {
     }
 };
 
-// Actualizar la estación actual de una solicitud
-const actualizarEstacion = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { estacion_actual } = req.body;
-
-        if (estacion_actual === undefined) {
-            return res.status(400).json({ mensaje: 'Falta estacion_actual' });
-        }
-
-        await db.query('UPDATE solicitud SET estacion_actual = ? WHERE id = ?', [estacion_actual, id]);
-        return res.json({ mensaje: 'Estación actualizada correctamente' });
-    } catch (error) {
-        console.error('Error en actualizarEstacion:', error);
-        return res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
-    }
-};
 
 // Enviar expediente a revisión (Bug 2 Fix: validación server-side de documentos obligatorios)
 const enviarExpediente = async (req, res) => {
@@ -204,8 +180,9 @@ const enviarExpediente = async (req, res) => {
             }
         }
 
-        // Todos los documentos obligatorios están presentes — cambiar estado
-        await db.query("UPDATE solicitud SET estado = 'EN_REVISION', estacion_actual = 4 WHERE id = ?", [id]);
+        // Todos los documentos obligatorios están presentes — cambiar estado a revisión, SIN avanzar etapa
+        // La etapa se avanzará automáticamente cuando el evaluador apruebe todos los documentos
+        await db.query("UPDATE solicitud SET estado = 'EN_REVISION' WHERE id = ?", [id]);
 
         // Emitir evento global de actualización
         req.app.get('io').emit('actualizacionGlobal');
@@ -218,12 +195,43 @@ const enviarExpediente = async (req, res) => {
 };
 
 
+// Obtener modalidades (Nuevos Endpoints Fase 1)
+const getModalidadesIngreso = async (req, res) => {
+    try {
+        const [resultados] = await db.query('SELECT id, nombre, descripcion FROM modalidad_ingreso WHERE activo = 1 ORDER BY id ASC');
+        return res.json(resultados);
+    } catch (error) {
+        console.error('Error en getModalidadesIngreso:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
+    }
+};
+
+// Obtener workflow
+const getEtapasWorkflow = async (req, res) => {
+    try {
+        const { idModalidad } = req.params;
+        const [resultados] = await db.query(
+            `SELECT me.orden, me.obligatorio, ep.id AS etapa_id, ep.nombre AS etapa_nombre, ep.descripcion AS etapa_descripcion 
+             FROM modalidad_etapa me 
+             JOIN etapa_proceso ep ON me.etapa_id = ep.id 
+             WHERE me.modalidad_id = ? 
+             ORDER BY me.orden ASC`,
+            [idModalidad]
+        );
+        return res.json(resultados);
+    } catch (error) {
+        console.error('Error en getEtapasWorkflow:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
+    }
+};
+
 module.exports = {
     crearSolicitud,
     getSolicitudActiva,
     cancelarSolicitud,
-    getModalidades,
     actualizarModalidad,
-    actualizarEstacion,
-    enviarExpediente
+    enviarExpediente,
+    getModalidadesIngreso,
+    getEtapasWorkflow
 };
+

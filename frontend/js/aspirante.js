@@ -111,11 +111,10 @@ document.addEventListener("DOMContentLoaded", async function () {
                             hidratarUI(soliData);
 
                             // Render initial route
-                            const currentHash = window.location.hash.replace('#', '');
-                            if (!currentHash) {
-                                window.location.hash = soliData.estacion_actual > 0 ? 'documentos' : 'inicio';
+                            if (!window.location.hash || window.location.hash === '#inicio') {
+                                window.location.hash = (soliData.etapaOrden && soliData.etapaOrden > 1) ? 'documentos' : 'inicio';
                             } else {
-                                switchView(currentHash);
+                                switchView(window.location.hash.replace('#', ''));
                             }
 
                             // Ocultamos el loader inicial si hubiera
@@ -969,7 +968,7 @@ async function avanzarEstacion(nuevaEstacion) {
                 const res = await fetch(`/api/solicitud/modalidad/${currentSolicitudId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tipoAdmision: inputModalidad.value })
+                    body: JSON.stringify({ tipoAdmision: inputModalidad.value }) // Por retrocompatibilidad de nombre de var en frontend, enviamos el ID en value
                 });
                 if (!res.ok) {
                     console.error("Error al guardar la modalidad en la base de datos.");
@@ -1024,19 +1023,10 @@ async function avanzarEstacion(nuevaEstacion) {
         }
     }
 
-    // Guardar progreso (estacion_actual) en la base de datos
-    if (currentSolicitudId) {
-        try {
-            await fetch(`/api/solicitud/estacion/${currentSolicitudId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ estacion_actual: nuevaEstacion })
-            });
-        } catch (e) {
-            console.error("Error al actualizar la estación en DB:", e);
-        }
-    }
-
+    // Ya no avanzamos la estacion_actual desde el frontend. 
+    // El avance ocurre automáticamente al subir los documentos o al ser evaluados por el servidor según la modalidad_etapa.
+    // Solo avanzamos la vista localmente.
+    
     ocultarLoader();
     if (boton) boton.disabled = false;
     cambiarEstacion(nuevaEstacion);
@@ -1982,20 +1972,19 @@ async function cargarModalidadesAdmision() {
 
     mostrarLoader();
     try {
-        const res = await fetch('/api/solicitud/modalidades');
+        const res = await fetch('/api/solicitud/ingreso/modalidades');
         if (res.ok) {
             const modalidades = await res.json();
             contenedor.innerHTML = '';
 
             modalidades.forEach((mod, index) => {
-                const titulo = mod.replace(/_/g, ' ').replace(/\w\S*/g, w => (w.replace(/^\w/, c => c.toUpperCase())));
                 const checkedStr = index === 0 ? 'checked' : '';
-
+                // 'mod' es un objeto { id, nombre, descripcion }
                 contenedor.innerHTML += `
                     <div class="file-box file-box-option" onclick="this.querySelector('input').checked=true; actualizarCostosAdmision();">
-                        <input type="radio" name="modalidad" value="${mod}" ${checkedStr} onchange="actualizarCostosAdmision()" style="position: absolute; opacity: 0; width: 0; height: 0;">
-                        <i class="fa-solid fa-circle-info info-btn-option" title="Más información" onclick="event.stopPropagation(); abrirModalInfoModalidad('${mod}', '${titulo.replace(/'/g, "\\'")}')"></i>
-                        <label>${typeof t === 'function' ? t('mod_' + mod.toLowerCase()) : titulo}</label>
+                        <input type="radio" name="modalidad" value="${mod.id}" data-nombre="${mod.nombre}" ${checkedStr} onchange="actualizarCostosAdmision()" style="position: absolute; opacity: 0; width: 0; height: 0;">
+                        <i class="fa-solid fa-circle-info info-btn-option" title="Más información" onclick="event.stopPropagation(); abrirModalInfoModalidad('${mod.nombre}', '${mod.descripcion.replace(/'/g, "\\'")}')"></i>
+                        <label>${mod.nombre}</label>
                     </div>
                 `;
             });
@@ -2102,7 +2091,7 @@ async function cargarRequisitosDocumentales(idConvocatoria) {
 function hidratarUI(soliData) {
     currentSolicitudId = soliData.idSolicitud || soliData.id;
     nivelAcademicoSeleccionado = soliData.nivel === 'DOCTORADO' ? 'Doctorado' : 'Maestría';
-    const estacionGuardada = soliData.estacion_actual || 0;
+    const estacionGuardada = soliData.etapaOrden ? (soliData.etapaOrden - 1) : 0;
 
     // Desbloquear navegación
     bloquearConvocatorias(soliData);
