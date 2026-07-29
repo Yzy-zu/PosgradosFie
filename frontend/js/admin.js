@@ -1745,51 +1745,71 @@ function abrirModalPerfilAdmin() {
     let usuarioStr = sessionStorage.getItem("usuario");
     if (!usuarioStr) return;
     let usuario = JSON.parse(usuarioStr);
-    
-    let nombreCompleto = (usuario.nombre || 'Administrador').toLowerCase();
-    let correo = usuario.correo || 'admin@umich.mx';
+
+    const nombreCompleto = (usuario.nombre || 'Administrador').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+    const correo = usuario.correo || 'admin@umich.mx';
+    const iniciales = nombreCompleto.split(' ').slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase() || 'AD';
 
     Swal.fire({
-        title: typeof t === 'function' ? t('prof_title') : 'Mi Perfil',
         html: `
-            <div style="text-align: left; font-size: 14px; line-height: 1.5; color: var(--color-text); padding-right: 15px;">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--color-border);">
-                    <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; flex-shrink: 0;">
-                        <i class="fa-solid fa-shield-halved"></i>
-                    </div>
-                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start;">
-                        <h4 style="margin: 0; color: var(--color-text); font-size: 18px; text-transform: capitalize; line-height: 1.2;">${nombreCompleto}</h4>
-                        <span style="background: rgba(var(--color-primary-rgb), 0.1); color: var(--color-primary); padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-top: 6px; letter-spacing: 0.5px;">Administrador</span>
-                    </div>
+        <div class="pm-wrapper">
+            <div class="pm-hero pm-hero-admin">
+                <div class="pm-avatar pm-avatar-admin">
+                    <i class="fa-solid fa-shield-halved"></i>
                 </div>
-                
-                <div style="margin-bottom: 12px;">
-                    <strong style="display: block; font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 2px;">Correo Electrónico</strong>
-                    <span style="color: var(--color-text); font-size: 15px;">${correo}</span>
+                <div class="pm-hero-info">
+                    <h2 class="pm-name">${nombreCompleto}</h2>
+                    <span class="pm-badge pm-badge-admin">
+                        <i class="fa-solid fa-lock" style="margin-right:5px;font-size:10px;"></i>
+                        Administrador
+                    </span>
+                    <p class="pm-email"><i class="fa-regular fa-envelope" style="margin-right:6px;opacity:0.7;"></i>${correo}</p>
                 </div>
-                
-                <div style="margin-bottom: 15px;">
-                    <strong style="display: block; font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 2px;">Rol del Sistema</strong>
-                    <span style="color: var(--color-text); font-size: 15px;">Acceso Total</span>
-                </div>
-                <hr style="border-color: var(--color-border); margin: 15px 0;">
-                <button onclick="abrirModalCambiarPassword(); Swal.close();" style="width: 100%; background: transparent; border: 1px solid var(--color-border); color: var(--color-text); padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.3s; text-align: center; margin-bottom: 10px;">
-                    <i class="fa-solid fa-key" style="margin-right: 5px;"></i> Restablecer Contraseña
-                </button>
-                <button onclick="cerrarSesion()" style="width: 100%; background: var(--color-danger); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.3s; text-align: center;">
-                    <i class="fa-solid fa-right-from-bracket" style="margin-right: 5px;"></i> Cerrar Sesión
-                </button>
             </div>
-        `,
+
+            <div class="pm-section">
+                <h5 class="pm-section-title">
+                    <span class="pm-section-icon pm-icon-amber"><i class="fa-solid fa-key"></i></span>
+                    Acceso al Sistema
+                </h5>
+                <div class="pm-grid">
+                    <div class="pm-cell" style="grid-column:span 2;">
+                        <span class="pm-label">Correo Electrónico</span>
+                        <span class="pm-value" style="text-transform:none;">${correo}</span>
+                    </div>
+                    <div class="pm-cell">
+                        <span class="pm-label">Nivel de Acceso</span>
+                        <span class="pm-value">Acceso Total</span>
+                    </div>
+                    <div class="pm-cell">
+                        <span class="pm-label">Rol</span>
+                        <span class="pm-value">Administrador del Sistema</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pm-section" style="margin-bottom:0;">
+                <h5 class="pm-section-title">
+                    <span class="pm-section-icon"><i class="fa-solid fa-sliders"></i></span>
+                    Acciones Rápidas
+                </h5>
+                <div style="display:flex;gap:12px;margin-top:4px;">
+                    <button onclick="abrirModalCambiarPassword(); Swal.close();" class="pm-action-btn pm-action-outline">
+                        <i class="fa-solid fa-key"></i> Cambiar Contraseña
+                    </button>
+                    <button onclick="cerrarSesion()" class="pm-action-btn pm-action-danger">
+                        <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>`,
         showConfirmButton: false,
         showCloseButton: true,
-        background: 'var(--color-card-bg)',
+        width: '600px',
         customClass: {
-            title: 'swal-title-custom',
-            popup: 'swal-popup-custom',
-            closeButton: 'swal-close-custom'
-        },
-        padding: '1.5rem',
-        width: '400px'
+            popup: 'pm-popup',
+            closeButton: 'pm-close-x',
+            htmlContainer: 'pm-html-container'
+        }
     });
 }

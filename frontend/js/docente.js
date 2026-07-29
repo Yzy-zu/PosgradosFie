@@ -872,45 +872,61 @@ function abrirModalPerfilDocente() {
     const usuario = JSON.parse(usuarioStr);
     const d = window.docenteData;
     const iniciales = (d.nombre.charAt(0) + (d.primerApellido ? d.primerApellido.charAt(0) : '')).toUpperCase();
-
+    const nombreCompleto = [d.nombre, d.primerApellido, d.segundoApellido].filter(Boolean).join(' ');
     const noReg = typeof t === 'function' ? t('prof_no_reg') : 'No registrado';
 
-    Swal.fire({
-        title: typeof t === 'function' ? t('docente_perfil') : 'Mi Perfil',
-        html: `
-            <div style="text-align: left; font-size: 14px; line-height: 1.5; color: var(--color-text); padding-right: 15px;">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--color-border);">
-                    <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; flex-shrink: 0;">
-                        ${iniciales}
-                    </div>
-                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start;">
-                        <h4 style="margin: 0; color: var(--color-text); font-size: 18px; text-transform: capitalize; line-height: 1.2;">${d.nombre} ${d.primerApellido || ''} ${d.segundoApellido || ''}</h4>
-                        <span style="background: #fce7f3; color: #be185d; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-top: 6px; letter-spacing: 0.5px;">${typeof t === 'function' ? t('docente_revisor') : 'Docente / Revisor'}</span>
-                    </div>
-                </div>
+    const cell = (label, value, span = 1) =>
+        `<div class="pm-cell" style="grid-column: span ${span};">
+            <span class="pm-label">${label}</span>
+            <span class="pm-value">${value || noReg}</span>
+        </div>`;
 
-                <h5 class="profile-section-title"><i class="fa-solid fa-address-card"></i> ${typeof t === 'function' ? t('docente_info_contacto') : 'Datos de Contacto'}</h5>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 15px; margin-bottom: 25px;">
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_correo') : 'Correo'}</span> <span class="profile-info-value" style="text-transform: none;">${usuario.correo}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_telefono') : 'Teléfono'}</span> <span class="profile-info-value">${d.telefono || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_nombre') : 'Nombre completo'}</span> <span class="profile-info-value" style="text-transform: capitalize;">${d.nombre || ''} ${d.primerApellido || ''} ${d.segundoApellido || ''}</span></div>
-                </div>
-                
-                <h5 class="profile-section-title"><i class="fa-solid fa-graduation-cap"></i> ${typeof t === 'function' ? t('docente_info_academica') : 'Información Académica'}</h5>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 15px; margin-bottom: 25px;">
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('docente_cargo') : 'Cargo'}</span> <span class="profile-info-value" style="text-transform: capitalize;">${d.cargo || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('docente_especialidad') : 'Especialidad'}</span> <span class="profile-info-value" style="text-transform: capitalize;">${d.especialidad || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('docente_cubiculo') : 'Cubículo'}</span> <span class="profile-info-value">${d.cubiculo || noReg}</span></div>
+    Swal.fire({
+        html: `
+        <div class="pm-wrapper">
+            <div class="pm-hero pm-hero-docente">
+                <div class="pm-avatar pm-avatar-docente">${iniciales}</div>
+                <div class="pm-hero-info">
+                    <h2 class="pm-name">${nombreCompleto}</h2>
+                    <span class="pm-badge pm-badge-docente">
+                        <i class="fa-solid fa-chalkboard-user" style="margin-right:5px;font-size:10px;"></i>
+                        ${typeof t === 'function' ? t('docente_revisor') : 'Docente / Revisor'}
+                    </span>
+                    <p class="pm-email"><i class="fa-regular fa-envelope" style="margin-right:6px;opacity:0.7;"></i>${usuario.correo || noReg}</p>
                 </div>
             </div>
-        `,
+
+            <div class="pm-section">
+                <h5 class="pm-section-title">
+                    <span class="pm-section-icon"><i class="fa-solid fa-address-card"></i></span>
+                    ${typeof t === 'function' ? t('docente_info_contacto') : 'Datos de Contacto'}
+                </h5>
+                <div class="pm-grid">
+                    ${cell(typeof t === 'function' ? t('prof_telefono') : 'Teléfono', d.telefono)}
+                    ${cell(typeof t === 'function' ? t('prof_nombre') : 'Nombre completo', nombreCompleto, 2)}
+                </div>
+            </div>
+
+            <div class="pm-section" style="margin-bottom:0;">
+                <h5 class="pm-section-title">
+                    <span class="pm-section-icon pm-icon-green"><i class="fa-solid fa-graduation-cap"></i></span>
+                    ${typeof t === 'function' ? t('docente_info_academica') : 'Información Académica'}
+                </h5>
+                <div class="pm-grid">
+                    ${cell(typeof t === 'function' ? t('docente_cargo') : 'Cargo', d.cargo)}
+                    ${cell(typeof t === 'function' ? t('docente_especialidad') : 'Especialidad', d.especialidad)}
+                    ${cell(typeof t === 'function' ? t('docente_cubiculo') : 'Cubículo', d.cubiculo)}
+                </div>
+            </div>
+        </div>`,
         showConfirmButton: true,
         confirmButtonText: typeof t === 'function' ? t('docente_modal_cerrar') : 'Cerrar',
         buttonsStyling: false,
-        width: '900px',
+        width: '720px',
         customClass: {
-            popup: 'profile-modal-bg',
-            confirmButton: 'profile-btn-close'
+            popup: 'pm-popup',
+            confirmButton: 'pm-btn-close',
+            htmlContainer: 'pm-html-container'
         }
     });
 }

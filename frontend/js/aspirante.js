@@ -261,16 +261,20 @@ async function cargarStatsInicio() {
 
             if (soliData.existe) {
                 // 1. Estado de Expediente
+                const cardExp = document.getElementById('stat-card-exp');
                 if (statExpStatus) {
                     if (soliData.estado === 'RECHAZADO') {
                         statExpStatus.innerText = 'Expediente Rechazado';
-                        statExpStatus.style.color = 'var(--color-danger)';
+                        statExpStatus.style.color = '';
+                        if (cardExp) { cardExp.classList.add('stat-alert'); cardExp.classList.remove('stat-success'); }
                     } else if (soliData.estado === 'APROBADO') {
                         statExpStatus.innerText = 'Expediente Aprobado';
-                        statExpStatus.style.color = 'var(--color-info)'; // azul/info
+                        statExpStatus.style.color = '';
+                        if (cardExp) { cardExp.classList.add('stat-success'); cardExp.classList.remove('stat-alert'); }
                     } else {
                         statExpStatus.innerText = 'Expediente Activo';
-                        statExpStatus.style.color = '#10b981'; // verde
+                        statExpStatus.style.color = '#10b981';
+                        if (cardExp) { cardExp.classList.remove('stat-alert', 'stat-success'); }
                     }
                 }
                 if (statExpSub) {
@@ -473,74 +477,109 @@ function abrirModalPerfil() {
     if (!usuarioStr || !aspiranteData) return;
     const usuario = JSON.parse(usuarioStr);
 
-    // Función de ayuda para formatear fechas sin desfase horario
     const formatDate = (dateString) => {
         if (!dateString) return typeof t === 'function' ? t('prof_no_reg') : 'No registrada';
         const d = new Date(dateString);
         return new Date(d.getTime() + Math.abs(d.getTimezoneOffset() * 60000)).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
     };
 
-    let fechaNac = formatDate(aspiranteData.fechaNacimiento);
-    let fechaEgreso = formatDate(aspiranteData.fechaEgreso);
-    let fechaTitulacion = formatDate(aspiranteData.fechaTitulacion);
+    const capitalizarNombre = (str) => {
+        if (!str) return '';
+        return str.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+    };
+
+    const nombre = capitalizarNombre(aspiranteData.nombre);
+    const apellido = capitalizarNombre(aspiranteData.primerApellido);
+    const apellido2 = capitalizarNombre(aspiranteData.segundoApellido || '');
+    const nombreCompleto = `${nombre} ${apellido} ${apellido2}`.trim();
+    const iniciales = (nombre.charAt(0) + apellido.charAt(0)).toUpperCase();
 
     const noReg = typeof t === 'function' ? t('prof_no_reg') : 'No registrado/a';
     const ninguno = typeof t === 'function' ? t('prof_ninguno') : 'Ninguno';
 
+    const cell = (label, value, span = 1) =>
+        `<div class="pm-cell" style="grid-column: span ${span};">
+            <span class="pm-label">${label}</span>
+            <span class="pm-value">${value || noReg}</span>
+        </div>`;
+
     Swal.fire({
-        title: typeof t === 'function' ? t('prof_title') : 'Mi Perfil',
         html: `
-            <div style="text-align: left; font-size: 14px; line-height: 1.5; color: var(--color-text); padding-right: 15px;">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--color-border);">
-                    <div style="width: 56px; height: 56px; border-radius: 50%; background: #1e293b; color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; flex-shrink: 0;">
-                        <i class="fa-solid fa-user"></i>
+        <div class="pm-wrapper">
+            <!-- HERO HEADER COMPACTO -->
+            <div class="pm-hero" style="padding: 22px 28px;">
+                <div class="pm-avatar" style="width:64px; height:64px; font-size:22px;">${iniciales}</div>
+                <div class="pm-hero-info">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <h2 class="pm-name" style="font-size:20px; margin:0;">${nombreCompleto}</h2>
+                        <span class="pm-badge pm-badge-aspirante" style="margin:0;">
+                            <i class="fa-solid fa-user-graduate" style="margin-right:5px;font-size:10px;"></i>
+                            ${typeof t === 'function' ? t('prof_badge') : 'Aspirante'}
+                        </span>
                     </div>
-                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start;">
-                        <h4 style="margin: 0; color: var(--color-text); font-size: 18px; text-transform: capitalize; line-height: 1.2;">${aspiranteData.nombre} ${aspiranteData.primerApellido} ${aspiranteData.segundoApellido || ''}</h4>
-                        <span style="background: #e0f2fe; color: #0369a1; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-top: 6px; letter-spacing: 0.5px;">${typeof t === 'function' ? t('prof_badge') : 'Aspirante'}</span>
-                    </div>
-                </div>
-                
-                <h5 class="profile-section-title"><i class="fa-solid fa-address-card"></i> ${typeof t === 'function' ? t('prof_personal') : 'Datos Personales'}</h5>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 15px; margin-bottom: 25px;">
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_correo') : 'Correo'}</span> <span class="profile-info-value" style="text-transform: none;">${usuario.correo || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_tel') : 'Teléfono'}</span> <span class="profile-info-value">${aspiranteData.telefono || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_curp') : 'CURP'}</span> <span class="profile-info-value" style="text-transform: uppercase;">${aspiranteData.curp || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_nacimiento') : 'Nacimiento'}</span> <span class="profile-info-value">${fechaNac}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_estado_civil') : 'Estado Civil'}</span> <span class="profile-info-value">${aspiranteData.estadoCivil || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_cp') : 'Cód. Postal'}</span> <span class="profile-info-value">${aspiranteData.direccionPostal || noReg}</span></div>
-                    <div class="profile-info-box" style="grid-column: span 3;"><span class="profile-info-label">${typeof t === 'function' ? t('prof_direccion') : 'Dirección'}</span> <span class="profile-info-value">${aspiranteData.direccion || noReg}</span></div>
-                </div>
-
-                <h5 class="profile-section-title"><i class="fa-solid fa-graduation-cap"></i> ${typeof t === 'function' ? t('prof_academica') : 'Formación Académica'}</h5>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 15px; margin-bottom: 25px;">
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_lic') : 'Licenciatura'}</span> <span class="profile-info-value">${aspiranteData.licenciatura || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_inst') : 'Institución'}</span> <span class="profile-info-value">${aspiranteData.institucionLicenciatura || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_promedio') : 'Promedio'}</span> <span class="profile-info-value">${aspiranteData.promedio || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_egreso') : 'Fecha Egreso'}</span> <span class="profile-info-value">${fechaEgreso}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_titulacion') : 'Titulación'}</span> <span class="profile-info-value">${fechaTitulacion}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_otros') : 'Otros Estudios'}</span> <span class="profile-info-value">${aspiranteData.otrosEstudios || ninguno}</span></div>
-                </div>
-
-                <h5 class="profile-section-title"><i class="fa-solid fa-briefcase"></i> ${typeof t === 'function' ? t('prof_laborales') : 'Datos Laborales'}</h5>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 15px;">
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_ocupacion') : 'Ocupación'}</span> <span class="profile-info-value">${aspiranteData.ocupacion || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_ciudad') : 'Ciudad'}</span> <span class="profile-info-value">${aspiranteData.ciudadOcupacion || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_estado') : 'Estado'}</span> <span class="profile-info-value">${aspiranteData.estadoOcupacion || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_tel_lab') : 'Tel. Laboral'}</span> <span class="profile-info-value">${aspiranteData.telefonoOcupacion || noReg}</span></div>
+                    <p class="pm-email" style="margin-top:4px;"><i class="fa-regular fa-envelope" style="margin-right:6px;opacity:0.7;"></i>${usuario.correo || noReg}</p>
                 </div>
             </div>
-        `,
+
+            <!-- SECCIÓN DATOS PERSONALES -->
+            <div class="pm-section">
+                <h5 class="pm-section-title">
+                    <span class="pm-section-icon"><i class="fa-solid fa-address-card"></i></span>
+                    ${typeof t === 'function' ? t('prof_personal') : 'Datos Personales'}
+                </h5>
+                <div class="pm-grid-4">
+                    ${cell(typeof t === 'function' ? t('prof_curp') : 'CURP', (aspiranteData.curp || '').toUpperCase())}
+                    ${cell(typeof t === 'function' ? t('prof_tel') : 'Teléfono', aspiranteData.telefono)}
+                    ${cell(typeof t === 'function' ? t('prof_nacimiento') : 'Nacimiento', formatDate(aspiranteData.fechaNacimiento))}
+                    ${cell(typeof t === 'function' ? t('prof_estado_civil') : 'Estado Civil', aspiranteData.estadoCivil)}
+                    ${cell(typeof t === 'function' ? t('prof_cp') : 'Cód. Postal', aspiranteData.direccionPostal)}
+                    ${cell(typeof t === 'function' ? t('prof_direccion') : 'Dirección', aspiranteData.direccion, 3)}
+                </div>
+            </div>
+
+            <!-- SECCIÓN FORMACIÓN ACADÉMICA -->
+            <div class="pm-section">
+                <h5 class="pm-section-title">
+                    <span class="pm-section-icon pm-icon-green"><i class="fa-solid fa-graduation-cap"></i></span>
+                    ${typeof t === 'function' ? t('prof_academica') : 'Formación Académica'}
+                </h5>
+                <div class="pm-grid-4">
+                    ${cell(typeof t === 'function' ? t('prof_lic') : 'Licenciatura', aspiranteData.licenciatura)}
+                    ${cell(typeof t === 'function' ? t('prof_inst') : 'Institución', aspiranteData.institucionLicenciatura)}
+                    ${cell(typeof t === 'function' ? t('prof_promedio') : 'Promedio', aspiranteData.promedio)}
+                    ${cell(typeof t === 'function' ? t('prof_egreso') : 'Fecha Egreso', formatDate(aspiranteData.fechaEgreso))}
+                    ${cell(typeof t === 'function' ? t('prof_titulacion') : 'Titulación', formatDate(aspiranteData.fechaTitulacion))}
+                    ${cell(typeof t === 'function' ? t('prof_otros') : 'Otros Estudios', aspiranteData.otrosEstudios || ninguno, 3)}
+                </div>
+            </div>
+
+            <!-- SECCIÓN DATOS LABORALES -->
+            <div class="pm-section" style="margin-bottom:0; padding-bottom: 12px;">
+                <h5 class="pm-section-title">
+                    <span class="pm-section-icon pm-icon-amber"><i class="fa-solid fa-briefcase"></i></span>
+                    ${typeof t === 'function' ? t('prof_laborales') : 'Datos Laborales'}
+                </h5>
+                <div class="pm-grid-4">
+                    ${cell(typeof t === 'function' ? t('prof_ocupacion') : 'Ocupación', aspiranteData.ocupacion)}
+                    ${cell(typeof t === 'function' ? t('prof_ciudad') : 'Ciudad', aspiranteData.ciudadOcupacion)}
+                    ${cell(typeof t === 'function' ? t('prof_estado') : 'Estado', aspiranteData.estadoOcupacion)}
+                    ${cell(typeof t === 'function' ? t('prof_tel_lab') : 'Tel. Laboral', aspiranteData.telefonoOcupacion)}
+                </div>
+            </div>
+        </div>`,
         showConfirmButton: true,
         confirmButtonText: typeof t === 'function' ? t('prof_btn_cerrar') : 'Cerrar',
         buttonsStyling: false,
-        width: '900px',
+        width: '1050px',
         customClass: {
-            popup: 'profile-modal-bg',
-            confirmButton: 'profile-btn-close'
+            popup: 'pm-popup',
+            confirmButton: 'pm-btn-close',
+            htmlContainer: 'pm-html-container'
         }
     });
 }
+
+
 
 /**
  * Muestra u oculta el menú de notificaciones
