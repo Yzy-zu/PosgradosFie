@@ -182,10 +182,9 @@ const enviarExpediente = async (req, res) => {
 
         // Obtener los requisitos OBLIGATORIOS de la convocatoria
         const [requisitosObligatorios] = await db.query(
-            'SELECT id FROM catalogo_requisitos WHERE idConvocatoria = ? AND obligatorio = 1',
+            'SELECT id FROM convocatoria_requisitos WHERE convocatoria_id = ? AND obligatorio = 1',
             [solicitud.idConvocatoria]
         );
-
         if (requisitosObligatorios.length > 0) {
             const idsRequeridos = requisitosObligatorios.map(r => r.id);
 
@@ -197,7 +196,6 @@ const enviarExpediente = async (req, res) => {
 
             const idsSubidos = new Set(docsSubidos.map(d => d.idRequisito));
             const faltantes = idsRequeridos.filter(reqId => !idsSubidos.has(reqId));
-
             if (faltantes.length > 0) {
                 return res.status(400).json({
                     mensaje: `Faltan ${faltantes.length} documento(s) obligatorio(s) para enviar el expediente.`,

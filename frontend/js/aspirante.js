@@ -12,7 +12,19 @@ socket.on('actualizacionGlobal', () => {
     if (currentHash === '#inicio' || currentHash === '') {
         if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
     } else if (currentHash === '#documentos') {
-        if (typeof bloquearInterfazPorRevision === 'function') bloquearInterfazPorRevision();
+        // BUG FIX: Only lock the UI if the actual state in DB dictates it
+        if (aspiranteData && aspiranteData.id) {
+            fetch(`/api/solicitud/activa/${aspiranteData.id}`)
+                .then(res => res.json())
+                .then(soliData => {
+                    if (soliData && soliData.existe && ['EN_REVISION', 'RECHAZADO', 'APROBADO'].includes(soliData.estado)) {
+                        if (typeof bloquearInterfazPorRevision === 'function') {
+                            bloquearInterfazPorRevision(soliData.estado);
+                        }
+                    }
+                })
+                .catch(e => console.error("Error validando estado de solicitud:", e));
+        }
     } else if (currentHash === '#convocatorias') {
         // BUG-01 Fix: cargarConvocatorias ahora existe como función real
         cargarConvocatorias();
@@ -200,6 +212,15 @@ function switchView(viewId) {
     const targetNavLink = document.getElementById(`nav-${viewId}`);
     if (targetNavLink) {
         targetNavLink.classList.add('active');
+    }
+
+    if (viewId === 'documentos') {
+        // Necesitamos esperar un tick para que la vista sea visible y tenga dimensiones
+        setTimeout(() => {
+            if (typeof actualizarPosicionZorro === 'function') {
+                actualizarPosicionZorro(false);
+            }
+        }, 50);
     }
 }
 
@@ -896,7 +917,42 @@ function cambiarEstacion(nuevaEstacion) {
     nodeNuevo.classList.add('active');
 
     estacionActual = nuevaEstacion;
+    actualizarPosicionZorro();
 }
+
+/**
+ * Mueve el zorro interactivo a la estación actual
+ */
+function actualizarPosicionZorro(salto = true) {
+    const fox = document.getElementById('fox-runner');
+    const nodo = document.getElementById(`node-${estacionActual}`);
+    const wrapper = document.querySelector('.stepper-wrapper');
+    
+    // Solo calcular si está visible
+    if (fox && nodo && wrapper && wrapper.offsetParent !== null) {
+        fox.style.opacity = '1';
+        const offsetLeft = nodo.offsetLeft + (nodo.offsetWidth / 2);
+        fox.style.left = `${offsetLeft}px`;
+        
+        // Actualizar la línea de progreso (animación tipo agua)
+        const porcentaje = (estacionActual / 3) * 100;
+        wrapper.style.setProperty('--progress', `${porcentaje}%`);
+        
+        if (salto) {
+            fox.style.transform = 'translate(-50%, -20px)';
+            setTimeout(() => {
+                if (fox) fox.style.transform = 'translate(-50%, 0)';
+            }, 300);
+        } else {
+            fox.style.transform = 'translate(-50%, 0)';
+        }
+    }
+}
+
+// Actualizar zorro al cambiar el tamaño de la ventana
+window.addEventListener('resize', () => {
+    actualizarPosicionZorro(false);
+});
 
 /**
  * Avanza estación e intenta subir los documentos al backend
@@ -993,21 +1049,15 @@ function actualizarCostosAdmision() {
     const inputs = document.querySelectorAll('input[name="modalidad"]');
 
     inputs.forEach(input => {
-        const card = input.closest('.radio-card');
-        const strongText = card.querySelector('strong');
+        const card = input.closest('.file-box');
+        if (!card) return;
 
         if (input.checked) {
-            // Estilo seleccionado (sólido)
-            card.style.backgroundColor = 'var(--color-guinda)';
-            card.style.borderColor = 'var(--color-guinda)';
+            card.classList.add('file-selected');
             card.style.borderStyle = 'solid';
-            if (strongText) strongText.style.color = '#ffffff';
         } else {
-            // Estilo normal (punteado)
-            card.style.backgroundColor = 'var(--color-card-bg)';
-            card.style.borderColor = 'var(--color-guinda)';
-            card.style.borderStyle = 'dashed';
-            if (strongText) strongText.style.color = 'var(--color-text)';
+            card.classList.remove('file-selected');
+            card.style.borderStyle = '';
         }
     });
 
@@ -1942,12 +1992,11 @@ async function cargarModalidadesAdmision() {
                 const checkedStr = index === 0 ? 'checked' : '';
 
                 contenedor.innerHTML += `
-                    <label class="radio-card" style="display:block; flex: 1 1 220px; min-width: 220px; position:relative; padding:20px; border-radius:10px; border:2px dashed var(--color-guinda); cursor:pointer; text-align:center; background-color: var(--color-card-bg); margin: 10px;">
-                        <input type="radio" name="modalidad" value="${mod}" ${checkedStr} onchange="actualizarCostosAdmision()" style="position:absolute; opacity:0; width:0; height:0;">
-                        <div class="radio-content" style="pointer-events:none;">
-                            <strong style="display:block; font-size:16px; color: var(--color-guinda); margin-bottom:5px;">${index + 1}. ${typeof t === 'function' ? t('mod_' + mod.toLowerCase()) : titulo}</strong>
-                        </div>
-                    </label>
+                    <div class="file-box file-box-option" onclick="this.querySelector('input').checked=true; actualizarCostosAdmision();">
+                        <input type="radio" name="modalidad" value="${mod}" ${checkedStr} onchange="actualizarCostosAdmision()" style="position: absolute; opacity: 0; width: 0; height: 0;">
+                        <i class="fa-solid fa-circle-info info-btn-option" title="Más información" onclick="event.stopPropagation(); abrirModalInfoModalidad('${mod}', '${titulo.replace(/'/g, "\\'")}')"></i>
+                        <label>${typeof t === 'function' ? t('mod_' + mod.toLowerCase()) : titulo}</label>
+                    </div>
                 `;
             });
             actualizarCostosAdmision();
@@ -1959,6 +2008,28 @@ async function cargarModalidadesAdmision() {
     } finally {
         ocultarLoader();
     }
+}
+
+/**
+ * Abre modal informativo al hacer clic en el ícono (i) de cada opción de Estación 0
+ */
+function abrirModalInfoModalidad(modKey, titulo) {
+    const tituloMod = typeof t === 'function' ? t('mod_' + modKey.toLowerCase()) : titulo;
+    Swal.fire({
+        title: `<i class="fa-solid fa-circle-info" style="color: var(--color-guinda);"></i> ${tituloMod}`,
+        html: `
+            <div style="text-align: left; font-size: 14px; color: var(--color-text); line-height: 1.6; margin-top: 10px;">
+                <p style="margin-bottom: 12px;"><strong>Información sobre: ${tituloMod}</strong></p>
+                <div style="background: var(--color-bg); border-left: 4px solid var(--color-guinda); padding: 14px 16px; border-radius: 8px; border: 1px solid var(--color-border); border-left-width: 4px;">
+                    Aquí se mostrarán los detalles, requisitos específicos y procedimientos correspondientes a la modalidad seleccionada.
+                </div>
+            </div>
+        `,
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: 'var(--color-guinda)',
+        background: 'var(--color-card-bg)',
+        color: 'var(--color-text)'
+    });
 }
 
 
@@ -2067,7 +2138,7 @@ function configurarPanelesNivel(nivel, idConvocatoria) {
         if (document.getElementById('btn-next-0')) document.getElementById('btn-next-0').disabled = true;
     } else {
         if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'none';
-        if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'block';
+        if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'flex';
 
         if (document.getElementById('btn-next-0')) document.getElementById('btn-next-0').disabled = false;
         actualizarCostosAdmision();
