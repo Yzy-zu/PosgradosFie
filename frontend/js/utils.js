@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Vincular clic del contenedor del perfil si existe (para admin.js que lo hacía por JS)
-    const profileContainer = document.getElementById('profile-container');
+    const profileContainer = document.querySelector('.profile-container');
     if (profileContainer) {
         profileContainer.addEventListener('click', toggleProfileMenu);
     }

@@ -14,7 +14,8 @@ socket.on('actualizacionGlobal', () => {
     } else if (currentHash === '#documentos') {
         if (typeof bloquearInterfazPorRevision === 'function') bloquearInterfazPorRevision();
     } else if (currentHash === '#convocatorias') {
-        if (typeof cargarConvocatorias === 'function') cargarConvocatorias();
+        // BUG-01 Fix: cargarConvocatorias ahora existe como función real
+        cargarConvocatorias();
     }
 });
 
@@ -22,14 +23,10 @@ socket.on('actualizacionGlobal', () => {
 // Bug 5 Fix: toggleSidebar() es la versión canónica definida en utils.js
 // Se elimina la definición local para evitar duplicación.
 
+// BUG-07 Fix: restaurarEstadoSidebar() ya es manejada por utils.js (DOMContentLoaded).
+// Se mantiene como no-op para no romper la llamada en línea 37 en caso de orden de carga.
 function restaurarEstadoSidebar() {
-    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-    if (isCollapsed) {
-        const sidebar = document.querySelector('.sidebar');
-        const mainContent = document.querySelector('.main-content');
-        if (sidebar) sidebar.classList.add('collapsed');
-        if (mainContent) mainContent.classList.add('expanded');
-    }
+    // Delegado a utils.js — no duplicar lógica
 }
 
 // Comprobación de Sesión y Estado de Registro al inicializar la página
@@ -82,12 +79,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                 if (topbarNombre) topbarNombre.innerText = nombreCompleto;
                 if (topbarIniciales) topbarIniciales.innerText = iniciales;
                 if (topbarFirstName) topbarFirstName.innerText = nombreCapitalizado.split(' ')[0];
-
-                // Sidebar
-                const sidebarNombre = document.getElementById('sidebar-nombre');
-                const sidebarIniciales = document.getElementById('sidebar-iniciales');
-                if (sidebarNombre) sidebarNombre.innerText = nombreCompleto;
-                if (sidebarIniciales) sidebarIniciales.innerText = iniciales;
 
                 // Menú Perfil Antiguo removido, ya no es necesario inyectar datos al dropdown
 
@@ -151,7 +142,7 @@ document.addEventListener("DOMContentLoaded", async function () {
  * Control del cambio de paneles (Navegación lateral con Hash Router)
  */
 function switchView(viewId) {
-    if (viewId === 'documentos' && !currentSolicitudId) {
+    if ((viewId === 'documentos' || viewId === 'proceso') && !currentSolicitudId) {
         // Redirigir a inicio o convocatorias si intenta forzar la URL sin tener una solicitud activa
         Swal.fire('Acceso Denegado', 'Debes seleccionar una convocatoria primero.', 'warning');
         window.location.hash = 'convocatorias';
@@ -181,17 +172,14 @@ function switchView(viewId) {
 
     // Controlar título/saludo en la barra superior
     const topbarGreeting = document.querySelector('.topbar-greeting');
-    const topbarSubtitulo = document.getElementById('topbar-subtitulo');
     const topbarNombre = document.getElementById('topbar-nombre-usuario');
 
     if (topbarGreeting && topbarNombre) {
         topbarGreeting.style.display = 'flex';
         if (viewId === 'inicio') {
-            if (topbarSubtitulo) topbarSubtitulo.style.display = 'block';
             topbarNombre.innerText = window.nombreAspiranteCompleto || 'Cargando...';
             cargarStatsInicio();
         } else {
-            if (topbarSubtitulo) topbarSubtitulo.style.display = 'none';
             const titulos = {
                 'proceso': typeof t === 'function' ? t('sb_proceso') : 'Proceso',
                 'convocatorias': typeof t === 'function' ? t('sb_convocatorias') : 'Convocatorias',
@@ -202,16 +190,6 @@ function switchView(viewId) {
             if (viewId === 'proceso') {
                 cargarDatosProceso();
             }
-        }
-    }
-
-    // Controlar la visibilidad del banner flotante de revisión (solo visible en documentos)
-    const floatingBanner = document.getElementById('revision-floating-banner');
-    if (floatingBanner) {
-        if (viewId === 'documentos') {
-            floatingBanner.style.display = 'flex';
-        } else {
-            floatingBanner.style.display = 'none';
         }
     }
 
@@ -256,20 +234,16 @@ async function cargarStatsInicio() {
 
             if (soliData.existe) {
                 // 1. Estado de Expediente
-                const cardExp = document.getElementById('stat-card-exp');
                 if (statExpStatus) {
                     if (soliData.estado === 'RECHAZADO') {
                         statExpStatus.innerText = 'Expediente Rechazado';
                         statExpStatus.style.color = '';
-                        if (cardExp) { cardExp.classList.add('stat-alert'); cardExp.classList.remove('stat-success'); }
                     } else if (soliData.estado === 'APROBADO') {
                         statExpStatus.innerText = 'Expediente Aprobado';
                         statExpStatus.style.color = '';
-                        if (cardExp) { cardExp.classList.add('stat-success'); cardExp.classList.remove('stat-alert'); }
                     } else {
                         statExpStatus.innerText = 'Expediente Activo';
                         statExpStatus.style.color = '#10b981';
-                        if (cardExp) { cardExp.classList.remove('stat-alert', 'stat-success'); }
                     }
                 }
                 if (statExpSub) {
@@ -407,7 +381,7 @@ async function cargarNotificaciones() {
             }
 
             if (!notificaciones || notificaciones.length === 0) {
-                contenedor.innerHTML = '<div class="messages-empty-state"><i class="fa-solid fa-inbox fa-2x mb-2 opacity-50"></i>No tienes mensajes.</div>';
+                contenedor.innerHTML = '<div class="messages-empty-state"><i class="fa-solid fa-inbox fa-2x" style="margin-bottom: 8px; opacity: 0.5;"></i>No tienes mensajes.</div>';
             } else {
                 // Agrupar por remitente
                 const grupos = {};
@@ -444,8 +418,8 @@ async function cargarNotificaciones() {
                     const remitenteKey = encodeURIComponent(grupo.remitente);
 
                     html += `
-                    <div class="chat-item p-3 border-bottom" style="cursor: pointer; display: flex; gap: 10px; align-items: center; border-color: var(--color-border) !important;" onclick="abrirNotificacion('${remitenteKey}', this)">
-                        <div class="chat-avatar ${bgClass} text-white rounded-circle d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; flex-shrink: 0; background-color: var(--color-text-muted) !important;">
+                    <div class="chat-item" style="padding: 16px; border-bottom: 1px solid var(--color-border); cursor: pointer; display: flex; gap: 10px; align-items: center;" onclick="abrirNotificacion('${remitenteKey}', this)">
+                        <div class="chat-avatar ${bgClass}" style="width: 40px; height: 40px; font-size: 16px;">
                             <i class="fa-solid fa-user"></i>
                         </div>
                         <div class="chat-details" style="flex: 1; overflow: hidden;">
@@ -461,7 +435,7 @@ async function cargarNotificaciones() {
             }
 
         } else {
-            contenedor.innerHTML = '<div class="messages-empty-state text-danger"><i class="fa-solid fa-triangle-exclamation mb-2"></i> Error al cargar.</div>';
+            contenedor.innerHTML = '<div class="messages-empty-state" style="color: var(--color-danger);"><i class="fa-solid fa-triangle-exclamation" style="margin-bottom: 8px;"></i> Error al cargar.</div>';
         }
     } catch (e) {
         console.warn("Ocurrio un error al obtener mensajes:", e);
@@ -514,7 +488,7 @@ function abrirModalPerfil() {
                 <div style="width: 75px; height: 75px; border-radius: 50%; background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; flex-shrink: 0; box-shadow: 0 4px 10px rgba(138, 28, 36, 0.2);">${iniciales}</div>
                 <div>
                     <h2 style="font-size: 24px; font-weight: 700; margin: 0; color: var(--color-text); letter-spacing: -0.5px;">${nombreCompleto}</h2>
-                    <p style="margin: 6px 0 0; color: var(--color-text-muted); font-size: 15px;"><i class="fa-regular fa-envelope" style="margin-right: 5px;"></i>${usuario.correo || noReg}</p>
+                    <p style="margin: 6px 0 0; color: var(--color-text-muted); font-size: 15px;"><i class="fa-solid fa-envelope" style="margin-right: 5px;"></i>${usuario.correo || noReg}</p>
                     <span style="display: inline-block; margin-top: 12px; padding: 4px 12px; background: rgba(138,28,36,0.08); color: #8a1c24; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">${typeof t === 'function' ? t('prof_badge') : 'Aspirante'}</span>
                 </div>
             </div>
@@ -603,21 +577,20 @@ function abrirNotificacion(remitenteKey, element) {
 
         if (!grupo) return;
 
-        // Marcar activo en la lista
-        document.querySelectorAll('#notification-list .chat-item').forEach(el => el.style.background = 'transparent');
-        if (element) element.style.background = 'var(--color-border)';
+        // BUG-08 Fix: función para escapar HTML y prevenir XSS en mensajes del servidor
+        const escaparHTML = (str) => {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        };
 
-        // Mostrar paneles
-        document.getElementById('messages-empty-pane').style.display = 'none';
-        const readPane = document.getElementById('messages-read-pane');
-        readPane.style.display = 'flex';
-
-        document.getElementById('messages-read-title').innerText = grupo.remitente.replace('Administracion', 'Administración');
-
-        const body = document.getElementById('messages-read-body');
-        let chatHtml = '';
-
+        let chatHtml = `<div style="max-height: 400px; overflow-y: auto; text-align: left; padding: 10px; background: var(--color-bg); border-radius: 8px;">`;
         let lastDateStr = '';
+        
         grupo.mensajes.forEach(notif => {
             const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
             const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
@@ -627,7 +600,7 @@ function abrirNotificacion(remitenteKey, element) {
             if (notif.editado_en && notif.creado_en && notif.editado_en !== notif.creado_en) {
                 const editDate = new Date(notif.editado_en);
                 if (Math.abs(editDate - dateObj) > 5000) {
-                    editadoHtml = `<span class="ms-1 text-muted fst-italic">(Editado)</span>`;
+                    editadoHtml = `<span style="margin-left: 4px; color: var(--color-text-muted); font-style: italic;">(Editado)</span>`;
                 }
             }
 
@@ -635,27 +608,37 @@ function abrirNotificacion(remitenteKey, element) {
             if (dateStr !== lastDateStr) {
                 chatHtml += `
                     <div style="text-align: center; margin-bottom: 15px; margin-top: 15px;">
-                        <span style="background: var(--color-border); padding: 2px 10px; border-radius: 12px; font-size: 11px; color: var(--color-text-muted); font-weight: bold;">${dateStr}</span>
+                        <span style="background: var(--color-border); padding: 2px 10px; border-radius: 12px; font-size: 11px; color: var(--color-text-muted); font-weight: bold;">${escaparHTML(dateStr)}</span>
                     </div>
                 `;
                 lastDateStr = dateStr;
             }
 
             chatHtml += `
-                <div style="background: var(--color-card-bg); border: 1px solid var(--color-border); padding: 12px 15px; border-radius: 14px 14px 14px 4px; box-shadow: var(--shadow-sm); font-size: 13.5px; color: var(--color-text); max-width: 90%; margin-bottom: 10px; word-wrap: break-word; align-self: flex-start;">
-                    <div style="font-weight: bold; color: var(--color-text); margin-bottom: 5px; font-size: 13px; text-transform: capitalize;">${notif.nombre}</div>
-                    ${notif.mensaje}
+                <div style="background: var(--color-card-bg); border: 1px solid var(--color-border); padding: 12px 15px; border-radius: 14px 14px 14px 4px; box-shadow: var(--shadow-sm); font-size: 13.5px; color: var(--color-text); margin-bottom: 10px; word-wrap: break-word;">
+                    <div style="font-weight: bold; color: var(--color-text); margin-bottom: 5px; font-size: 13px; text-transform: capitalize;">${escaparHTML(notif.nombre)}</div>
+                    <div style="white-space: pre-wrap;">${escaparHTML(notif.mensaje)}</div>
                     <div style="font-size: 10px; color: var(--color-text-muted); margin-top: 5px; text-align: right;">${timeStr} ${editadoHtml}</div>
                 </div>
             `;
         });
+        chatHtml += `</div>`;
 
-        body.innerHTML = chatHtml;
+        // Cerrar el dropdown para que el modal se vea limpio
+        const megaDropdown = document.getElementById('messages-mega-dropdown');
+        if (megaDropdown) {
+            megaDropdown.style.display = 'none';
+            megaDropdown.classList.remove('show');
+        }
 
-        // Auto scroll al final del chat
-        setTimeout(() => {
-            body.scrollTop = body.scrollHeight;
-        }, 50);
+        Swal.fire({
+            title: `<div style="display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.2rem;"><i class="fa-solid fa-user-circle" style="color: var(--color-primary);"></i> <span>${grupo.remitente.replace('Administracion', 'Administración')}</span></div>`,
+            html: chatHtml,
+            width: '550px',
+            showCloseButton: true,
+            confirmButtonText: 'Cerrar',
+            confirmButtonColor: '#8a1c24'
+        });
 
     } catch (error) {
         console.error("Error al abrir notificación", error);
@@ -899,10 +882,20 @@ function cambiarEstacion(nuevaEstacion) {
     document.getElementById(`panel-estacion-${estacionActual}`).classList.remove('active-panel');
     document.getElementById(`panel-estacion-${nuevaEstacion}`).classList.add('active-panel');
 
-    // Manejar el estado visual en la barra de progreso (Nodos)
-    document.getElementById(`node-${estacionActual}`).classList.remove('active');
-    document.getElementById(`node-${estacionActual}`).classList.add('completed');
-    document.getElementById(`node-${nuevaEstacion}`).classList.add('active');
+    // BUG-04 Fix: solo marcar como 'completed' al avanzar; al retroceder limpiar 'completed' del nodo actual
+    const nodeActual = document.getElementById(`node-${estacionActual}`);
+    const nodeNuevo  = document.getElementById(`node-${nuevaEstacion}`);
+
+    nodeActual.classList.remove('active');
+    if (nuevaEstacion > estacionActual) {
+        // Avanzando: el nodo anterior queda completado
+        nodeActual.classList.add('completed');
+    } else {
+        // Retrocediendo: el nodo al que volvemos deja de ser completado
+        nodeActual.classList.remove('completed');
+        nodeNuevo.classList.remove('completed');
+    }
+    nodeNuevo.classList.add('active');
 
     estacionActual = nuevaEstacion;
 }
@@ -1027,17 +1020,6 @@ function actualizarCostosAdmision() {
     }
 }
 
-function mostrarDetallesAdmision() {
-    const inputs = document.querySelector('input[name="modalidad"]:checked');
-    if (inputs) {
-        Swal.fire({
-            title: 'Detalles de Modalidad',
-            text: `Modalidad seleccionada: ${inputs.value.replace(/_/g, ' ')}`,
-            icon: 'info',
-            confirmButtonColor: '#8a1c24'
-        });
-    }
-}
 
 /**
  * Valida de forma dinámica los archivos requeridos para habilitar el botón final
@@ -1087,10 +1069,6 @@ async function bloquearInterfazPorRevision(estadoActual = 'EN_REVISION') {
     const banner = document.getElementById('banner-revision');
     const encabezado = document.getElementById('encabezado-documentos');
 
-    // 1. Eliminar cualquier toast flotante anterior al pie de página
-    const oldToast = document.getElementById('revision-toast');
-    if (oldToast) oldToast.remove();
-
     // 2. Construir la vista integrada dentro de banner-revision (banner superior + barra de progreso + grid sin caja exterior)
     if (banner) {
         banner.style.cssText = 'display:block; background:transparent; border:none; box-shadow:none; padding:0; margin-bottom: 20px;';
@@ -1132,30 +1110,15 @@ async function bloquearInterfazPorRevision(estadoActual = 'EN_REVISION') {
                 </div>
             </div>
 
-            <!-- Barra de Progreso Respirable con Conteo -->
-            <div class="progress-card-v2">
-                <div class="progress-card-v2-header">
-                    <span class="progress-card-v2-label" data-i18n="doc_docs_aprobados">${typeof t === 'function' ? t('doc_docs_aprobados') : 'Documentos aprobados'}</span>
-                    <span id="txt-conteo-aprobados" class="progress-card-v2-count">0 / 0</span>
-                </div>
-                <div class="progress-card-v2-track">
-                    <div id="barra-progreso-fill" class="progress-card-v2-fill" style="width: 0%;"></div>
-                </div>
-            </div>
-
             <!-- Contenedor Directo de Tarjetas (Sin caja exterior con borde) -->
             <div id="docs-dinamicos-container" style="margin-top: 15px; padding-bottom: 80px;">
                 <div class="docs-empty-state">
-                    <i class="fa-solid fa-folder-open fa-3x mb-3 text-muted"></i>
+                    <i class="fa-solid fa-folder-open fa-3x" style="margin-bottom: 16px; color: var(--color-text-muted);"></i>
                     <p class="text-muted" data-i18n="doc_no_encontrado">${typeof t === 'function' ? t('doc_no_encontrado') : 'No se encontraron documentos adjuntos.'}</p>
                 </div>
             </div>
         `;
     }
-
-    // Ya no inyectamos revision-floating-banner en el body para mantener el flujo en el DOM
-    let oldFloating = document.getElementById('revision-floating-banner');
-    if (oldFloating) oldFloating.style.display = 'none';
 
     if (encabezado) encabezado.style.display = 'none';
 
@@ -1409,7 +1372,7 @@ function abrirModalDoc(docStr) {
                 if (numIntentos < 3) {
                     const reqNombreSanitized = encodeURIComponent(doc.requisitoNombre || 'Documento');
                     resubirContainer.innerHTML = `
-                        <button onclick="iniciarReSubidaDocumento(${doc.idDocumento}, '${reqNombreSanitized}', ${numIntentos})" style="background-color: #8a1c24; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; font-size: 15px; box-shadow: 0 4px 10px rgba(138, 28, 36, 0.2); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <button onclick="iniciarReSubidaDocumento(${doc.idDocumento}, '${reqNombreSanitized}', ${numIntentos})" class="btn-resubida">
                             <i class="fa-solid fa-cloud-arrow-up"></i> ${typeof t === 'function' ? t('doc_resubir_btn') : 'Re-subir'} ${typeof t === 'function' ? t('doc_intento_txt1') : '(Será tu Intento'} ${numIntentos + 1} ${typeof t === 'function' ? t('doc_intento_txt2') : 'de 3)'}
                         </button>
                     `;
@@ -1430,9 +1393,33 @@ function abrirModalDoc(docStr) {
 
         const enlace = document.getElementById('modal-doc-enlace');
         if (doc.rutaArchivo) {
-            // Bug 10 Fix: usar ruta autenticada en lugar de /uploads/ directo
-            const token = sessionStorage.getItem('token') || '';
-            enlace.href = `/api/files/${doc.rutaArchivo}?token=${encodeURIComponent(token)}`;
+            enlace.href = '#';
+            enlace.onclick = async (e) => {
+                e.preventDefault();
+                const token = sessionStorage.getItem('token') || '';
+                try {
+                    enlace.style.opacity = '0.6';
+                    enlace.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Cargando...`;
+                    
+                    const res = await fetch(`/api/files/${doc.rutaArchivo}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (!res.ok) throw new Error('Error al obtener el archivo');
+                    
+                    const blob = await res.blob();
+                    const objectUrl = URL.createObjectURL(blob);
+                    window.open(objectUrl, '_blank');
+                    
+                    setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
+                } catch (error) {
+                    console.error("Error al descargar archivo:", error);
+                    Swal.fire('Error', 'No se pudo abrir el documento.', 'error');
+                } finally {
+                    enlace.style.opacity = '1';
+                    enlace.innerHTML = `<i class="fa-solid fa-arrow-up-right-from-square"></i> <span data-i18n="doc_ver_doc">${typeof t === 'function' ? t('doc_ver_doc') : 'Ver Documento'}</span>`;
+                }
+            };
             enlace.style.display = 'inline-flex';
         } else {
             enlace.style.display = 'none';
@@ -1604,9 +1591,24 @@ async function finalizarProcesoEstaciones() {
 
         // Llamar al endpoint de EN_REVISION para bloquear el expediente
         try {
-            await fetch(`/api/solicitud/enviar/${currentSolicitudId}`, {
+            const envioRes = await fetch(`/api/solicitud/enviar/${currentSolicitudId}`, {
                 method: 'PUT'
             });
+
+            // BUG-06 Fix: verificar res.ok antes de mostrar éxito
+            if (!envioRes.ok) {
+                const errData = await envioRes.json().catch(() => ({}));
+                ocultarLoader();
+                Swal.fire({
+                    title: 'Error al enviar',
+                    text: errData.mensaje || 'El servidor no pudo procesar el envío del expediente. Inténtalo de nuevo.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
+                if (btnFinalizar) btnFinalizar.disabled = false;
+                return;
+            }
+
             // Activar bloqueo de interfaz sin recargar
             Swal.fire({
                 title: '¡Felicidades!',
@@ -1625,6 +1627,16 @@ async function finalizarProcesoEstaciones() {
             }
         } catch (e) {
             console.error("Error al enviar expediente a revisión en DB:", e);
+            // BUG-03 Fix: ocultar loader en el catch para no bloquear la pantalla
+            ocultarLoader();
+            Swal.fire({
+                title: 'Error de conexión',
+                text: 'No se pudo conectar con el servidor. Verifica tu conexión e inténtalo de nuevo.',
+                icon: 'error',
+                confirmButtonColor: '#ef4444'
+            });
+            if (btnFinalizar) btnFinalizar.disabled = false;
+            return;
         }
     }
 
@@ -1635,12 +1647,65 @@ async function finalizarProcesoEstaciones() {
 }
 
 /**
+ * BUG-01 Fix: función real para refrescar la vista de convocatorias desde Socket.io.
+ * Si el usuario ya había seleccionado un nivel (Maestría/Doctorado), recargas las tarjetas.
+ * Si no, simplemente se asegura de mostrar el panel de selección inicial.
+ */
+function cargarConvocatorias() {
+    if (nivelAcademicoSeleccionado) {
+        // Ya había seleccionado nivel → recargar la lista con datos frescos
+        activarModulosPostRegistro(nivelAcademicoSeleccionado === 'Doctorado'
+            ? 'Doctorado en Ingeniería Eléctrica'
+            : 'Maestría en Ingeniería Eléctrica');
+    } else {
+        // Sin nivel seleccionado → asegurar que se muestra el panel inicial
+        const panelSeleccion = document.getElementById('seleccion-programa');
+        const panelListaAbierta = document.getElementById('lista-programas-abiertos');
+        if (panelListaAbierta) panelListaAbierta.style.display = 'none';
+        if (panelSeleccion) {
+            panelSeleccion.style.display = 'flex';
+            void panelSeleccion.offsetWidth;
+            panelSeleccion.classList.add('fade-in');
+        }
+    }
+}
+
+/**
  * Actualiza la gráfica de proceso con datos reales del expediente
  * @param {number} aprobados - Documentos aprobados
  * @param {number} rechazados - Documentos rechazados
  * @param {number} total - Total de documentos
  */
 function actualizarGraficaProceso(aprobados = 0, rechazados = 0, total = 5) {
+    const pieChart = document.getElementById('grafica-pastel');
+    const legend = document.querySelector('#view-proceso .chart-legend');
+
+    if (total === 0) {
+        if (pieChart) pieChart.style.display = 'none';
+        if (legend) legend.style.display = 'none';
+        
+        let emptyState = document.getElementById('proceso-empty');
+        if (!emptyState && pieChart) {
+            emptyState = document.createElement('div');
+            emptyState.id = 'proceso-empty';
+            emptyState.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: var(--color-text-muted);">
+                    <i class="fa-solid fa-chart-pie" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                    <h4 style="margin-bottom: 10px; color: var(--color-text);">${typeof t === 'function' ? t('proc_empty_title') : 'Aún no hay solicitud'}</h4>
+                    <p style="font-size: 14px;">${typeof t === 'function' ? t('proc_empty_desc') : 'Inicia tu proceso en una convocatoria para ver tu progreso.'}</p>
+                </div>
+            `;
+            pieChart.parentNode.insertBefore(emptyState, pieChart);
+        } else if (emptyState) {
+            emptyState.style.display = 'block';
+        }
+        return;
+    }
+
+    if (document.getElementById('proceso-empty')) document.getElementById('proceso-empty').style.display = 'none';
+    if (pieChart) pieChart.style.display = 'flex';
+    if (legend) legend.style.display = 'flex';
+
     const pendientes = total - aprobados - rechazados;
 
     if (document.getElementById('lbl-aprobados')) document.getElementById('lbl-aprobados').innerText = aprobados;
@@ -1732,12 +1797,6 @@ function bloquearConvocatorias(soliData = null) {
             }
 
             const infoHtml = `
-                <style>
-                    .slide-view {
-                        grid-area: 1 / 1;
-                        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
-                    }
-                </style>
                 <div style="background: var(--color-card-bg); border: none; border-radius: 12px; padding: 40px; text-align: center; width: 100%; max-width: 900px; margin: 20px auto; box-shadow: var(--shadow-md); font-family: 'Inter', Arial, sans-serif; overflow: hidden;">
                     
                     <div style="background: #fef3c7; border: 1px solid #fcd34d; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
@@ -1757,12 +1816,12 @@ function bloquearConvocatorias(soliData = null) {
                                 <span style="font-size: 14px; color: var(--color-text-muted);">${typeof t === 'function' ? t('conv_opcion_sel') : 'Modalidad:'} <strong>${opcionElegida}</strong></span>
                             </p>
                             
-                            <button class="btn-primary" onclick="switchView('documentos')" style="background-color: #1e293b; color: #ffffff; padding: 12px 30px; border-radius: 6px; font-size: 15px; font-weight: 600; margin-bottom: 25px; min-width: 250px; border: none; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#0f172a'" onmouseout="this.style.backgroundColor='#1e293b'">
+                            <button onclick="switchView('documentos')" class="btn-continuar-sol">
                                 <i class="fa-solid fa-arrow-right" style="margin-right: 8px;"></i> ${typeof t === 'function' ? t('conv_btn_continuar') : 'Continuar Solicitud'}
                             </button>
                             
                             <div>
-                                <button onclick="mostrarVistaDetalles()" style="background: none; border: none; color: var(--color-info); font-size: 14px; font-weight: 600; cursor: pointer; padding: 5px; transition: color 0.2s;" onmouseover="this.style.color='var(--color-primary-hover)'" onmouseout="this.style.color='var(--color-info)'">
+                                <button onclick="mostrarVistaDetalles()" class="btn-detalles-link">
                                     ${typeof t === 'function' ? t('conv_btn_fechas') : 'Ver fechas del proceso'} <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i>
                                 </button>
                             </div>
@@ -1800,7 +1859,7 @@ function bloquearConvocatorias(soliData = null) {
                             </div>
 
                             <div style="text-align: center; margin-top: 30px;">
-                                <button onclick="ocultarVistaDetalles()" style="background: none; border: none; color: var(--color-text-muted); font-size: 14px; font-weight: 600; cursor: pointer; padding: 10px; transition: color 0.2s;" onmouseover="this.style.color='var(--color-text)'" onmouseout="this.style.color='var(--color-text-muted)'">
+                                <button onclick="ocultarVistaDetalles()" class="btn-volver-link">
                                     <i class="fa-solid fa-arrow-left" style="margin-right: 5px;"></i> ${typeof t === 'function' ? t('conv_volver_resumen') : 'Volver al resumen'}
                                 </button>
                             </div>
@@ -1924,6 +1983,10 @@ async function cargarRequisitosDocumentales(idConvocatoria) {
                 return;
             }
 
+            let htmlIdentidad = '';
+            let htmlAcademico = '';
+            let htmlEvaluacion = '';
+
             requisitos.forEach(req => {
                 const isRequired = req.obligatorio ? '*' : '';
                 const requiredAttr = req.obligatorio ? 'required' : '';
@@ -1936,13 +1999,17 @@ async function cargarRequisitosDocumentales(idConvocatoria) {
                 `;
 
                 if (req.categoria === 'IDENTIDAD' || req.categoria === 'GENERAL') {
-                    if (gridIdentidad) gridIdentidad.innerHTML += htmlReq;
+                    htmlIdentidad += htmlReq;
                 } else if (req.categoria === 'ACADEMICO') {
-                    if (gridAcademico) gridAcademico.innerHTML += htmlReq;
+                    htmlAcademico += htmlReq;
                 } else if (req.categoria === 'EVALUACION') {
-                    if (gridEvaluacion) gridEvaluacion.innerHTML += htmlReq;
+                    htmlEvaluacion += htmlReq;
                 }
             });
+
+            if (gridIdentidad) gridIdentidad.innerHTML = htmlIdentidad;
+            if (gridAcademico) gridAcademico.innerHTML = htmlAcademico;
+            if (gridEvaluacion) gridEvaluacion.innerHTML = htmlEvaluacion;
 
             // Re-ejecutar verificación en caso de que todo sea opcional
             verificarArchivosEstacion(1);
@@ -1995,34 +2062,15 @@ function hidratarUI(soliData) {
 function configurarPanelesNivel(nivel, idConvocatoria) {
     if (idConvocatoria) sessionStorage.setItem('idConvocatoriaPendiente', idConvocatoria);
 
-    const titulo = document.getElementById('titulo-flujo-documentos');
-    const boxCostos = document.getElementById('box-costos-desglose');
-
     if (nivel === "Doctorado") {
-        if (titulo) titulo.innerText = "Expediente: Doctorado FIE";
-        if (document.getElementById('lbl-step-1')) document.getElementById('lbl-step-1').innerText = "Identidad y Generales";
-        if (document.getElementById('lbl-step-2')) document.getElementById('lbl-step-2').innerText = "Académicos";
-        if (document.getElementById('lbl-step-3')) document.getElementById('lbl-step-3').innerText = "Evaluación / Cartas";
-
         if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'none';
         if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'block';
 
-        if (boxCostos) {
-            boxCostos.innerHTML = `<h4>Aranceles y Conceptos de Pago (Doctorado)</h4><div class="costo-linea"><span style="color:#27ae60;">✓ Exención por Continuidad FIE:</span> <strong>$ 0.00 MXN</strong></div><small style="color:#777;">Al ser egresado directo del posgrado FIE, los derechos de examen interno quedan exentos.</small>`;
-        }
         if (document.getElementById('btn-next-0')) document.getElementById('btn-next-0').disabled = true;
     } else {
-        if (titulo) titulo.innerText = "Expediente: Maestría FIE";
-        if (document.getElementById('lbl-step-1')) document.getElementById('lbl-step-1').innerText = "Identidad y Generales";
-        if (document.getElementById('lbl-step-2')) document.getElementById('lbl-step-2').innerText = "Académicos";
-        if (document.getElementById('lbl-step-3')) document.getElementById('lbl-step-3').innerText = "Evaluación / Cartas";
-
         if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'none';
         if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'block';
 
-        if (boxCostos) {
-            boxCostos.innerHTML = `<h4>Aranceles y Conceptos de Pago (Maestría)</h4><div class="costo-linea"><span>Examen de Admisión Institucional:</span> <strong>$ 1,200.00 MXN</strong></div><div class="costo-linea"><span>Curso Propedéutico:</span> <strong>$ 2,500.00 MXN</strong></div>`;
-        }
         if (document.getElementById('btn-next-0')) document.getElementById('btn-next-0').disabled = false;
         actualizarCostosAdmision();
     }

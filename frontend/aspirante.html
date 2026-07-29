@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIE</title>
+    <title>Portal Aspirantes — Posgrados FIE</title>
+    <meta name="description" content="Portal oficial de aspirantes para los posgrados de la Facultad de Ingeniería Eléctrica.">
     <link rel="shortcut icon" href="css/favico.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,7 +37,7 @@
         <div class="sidebar-header">
             <div class="sidebar-logo" style="background: transparent;">
                 <img src="css/posgradofie.png" alt="Logo"
-                    style="width: 200%; height: 200%; object-fit: contain; cursor: pointer;" onclick="toggleSidebar()">
+                    style="width: 100%; max-width: 45px; height: auto; object-fit: contain; cursor: pointer;" onclick="toggleSidebar()">
             </div>
             <div style="display: flex; flex-direction: column; justify-content: center;">
                 <span class="text"
@@ -102,7 +103,7 @@
                 <div class="notification-container" onclick="toggleNotificationMenu(event)" style="position: relative;">
                     <div class="notification-trigger"
                         style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; color: var(--color-text); background: var(--color-card-bg);">
-                        <i class="fa-regular fa-bell icon-anim-bell"></i>
+                        <i class="fa-solid fa-bell icon-anim-bell"></i>
                         <span id="notification-badge" class="notification-badge" style="display: none;"></span>
                     </div>
                     <!-- Mega Dropdown Messages (se mantiene su funcionalidad) -->
@@ -110,13 +111,13 @@
                         <div class="messages-mega-header">
                             <span data-i18n="tb_bandeja">Bandeja de Mensajes</span>
                             <i class="fa-solid fa-check-double" style="cursor: pointer; color: white;"
-                                title="Marcar todos como leídos" onclick="alert('En desarrollo')"></i>
+                                title="Marcar todos como leídos" onclick="Swal.fire({title: 'En desarrollo', text: 'Esta función estará disponible próximamente.', icon: 'info', confirmButtonColor: '#8a1c24'})"></i>
                         </div>
                         <div class="messages-mega-body">
                             <!-- Lista de chats (Izquierda) -->
                             <div class="messages-mega-list" id="notification-list">
                                 <div class="messages-empty-state">
-                                    <i class="fa-solid fa-spinner fa-spin mb-2"></i> <span
+                                    <i class="fa-solid fa-spinner fa-spin" style="margin-bottom: 8px;"></i> <span
                                         data-i18n="tb_cargando">Cargando...</span>
                                 </div>
                             </div>
@@ -133,10 +134,10 @@
                             <!-- Vista vacía de lectura (Derecha) -->
                             <div class="messages-mega-read" id="messages-empty-pane">
                                 <div class="messages-empty-state">
-                                    <i class="fa-regular fa-envelope fa-beat-fade"
+                                    <i class="fa-solid fa-envelope fa-beat-fade"
                                         style="font-size: 42px; opacity: 0.4; margin-bottom: 12px;"></i>
-                                    <p data-i18n="tb_selecciona_msj"><strong>Selecciona un mensaje</strong><br>para ver
-                                        la conversación</p>
+                                    <p data-i18n="tb_selecciona_msj" style="margin-bottom: 8px;"><strong>Selecciona un mensaje</strong></p><p>para ver
+                                        su contenido aquí</p>
                                 </div>
                             </div>
                         </div>
@@ -244,7 +245,7 @@
                                 data-i18n="proc_rechazados">Rechazados</span> (<strong id="lbl-rechazados">0</strong>)
                         </div>
                         <div class="legend-item"><span class="dot pending"></span> <span
-                                data-i18n="proc_pendientes">Pendientes</span> (<strong id="lbl-pendientes">5</strong>)
+                                data-i18n="proc_pendientes">Pendientes</span> (<strong id="lbl-pendientes">--</strong>)
                         </div>
                     </div>
                 </div>
@@ -259,11 +260,11 @@
             <!-- Contenedor 1: Selección inicial de tarjetas -->
             <div id="seleccion-programa" class="programas-container">
                 <div class="box-programa" onclick="seleccionarPrograma('Maestría en Ingeniería Eléctrica')">
-                    <i class="fa-solid fa-book-bookmark icon-anim-prog"></i><br><span
+                    <i class="fa-solid fa-book-bookmark icon-anim-prog" style="margin-bottom: 8px; display: block;"></i><span
                         data-i18n="sb_maestria">Maestría</span>
                 </div>
                 <div class="box-programa" onclick="seleccionarPrograma('Doctorado en Ingeniería Eléctrica')">
-                    <i class="fa-solid fa-user-graduate icon-anim-prog"></i><br><span
+                    <i class="fa-solid fa-user-graduate icon-anim-prog" style="margin-bottom: 8px; display: block;"></i><span
                         data-i18n="sb_doctorado">Doctorado</span>
                 </div>
             </div>
@@ -271,15 +272,13 @@
             <!-- Contenedor 2: Vista detallada del programa seleccionado -->
             <div id="lista-programas-abiertos" class="lista-convocatorias" style="display: none;">
                 <!-- 🚀 NUEVO BOTÓN DE RETORNO INSTITUCIONAL -->
-                <button onclick="regresarAConvocatorias()"
-                    style="background-color: #8a1c24; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 14px; cursor: pointer; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 8px; font-weight: bold; transition: background 0.2s;">
+                <button onclick="regresarAConvocatorias()" class="btn-custom-return">
                     <i class="fa-solid fa-arrow-left"></i> <span data-i18n="conv_cambiar_prog">Cambiar de Programa /
                         Volver</span>
                 </button>
 
-                <p data-i18n="conv_msg_desbloqueo">Has iniciado sesión y desbloqueado los accesos para el registro
+                <p data-i18n="conv_msg_desbloqueo" style="margin-bottom: 20px;">Has iniciado sesión y desbloqueado los accesos para el registro
                     formal al programa seleccionado.</p>
-                <br>
                 <div id="contenedor-tarjetas-programas"></div>
             </div>
         </section>
@@ -293,15 +292,12 @@
                 <p data-i18n="doc_msg_completar" style="margin: 0; color: var(--color-text-muted);">Completa cada una de
                     las estaciones requeridas para enviar tu postulación a revisión administrativa.
                 </p>
-                <button type="button" id="btn-cancelar-solicitud" onclick="cancelarSolicitudActual()"
-                    style="background-color: var(--color-danger); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; transition: transform 0.2s;"
-                    onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'"><i
-                        class="fa-solid fa-trash icon-anim-trash"></i> <span data-i18n="doc_btn_cancelar">Cancelar
-                        Solicitud</span></button>
+                <button type="button" id="btn-cancelar-solicitud" onclick="cancelarSolicitudActual()" class="btn-custom-cancel">
+                    <i class="fa-solid fa-trash icon-anim-trash"></i> <span data-i18n="doc_btn_cancelar">Cancelar Solicitud</span>
+                </button>
             </div>
-            <br>
 
-            <div class="stepper-wrapper">
+            <div class="stepper-wrapper" style="margin-top: 20px;">
                 <div class="step-node active" id="node-0">0<span class="step-label"
                         data-i18n="doc_step_admision">Admisión</span></div>
                 <div class="step-node" id="node-1">1<span class="step-label" id="lbl-step-1"
@@ -335,17 +331,9 @@
                                 onchange="verificarArchivosEstacion(0)">
                         </div>
 
-                        <!-- Botón para ver más detalles, que será implementado en el futuro -->
-                        <div id="contenedor-detalles-admision" style="margin-top: 10px; display: none;">
-                            <button type="button" class="btn-secondary" style="font-size: 13px;"
-                                onclick="mostrarDetallesAdmision()">
-                                <i class="fa-solid fa-circle-info"></i> <span data-i18n="doc_est0_btn_detalles">Más
-                                    Detalles de esta Modalidad</span>
-                            </button>
-                        </div>
-                        <br>
+
                         <button type="button" class="btn-primary" id="btn-next-0"
-                            style="width: auto; padding: 12px 30px;" onclick="avanzarEstacion(1)"><span
+                            style="width: auto; padding: 12px 30px; margin-top: 20px;" onclick="avanzarEstacion(1)"><span
                                 data-i18n="doc_est0_btn_confirmar">Confirmar y Continuar</span>
                             <i class="fa-solid fa-arrow-right icon-anim-next"></i></button>
                     </form>
@@ -361,8 +349,7 @@
                         <div id="grid-dinamico-identidad" class="file-grid">
                             <!-- Los requisitos de IDENTIDAD y GENERAL se inyectan aquí -->
                         </div>
-                        <br>
-                        <div style="display:flex; gap:15px;">
+                        <div style="display:flex; gap:15px; margin-top: 20px;">
                             <button type="button" class="btn-secondary" onclick="cambiarEstacion(0)"><i
                                     class="fa-solid fa-arrow-left"></i> <span
                                     data-i18n="doc_btn_volver">Volver</span></button>
@@ -384,8 +371,7 @@
                         <div id="grid-dinamico-academico" class="file-grid">
                             <!-- Los requisitos ACADEMICOS se inyectan aquí -->
                         </div>
-                        <br>
-                        <div style="display:flex; gap:15px;">
+                        <div style="display:flex; gap:15px; margin-top: 20px;">
                             <button type="button" class="btn-secondary" onclick="cambiarEstacion(1)"><i
                                     class="fa-solid fa-arrow-left"></i> <span
                                     data-i18n="doc_btn_volver">Volver</span></button>
@@ -419,8 +405,7 @@
                                     expediente no podré modificarlo después.</span>
                             </label>
                         </div>
-                        <br>
-                        <div id="botones-estacion-3" style="display:flex; gap:15px;">
+                        <div id="botones-estacion-3" style="display:flex; gap:15px; margin-top: 20px;">
                             <button type="button" class="btn-secondary" onclick="cambiarEstacion(2)"><i
                                     class="fa-solid fa-arrow-left"></i> <span
                                     data-i18n="doc_btn_volver">Volver</span></button>

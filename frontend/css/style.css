@@ -533,74 +533,7 @@ html {
     color: var(--color-text);
 }
 
-.profile-summary-premium .summary-header {
-    margin-bottom: 10px;
-}
 
-.profile-summary-premium .summary-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--color-text);
-    margin-bottom: 5px;
-    letter-spacing: -0.5px;
-}
-
-.profile-summary-premium .summary-subtitle {
-    font-size: 0.95rem;
-    color: var(--color-text-muted);
-}
-
-.profile-summary-premium .summary-metrics {
-    display: flex;
-    gap: 30px;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.profile-summary-premium .metric-item {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    flex: 1;
-    min-width: 150px;
-}
-
-.profile-summary-premium .metric-value {
-    font-size: 1.8rem;
-    font-weight: 800;
-    color: var(--color-text);
-    line-height: 1;
-}
-
-.profile-summary-premium .metric-value.metric-highlight {
-    color: var(--color-primary);
-}
-
-.profile-summary-premium .metric-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--color-text-muted);
-}
-
-.profile-summary-premium .metric-sub {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-}
-
-.profile-summary-premium .metric-divider {
-    width: 1px;
-    height: 60px;
-    background-color: var(--color-border);
-    display: none;
-}
-
-@media (min-width: 768px) {
-    .profile-summary-premium .metric-divider {
-        display: block;
-    }
-}
 
 .stats-grid {
     display: grid;
@@ -3792,6 +3725,26 @@ body.dark-mode .doc-badge {
     color: #3b82f6;
 }
 
+/* BUG-02 Fix: clase docs-empty-state faltaba en el CSS */
+.docs-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--color-text-muted);
+    gap: 12px;
+    width: 100%;
+}
+
+.docs-empty-state p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--color-text-muted);
+}
+
+
 /* ====================================================================
    BANNER DE REVISIÓN FLOTANTE (parte inferior)
    ==================================================================== */
@@ -5272,4 +5225,114 @@ body.dark-mode .status-banner.status-aprobado .status-banner-sub { color: #4ade8
 body.dark-mode .status-banner.status-aprobado .status-banner-badge {
     background: rgba(34, 197, 94, 0.22);
     color: #86efac;
+}
+.slide-view {
+    grid-area: 1 / 1;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+}
+
+
+/* ==== BOTONES PERSONALIZADOS (DISEÑO-03 & DISEÑO-06) ==== */
+.btn-custom-return {
+    background-color: #8a1c24;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+    transition: background 0.2s, transform 0.2s;
+}
+.btn-custom-return:hover {
+    background-color: #72171e;
+}
+
+.btn-custom-cancel {
+    background-color: var(--color-danger);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    transition: transform 0.2s, background 0.2s;
+}
+.btn-custom-cancel:hover {
+    transform: scale(1.03);
+    background-color: #e53e3e;
+}
+
+.btn-resubida {
+    background-color: #8a1c24; 
+    color: white; 
+    border: none; 
+    padding: 12px 24px; 
+    border-radius: 8px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 10px; 
+    font-size: 15px; 
+    box-shadow: 0 4px 10px rgba(138, 28, 36, 0.2); 
+    transition: transform 0.2s;
+}
+.btn-resubida:hover {
+    transform: scale(1.03);
+}
+
+.btn-continuar-sol {
+    background-color: #1e293b; 
+    color: #ffffff; 
+    padding: 12px 30px; 
+    border-radius: 6px; 
+    font-size: 15px; 
+    font-weight: 600; 
+    margin-bottom: 25px; 
+    min-width: 250px; 
+    border: none; 
+    cursor: pointer; 
+    transition: background-color 0.2s;
+}
+.btn-continuar-sol:hover {
+    background-color: #0f172a;
+}
+
+.btn-detalles-link {
+    background: none; 
+    border: none; 
+    color: var(--color-info); 
+    font-size: 14px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    padding: 5px; 
+    transition: color 0.2s;
+}
+.btn-detalles-link:hover {
+    color: var(--color-primary-hover);
+}
+
+.btn-volver-link {
+    background: none; 
+    border: none; 
+    color: var(--color-text-muted); 
+    font-size: 14px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    padding: 10px; 
+    transition: color 0.2s;
+}
+.btn-volver-link:hover {
+    color: var(--color-text);
 }
