@@ -532,13 +532,11 @@ function abrirModalPerfil() {
                 </div>
             </div>
         </div>`,
-        showConfirmButton: true,
-        confirmButtonText: typeof t === 'function' ? t('prof_btn_cerrar') : 'Cerrar',
-        buttonsStyling: false,
+        showConfirmButton: false,
+        showCloseButton: true,
         width: '1050px',
         customClass: {
             popup: 'pm-popup',
-            confirmButton: 'pm-btn-close',
             htmlContainer: 'pm-html-container'
         }
     });
