@@ -100,10 +100,23 @@ const getAspiranteMe = async (req, res) => {
     }
 };
 
-// Obtener todos los aspirantes
+// Obtener todos los aspirantes con el posgrado al que aplicaron
 const obtenerAspirantes = async (req, res) => {
     try {
-        const [resultados] = await db.query('SELECT * FROM aspirante');
+        const query = `
+            SELECT a.*, 
+                   (
+                       SELECT c.nombre 
+                       FROM solicitud s 
+                       JOIN convocatorias c ON s.idConvocatoria = c.id 
+                       WHERE s.idAspi = a.id 
+                       ORDER BY s.creadoEn DESC 
+                       LIMIT 1
+                   ) AS posgradoNombre
+            FROM aspirante a
+            ORDER BY a.id DESC
+        `;
+        const [resultados] = await db.query(query);
         return res.status(200).json(resultados);
     } catch (error) {
         console.error('Error en obtenerAspirantes:', error);

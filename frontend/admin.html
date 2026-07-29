@@ -30,8 +30,11 @@
 
     <!-- Global Loader (UX) -->
     <div id="global-loader" style="display: none;">
-        <div class="spinner"></div>
-        <p style="color:#333; font-weight:bold; font-size:16px;">Cargando información, por favor espera...</p>
+        <img src="css/zorro.png" alt="Zorro Posgrados FIE" class="loader-zorro">
+        <div class="loader-pis-pas">
+            <span class="jump-pis">¡pis</span>
+            <span class="jump-pas">pas!</span>
+        </div>
     </div>
 
     <!-- Sidebar from aspirante.html design -->
@@ -301,7 +304,7 @@
                                 <tr>
                                     <th>Nombre</th>
                                     <th>Correo</th>
-                                    <th>Estado</th>
+                                    <th>Posgrado</th>
                                     <th class="text-end">Acción</th>
                                 </tr>
                             </thead>
@@ -314,8 +317,8 @@
             <!-- VISTA DE PERFIL (Expediente Clínico / Académico) -->
             <div id="vistaPerfilAspirante" class="d-none">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <button class="btn btn-light shadow-sm" onclick="cerrarExpedienteAspirante()"
-                        style="border-radius: 8px; font-weight: 600; color: #475569;">
+                    <button class="btn btn-outline-secondary shadow-sm" onclick="cerrarExpedienteAspirante()"
+                        style="border-radius: 8px; font-weight: 600;">
                         <i class="fa-solid fa-arrow-left me-2"></i> Volver a la lista
                     </button>
                     <button class="btn btn-primary shadow-sm d-none" id="btnVerExpedienteCompleto"
@@ -333,19 +336,19 @@
                                 --
                             </div>
 
-                            <h4 class="mb-1 fw-bold text-dark" id="perfil_nombreCompleto">Cargando...</h4>
+                            <h4 class="mb-1 fw-bold" style="color: var(--color-text);" id="perfil_nombreCompleto">Cargando...</h4>
                             <p class="text-muted mb-3" style="font-size: 0.9rem;" id="perfil_correo">correo@ejemplo.com
                             </p>
 
                             <span class="soft-badge soft-badge-success mb-4 d-inline-block"
                                 id="perfil_estado">Activo</span>
 
-                            <hr style="border-color: #f1f5f9; margin: 20px 0;">
+                            <hr style="border-color: var(--color-border); margin: 20px 0;">
 
                             <div class="text-start px-2" style="overflow-x: hidden; word-wrap: break-word;">
                                 <!-- Datos Personales -->
                                 <h6 class="text-muted small fw-bold mb-3 border-bottom pb-1"
-                                    style="text-transform: uppercase;">Datos Personales</h6>
+                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">Datos Personales</h6>
                                 <div class="mb-3">
                                     <div class="profile-label-premium">CURP</div>
                                     <div class="profile-value-premium" id="perfil_curp">-</div>
@@ -370,7 +373,7 @@
 
                                 <!-- Datos Académicos -->
                                 <h6 class="text-muted small fw-bold mb-3 border-bottom pb-1"
-                                    style="text-transform: uppercase;">Antecedentes Académicos</h6>
+                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">Antecedentes Académicos</h6>
                                 <div class="mb-3">
                                     <div class="profile-label-premium">LICENCIATURA</div>
                                     <div class="profile-value-premium" id="perfil_licenciatura">-</div>
@@ -397,7 +400,7 @@
 
                                 <!-- Otros Datos -->
                                 <h6 class="text-muted small fw-bold mb-3 border-bottom pb-1"
-                                    style="text-transform: uppercase;">Ocupación / Otros</h6>
+                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">Ocupación / Otros</h6>
                                 <div class="mb-3">
                                     <div class="profile-label-premium">OCUPACIÓN</div>
                                     <div class="profile-value-premium" id="perfil_ocupacion">-</div>
@@ -413,9 +416,9 @@
 
                     <!-- Columna Derecha: Solicitudes y Documentos -->
                     <div class="col-md-8">
-                        <div class="card bg-white shadow-sm h-100" style="border: none; border-radius: 16px;">
-                            <div class="card-header bg-white pt-4 pb-2 px-4" style="border-bottom: 1px solid #f1f5f9;">
-                                <h5 class="mb-0 fw-bold" style="color: #1e293b; letter-spacing: -0.5px;">Trámites de
+                        <div class="card shadow-sm h-100" style="border-radius: 16px;">
+                            <div class="card-header pt-4 pb-2 px-4" style="background: transparent; border-bottom: 1px solid var(--color-border);">
+                                <h5 class="mb-0 fw-bold" style="color: var(--color-text); letter-spacing: -0.5px;">Trámites de
                                     Admisión</h5>
                             </div>
                             <div class="card-body px-4 pb-4" id="contenedorSolicitudes">

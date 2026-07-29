@@ -2168,8 +2168,10 @@ body.dark-mode .stat-card.stat-success {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(255, 255, 255, 0.9);
-    z-index: 9999;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 99999;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -2184,25 +2186,56 @@ body.dark-mode .stat-card.stat-success {
     opacity: 1;
 }
 
-.spinner {
-    width: 50px;
-    height: 50px;
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid #8a1c24;
-    /* Guinda */
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+.loader-zorro {
+    width: 140px;
+    height: auto;
+    object-fit: contain;
     margin-bottom: 20px;
+    animation: zorroFloat 1.8s ease-in-out infinite;
+    filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.15));
 }
 
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
+@keyframes zorroFloat {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
     }
+    50% {
+        transform: translateY(-12px) rotate(-3deg);
+    }
+}
 
-    100% {
-        transform: rotate(360deg);
+.loader-pis-pas {
+    font-size: 28px;
+    font-weight: 900;
+    color: #8a1c24;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: 1px;
+    user-select: none;
+}
+
+@keyframes jumpText {
+    0%, 100% {
+        transform: translateY(0) scale(1);
     }
+    30% {
+        transform: translateY(-16px) scale(1.15);
+    }
+    60% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+.jump-pis {
+    display: inline-block;
+    animation: jumpText 1.2s infinite cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.jump-pas {
+    display: inline-block;
+    animation: jumpText 1.2s infinite cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation-delay: 0.35s;
 }
 
 /* Animación de detalles de usuario */
@@ -2476,16 +2509,22 @@ body.dark-mode .stat-card.stat-success {
     font-size: 2.5rem;
     font-weight: 700;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    border: 3px solid #fff;
+    border: 3px solid var(--color-card-bg);
     margin: 0 auto;
 }
 
+body.dark-mode .avatar-initials {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(99, 102, 241, 0.5) 100%);
+    color: #a5b4fc;
+    border-color: var(--color-card-bg);
+}
+
 .profile-card-premium {
-    background: #fff;
+    background: var(--color-card-bg);
     border-radius: 16px;
     padding: 30px 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--color-border);
     text-align: center;
 }
 
@@ -2493,14 +2532,14 @@ body.dark-mode .stat-card.stat-success {
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: #64748b;
+    color: var(--color-text-muted);
     margin-bottom: 2px;
     font-weight: 600;
 }
 
 .profile-value-premium {
     font-size: 0.95rem;
-    color: #1e293b;
+    color: var(--color-text);
     font-weight: 600;
     margin-bottom: 15px;
 }
@@ -2510,7 +2549,7 @@ body.dark-mode .stat-card.stat-success {
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-border);
     transition: background-color 0.2s, transform 0.2s;
     cursor: pointer;
 }
@@ -2520,26 +2559,30 @@ body.dark-mode .stat-card.stat-success {
 }
 
 .doc-row-premium:hover {
-    background-color: #f8fafc;
+    background-color: var(--color-bg);
     transform: translateX(4px);
+}
+
+body.dark-mode .doc-row-premium:hover {
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 .doc-row-premium .doc-icon {
     font-size: 20px;
-    color: #cbd5e1;
+    color: var(--color-text-muted);
     margin-right: 15px;
     transition: color 0.2s;
 }
 
 .doc-row-premium:hover .doc-icon {
-    color: #3b82f6;
+    color: var(--color-primary);
 }
 
 .doc-row-premium .chevron-icon {
     opacity: 0;
     transform: translateX(-10px);
     transition: all 0.2s;
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 .doc-row-premium:hover .chevron-icon {
@@ -4077,11 +4120,11 @@ body.dark-mode .swal2-content {
 
 /* ==== LOADER DARK MODE OVERRIDES ==== */
 body.dark-mode #global-loader {
-    background: rgba(15, 23, 42, 0.9);
+    background: rgba(15, 23, 42, 0.94);
 }
 
-body.dark-mode #global-loader p {
-    color: var(--color-text) !important;
+body.dark-mode .loader-pis-pas {
+    color: #f87171;
 }
 
 /* ==== SIDEBAR DARK MODE OVERRIDES ==== */

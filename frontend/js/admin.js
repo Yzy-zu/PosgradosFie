@@ -1183,8 +1183,28 @@ async function cargarAspirantes() {
                 }
             }
 
+            async function posgradoAspirante(asp) {
+                if (asp.posgradoNombre) return asp.posgradoNombre;
+                try {
+                    const resExp = await fetch(`/api/aspirante/${asp.id}/expediente`);
+                    if (!resExp.ok) return null;
+                    const exp = await resExp.json();
+                    if (exp.solicitudes && exp.solicitudes.length > 0) {
+                        const sol = exp.solicitudes[0];
+                        return sol.convocatoriaNombre || sol.opcionNombre || null;
+                    }
+                } catch (e) {
+                    return null;
+                }
+                return null;
+            }
+
             const correoReal = (await correoAspirante(aspirante.idUsuario)) || aspirante.correo || 'Sin correo';
+            const posgradoNombreReal = await posgradoAspirante(aspirante);
             const ini = (aspirante.nombre ? aspirante.nombre.charAt(0) : (correoReal ? correoReal.charAt(0) : 'A')).toUpperCase();
+
+            const posgradoTxt = posgradoNombreReal || 'Sin posgrado seleccionado';
+            const badgeClass = posgradoNombreReal ? 'soft-badge-primary' : 'soft-badge-secondary';
 
             tr.style.cursor = "pointer";
             tr.onclick = () => verExpedienteAspirante(aspirante.id);
@@ -1196,7 +1216,7 @@ async function cargarAspirantes() {
                     </div>
                 </td>
                 <td style="color: var(--color-text-muted);">${correoReal}</td>
-                <td><span class="soft-badge soft-badge-info"><i class="fa-solid fa-user-check me-1"></i> Registrado</span></td>
+                <td><span class="soft-badge ${badgeClass}"><i class="fa-solid fa-graduation-cap me-1"></i> ${posgradoTxt}</span></td>
                 <td class="text-end">
                     <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 text-nowrap" style="font-size: 0.8rem;">
                         <i class="fa-solid fa-folder-open me-1"></i> Ver expediente
@@ -1289,7 +1309,7 @@ async function verExpedienteAspirante(id) {
                 // Armar la lista de documentos
                 let htmlDocs = "";
                 if (sol.documentos && sol.documentos.length > 0) {
-                    htmlDocs = `<div class="mt-4"><h6 class="small fw-bold text-muted mb-3" style="letter-spacing: 0.5px; text-transform: uppercase;">Documentos Adjuntos</h6><div class="border rounded" style="border-color: #f1f5f9 !important; overflow: hidden;">`;
+                    htmlDocs = `<div class="mt-4"><h6 class="small fw-bold text-muted mb-3" style="letter-spacing: 0.5px; text-transform: uppercase;">Documentos Adjuntos</h6><div class="border rounded" style="border-color: var(--color-border) !important; overflow: hidden;">`;
                     sol.documentos.forEach(doc => {
                         let classBadge = "soft-badge-warning";
                         if (doc.estadoValidacion === "APROBADO") { classBadge = "soft-badge-success"; }
@@ -1299,7 +1319,7 @@ async function verExpedienteAspirante(id) {
                             <div class="doc-row-premium" onclick="window.open('/uploads/${doc.rutaArchivo}', '_blank')">
                                 <div class="d-flex align-items-center">
                                     <i class="fa-solid fa-file-pdf doc-icon"></i>
-                                    <span style="font-weight: 500; color: #334155;">${doc.requisitoNombre}</span>
+                                    <span style="font-weight: 500; color: var(--color-text);">${doc.requisitoNombre}</span>
                                 </div>
                                 <div class="d-flex align-items-center">
                                     <span class="soft-badge ${classBadge} me-3">${doc.estadoValidacion}</span>
@@ -1310,15 +1330,15 @@ async function verExpedienteAspirante(id) {
                     });
                     htmlDocs += `</div></div>`;
                 } else {
-                    htmlDocs = `<div class="mt-4 p-4 text-center rounded" style="background: #f8fafc;"><p class="text-muted small mb-0"><i class="fa-solid fa-folder-minus me-2"></i> No se han adjuntado documentos aún.</p></div>`;
+                    htmlDocs = `<div class="mt-4 p-4 text-center rounded" style="background: var(--color-bg);"><p class="text-muted small mb-0"><i class="fa-solid fa-folder-minus me-2"></i> No se han adjuntado documentos aún.</p></div>`;
                 }
 
                 contSolicitudes.innerHTML += `
-                    <div class="mb-5 pb-2" style="border-bottom: 1px dashed #e2e8f0;">
+                    <div class="mb-5 pb-2" style="border-bottom: 1px dashed var(--color-border);">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
-                                <h5 class="fw-bold mb-1" style="color: #0f172a;">${sol.convocatoriaNombre}</h5>
-                                ${sol.opcionNombre ? `<div class="mb-1"><span class="badge bg-light text-dark border"><i class="fa-solid fa-layer-group text-primary me-1"></i> Opción: ${sol.opcionNombre}</span></div>` : ''}
+                                <h5 class="fw-bold mb-1" style="color: var(--color-text);">${sol.convocatoriaNombre}</h5>
+                                ${sol.opcionNombre ? `<div class="mb-1"><span class="soft-badge soft-badge-secondary"><i class="fa-solid fa-layer-group me-1"></i> Opción: ${sol.opcionNombre}</span></div>` : ''}
                                 <div class="text-muted small mt-1" style="font-weight: 500;">
                                     <span>Iniciado el: ${d}</span> &nbsp;&bull;&nbsp; <span>${sol.tipoAdmision}</span>
                                 </div>
