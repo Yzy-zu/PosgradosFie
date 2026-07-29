@@ -83,6 +83,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 });
 
 async function cargarAspirantesAPI() {
+    mostrarLoader();
     try {
         const token = sessionStorage.getItem("token");
         const respuesta = await fetch('/api/aspirante/expedientes/todos', {
@@ -132,6 +133,8 @@ async function cargarAspirantesAPI() {
         }
     } catch (error) {
         console.error("Error de conexión:", error);
+    } finally {
+        ocultarLoader();
     }
 }
 
@@ -139,8 +142,6 @@ async function cargarAspirantesAPI() {
  * Control de Navegación Lateral (Cambio de Secciones)
  */
 function switchView(viewId) {
-    mostrarLoader();
-
     // Actualizar URL sin recargar para persistencia
     window.history.pushState(null, null, `#${viewId}`);
 
@@ -163,10 +164,6 @@ function switchView(viewId) {
     document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
     const activeLink = document.getElementById(`nav-${viewId}`);
     if (activeLink) activeLink.classList.add('active');
-
-    setTimeout(() => {
-        ocultarLoader();
-    }, 300);
 }
 
 
@@ -631,6 +628,7 @@ async function aprobarDocumentoModal() {
     const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id == documentoAEvaluar);
     if (docIndex === -1) return;
 
+    mostrarLoader();
     try {
         const token = sessionStorage.getItem("token") || "";
         const res = await fetch(`/api/documentos/evaluar/${documentoAEvaluar}`, {
@@ -664,6 +662,8 @@ async function aprobarDocumentoModal() {
     } catch (e) {
         console.error("Error al aprobar documento:", e);
         Swal.fire({ icon: 'error', title: 'Error de conexión', text: typeof t === 'function' ? t('docente_err_servidor') : 'Ocurrió un error al comunicarse con el servidor.', confirmButtonColor: '#ef4444' });
+    } finally {
+        ocultarLoader();
     }
 }
 
@@ -682,6 +682,7 @@ async function rechazarDocumentoModal() {
     const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id == documentoAEvaluar);
     if (docIndex === -1) return;
 
+    mostrarLoader();
     try {
         const token = sessionStorage.getItem("token") || "";
         const res = await fetch(`/api/documentos/evaluar/${documentoAEvaluar}`, {
@@ -715,6 +716,8 @@ async function rechazarDocumentoModal() {
     } catch (e) {
         console.error("Error al rechazar documento:", e);
         Swal.fire({ icon: 'error', title: 'Error de conexión', text: typeof t === 'function' ? t('docente_err_servidor') : 'Ocurrió un error al comunicarse con el servidor.', confirmButtonColor: '#ef4444' });
+    } finally {
+        ocultarLoader();
     }
 }
 
@@ -876,46 +879,41 @@ function abrirModalPerfilDocente() {
     const noReg = typeof t === 'function' ? t('prof_no_reg') : 'No registrado';
 
     const cell = (label, value, span = 1) =>
-        `<div class="pm-cell" style="grid-column: span ${span};">
-            <span class="pm-label">${label}</span>
-            <span class="pm-value">${value || noReg}</span>
+        `<div style="grid-column: span ${span};">
+            <span style="display: block; font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">${label}</span>
+            <strong style="color: var(--color-text); font-size: 15px; font-weight: 500;">${value || noReg}</strong>
         </div>`;
 
     Swal.fire({
         html: `
-        <div class="pm-wrapper">
-            <div class="pm-hero pm-hero-docente">
-                <div class="pm-avatar pm-avatar-docente">${iniciales}</div>
-                <div class="pm-hero-info">
-                    <h2 class="pm-name">${nombreCompleto}</h2>
-                    <span class="pm-badge pm-badge-docente">
-                        <i class="fa-solid fa-chalkboard-user" style="margin-right:5px;font-size:10px;"></i>
-                        ${typeof t === 'function' ? t('docente_revisor') : 'Docente / Revisor'}
-                    </span>
-                    <p class="pm-email"><i class="fa-regular fa-envelope" style="margin-right:6px;opacity:0.7;"></i>${usuario.correo || noReg}</p>
+        <div class="pm-wrapper" style="text-align: left; background: var(--color-card-bg); position: relative; overflow: hidden; border-radius: 12px;">
+            <div class="modal-watermark"></div>
+
+            <div style="padding: 35px 35px 25px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--color-border); position: relative; z-index: 1;">
+                <div style="width: 75px; height: 75px; border-radius: 50%; background: #be185d; color: white; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; flex-shrink: 0; box-shadow: 0 4px 10px rgba(190, 24, 93, 0.2);">${iniciales}</div>
+                <div>
+                    <h2 style="font-size: 24px; font-weight: 700; margin: 0; color: var(--color-text); letter-spacing: -0.5px;">${nombreCompleto}</h2>
+                    <p style="margin: 6px 0 0; color: var(--color-text-muted); font-size: 15px;"><i class="fa-regular fa-envelope" style="margin-right: 5px;"></i>${usuario.correo || noReg}</p>
+                    <span style="display: inline-block; margin-top: 12px; padding: 4px 12px; background: rgba(190,24,93,0.08); color: #be185d; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">${typeof t === 'function' ? t('docente_revisor') : 'Docente / Revisor'}</span>
                 </div>
             </div>
 
-            <div class="pm-section">
-                <h5 class="pm-section-title">
-                    <span class="pm-section-icon"><i class="fa-solid fa-address-card"></i></span>
-                    ${typeof t === 'function' ? t('docente_info_contacto') : 'Datos de Contacto'}
-                </h5>
-                <div class="pm-grid">
-                    ${cell(typeof t === 'function' ? t('prof_telefono') : 'Teléfono', d.telefono)}
-                    ${cell(typeof t === 'function' ? t('prof_nombre') : 'Nombre completo', nombreCompleto, 2)}
+            <div style="padding: 0 35px; position: relative; z-index: 1;">
+                <div style="padding: 30px 0; border-bottom: 1px solid var(--color-border);">
+                    <h5 style="font-size: 13px; font-weight: 800; color: var(--color-text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px;">${typeof t === 'function' ? t('docente_info_contacto') : 'Datos de Contacto'}</h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+                        ${cell(typeof t === 'function' ? t('prof_telefono') : 'Teléfono', d.telefono)}
+                        ${cell(typeof t === 'function' ? t('prof_nombre') : 'Nombre completo', nombreCompleto, 2)}
+                    </div>
                 </div>
-            </div>
 
-            <div class="pm-section" style="margin-bottom:0;">
-                <h5 class="pm-section-title">
-                    <span class="pm-section-icon pm-icon-green"><i class="fa-solid fa-graduation-cap"></i></span>
-                    ${typeof t === 'function' ? t('docente_info_academica') : 'Información Académica'}
-                </h5>
-                <div class="pm-grid">
-                    ${cell(typeof t === 'function' ? t('docente_cargo') : 'Cargo', d.cargo)}
-                    ${cell(typeof t === 'function' ? t('docente_especialidad') : 'Especialidad', d.especialidad)}
-                    ${cell(typeof t === 'function' ? t('docente_cubiculo') : 'Cubículo', d.cubiculo)}
+                <div style="padding: 30px 0 35px;">
+                    <h5 style="font-size: 13px; font-weight: 800; color: var(--color-text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px;">${typeof t === 'function' ? t('docente_info_academica') : 'Información Académica'}</h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+                        ${cell(typeof t === 'function' ? t('docente_cargo') : 'Cargo', d.cargo)}
+                        ${cell(typeof t === 'function' ? t('docente_especialidad') : 'Especialidad', d.especialidad)}
+                        ${cell(typeof t === 'function' ? t('docente_cubiculo') : 'Cubículo', d.cubiculo)}
+                    </div>
                 </div>
             </div>
         </div>`,

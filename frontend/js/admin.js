@@ -100,12 +100,8 @@ function configurarBotones() {
 
 
 function activarSeccionPorHash() {
-    mostrarLoader();
     const hash = window.location.hash.replace("#", "");
-    if (!hash) {
-        ocultarLoader();
-        return;
-    }
+    if (!hash) return;
 
     const enlaces = document.querySelectorAll("#sidebarMenu .nav-link");
     const secciones = document.querySelectorAll(".view-section");
@@ -149,10 +145,6 @@ function activarSeccionPorHash() {
         void seccionMostrar.offsetWidth; // Trigger reflow for animation
         seccionMostrar.classList.add("fade-in");
     }
-
-    setTimeout(() => {
-        ocultarLoader();
-    }, 300); // Simulate brief loading for smooth transition
 }
 
 function configurarNavegacion() {
@@ -189,6 +181,7 @@ function cargarDashboard() {
 }
 
 async function cargarUsuarios() {
+    mostrarLoader();
     try {
         const respuesta = await fetch("/api/usuario");
         const usuarios = await respuesta.json();
@@ -227,6 +220,8 @@ async function cargarUsuarios() {
         });
     } catch (error) {
         console.error("Error en cargarUsuarios:", error);
+    } finally {
+        ocultarLoader();
     }
 }
 
@@ -587,6 +582,7 @@ async function cargarConvocatorias() {
 
     if (!contenedor) return;
 
+    mostrarLoader();
     try {
         const respuesta = await fetch("/api/convocatorias");
 
@@ -637,6 +633,8 @@ async function cargarConvocatorias() {
     } catch (error) {
         console.error("Error en cargarConvocatorias:", error);
         contenedor.innerHTML = "<p class='text-muted' style='grid-column: 1 / -1;'>Esperando API de convocatorias...</p>";
+    } finally {
+        ocultarLoader();
     }
 }
 
@@ -1150,6 +1148,7 @@ async function cargarAspirantes() {
     const tbody = document.getElementById("tablaAspirantes");
     if (!tbody) return;
 
+    mostrarLoader();
     try {
         const respuesta = await fetch("/api/aspirante");
 
@@ -1228,10 +1227,13 @@ async function cargarAspirantes() {
     } catch (error) {
         console.error("Error al cargar aspirantes:", error);
         tbody.innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Esperando API de aspirantes...</td></tr>";
+    } finally {
+        ocultarLoader();
     }
 }
 
 async function verExpedienteAspirante(id) {
+    mostrarLoader();
     try {
         const respuesta = await fetch(`/api/aspirante/${id}/expediente`);
         if (!respuesta.ok) throw new Error("Aspirante no encontrado");
@@ -1358,6 +1360,8 @@ async function verExpedienteAspirante(id) {
     } catch (error) {
         console.error("Error al cargar expediente:", error);
         alert("No se pudo cargar el expediente del aspirante.");
+    } finally {
+        ocultarLoader();
     }
 }
 
@@ -1422,6 +1426,7 @@ async function cargarNotificacionesAdmin() {
     const contenedor = document.getElementById("listaNotificacionesChat");
     if (!contenedor) return;
 
+    mostrarLoader();
     try {
         const respuesta = await fetch("/api/notificaciones");
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
@@ -1471,6 +1476,8 @@ async function cargarNotificacionesAdmin() {
     } catch (error) {
         console.warn("Error al cargar notificaciones:", error);
         contenedor.innerHTML = `<div class="p-4 text-center text-danger small"><i class="fa-solid fa-plug-circle-exclamation mb-2"></i><br>Error al cargar.</div>`;
+    } finally {
+        ocultarLoader();
     }
 }
 
@@ -1795,54 +1802,47 @@ function abrirModalPerfilAdmin() {
 
     Swal.fire({
         html: `
-        <div class="pm-wrapper">
-            <div class="pm-hero pm-hero-admin">
-                <div class="pm-avatar pm-avatar-admin">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </div>
-                <div class="pm-hero-info">
-                    <h2 class="pm-name">${nombreCompleto}</h2>
-                    <span class="pm-badge pm-badge-admin">
-                        <i class="fa-solid fa-lock" style="margin-right:5px;font-size:10px;"></i>
-                        Administrador
-                    </span>
-                    <p class="pm-email"><i class="fa-regular fa-envelope" style="margin-right:6px;opacity:0.7;"></i>${correo}</p>
+        <div class="pm-wrapper" style="text-align: left; background: var(--color-card-bg); position: relative; overflow: hidden; border-radius: 12px;">
+            <div class="modal-watermark"></div>
+
+            <div style="padding: 35px 35px 25px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--color-border); position: relative; z-index: 1;">
+                <div style="width: 75px; height: 75px; border-radius: 50%; background: #d97706; color: white; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; flex-shrink: 0; box-shadow: 0 4px 10px rgba(217, 119, 6, 0.2);"><i class="fa-solid fa-shield-halved"></i></div>
+                <div>
+                    <h2 style="font-size: 24px; font-weight: 700; margin: 0; color: var(--color-text); letter-spacing: -0.5px;">${nombreCompleto}</h2>
+                    <p style="margin: 6px 0 0; color: var(--color-text-muted); font-size: 15px;"><i class="fa-regular fa-envelope" style="margin-right: 5px;"></i>${correo}</p>
+                    <span style="display: inline-block; margin-top: 12px; padding: 4px 12px; background: rgba(217,119,6,0.08); color: #d97706; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Administrador</span>
                 </div>
             </div>
 
-            <div class="pm-section">
-                <h5 class="pm-section-title">
-                    <span class="pm-section-icon pm-icon-amber"><i class="fa-solid fa-key"></i></span>
-                    Acceso al Sistema
-                </h5>
-                <div class="pm-grid">
-                    <div class="pm-cell" style="grid-column:span 2;">
-                        <span class="pm-label">Correo Electrónico</span>
-                        <span class="pm-value" style="text-transform:none;">${correo}</span>
-                    </div>
-                    <div class="pm-cell">
-                        <span class="pm-label">Nivel de Acceso</span>
-                        <span class="pm-value">Acceso Total</span>
-                    </div>
-                    <div class="pm-cell">
-                        <span class="pm-label">Rol</span>
-                        <span class="pm-value">Administrador del Sistema</span>
+            <div style="padding: 0 35px; position: relative; z-index: 1;">
+                <div style="padding: 30px 0; border-bottom: 1px solid var(--color-border);">
+                    <h5 style="font-size: 13px; font-weight: 800; color: var(--color-text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px;">Acceso al Sistema</h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+                        <div style="grid-column: span 2;">
+                            <span style="display: block; font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Correo Electrónico</span>
+                            <strong style="color: var(--color-text); font-size: 15px; font-weight: 500;">${correo}</strong>
+                        </div>
+                        <div>
+                            <span style="display: block; font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Nivel de Acceso</span>
+                            <strong style="color: var(--color-text); font-size: 15px; font-weight: 500;">Acceso Total</strong>
+                        </div>
+                        <div>
+                            <span style="display: block; font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Rol</span>
+                            <strong style="color: var(--color-text); font-size: 15px; font-weight: 500;">Administrador del Sistema</strong>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="pm-section" style="margin-bottom:0;">
-                <h5 class="pm-section-title">
-                    <span class="pm-section-icon"><i class="fa-solid fa-sliders"></i></span>
-                    Acciones Rápidas
-                </h5>
-                <div style="display:flex;gap:12px;margin-top:4px;">
-                    <button onclick="abrirModalCambiarPassword(); Swal.close();" class="pm-action-btn pm-action-outline">
-                        <i class="fa-solid fa-key"></i> Cambiar Contraseña
-                    </button>
-                    <button onclick="cerrarSesion()" class="pm-action-btn pm-action-danger">
-                        <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
-                    </button>
+                <div style="padding: 30px 0 35px;">
+                    <h5 style="font-size: 13px; font-weight: 800; color: var(--color-text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px;">Acciones Rápidas</h5>
+                    <div style="display:flex;gap:12px;">
+                        <button onclick="abrirModalCambiarPassword(); Swal.close();" class="pm-action-btn pm-action-outline">
+                            <i class="fa-solid fa-key"></i> Cambiar Contraseña
+                        </button>
+                        <button onclick="cerrarSesion()" class="pm-action-btn pm-action-danger">
+                            <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>`,

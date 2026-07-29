@@ -163,8 +163,6 @@ function switchView(viewId) {
         return; // El evento onhashchange se encargará de hacer el render
     }
 
-    mostrarLoader();
-
     // Ocultar todas las secciones de contenido
     const sections = document.querySelectorAll('.view-section');
     sections.forEach(sec => {
@@ -225,10 +223,6 @@ function switchView(viewId) {
     if (targetNavLink) {
         targetNavLink.classList.add('active');
     }
-
-    setTimeout(() => {
-        ocultarLoader();
-    }, 300);
 }
 
 // Router Event Listener
@@ -241,20 +235,21 @@ window.addEventListener('hashchange', () => {
  * Carga las estadísticas reales de la API para el dashboard de inicio
  */
 async function cargarStatsInicio() {
+    if (!aspiranteData || !aspiranteData.id) return;
+
+    const statDocsCount = document.getElementById('dash-docs-count');
+    const statDocsSub = document.getElementById('dash-docs-sub');
+    const statExpStatus = document.getElementById('dash-exp-status');
+    const statExpSub = document.getElementById('dash-exp-sub');
+    const statConvName = document.getElementById('dash-conv-name');
+    const statConvSub = document.getElementById('dash-conv-sub');
+
+    if (statDocsSub) { statDocsSub.style.display = 'block'; statDocsSub.innerText = 'Cargando...'; }
+    if (statExpSub) { statExpSub.style.display = 'block'; statExpSub.innerText = 'Cargando...'; }
+    if (statConvSub) { statConvSub.style.display = 'block'; statConvSub.innerText = 'Cargando...'; }
+
+    mostrarLoader();
     try {
-        if (!aspiranteData || !aspiranteData.id) return;
-
-        const statDocsCount = document.getElementById('dash-docs-count');
-        const statDocsSub = document.getElementById('dash-docs-sub');
-        const statExpStatus = document.getElementById('dash-exp-status');
-        const statExpSub = document.getElementById('dash-exp-sub');
-        const statConvName = document.getElementById('dash-conv-name');
-        const statConvSub = document.getElementById('dash-conv-sub');
-
-        if (statDocsSub) { statDocsSub.style.display = 'block'; statDocsSub.innerText = 'Cargando...'; }
-        if (statExpSub) { statExpSub.style.display = 'block'; statExpSub.innerText = 'Cargando...'; }
-        if (statConvSub) { statConvSub.style.display = 'block'; statConvSub.innerText = 'Cargando...'; }
-
         const resSoli = await fetch(`/api/solicitud/activa/${aspiranteData.id}`);
         if (resSoli.ok) {
             const soliData = await resSoli.json();
@@ -333,6 +328,8 @@ async function cargarStatsInicio() {
         }
     } catch (error) {
         console.error("Error al cargar stats de inicio:", error);
+    } finally {
+        ocultarLoader();
     }
 }
 
@@ -346,6 +343,7 @@ async function cargarDatosProceso() {
         return;
     }
 
+    mostrarLoader();
     try {
         const res = await fetch(`/api/aspirante/${aspiranteData.id}/expediente`);
         if (!res.ok) return;
@@ -366,6 +364,8 @@ async function cargarDatosProceso() {
         actualizarGraficaProceso(aprobados, rechazados, total);
     } catch (error) {
         console.error('Error al cargar datos de proceso:', error);
+    } finally {
+        ocultarLoader();
     }
 }
 
@@ -498,72 +498,63 @@ function abrirModalPerfil() {
     const ninguno = typeof t === 'function' ? t('prof_ninguno') : 'Ninguno';
 
     const cell = (label, value, span = 1) =>
-        `<div class="pm-cell" style="grid-column: span ${span};">
-            <span class="pm-label">${label}</span>
-            <span class="pm-value">${value || noReg}</span>
+        `<div style="grid-column: span ${span};">
+            <span style="display: block; font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">${label}</span>
+            <strong style="color: var(--color-text); font-size: 15px; font-weight: 500;">${value || noReg}</strong>
         </div>`;
 
     Swal.fire({
         html: `
-        <div class="pm-wrapper">
-            <!-- HERO HEADER COMPACTO -->
-            <div class="pm-hero" style="padding: 22px 28px;">
-                <div class="pm-avatar" style="width:64px; height:64px; font-size:22px;">${iniciales}</div>
-                <div class="pm-hero-info">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <h2 class="pm-name" style="font-size:20px; margin:0;">${nombreCompleto}</h2>
-                        <span class="pm-badge pm-badge-aspirante" style="margin:0;">
-                            <i class="fa-solid fa-user-graduate" style="margin-right:5px;font-size:10px;"></i>
-                            ${typeof t === 'function' ? t('prof_badge') : 'Aspirante'}
-                        </span>
+        <div class="pm-wrapper" style="text-align: left; background: var(--color-card-bg); position: relative; overflow: hidden; border-radius: 12px;">
+            <!-- WATERMARK -->
+            <div class="modal-watermark"></div>
+
+            <!-- HEADER CLEAN -->
+            <div style="padding: 35px 35px 25px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--color-border); position: relative; z-index: 1;">
+                <div style="width: 75px; height: 75px; border-radius: 50%; background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; flex-shrink: 0; box-shadow: 0 4px 10px rgba(138, 28, 36, 0.2);">${iniciales}</div>
+                <div>
+                    <h2 style="font-size: 24px; font-weight: 700; margin: 0; color: var(--color-text); letter-spacing: -0.5px;">${nombreCompleto}</h2>
+                    <p style="margin: 6px 0 0; color: var(--color-text-muted); font-size: 15px;"><i class="fa-regular fa-envelope" style="margin-right: 5px;"></i>${usuario.correo || noReg}</p>
+                    <span style="display: inline-block; margin-top: 12px; padding: 4px 12px; background: rgba(138,28,36,0.08); color: #8a1c24; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">${typeof t === 'function' ? t('prof_badge') : 'Aspirante'}</span>
+                </div>
+            </div>
+
+            <div style="padding: 0 35px; position: relative; z-index: 1;">
+                <!-- DATOS PERSONALES -->
+                <div style="padding: 30px 0; border-bottom: 1px solid var(--color-border);">
+                    <h5 style="font-size: 13px; font-weight: 800; color: var(--color-text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px;">${typeof t === 'function' ? t('prof_personal') : 'Datos Personales'}</h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+                        ${cell(typeof t === 'function' ? t('prof_curp') : 'CURP', (aspiranteData.curp || '').toUpperCase())}
+                        ${cell(typeof t === 'function' ? t('prof_tel') : 'Teléfono', aspiranteData.telefono)}
+                        ${cell(typeof t === 'function' ? t('prof_nacimiento') : 'Nacimiento', formatDate(aspiranteData.fechaNacimiento))}
+                        ${cell(typeof t === 'function' ? t('prof_estado_civil') : 'Estado Civil', aspiranteData.estadoCivil)}
+                        ${cell(typeof t === 'function' ? t('prof_cp') : 'Cód. Postal', aspiranteData.direccionPostal)}
+                        ${cell(typeof t === 'function' ? t('prof_direccion') : 'Dirección', aspiranteData.direccion, 3)}
                     </div>
-                    <p class="pm-email" style="margin-top:4px;"><i class="fa-regular fa-envelope" style="margin-right:6px;opacity:0.7;"></i>${usuario.correo || noReg}</p>
                 </div>
-            </div>
 
-            <!-- SECCIÓN DATOS PERSONALES -->
-            <div class="pm-section">
-                <h5 class="pm-section-title">
-                    <span class="pm-section-icon"><i class="fa-solid fa-address-card"></i></span>
-                    ${typeof t === 'function' ? t('prof_personal') : 'Datos Personales'}
-                </h5>
-                <div class="pm-grid-4">
-                    ${cell(typeof t === 'function' ? t('prof_curp') : 'CURP', (aspiranteData.curp || '').toUpperCase())}
-                    ${cell(typeof t === 'function' ? t('prof_tel') : 'Teléfono', aspiranteData.telefono)}
-                    ${cell(typeof t === 'function' ? t('prof_nacimiento') : 'Nacimiento', formatDate(aspiranteData.fechaNacimiento))}
-                    ${cell(typeof t === 'function' ? t('prof_estado_civil') : 'Estado Civil', aspiranteData.estadoCivil)}
-                    ${cell(typeof t === 'function' ? t('prof_cp') : 'Cód. Postal', aspiranteData.direccionPostal)}
-                    ${cell(typeof t === 'function' ? t('prof_direccion') : 'Dirección', aspiranteData.direccion, 3)}
+                <!-- FORMACIÓN ACADÉMICA -->
+                <div style="padding: 30px 0; border-bottom: 1px solid var(--color-border);">
+                    <h5 style="font-size: 13px; font-weight: 800; color: var(--color-text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px;">${typeof t === 'function' ? t('prof_academica') : 'Formación Académica'}</h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+                        ${cell(typeof t === 'function' ? t('prof_lic') : 'Licenciatura', aspiranteData.licenciatura)}
+                        ${cell(typeof t === 'function' ? t('prof_inst') : 'Institución', aspiranteData.institucionLicenciatura)}
+                        ${cell(typeof t === 'function' ? t('prof_promedio') : 'Promedio', aspiranteData.promedio)}
+                        ${cell(typeof t === 'function' ? t('prof_egreso') : 'Fecha Egreso', formatDate(aspiranteData.fechaEgreso))}
+                        ${cell(typeof t === 'function' ? t('prof_titulacion') : 'Titulación', formatDate(aspiranteData.fechaTitulacion))}
+                        ${cell(typeof t === 'function' ? t('prof_otros') : 'Otros Estudios', aspiranteData.otrosEstudios || ninguno, 3)}
+                    </div>
                 </div>
-            </div>
 
-            <!-- SECCIÓN FORMACIÓN ACADÉMICA -->
-            <div class="pm-section">
-                <h5 class="pm-section-title">
-                    <span class="pm-section-icon pm-icon-green"><i class="fa-solid fa-graduation-cap"></i></span>
-                    ${typeof t === 'function' ? t('prof_academica') : 'Formación Académica'}
-                </h5>
-                <div class="pm-grid-4">
-                    ${cell(typeof t === 'function' ? t('prof_lic') : 'Licenciatura', aspiranteData.licenciatura)}
-                    ${cell(typeof t === 'function' ? t('prof_inst') : 'Institución', aspiranteData.institucionLicenciatura)}
-                    ${cell(typeof t === 'function' ? t('prof_promedio') : 'Promedio', aspiranteData.promedio)}
-                    ${cell(typeof t === 'function' ? t('prof_egreso') : 'Fecha Egreso', formatDate(aspiranteData.fechaEgreso))}
-                    ${cell(typeof t === 'function' ? t('prof_titulacion') : 'Titulación', formatDate(aspiranteData.fechaTitulacion))}
-                    ${cell(typeof t === 'function' ? t('prof_otros') : 'Otros Estudios', aspiranteData.otrosEstudios || ninguno, 3)}
-                </div>
-            </div>
-
-            <!-- SECCIÓN DATOS LABORALES -->
-            <div class="pm-section" style="margin-bottom:0; padding-bottom: 12px;">
-                <h5 class="pm-section-title">
-                    <span class="pm-section-icon pm-icon-amber"><i class="fa-solid fa-briefcase"></i></span>
-                    ${typeof t === 'function' ? t('prof_laborales') : 'Datos Laborales'}
-                </h5>
-                <div class="pm-grid-4">
-                    ${cell(typeof t === 'function' ? t('prof_ocupacion') : 'Ocupación', aspiranteData.ocupacion)}
-                    ${cell(typeof t === 'function' ? t('prof_ciudad') : 'Ciudad', aspiranteData.ciudadOcupacion)}
-                    ${cell(typeof t === 'function' ? t('prof_estado') : 'Estado', aspiranteData.estadoOcupacion)}
-                    ${cell(typeof t === 'function' ? t('prof_tel_lab') : 'Tel. Laboral', aspiranteData.telefonoOcupacion)}
+                <!-- DATOS LABORALES -->
+                <div style="padding: 30px 0 35px;">
+                    <h5 style="font-size: 13px; font-weight: 800; color: var(--color-text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px;">${typeof t === 'function' ? t('prof_laborales') : 'Datos Laborales'}</h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+                        ${cell(typeof t === 'function' ? t('prof_ocupacion') : 'Ocupación', aspiranteData.ocupacion)}
+                        ${cell(typeof t === 'function' ? t('prof_ciudad') : 'Ciudad', aspiranteData.ciudadOcupacion)}
+                        ${cell(typeof t === 'function' ? t('prof_estado') : 'Estado', aspiranteData.estadoOcupacion)}
+                        ${cell(typeof t === 'function' ? t('prof_tel_lab') : 'Tel. Laboral', aspiranteData.telefonoOcupacion)}
+                    </div>
                 </div>
             </div>
         </div>`,
@@ -727,6 +718,7 @@ async function activarModulosPostRegistro(nombrePrograma) {
         let nivel = nombrePrograma.includes('Doctorado') ? 'DOCTORADO' : 'MAESTRIA';
         nivelAcademicoSeleccionado = nivel === 'DOCTORADO' ? 'Doctorado' : 'Maestría';
 
+        mostrarLoader();
         try {
             const respuesta = await fetch('/api/convocatorias');
             if (respuesta.ok) {
@@ -772,6 +764,8 @@ async function activarModulosPostRegistro(nombrePrograma) {
         } catch (error) {
             console.error("Error al obtener convocatorias:", error);
             htmlConvocatorias = `<p>Error de conexión al cargar convocatorias.</p>`;
+        } finally {
+            ocultarLoader();
         }
 
         contenedorTarjetas.innerHTML = htmlConvocatorias;
@@ -832,6 +826,7 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
     }
 
     // Crear Solicitud en la base de datos
+    mostrarLoader();
     try {
         const respuestaSoli = await fetch('/api/solicitud/crear', {
             method: 'POST',
@@ -864,17 +859,21 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
 
         } else if (respuestaSoli.status === 409) {
             const errData = await respuestaSoli.json();
+            ocultarLoader();
             Swal.fire('Aviso', errData.mensaje, 'warning');
             return;
         } else {
+            ocultarLoader();
             Swal.fire('Error', 'Hubo un error al crear la solicitud en el servidor.', 'error');
             return;
         }
     } catch (e) {
         console.error(e);
+        ocultarLoader();
         Swal.fire('Error', 'Fallo de conexión al crear solicitud.', 'error');
         return;
     }
+    ocultarLoader();
 
     if (idConvocatoria) sessionStorage.setItem('idConvocatoriaPendiente', idConvocatoria);
     nivelAcademicoSeleccionado = nivel;
@@ -1099,58 +1098,37 @@ async function bloquearInterfazPorRevision(estadoActual = 'EN_REVISION') {
         let textBanner = 'Expediente bajo revisión';
         let textSub = 'Serás notificado si se requiere alguna corrección';
         let badge = 'EN REVISIÓN';
-        let bgColor = '#fffbeb';
-        let borderColor = '#fcd34d';
-        let iconBgColor = '#fef3c7';
-        let iconColor = '#d97706';
-        let titleColor = '#92400e';
-        let subColor = '#b45309';
-        let badgeBgColor = '#fef08a';
-        let badgeColor = '#854d0e';
+        let statusKey = 'en_revision';
         let iconClass = 'fa-solid fa-lock';
 
         if (estadoActual === 'RECHAZADO') {
             textBanner = 'Expediente Rechazado';
             textSub = 'Revisa los comentarios y corrige los documentos necesarios';
             badge = 'RECHAZADO';
-            bgColor = '#fef2f2';
-            borderColor = '#fca5a5';
-            iconBgColor = '#fee2e2';
-            iconColor = '#ef4444';
-            titleColor = '#991b1b';
-            subColor = '#b91c1c';
-            badgeBgColor = '#fecaca';
-            badgeColor = '#991b1b';
+            statusKey = 'rechazado';
             iconClass = 'fa-solid fa-circle-xmark';
         } else if (estadoActual === 'APROBADO') {
             textBanner = 'Expediente Aprobado';
             textSub = 'Felicidades, tu expediente ha sido validado satisfactoriamente';
             badge = 'APROBADO';
-            bgColor = '#f0fdf4';
-            borderColor = '#86efac';
-            iconBgColor = '#dcfce7';
-            iconColor = '#22c55e';
-            titleColor = '#166534';
-            subColor = '#15803d';
-            badgeBgColor = '#bbf7d0';
-            badgeColor = '#166534';
+            statusKey = 'aprobado';
             iconClass = 'fa-solid fa-circle-check';
         }
 
         banner.innerHTML = `
             <!-- Banner Integrado Dinámico -->
-            <div style="background-color: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 8px; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; box-shadow: var(--shadow-sm);">
+            <div class="status-banner status-${statusKey}">
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <div style="background-color: ${iconBgColor}; color: ${iconColor}; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px;">
+                    <div class="status-banner-icon">
                         <i class="${iconClass}"></i>
                     </div>
                     <div>
-                        <div style="color: ${titleColor}; font-weight: 700; font-size: 15px;">${textBanner}</div>
-                        <div style="color: ${subColor}; font-size: 13px;">${textSub}</div>
+                        <div class="status-banner-title">${textBanner}</div>
+                        <div class="status-banner-sub">${textSub}</div>
                     </div>
                 </div>
                 <div>
-                    <span style="background-color: ${badgeBgColor}; color: ${badgeColor}; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800;">${badge}</span>
+                    <span class="status-banner-badge">${badge}</span>
                 </div>
             </div>
 
@@ -1196,6 +1174,7 @@ async function bloquearInterfazPorRevision(estadoActual = 'EN_REVISION') {
 
     // 6. Cargar documentos desde la API para el panel dinámico
     if (aspiranteData && aspiranteData.id) {
+        mostrarLoader();
         try {
             const res = await fetch(`/api/aspirante/${aspiranteData.id}/expediente`);
             if (res.ok) {
@@ -1213,6 +1192,8 @@ async function bloquearInterfazPorRevision(estadoActual = 'EN_REVISION') {
             }
         } catch (error) {
             console.error("Error al cargar expediente dinámico:", error);
+        } finally {
+            ocultarLoader();
         }
     }
 }
@@ -1248,7 +1229,14 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
         }
     });
 
-    const formatearFecha = (raw, estado, peso) => {
+    const formatearPeso = (bytes) => {
+        if (!bytes || isNaN(bytes)) return null;
+        if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(1)} MB`;
+        if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
+        return `${bytes} B`;
+    };
+
+    const formatearFecha = (raw, estado, pesoStr) => {
         if (estado === 'APROBADO') {
             try {
                 if (!raw) return 'Aprobado recientemente';
@@ -1262,7 +1250,7 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
                 return 'Aprobado recientemente';
             }
         }
-        return `PDF - ${peso || '1.2'} MB`;
+        return pesoStr ? `PDF · ${pesoStr}` : 'PDF';
     };
 
     const catKeyMap = {
@@ -1311,28 +1299,31 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
 
             switch (doc.estadoValidacion) {
                 case 'APROBADO':
-                    badgeHtml = `<span class="doc-badge-aprobado">${typeof t === 'function' ? t('doc_aprobado') : 'APROBADO'}</span>`;
+                    badgeHtml = `<span class="doc-badge doc-badge-aprobado"><span class="doc-badge-dot"></span>${typeof t === 'function' ? t('doc_aprobado') : 'Aprobado'}</span>`;
                     break;
                 case 'RECHAZADO':
-                    badgeHtml = `<span class="doc-badge-rechazado">${typeof t === 'function' ? t('doc_rechazado') : 'RECHAZADO'}</span>`;
+                    badgeHtml = `<span class="doc-badge doc-badge-rechazado"><span class="doc-badge-dot"></span>${typeof t === 'function' ? t('doc_rechazado') : 'Rechazado'}</span>`;
                     break;
                 default:
-                    badgeHtml = `<span class="doc-badge-pendiente">${typeof t === 'function' ? t('doc_pendiente') : 'PENDIENTE'}</span>`;
+                    badgeHtml = `<span class="doc-badge doc-badge-pendiente"><span class="doc-badge-dot"></span>${typeof t === 'function' ? t('doc_pendiente') : 'Pendiente'}</span>`;
                     break;
             }
 
+            // Fetch real file size asynchronously via HEAD request
+            const rutaArchivo = doc.rutaArchivo;
+            const cardId = `doc-card-${doc.idDocumento || doc.id || Math.random().toString(36).slice(2)}`;
+            const fechaSubidaStr = formatearFecha(doc.fechaSubida || doc.creadoEn || doc.fecha_actualizacion, doc.estadoValidacion, null);
             const docDataStr = encodeURIComponent(JSON.stringify(doc));
-            const fechaSubidaStr = formatearFecha(doc.fechaSubida || doc.creadoEn || doc.fecha_actualizacion, doc.estadoValidacion, doc.peso || null);
 
             html += `
-                <div class="doc-card-v2" onclick="abrirModalDoc('${docDataStr}')">
+                <div class="doc-card-v2" id="${cardId}" onclick="abrirModalDoc('${docDataStr}')">
                     <div class="doc-card-v2-header">
                         <div class="doc-card-v2-icon" style="background: ${iconBg}; color: ${iconColor};">
                             <i class="fa-solid ${iconClass}"></i>
                         </div>
                         <div>
                             <div class="doc-card-v2-title">${doc.requisitoNombre ? (typeof t === 'function' ? t(doc.requisitoNombre) : doc.requisitoNombre) : (typeof t === 'function' ? t('doc_doc_adjunto') : 'Documento adjunto')}</div>
-                            <div class="doc-card-v2-date">${fechaSubidaStr}</div>
+                            <div class="doc-card-v2-date" id="${cardId}-size">${fechaSubidaStr}</div>
                         </div>
                     </div>
                     <div class="doc-card-v2-footer">
@@ -1341,13 +1332,27 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
                     </div>
                 </div>
             `;
-        });
+
+            // After building HTML, fetch file size in background
+            if (rutaArchivo && doc.estadoValidacion !== 'APROBADO') {
+                (async () => {
+                    try {
+                        const res = await fetch(`/uploads/${rutaArchivo}`, { method: 'HEAD' });
+                        const cl = res.headers.get('content-length');
+                        const pesoStr = formatearPeso(parseInt(cl, 10));
+                        const sizeEl = document.getElementById(`${cardId}-size`);
+                        if (sizeEl && pesoStr) sizeEl.textContent = `PDF · ${pesoStr}`;
+                    } catch (_) { /* silently ignore */ }
+                })();
+            }
+        }); // end docsGrupo.forEach
 
         html += `</div>`;
     }
 
     container.innerHTML = html;
 }
+
 
 function abrirModalDoc(docStr) {
     try {
@@ -1868,6 +1873,7 @@ async function cargarModalidadesAdmision() {
     const contenedor = document.getElementById('opciones-admision-maestria');
     if (!contenedor) return;
 
+    mostrarLoader();
     try {
         const res = await fetch('/api/solicitud/modalidades');
         if (res.ok) {
@@ -1893,11 +1899,14 @@ async function cargarModalidadesAdmision() {
         }
     } catch (e) {
         console.error("Error cargando modalidades:", e);
+    } finally {
+        ocultarLoader();
     }
 }
 
 
 async function cargarRequisitosDocumentales(idConvocatoria) {
+    mostrarLoader();
     try {
         const res = await fetch(`/api/convocatorias/${idConvocatoria}/requisitos`);
         if (res.ok) {
@@ -1946,6 +1955,8 @@ async function cargarRequisitosDocumentales(idConvocatoria) {
     } catch (e) {
         console.error("Error cargando requisitos:", e);
         Swal.fire('Error', 'Error de conexión al cargar requisitos.', 'error');
+    } finally {
+        ocultarLoader();
     }
 }
 

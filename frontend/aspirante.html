@@ -48,10 +48,7 @@
             </div>
         </div>
 
-        <div class="nav-label"
-            style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #4b5563; padding: 10px 15px; margin-top: 10px; font-weight: 800;"
-            data-i18n="sb_label_principal">
-            PRINCIPAL</div>
+
 
         <ul class="side-menu top">
             <li>
@@ -95,8 +92,8 @@
     <main class="main-content" style="position: relative;">
         <header class="topbar-modern">
             <div class="topbar-greeting">
-                <small id="topbar-subtitulo" data-i18n="tb_bienvenido">Bienvenido de vuelta</small>
-                <span id="topbar-nombre-usuario">Cargando...</span>
+                <span id="topbar-nombre-usuario"
+                    style="font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; color: var(--color-text);">Cargando...</span>
             </div>
 
             <!-- Acciones Superiores Derechas -->
@@ -136,7 +133,8 @@
                             <!-- Vista vacía de lectura (Derecha) -->
                             <div class="messages-mega-read" id="messages-empty-pane">
                                 <div class="messages-empty-state">
-                                    <i class="fa-regular fa-envelope fa-beat-fade" style="font-size: 42px; opacity: 0.4; margin-bottom: 12px;"></i>
+                                    <i class="fa-regular fa-envelope fa-beat-fade"
+                                        style="font-size: 42px; opacity: 0.4; margin-bottom: 12px;"></i>
                                     <p data-i18n="tb_selecciona_msj"><strong>Selecciona un mensaje</strong><br>para ver
                                         la conversación</p>
                                 </div>
@@ -164,46 +162,26 @@
         </header>
 
         <section id="view-inicio" class="view-section active">
-            <!-- Stats Grid -->
-            <div class="stats-grid" id="inicio-stats">
-                <div class="stat-card" id="stat-card-docs">
-                    <div class="stat-card-row">
-                        <div class="stat-card-icon" style="background: rgba(238,242,255,0.8); color: #6366f1;">
-                            <i class="fa-regular fa-file-lines icon-anim-stat"></i>
-                        </div>
-                        <div class="stat-card-info">
-                            <span class="stat-label" data-i18n="dash_docs">Documentos</span>
-                            <span class="stat-value" id="dash-docs-count" style="font-size: 15px; margin-top: 4px;">0
-                                documentos subidos</span>
-                            <span class="stat-sub" id="dash-docs-sub" data-i18n="dash_esperando_datos"
-                                style="display: none;">Esperando datos...</span>
-                        </div>
+            <!-- Resumen de Perfil (Diseño Limpio) -->
+            <div class="profile-summary-premium">
+                <div class="summary-metrics">
+                    <div class="metric-item">
+                        <span class="metric-value" id="dash-docs-count">0</span>
+                        <span class="metric-label" data-i18n="dash_docs">Documentos Subidos</span>
+                        <span class="metric-sub" id="dash-docs-sub" style="display: none;">Esperando datos...</span>
                     </div>
-                </div>
-                <div class="stat-card" id="stat-card-exp">
-                    <div class="stat-card-row">
-                        <div class="stat-card-icon" style="background: rgba(236,253,245,0.8); color: #10b981;">
-                            <i class="fa-regular fa-folder-open icon-anim-stat"></i>
-                        </div>
-                        <div class="stat-card-info">
-                            <span class="stat-label" data-i18n="dash_expediente">Expediente</span>
-                            <span class="stat-value" id="dash-exp-status" style="font-size: 15px; margin-top: 4px;">Sin
-                                expediente activo</span>
-                            <span class="stat-sub" id="dash-exp-sub" style="display: none;">--</span>
-                        </div>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item">
+                        <span class="metric-value metric-highlight" id="dash-exp-status">--</span>
+                        <span class="metric-label" data-i18n="dash_expediente">Estado del Expediente</span>
+                        <span class="metric-sub" id="dash-exp-sub" style="display: none;">--</span>
                     </div>
-                </div>
-                <div class="stat-card" id="stat-card-conv">
-                    <div class="stat-card-row">
-                        <div class="stat-card-icon" style="background: rgba(254,252,232,0.8); color: #d97706; border: 1px solid rgba(253,224,71,0.4);">
-                            <i class="fa-solid fa-bullhorn icon-anim-stat"></i>
-                        </div>
-                        <div class="stat-card-info">
-                            <span class="stat-label" data-i18n="dash_convocatoria">Convocatoria</span>
-                            <span class="stat-value" id="dash-conv-name" style="font-size: 15px; margin-top: 4px;">Ninguna
-                                seleccionada</span>
-                            <span class="stat-sub" id="dash-conv-sub" style="display: none;">Maestría FIE</span>
-                        </div>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item">
+                        <span class="metric-value" id="dash-conv-name"
+                            style="font-size: 16px; line-height: 1.2; word-wrap: break-word;">Ninguna</span>
+                        <span class="metric-label" data-i18n="dash_convocatoria">Programa</span>
+                        <span class="metric-sub" id="dash-conv-sub" style="display: none;">Maestría FIE</span>
                     </div>
                 </div>
             </div>
@@ -234,8 +212,10 @@
                 </div>
 
                 <!-- Controls -->
-                <button class="carousel-btn prev-btn" onclick="moveCarousel(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-                <button class="carousel-btn next-btn" onclick="moveCarousel(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="carousel-btn prev-btn" onclick="moveCarousel(-1)"><i
+                        class="fa-solid fa-chevron-left"></i></button>
+                <button class="carousel-btn next-btn" onclick="moveCarousel(1)"><i
+                        class="fa-solid fa-chevron-right"></i></button>
 
                 <!-- Indicators -->
                 <div class="carousel-indicators" id="inicio-carousel-indicators">
@@ -248,10 +228,9 @@
 
         <section id="view-proceso" class="view-section">
             <div style="display: flex; gap: 25px; flex-wrap: wrap;">
-                <div class="card"
+                <div class="premium-panel"
                     style="flex: 1; min-width: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                    <h3 data-i18n="proc_estatus_exp">Estatus del Expediente Digital</h3>
-                    <br>
+                    <h3 data-i18n="proc_estatus_exp" style="margin-bottom: 25px;">Estatus del Expediente Digital</h3>
 
                     <div id="grafica-pastel" class="pie-chart">
                         <div class="pie-center"><span id="txt-porcentaje">0%</span></div>
@@ -280,10 +259,12 @@
             <!-- Contenedor 1: Selección inicial de tarjetas -->
             <div id="seleccion-programa" class="programas-container">
                 <div class="box-programa" onclick="seleccionarPrograma('Maestría en Ingeniería Eléctrica')">
-                    <i class="fa-solid fa-book-bookmark icon-anim-prog"></i><br><span data-i18n="sb_maestria">Maestría</span>
+                    <i class="fa-solid fa-book-bookmark icon-anim-prog"></i><br><span
+                        data-i18n="sb_maestria">Maestría</span>
                 </div>
                 <div class="box-programa" onclick="seleccionarPrograma('Doctorado en Ingeniería Eléctrica')">
-                    <i class="fa-solid fa-user-graduate icon-anim-prog"></i><br><span data-i18n="sb_doctorado">Doctorado</span>
+                    <i class="fa-solid fa-user-graduate icon-anim-prog"></i><br><span
+                        data-i18n="sb_doctorado">Doctorado</span>
                 </div>
             </div>
 
@@ -333,12 +314,10 @@
             </div>
 
             <div id="panel-estacion-0" class="station-panel active-panel">
-                <div class="card">
-                    <h3><i class="fa-solid fa-circle-info" style="color:#8a1c24;"></i> <span
-                            data-i18n="doc_est0_titulo">Estación 0: Mecanismo de Admisión Seleccionado</span></h3>
-                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est0_desc">De acuerdo
-                        a la normativa institucional, selecciona tu
-                        modalidad de ingreso:</p>
+                <div class="premium-panel">
+                    <h3 data-i18n="doc_est0_titulo">Mecanismo de Admisión</h3>
+                    <p style="margin-bottom: 20px; color: var(--color-text-muted);" data-i18n="doc_est0_desc">Selecciona
+                        la modalidad por la cual deseas ingresar al posgrado:</p>
 
                     <div id="opciones-admision-maestria" class="modalidad-opciones">
                         <!-- Las opciones de admisión se inyectan dinámicamente desde el backend -->
@@ -374,12 +353,10 @@
             </div>
 
             <div id="panel-estacion-1" class="station-panel">
-                <div class="card">
-                    <h3><i class="fa-solid fa-address-card" style="color:#8a1c24;"></i> <span
-                            data-i18n="doc_est1_titulo">Estación 1: Identidad y Datos Generales</span></h3>
-                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est1_desc">Sube los
-                        documentos oficiales de identificación y datos
-                        generales. Los campos con asterisco (*) son obligatorios.</p>
+                <div class="premium-panel">
+                    <h3 data-i18n="doc_est1_titulo">Identidad y Datos Generales</h3>
+                    <p style="margin-bottom: 20px; color: var(--color-text-muted);" data-i18n="doc_est1_desc">Sube los
+                        documentos oficiales requeridos. Asegúrate de que sean legibles y en formato PDF.</p>
                     <form id="form-estacion-1">
                         <div id="grid-dinamico-identidad" class="file-grid">
                             <!-- Los requisitos de IDENTIDAD y GENERAL se inyectan aquí -->
@@ -399,10 +376,9 @@
             </div>
 
             <div id="panel-estacion-2" class="station-panel">
-                <div class="card">
-                    <h3><i class="fa-solid fa-user-tie" style="color:#8a1c24;"></i> <span
-                            data-i18n="doc_est2_titulo">Estación 2: Antecedentes Académicos</span></h3>
-                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est2_desc">Carga tus
+                <div class="premium-panel">
+                    <h3 data-i18n="doc_est2_titulo">Antecedentes Académicos</h3>
+                    <p style="margin-bottom: 20px; color: var(--color-text-muted);" data-i18n="doc_est2_desc">Carga tus
                         títulos, certificados e historial académico oficial.</p>
                     <form id="form-estacion-2">
                         <div id="grid-dinamico-academico" class="file-grid">
@@ -423,10 +399,9 @@
             </div>
 
             <div id="panel-estacion-3" class="station-panel">
-                <div class="card">
-                    <h3><i class="fa-solid fa-square-poll-vertical" style="color:#8a1c24;"></i> <span
-                            data-i18n="doc_est3_titulo">Estación 3: Evaluación y Cartas</span></h3>
-                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est3_desc">Sube los
+                <div class="premium-panel">
+                    <h3 data-i18n="doc_est3_titulo">Evaluación y Cartas</h3>
+                    <p style="margin-bottom: 20px; color: var(--color-text-muted);" data-i18n="doc_est3_desc">Sube los
                         resultados de tus certificaciones, exámenes y
                         cartas de recomendación.</p>
                     <form id="form-estacion-3">
@@ -452,7 +427,8 @@
                             <button type="button" class="btn-primary" id="btn-finalizar"
                                 style="width:auto; padding:12px 30px; background-color: var(--color-success);" disabled
                                 onclick="finalizarProcesoEstaciones()"><span data-i18n="doc_btn_concluir">Concluir y
-                                    Enviar Expediente</span> <i class="fa-solid fa-paper-plane icon-anim-send"></i></button>
+                                    Enviar Expediente</span> <i
+                                    class="fa-solid fa-paper-plane icon-anim-send"></i></button>
                         </div>
                     </form>
                 </div>
