@@ -17,12 +17,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. Listener para el formulario de entrevistas en el Modal
-    // Se agregan ambos selectores comunes por seguridad de compatibilidad en HTML
-    const formEntrevista = document.getElementById('formModalEntrevista') || document.getElementById('formEntrevista');
-    if (formEntrevista) {
-        formEntrevista.addEventListener('submit', guardarEntrevista);
-    }
+    // 4. Delegación global de eventos submit para el formulario de entrevistas
+    // Esto garantiza que e.preventDefault() funcione aunque el modal se inyecte dinámicamente
+    document.addEventListener('submit', (e) => {
+        if (e.target && (e.target.id === 'formModalEntrevista' || e.target.id === 'formEntrevista')) {
+            guardarEntrevista(e);
+        }
+    });
 
     // 5. Cierre de sesión
     const logoutBtn = document.getElementById('menuLogout');
@@ -141,15 +142,14 @@ async function cargarConvocatorias() {
             const fInicioStr = c.fecha_inicio || c.fechaInicio;
             const fFinStr = c.fecha_fin || c.fechaFin;
 
-            const fInicio = fInicioStr ? new Date(fInicioStr).toLocaleDateString('es-MX') : 'S/F';
-            const fFin = fFinStr ? new Date(fFinStr).toLocaleDateString('es-MX') : 'S/F';
+            const fInicio = fInicioStr ? fInicioStr.substring(0, 10) : 'S/F';
+            const fFin = fFinStr ? fFinStr.substring(0, 10) : 'S/F';
 
             const estatusTexto = (c.estatus || c.estado || '').toString().toUpperCase();
-            const hoy = new Date();
-            const fechaFinObj = fFinStr ? new Date(fFinStr) : null;
+            const hoy = new Date().toISOString().substring(0, 10);
 
             const esActiva = (estatusTexto === 'ACTIVA' || c.activa === 1 || c.activa === true) &&
-                             (!fechaFinObj || fechaFinObj >= hoy);
+                             (!fFinStr || fFin >= hoy);
 
             const badgeEstado = esActiva 
                 ? `<span class="badge bg-success px-3 py-1">Activa</span>`
@@ -337,7 +337,8 @@ async function cambiarDictamen(idSolicitud, nuevoDictamen) {
             cargarAspirantes();
             cargarMetricas();
         } else {
-            Swal.fire('Error', 'No se pudo guardar el dictamen en la base de datos.', 'error');
+            const data = await res.json().catch(() => ({}));
+            Swal.fire('Error', data.mensaje || 'No se pudo guardar el dictamen en la base de datos.', 'error');
         }
     } catch (err) {
         console.error('Error al actualizar dictamen:', err);
@@ -420,7 +421,7 @@ async function verExpediente(idAspirante) {
 
 let listaDocentesCache = null;
 
-// A. Función para cargar la tabla de entrevistas
+// A. Cargar la tabla de entrevistas
 async function cargarEntrevistas() {
     console.log('Vista Entrevistas activa');
     const tbody = document.getElementById('tablaEntrevistasBody');
@@ -449,33 +450,60 @@ async function cargarEntrevistas() {
         entrevistas.forEach(ent => {
             const tr = document.createElement('tr');
             
-            const fechaValida = ent.fecha_entrevista && !isNaN(new Date(ent.fecha_entrevista).getTime());
-            const fechaStr = fechaValida 
-                ? new Date(ent.fecha_entrevista).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })
-                : 'Sin agendar';
+            // 1. Manejo de IDs según la estructura de la DB (idSoli / id_solicitud)
+            const idSolicitud = ent.idSoli || ent.id_solicitud || ent.id;
+            const idDocente = ent.idUsua || ent.id_docente || ent.id_usuario || '';
+
+            // 2. Nombre del Aspirante (desde tabla aspirante/solicitud)
+            const nombreAspirante = ent.nombre_completo || 
+                `${ent.nombre || ''} ${ent.primerApellido || ''} ${ent.segundoApellido || ''}`.trim() || 
+                'Aspirante';
+
+            // 3. Nombre del Docente asignado (desde tabla docente/evaluacion)
+            const nombreDocente = ent.docente_asignado || 
+                `${ent.docenteNombre || ''} ${ent.docenteApellido || ''}`.trim() || 
+                (idDocente ? `Docente ID: ${idDocente}` : 'Sin docente');
+
+            // 4. Folio o CURP
+            const folioCurp = ent.curp || ent.folio || 'Sin CURP';
+
+            // 5. Programa / Opción Posgrado
+            const programa = ent.programa || ent.opcion_posgrado || ent.posgrado_nombre || 'Sin asignación';
+
+            // 6. Formatear fecha de entrevista (si está agendada en convocatoria o evaluación)
+            const fechaRaw = ent.fecha_entrevista || ent.fechaEntrevista || '';
+            let fechaStr = 'Sin agendar';
+            if (fechaRaw) {
+                const partes = fechaRaw.split('T');
+                const f = partes[0] || '';
+                const h = partes[1] ? partes[1].substring(0, 5) : '';
+                fechaStr = `${f} ${h}`.trim();
+            }
+
+            const fechaValida = !!fechaRaw;
                 
             const badgeEstado = fechaValida 
                 ? `<span class="badge bg-success">Programada</span>` 
                 : `<span class="badge bg-warning text-dark">Pendiente</span>`;
 
-            const nombreEscapado = (ent.nombre_completo || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-            const lugarEscapado = (ent.lugar_link || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-            const fechaParam = ent.fecha_entrevista ? ent.fecha_entrevista : '';
+            // Escapar cadenas para evitar que rompan el HTML inline
+            const nombreEscapado = nombreAspirante.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const lugarEscapado = (ent.lugar || ent.lugar_link || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
             tr.innerHTML = `
                 <td class="py-3">
-                    <div class="fw-bold text-dark">${ent.nombre_completo || 'Aspirante'}</div>
-                    <small class="text-muted font-monospace">${ent.folio || ''}</small>
+                    <div class="fw-bold text-dark">${nombreAspirante}</div>
+                    <small class="text-muted font-monospace">${folioCurp}</small>
                 </td>
-                <td><span class="fw-medium text-secondary">${ent.programa || 'Sin asignación'}</span></td>
-                <td><span class="fw-bold text-dark">${ent.docente_asignado || 'Sin docente'}</span></td>
+                <td><span class="fw-medium text-secondary">${programa}</span></td>
+                <td><span class="fw-bold text-dark">${nombreDocente}</span></td>
                 <td>
                     ${badgeEstado}
                     <small class="d-block text-muted mt-1 font-monospace">${fechaStr}</small>
                 </td>
                 <td class="text-end">
                     <button class="btn btn-sm btn-outline-primary" 
-                            onclick="abrirModalEntrevista(${ent.id_solicitud}, '${nombreEscapado}', '${fechaParam}', '${ent.id_docente || ''}', '${lugarEscapado}')">
+                            onclick="abrirModalEntrevista(${idSolicitud}, '${nombreEscapado}', '${fechaRaw}', '${idDocente}', '${lugarEscapado}')">
                         <i class="fa-solid fa-calendar-plus me-1"></i> ${fechaValida ? 'Editar' : 'Programar'}
                     </button>
                 </td>
@@ -490,8 +518,7 @@ async function cargarEntrevistas() {
         </td></tr>`;
     }
 }
-
-// B. Función para llenar el select de docentes (con Logs de depuración)
+// B. Llenar el select de docentes
 async function cargarDocentesSelect() {
     const select = document.getElementById('selectDocente');
     if (!select) {
@@ -501,17 +528,17 @@ async function cargarDocentesSelect() {
 
     try {
         if (!listaDocentesCache || listaDocentesCache.length === 0) {
-            console.log('🔄 Solicitando docentes al servidor (/api/coordinador/docentes)...');
+            console.log(' Solicitando docentes al servidor (/api/coordinador/docentes)...');
             const res = await fetch('/api/coordinador/docentes');
             
             if (!res.ok) {
-                console.error(`❌ Error al obtener docentes: HTTP ${res.status}`);
+                console.error(` Error al obtener docentes: HTTP ${res.status}`);
                 select.innerHTML = '<option value="" disabled selected>Error al cargar docentes</option>';
                 return;
             }
 
             listaDocentesCache = await res.json();
-            console.log('✅ Docentes recibidos del servidor:', listaDocentesCache);
+            console.log(' Docentes recibidos del servidor:', listaDocentesCache);
         }
 
         if (!Array.isArray(listaDocentesCache) || listaDocentesCache.length === 0) {
@@ -536,12 +563,12 @@ async function cargarDocentesSelect() {
         select.innerHTML = htmlOptions;
 
     } catch (err) {
-        console.error('❌ Error crítico en cargarDocentesSelect:', err);
+        console.error('Error crítico en cargarDocentesSelect:', err);
         select.innerHTML = '<option value="" disabled selected>Error de conexión</option>';
     }
 }
 
-// C. Función para abrir el modal de entrevista
+// C. Abrir el modal de entrevista
 async function abrirModalEntrevista(idSolicitud, nombreAspirante, fecha = '', idDocente = '', lugar = '') {
     const modalElement = document.getElementById('modalEntrevista');
     if (!modalElement) return;
@@ -556,17 +583,11 @@ async function abrirModalEntrevista(idSolicitud, nombreAspirante, fecha = '', id
     if (inputSolicitud) inputSolicitud.value = idSolicitud;
     if (txtNombre) txtNombre.textContent = nombreAspirante;
     
-    // Formatear Fecha y Hora
-    if (fecha && !isNaN(new Date(fecha).getTime())) {
-        const dateObj = new Date(fecha);
-        const year = dateObj.getFullYear();
-        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const day = String(dateObj.getDate()).padStart(2, '0');
-        if (inputFecha) inputFecha.value = `${year}-${month}-${day}`;
-
-        const hours = String(dateObj.getHours()).padStart(2, '0');
-        const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-        if (inputHora) inputHora.value = `${hours}:${minutes}`;
+    // Parseo seguro de fecha y hora sin desajustes por UTC
+    if (fecha) {
+        const partes = fecha.split('T');
+        if (inputFecha) inputFecha.value = partes[0] || '';
+        if (inputHora) inputHora.value = partes[1] ? partes[1].substring(0, 5) : '';
     } else {
         if (inputFecha) inputFecha.value = '';
         if (inputHora) inputHora.value = '';
@@ -574,22 +595,22 @@ async function abrirModalEntrevista(idSolicitud, nombreAspirante, fecha = '', id
     
     if (inputLugar) inputLugar.value = lugar;
 
-    // Cargar docentes en el select ANTES de establecer el valor
+    // Cargar opciones en el select
     await cargarDocentesSelect();
 
     if (selectDocente) {
-        if (idDocente && idDocente !== 'null' && idDocente !== 'undefined') {
-            selectDocente.value = String(idDocente);
-        } else {
-            selectDocente.value = '';
-        }
+        const targetVal = (idDocente && idDocente !== 'null' && idDocente !== 'undefined') ? String(idDocente) : '';
+        // Asignación con diferimiento leve para asegurar el refresco de las opciones en el DOM
+        setTimeout(() => {
+            selectDocente.value = targetVal;
+        }, 0);
     }
 
     const bsModal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
     bsModal.show();
 }
 
-// D. Función para guardar/programar la entrevista
+// D. Guardar/programar entrevista
 async function guardarEntrevista(e) {
     if (e) e.preventDefault();
 
@@ -618,6 +639,8 @@ async function guardarEntrevista(e) {
             })
         });
 
+        const data = await res.json().catch(() => ({}));
+
         if (res.ok) {
             Swal.fire({
                 icon: 'success',
@@ -634,10 +657,11 @@ async function guardarEntrevista(e) {
             cargarEntrevistas();
             cargarMetricas();
         } else {
-            Swal.fire('Error', 'No se pudo guardar la entrevista.', 'error');
+            Swal.fire('Error', data.mensaje || data.error || 'No se pudo guardar la entrevista.', 'error');
         }
     } catch (err) {
         console.error('Error al guardar la entrevista:', err);
+        Swal.fire('Error de conexión', 'Ocurrió un fallo en el cliente al intentar procesar la entrevista.', 'error');
     }
 }
 

@@ -7,16 +7,16 @@ const coordinadorController = {
     // ==========================================
     getMetricas: async (req, res) => {
         try {
-            const [[totales]] = await db.query('SELECT COUNT(*) AS totales FROM solicitud');
-            const [[pendientes]] = await db.query("SELECT COUNT(*) AS pendientes FROM solicitud WHERE estado = 'PENDIENTE'");
-            const [[entrevistas]] = await db.query("SELECT COUNT(*) AS entrevistas FROM entrevistas WHERE estatus = 'PROGRAMADA'");
-            const [[aceptados]] = await db.query("SELECT COUNT(*) AS aceptados FROM solicitud WHERE estado = 'APROBADO'");
+            const [totales] = await db.query('SELECT COUNT(*) AS total FROM solicitud');
+            const [pendientes] = await db.query("SELECT COUNT(*) AS total FROM solicitud WHERE estado = 'PENDIENTE'");
+            const [entrevistas] = await db.query("SELECT COUNT(*) AS total FROM entrevistas WHERE estatus = 'PROGRAMADA'");
+            const [aceptados] = await db.query("SELECT COUNT(*) AS total FROM solicitud WHERE estado = 'APROBADO'");
 
             res.json({
-                totales: totales.totales || 0,
-                pendientes: pendientes.pendientes || 0,
-                entrevistas: entrevistas.entrevistas || 0,
-                aceptados: aceptados.aceptados || 0
+                totales: totales[0]?.total || 0,
+                pendientes: pendientes[0]?.total || 0,
+                entrevistas: entrevistas[0]?.total || 0,
+                aceptados: aceptados[0]?.total || 0
             });
         } catch (error) {
             console.error('Error al obtener métricas:', error);
