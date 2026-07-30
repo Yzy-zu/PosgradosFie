@@ -1,0 +1,23 @@
+const moduloDocumentosRenderer = {
+    renderizar(soliData, dataExp) {
+        const esEtapaAvanzada = soliData.etapaOrden && soliData.etapaOrden >= 2;
+        if (['EN_REVISION', 'RECHAZADO', 'APROBADO'].includes(soliData.estado) || esEtapaAvanzada) {
+            if (typeof bloquearInterfazPorRevision === 'function') {
+                const estadoMostrar = (soliData.estado === 'PENDIENTE' && esEtapaAvanzada) ? 'APROBADO' : soliData.estado;
+                bloquearInterfazPorRevision(estadoMostrar, soliData);
+            }
+        } else {
+            const encabezado = document.getElementById('encabezado-documentos');
+            const stepper = document.querySelector('.stepper-wrapper');
+            const banner = document.getElementById('banner-revision');
+            if (banner) banner.style.display = 'none';
+            if (encabezado) encabezado.style.display = 'block';
+            if (stepper) stepper.style.display = 'flex';
+
+            const estacionGuardada = soliData.etapaOrden ? (soliData.etapaOrden - 1) : 0;
+            if (typeof cambiarEstacion === 'function' && estacionGuardada > 0) {
+                cambiarEstacion(Math.min(estacionGuardada, 3));
+            }
+        }
+    }
+};

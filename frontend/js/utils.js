@@ -16,16 +16,17 @@ function ocultarLoader() {
 }
 
 // ==== SIDEBAR TOGGLE ====
+// Bug 5 Fix: implementación canónica con toggle sincronizado
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const mainContent = document.querySelector('.main-content');
-    
-    if (sidebar) {
-        sidebar.classList.toggle('collapsed');
-        const isCollapsed = sidebar.classList.contains('collapsed');
-        localStorage.setItem('sidebarCollapsed', isCollapsed);
+    if (!sidebar) return;
+
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    if (mainContent) {
+        mainContent.classList.toggle('expanded', isCollapsed);
     }
-    if (mainContent) mainContent.classList.toggle('expanded');
+    localStorage.setItem('sidebarCollapsed', isCollapsed ? 'true' : 'false');
 }
 
 // Inicializar estado de interfaz al cargar (Sidebar y Tema)
@@ -89,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Vincular clic del contenedor del perfil si existe (para admin.js que lo hacía por JS)
-    const profileContainer = document.getElementById('profile-container');
+    const profileContainer = document.querySelector('.profile-container');
     if (profileContainer) {
         profileContainer.addEventListener('click', toggleProfileMenu);
     }
@@ -196,17 +197,20 @@ async function abrirModalCambiarPassword() {
     }
 }
 
-// ==== MANEJO DEL TEMA VISUAL (MODO OSCURO) ====
 function cambiarTema(tema) {
     if (tema === 'Oscuro') {
         document.body.classList.add('dark-mode');
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
     } else if (tema === 'Claro') {
         document.body.classList.remove('dark-mode');
+        document.documentElement.removeAttribute('data-bs-theme');
     } else if (tema === 'Sistema') {
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
             document.body.classList.add('dark-mode');
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
         } else {
             document.body.classList.remove('dark-mode');
+            document.documentElement.removeAttribute('data-bs-theme');
         }
     }
     localStorage.setItem('temaSeleccionado', tema);
@@ -218,8 +222,10 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
     if (tema === 'Sistema') {
         if (e.matches) {
             document.body.classList.add('dark-mode');
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
         } else {
             document.body.classList.remove('dark-mode');
+            document.documentElement.removeAttribute('data-bs-theme');
         }
     }
 });

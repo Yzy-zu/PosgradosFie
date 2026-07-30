@@ -1,4 +1,5 @@
 const db = require('../database/db');
+const WorkflowService = require('../services/workflowService');
 
 // Subir documento
 const subirDocumento = async (req, res) => {
@@ -48,59 +49,7 @@ const subirDocumento = async (req, res) => {
     }
 };
 
-// Obtener todos los documentos
-const obtenerDocumentos = async (req, res) => {
-    try {
-        const [resultados] = await db.query('SELECT * FROM documento');
-        return res.json(resultados);
-    } catch (error) {
-        console.error('Error en obtenerDocumentos:', error);
-        return res.status(500).json({ success: false, mensaje: 'Error al obtener documentos.' });
-    }
-};
 
-// Obtener un documento por ID
-const obtenerDocumento = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const [resultado] = await db.query('SELECT * FROM documento WHERE id = ?', [id]);
-
-        if (resultado.length === 0) {
-            return res.status(404).json({ mensaje: 'Documento no encontrado.' });
-        }
-
-        return res.json(resultado[0]);
-    } catch (error) {
-        console.error('Error en obtenerDocumento:', error);
-        return res.status(500).json({ success: false, mensaje: 'Error al obtener documento.' });
-    }
-};
-
-// Actualizar estado de documento
-const actualizarDocumento = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { estadoDoc } = req.body;
-
-        await db.query('UPDATE documento SET estadoDoc = ? WHERE id = ?', [estadoDoc, id]);
-        return res.json({ mensaje: 'Documento actualizado correctamente.' });
-    } catch (error) {
-        console.error('Error en actualizarDocumento:', error);
-        return res.status(500).json({ success: false, mensaje: 'Error al actualizar documento.' });
-    }
-};
-
-// Eliminar documento
-const eliminarDocumento = async (req, res) => {
-    try {
-        const { id } = req.params;
-        await db.query('DELETE FROM documento WHERE id = ?', [id]);
-        return res.json({ mensaje: 'Documento eliminado correctamente.' });
-    } catch (error) {
-        console.error('Error en eliminarDocumento:', error);
-        return res.status(500).json({ success: false, mensaje: 'Error al eliminar documento.' });
-    }
-};
 
 // Evaluar documento (flujo nuevo: solicitud_documentos)
 const evaluarDocumento = async (req, res) => {
@@ -125,35 +74,8 @@ const evaluarDocumento = async (req, res) => {
             [estadoValidacion, comentarios || null, id]
         );
 
-        // Lógica automática para actualizar el estado general de la solicitud
-        // Obtener sólo los últimos intentos de todos los documentos de la solicitud
-        const [ultimosDocs] = await db.query(
-            `SELECT sd1.estadoValidacion 
-             FROM solicitud_documentos sd1
-             INNER JOIN (
-                 SELECT idRequisito, MAX(intentos) as maxIntentos
-                 FROM solicitud_documentos
-                 WHERE idSolicitud = ?
-                 GROUP BY idRequisito
-             ) sd2 ON sd1.idRequisito = sd2.idRequisito AND sd1.intentos = sd2.maxIntentos
-             WHERE sd1.idSolicitud = ?`,
-            [idSolicitud, idSolicitud]
-        );
-        
-        let nuevoEstadoSolicitud = 'EN_REVISION';
-        
-        const tieneRechazados = ultimosDocs.some(d => d.estadoValidacion === 'RECHAZADO');
-        const todosAprobados = ultimosDocs.every(d => d.estadoValidacion === 'APROBADO');
-        
-        if (tieneRechazados) {
-            nuevoEstadoSolicitud = 'RECHAZADO';
-        } else if (todosAprobados && ultimosDocs.length > 0) {
-            nuevoEstadoSolicitud = 'APROBADO';
-        } else {
-            nuevoEstadoSolicitud = 'EN_REVISION';
-        }
-
-        await db.query('UPDATE solicitud SET estado = ? WHERE id = ?', [nuevoEstadoSolicitud, idSolicitud]);
+        // Lógica delegada al WorkflowService para evaluar transición
+        const nuevoEstadoSolicitud = await WorkflowService.evaluarTransicionDocumentacion(idSolicitud);
 
         // Emitir evento global de actualización
         req.app.get('io').emit('actualizacionGlobal');
@@ -207,23 +129,7 @@ const reemplazarDocumento = async (req, res) => {
         );
 
         // Recalcular estado de la solicitud basándose únicamente en los ÚLTIMOS intentos de cada requisito
-        const [ultimosDocs] = await db.query(
-            `SELECT sd1.estadoValidacion 
-             FROM solicitud_documentos sd1
-             INNER JOIN (
-                 SELECT idRequisito, MAX(intentos) as maxIntentos
-                 FROM solicitud_documentos
-                 WHERE idSolicitud = ?
-                 GROUP BY idRequisito
-             ) sd2 ON sd1.idRequisito = sd2.idRequisito AND sd1.intentos = sd2.maxIntentos
-             WHERE sd1.idSolicitud = ?`,
-            [documentData.idSolicitud, documentData.idSolicitud]
-        );
-
-        const tieneRechazados = ultimosDocs.some(d => d.estadoValidacion === 'RECHAZADO');
-        if (!tieneRechazados) {
-            await db.query("UPDATE solicitud SET estado = 'EN_REVISION' WHERE id = ?", [documentData.idSolicitud]);
-        }
+        await WorkflowService.evaluarTransicionDocumentacion(documentData.idSolicitud);
 
         // Emitir evento global de actualización
         req.app.get('io').emit('actualizacionGlobal');
@@ -243,10 +149,6 @@ const reemplazarDocumento = async (req, res) => {
 
 module.exports = {
     subirDocumento,
-    obtenerDocumentos,
-    obtenerDocumento,
-    actualizarDocumento,
-    eliminarDocumento,
     evaluarDocumento,
     reemplazarDocumento
 };

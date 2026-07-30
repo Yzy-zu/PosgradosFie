@@ -3,7 +3,11 @@ const translations = {
         // Sidebar
         "sb_label_principal": "PRINCIPAL",
         "sb_inicio": "Inicio",
+        "sb_expedientes": "Expedientes",
         "sb_aspirantes": "Aspirantes",
+        "sb_examenes": "Exámenes",
+        "sb_curso_propedeutico": "Curso",
+        "sb_promedio": "Promedio",
         "sb_proceso": "Proceso",
         "sb_convocatorias": "Convocatorias",
         "sb_documentos": "Documentos",
@@ -11,6 +15,11 @@ const translations = {
         "sb_doctorado": "Doctorado",
         "sb_ajustes": "Ajustes",
         "sb_cerrar_sesion": "Cerrar Sesión",
+        "sb_usuarios": "Usuarios",
+        "sb_posgrados": "Posgrados",
+        "sb_solicitudes": "Solicitudes",
+        "sb_reportes": "Reportes",
+        "sb_notificaciones": "Notificaciones",
 
         // Topbar
         "tb_bienvenido": "Bienvenido de vuelta",
@@ -18,7 +27,7 @@ const translations = {
         "tb_bandeja": "Bandeja de Mensajes",
         "tb_cargando": "Cargando...",
         "tb_selecciona_msj": "Selecciona un mensaje<br>para ver la conversación",
-        
+
         // Modal & Loader
         "global_cargando": "Cargando información, por favor espera...",
 
@@ -41,6 +50,7 @@ const translations = {
         "st_noti_push": "Notificaciones Push",
         "st_noti_desc": "Avisos dentro de la plataforma",
         "st_btn_guardar": "Guardar Cambios",
+        "sb_admision": "Admision",
 
         // Dynamic Texts (Documents)
         "cat_identidad": "IDENTIDAD Y GENERALES",
@@ -64,7 +74,7 @@ const translations = {
         "doc_intento_txt1": "(Será tu Intento",
         "doc_intento_txt2": "de 3)",
         "doc_limite_alcanzado": "Se ha alcanzado el límite máximo de 3 intentos para este documento.",
-        
+
         // Toast Revisión
         "toast_rev_title": "Expediente bajo revisión",
         "toast_rev_sub": "Serás notificado si se requiere alguna corrección",
@@ -92,11 +102,11 @@ const translations = {
         // Convocatorias
         "conv_cambiar_prog": "Cambiar de Programa / Volver",
         "conv_msg_desbloqueo": "Has iniciado sesión y desbloqueado los accesos para el registro formal al programa seleccionado.",
-        "conv_tramite_curso": "Trámite de Admisión en Curso",
-        "conv_participando": "Actualmente estás participando en el proceso de selección institucional para el:",
-        "conv_opcion_sel": "Opción seleccionada:",
-        "conv_btn_continuar": "Continuar mi Trámite",
-        "conv_btn_fechas": "Ver fechas y detalles del proceso",
+        "conv_tramite_curso": "Solicitud de Admisión Activa",
+        "conv_participando": "Te encuentras registrado en el proceso de admisión para:",
+        "conv_opcion_sel": "Modalidad:",
+        "conv_btn_continuar": "Continuar Solicitud",
+        "conv_btn_fechas": "Ver fechas del proceso",
         "conv_duracion": "Duración:",
         "conv_modalidad": "Modalidad:",
         "conv_apertura": "Apertura",
@@ -162,7 +172,7 @@ const translations = {
         "prof_ninguno": "Ninguno",
 
         // Docente
-        "docente_dist_doc": "Distribución de Documentos Evaluados",
+        "docente_dist_doc": "Documentos Evaluados",
         "docente_dist_doc_desc": "Porcentaje general de documentos revisados en la plataforma.",
         "docente_perfil": "Perfil",
         "docente_revisor": "Docente / Revisor",
@@ -207,14 +217,15 @@ const translations = {
         "docente_err_motivo": "Por favor, ingresa el motivo detallado del rechazo.",
         "prof_fecha_registro": "Fecha Registro",
         "det_nivel": "Nivel",
-        "docente_archivos": "Archivos y Documentos Digitales",
-        "docente_revisa_doc": "Revisa el documento haciendo clic en 'Ver'. Posteriormente, define si el documento es aprobado o rechazado.",
+        "docente_archivos": "Archivos del Aspirante",
+        "docente_revisa_doc": "Revisa el documento haciendo click en el",
         "tb_marcar_leidos": "Marcar todos como leídos",
         "docente_sin_nombre": "Sin nombre",
         "docente_sin_solicitud": "Sin Solicitud",
         "docente_sin_correo": "Sin correo",
         "docente_por_asignar": "Por asignar",
-        "docente_revision_expedientes": "Revisión y Expedientes",
+        "docente_revision_expedientes": "Expedientes",
+        "docente_instruccion_click": "Haz clic en un registro de la lista de la izquierda",
 
         // DB Requirements
         "Acta Nacimiento": "Acta Nacimiento",
@@ -241,7 +252,11 @@ const translations = {
         // Sidebar
         "sb_label_principal": "MAIN",
         "sb_inicio": "Dashboard",
+        "sb_expedientes": "Files",
         "sb_aspirantes": "Applicants",
+        "sb_examenes": "Exams",
+        "sb_curso_propedeutico": "Preparatory Course",
+        "sb_promedio": "GPA / Average",
         "sb_proceso": "Process",
         "sb_convocatorias": "Admissions",
         "sb_documentos": "Documents",
@@ -249,6 +264,11 @@ const translations = {
         "sb_doctorado": "Doctorate (Ph.D.)",
         "sb_ajustes": "Settings",
         "sb_cerrar_sesion": "Log Out",
+        "sb_usuarios": "Users",
+        "sb_posgrados": "Postgraduate Programs",
+        "sb_solicitudes": "Requests",
+        "sb_reportes": "Reports",
+        "sb_notificaciones": "Notifications",
 
         // Topbar
         "tb_bienvenido": "Welcome back",
@@ -256,7 +276,7 @@ const translations = {
         "tb_bandeja": "Messages Inbox",
         "tb_cargando": "Loading...",
         "tb_selecciona_msj": "Select a message<br>to view the conversation",
-        
+
         // Modal & Loader
         "global_cargando": "Loading information, please wait...",
 
@@ -330,11 +350,11 @@ const translations = {
         // Convocatorias
         "conv_cambiar_prog": "Change Program / Back",
         "conv_msg_desbloqueo": "You have logged in and unlocked access for formal registration to the selected program.",
-        "conv_tramite_curso": "Admission Process in Progress",
-        "conv_participando": "You are currently participating in the institutional selection process for:",
-        "conv_opcion_sel": "Selected option:",
-        "conv_btn_continuar": "Continue my Process",
-        "conv_btn_fechas": "View process dates and details",
+        "conv_tramite_curso": "Active Admission Application",
+        "conv_participando": "You are registered in the admission process for:",
+        "conv_opcion_sel": "Modality:",
+        "conv_btn_continuar": "Continue Application",
+        "conv_btn_fechas": "View key dates and details",
         "conv_duracion": "Duration:",
         "conv_modalidad": "Modality:",
         "conv_apertura": "Opening",
@@ -453,6 +473,7 @@ const translations = {
         "docente_sin_correo": "No email",
         "docente_por_asignar": "Unassigned",
         "docente_revision_expedientes": "File Review & Evaluation",
+        "docente_instruccion_click": "Click on a record in the list on the left",
 
         // DB Requirements
         "Acta Nacimiento": "Birth Certificate",
@@ -536,7 +557,7 @@ function cambiarIdioma(langValue) {
     } else {
         langCode = 'es';
     }
-    
+
     if (langCode !== getIdiomaActual()) {
         localStorage.setItem('idioma', langCode);
         location.reload(); // Recarga limpia para asegurar que todo el JS dinámico se regenere
@@ -546,7 +567,7 @@ function cambiarIdioma(langValue) {
 // Escuchar cuando el DOM esté listo para aplicar las traducciones
 document.addEventListener('DOMContentLoaded', () => {
     aplicarTraduccionesDOM();
-    
+
     // Seleccionar el dropdown de idioma correcto si existe
     const selectIdioma = document.getElementById('setting-idioma');
     if (selectIdioma) {

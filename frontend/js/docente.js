@@ -1,15 +1,12 @@
 // Variables de Estado Global de la Interfaz
 let aspirantes = [];
 let idAspiranteActivo = null;
-let documentoARechazar = null;
 
 // Conexión Socket.io
 const socket = io();
 socket.on('actualizacionGlobal', () => {
     // Recargar vista actual si hay un cambio (ej. aspirante sube nuevo documento)
-    if (typeof cargarExpedientesAspirantes === 'function') {
-        cargarExpedientesAspirantes();
-    }
+    cargarAspirantesAPI();
 });
 
 // Inicialización de la Aplicación
@@ -48,7 +45,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     const usuario = JSON.parse(tokenObj);
-    const saludo = document.getElementById('saludo-usuario');
 
     try {
         window.docenteData = await cargarDocente(usuario.id);
@@ -71,6 +67,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     await cargarAspirantesAPI();
     cargarNotificaciones();
 
+    // Restaurar estado del toggle de notificaciones push
+    const toggleNotiPush = document.getElementById('toggle-notificaciones-push');
+    if (toggleNotiPush) {
+        toggleNotiPush.checked = localStorage.getItem('notificacionesPush') !== 'false';
+    }
+
     // Restaurar vista desde la URL (Persistencia)
     const currentHash = window.location.hash.replace("#", "");
     if (currentHash) {
@@ -81,6 +83,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 });
 
 async function cargarAspirantesAPI() {
+    mostrarLoader();
     try {
         const token = sessionStorage.getItem("token");
         const respuesta = await fetch('/api/aspirante/expedientes/todos', {
@@ -96,7 +99,7 @@ async function cargarAspirantesAPI() {
                 const asp = exp.perfil;
                 // Buscar la solicitud activa (en revision o pendiente) o la primera (que será la más reciente gracias al ORDER BY)
                 const sol = exp.solicitudes && exp.solicitudes.length > 0
-                    ? (exp.solicitudes.find(s => ['EN_REVISION', 'PENDIENTE', 'RECHAZADO', 'INCOMPLETO', 'APROBADO'].includes(s.estado)) || exp.solicitudes[0])
+                    ? (exp.solicitudes.find(s => ['EN_REVISION', 'PENDIENTE', 'RECHAZADO', 'APROBADO'].includes(s.estado)) || exp.solicitudes[0])
                     : null;
 
                 let docList = [];
@@ -117,7 +120,7 @@ async function cargarAspirantesAPI() {
                     programa: sol ? sol.convocatoriaNombre : (typeof t === 'function' ? t('docente_sin_solicitud') : "Sin Solicitud"),
                     correo: asp.correo || (typeof t === 'function' ? t('docente_sin_correo') : "Sin correo"),
                     fechaRegistro: sol ? new Date(sol.creadoEn).toISOString().split('T')[0] : (asp.fechaNacimiento ? asp.fechaNacimiento.split('T')[0] : "N/A"),
-                    mecanismo: sol ? sol.tipoAdmision.replace(/_/g, ' ') : "N/A",
+                    mecanismo: sol ? sol.modalidadNombre : "N/A",
                     nivel: sol && sol.posgrado_id == 2 ? (typeof t === 'function' ? t('sb_doctorado') : "Doctorado") : (sol && sol.posgrado_id == 1 ? (typeof t === 'function' ? t('sb_maestria') : "Maestría") : (typeof t === 'function' ? t('docente_por_asignar') : "Por asignar")),
                     documentos: docList
                 };
@@ -125,11 +128,14 @@ async function cargarAspirantesAPI() {
 
             actualizarEstadisticas();
             filtrarYMostrarAspirantes();
+            renderizarVistasAdicionalesDocente();
         } else {
             console.error("Error al obtener aspirantes de la API");
         }
     } catch (error) {
         console.error("Error de conexión:", error);
+    } finally {
+        ocultarLoader();
     }
 }
 
@@ -137,8 +143,6 @@ async function cargarAspirantesAPI() {
  * Control de Navegación Lateral (Cambio de Secciones)
  */
 function switchView(viewId) {
-    mostrarLoader();
-
     // Actualizar URL sin recargar para persistencia
     window.history.pushState(null, null, `#${viewId}`);
 
@@ -159,17 +163,68 @@ function switchView(viewId) {
 
     // Actualizar estado activo en la barra lateral
     document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
-    const activeLink = document.getElementById(`nav-${viewId}`);
-    if (activeLink) activeLink.classList.add('active');
 
-    setTimeout(() => {
-        ocultarLoader();
-    }, 300);
+    const isExamenesView = ['examenes', 'examenes-proximos', 'examenes-en-proceso'].includes(viewId);
+    if (isExamenesView) {
+        const navMain = document.getElementById('nav-examenes');
+        if (navMain) navMain.classList.add('active');
+    } else {
+        const activeLink = document.getElementById(`nav-${viewId}`);
+        if (activeLink) activeLink.classList.add('active');
+    }
+
+    if (viewId === 'aspirantes') {
+        if (typeof cargarAspirantes === 'function') {
+            cargarAspirantes();
+        }
+    } else if (viewId === 'examenes' || viewId === 'examenes-proximos') {
+        const targetSection = document.getElementById('view-examenes');
+        if (targetSection) {
+            document.querySelectorAll('.view-section').forEach(sec => sec.style.display = 'none');
+            targetSection.style.display = 'block';
+        }
+        cargarTablaExamenesAPI('proximos');
+    } else if (viewId === 'examenes-en-proceso') {
+        const targetSection = document.getElementById('view-examenes');
+        if (targetSection) {
+            document.querySelectorAll('.view-section').forEach(sec => sec.style.display = 'none');
+            targetSection.style.display = 'block';
+        }
+        cargarTablaExamenesAPI('en_examen');
+    } else if (viewId === 'curso-propedeutico') {
+        cargarTablaPropedeuticoAPI();
+    } else if (viewId === 'promedio') {
+        cargarTablaPromedioAPI();
+    }
+
+    // Actualizar título en la barra superior (topbar)
+    actualizarTituloTopbar(viewId);
 }
 
-/**
- * Cierre de Sesión Limpiando Variables No Persistentes de Login
- */
+function actualizarTituloTopbar(viewId) {
+    const topbarTitle = document.getElementById('topbar-nombre-usuario');
+    if (!topbarTitle) return;
+
+    if (viewId === 'inicio') {
+        const d = window.docenteData;
+        if (d && d.nombre) {
+            const nombreCompleto = `${d.nombre || ''} ${d.primerApellido || ''} ${d.segundoApellido || ''}`.trim();
+            topbarTitle.innerText = nombreCompleto;
+        } else {
+            topbarTitle.innerText = typeof t === 'function' ? t('docente_revisor') : 'Docente / Revisor';
+        }
+    } else if (viewId === 'expedientes') {
+        topbarTitle.innerHTML = `<i class="fa-solid fa-folder-open me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('docente_revision_expedientes') : 'Revisión y Expedientes'}`;
+    } else if (viewId === 'aspirantes') {
+        topbarTitle.innerHTML = `<i class="fa-solid fa-users me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_aspirantes') : 'Aspirantes'}`;
+    } else if (viewId === 'examenes') {
+        topbarTitle.innerHTML = `<i class="fa-solid fa-file-pen me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_examenes') : 'Exámenes'}`;
+    } else if (viewId === 'curso-propedeutico') {
+        topbarTitle.innerHTML = `<i class="fa-solid fa-book-open-reader me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_curso_propedeutico') : 'Curso Propedéutico'}`;
+    } else if (viewId === 'promedio') {
+        topbarTitle.innerHTML = `<i class="fa-solid fa-calculator me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_promedio') : 'Promedio'}`;
+    }
+}
 
 
 /**
@@ -539,10 +594,7 @@ function cambiarTabEvaluacion(tabName) {
     }
 }
 
-function ocultarPanelNotificaciones() {
-    const p = document.getElementById('panel-notificaciones');
-    if (p) p.style.display = 'none';
-}
+
 
 function abrirNotificacion(remitenteKey, element) {
     try {
@@ -636,6 +688,7 @@ async function aprobarDocumentoModal() {
     const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id == documentoAEvaluar);
     if (docIndex === -1) return;
 
+    mostrarLoader();
     try {
         const token = sessionStorage.getItem("token") || "";
         const res = await fetch(`/api/documentos/evaluar/${documentoAEvaluar}`, {
@@ -664,11 +717,13 @@ async function aprobarDocumentoModal() {
             });
         } else {
             const err = await res.json();
-            alert((typeof t === 'function' ? t('docente_err_aprobar') : "No se pudo aprobar el documento: ") + (err.mensaje || "Error"));
+            Swal.fire({ icon: 'error', title: 'Error', text: (typeof t === 'function' ? t('docente_err_aprobar') : 'No se pudo aprobar el documento: ') + (err.mensaje || 'Error'), confirmButtonColor: '#ef4444' });
         }
     } catch (e) {
         console.error("Error al aprobar documento:", e);
-        alert(typeof t === 'function' ? t('docente_err_servidor') : "Ocurrió un error al comunicarse con el servidor.");
+        Swal.fire({ icon: 'error', title: 'Error de conexión', text: typeof t === 'function' ? t('docente_err_servidor') : 'Ocurrió un error al comunicarse con el servidor.', confirmButtonColor: '#ef4444' });
+    } finally {
+        ocultarLoader();
     }
 }
 
@@ -677,7 +732,7 @@ async function rechazarDocumentoModal() {
     const noteText = document.getElementById('eval-modal-nota').value.trim();
 
     if (noteText === "") {
-        alert(typeof t === 'function' ? t('docente_err_motivo') : "Por favor, ingresa el motivo detallado del rechazo.");
+        Swal.fire({ icon: 'warning', title: 'Campo requerido', text: typeof t === 'function' ? t('docente_err_motivo') : 'Por favor, ingresa el motivo detallado del rechazo.', confirmButtonColor: '#f59e0b' });
         return;
     }
 
@@ -687,6 +742,7 @@ async function rechazarDocumentoModal() {
     const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id == documentoAEvaluar);
     if (docIndex === -1) return;
 
+    mostrarLoader();
     try {
         const token = sessionStorage.getItem("token") || "";
         const res = await fetch(`/api/documentos/evaluar/${documentoAEvaluar}`, {
@@ -715,11 +771,13 @@ async function rechazarDocumentoModal() {
             });
         } else {
             const err = await res.json();
-            alert((typeof t === 'function' ? t('docente_err_rechazar') : "No se pudo rechazar el documento: ") + (err.mensaje || "Error"));
+            Swal.fire({ icon: 'error', title: 'Error', text: (typeof t === 'function' ? t('docente_err_rechazar') : 'No se pudo rechazar el documento: ') + (err.mensaje || 'Error'), confirmButtonColor: '#ef4444' });
         }
     } catch (e) {
         console.error("Error al rechazar documento:", e);
-        alert(typeof t === 'function' ? t('docente_err_servidor') : "Ocurrió un error al comunicarse con el servidor.");
+        Swal.fire({ icon: 'error', title: 'Error de conexión', text: typeof t === 'function' ? t('docente_err_servidor') : 'Ocurrió un error al comunicarse con el servidor.', confirmButtonColor: '#ef4444' });
+    } finally {
+        ocultarLoader();
     }
 }
 
@@ -866,6 +924,10 @@ function cerrarDrawerAjustes() {
     document.getElementById('settings-drawer-overlay').classList.remove('show');
 }
 
+function guardarToggleNotificaciones(activado) {
+    localStorage.setItem('notificacionesPush', activado ? 'true' : 'false');
+}
+
 // ==== PERFIL DOCENTE ====
 function abrirModalPerfilDocente() {
     const usuarioStr = sessionStorage.getItem('usuario');
@@ -873,44 +935,555 @@ function abrirModalPerfilDocente() {
     const usuario = JSON.parse(usuarioStr);
     const d = window.docenteData;
     const iniciales = (d.nombre.charAt(0) + (d.primerApellido ? d.primerApellido.charAt(0) : '')).toUpperCase();
-
+    const nombreCompleto = [d.nombre, d.primerApellido, d.segundoApellido].filter(Boolean).join(' ');
     const noReg = typeof t === 'function' ? t('prof_no_reg') : 'No registrado';
 
+    const cell = (label, value, span = 1) =>
+        `<div style="grid-column: span ${span};">
+            <span style="display: block; font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">${label}</span>
+            <strong style="color: var(--color-text); font-size: 15px; font-weight: 500;">${value || noReg}</strong>
+        </div>`;
+
     Swal.fire({
-        title: typeof t === 'function' ? t('docente_perfil') : 'Mi Perfil',
         html: `
-            <div style="text-align: left; font-size: 14px; line-height: 1.5; color: var(--color-text); padding-right: 15px;">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--color-border);">
-                    <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; flex-shrink: 0;">
-                        ${iniciales}
-                    </div>
-                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start;">
-                        <h4 style="margin: 0; color: var(--color-text); font-size: 18px; text-transform: capitalize; line-height: 1.2;">${d.nombre} ${d.primerApellido || ''} ${d.segundoApellido || ''}</h4>
-                        <span style="background: #fce7f3; color: #be185d; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-top: 6px; letter-spacing: 0.5px;">${typeof t === 'function' ? t('docente_revisor') : 'Docente / Revisor'}</span>
+        <div class="pm-wrapper" style="text-align: left; background: var(--color-card-bg); position: relative; overflow: hidden; border-radius: 12px;">
+            <div class="modal-watermark"></div>
+
+            <div style="padding: 35px 35px 25px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--color-border); position: relative; z-index: 1;">
+                <div style="width: 75px; height: 75px; border-radius: 50%; background: #be185d; color: white; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; flex-shrink: 0; box-shadow: 0 4px 10px rgba(190, 24, 93, 0.2);">${iniciales}</div>
+                <div>
+                    <h2 style="font-size: 24px; font-weight: 700; margin: 0; color: var(--color-text); letter-spacing: -0.5px;">${nombreCompleto}</h2>
+                    <p style="margin: 6px 0 0; color: var(--color-text-muted); font-size: 15px;"><i class="fa-regular fa-envelope" style="margin-right: 5px;"></i>${usuario.correo || noReg}</p>
+                    <span style="display: inline-block; margin-top: 12px; padding: 4px 12px; background: rgba(190,24,93,0.08); color: #be185d; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">${typeof t === 'function' ? t('docente_revisor') : 'Docente / Revisor'}</span>
+                </div>
+            </div>
+
+            <div style="padding: 0 35px; position: relative; z-index: 1;">
+                <div style="padding: 30px 0; border-bottom: 1px solid var(--color-border);">
+                    <h5 style="font-size: 13px; font-weight: 800; color: var(--color-text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px;">${typeof t === 'function' ? t('docente_info_contacto') : 'Datos de Contacto'}</h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+                        ${cell(typeof t === 'function' ? t('prof_telefono') : 'Teléfono', d.telefono)}
+                        ${cell(typeof t === 'function' ? t('prof_nombre') : 'Nombre completo', nombreCompleto, 2)}
                     </div>
                 </div>
 
-                <h5 class="profile-section-title"><i class="fa-solid fa-address-card"></i> ${typeof t === 'function' ? t('docente_info_contacto') : 'Datos de Contacto'}</h5>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 15px; margin-bottom: 25px;">
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('prof_correo') : 'Correo'}</span> <span class="profile-info-value" style="text-transform: none;">${usuario.correo}</span></div>
-                </div>
-                
-                <h5 class="profile-section-title"><i class="fa-solid fa-graduation-cap"></i> ${typeof t === 'function' ? t('docente_info_academica') : 'Información Académica'}</h5>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 15px; margin-bottom: 25px;">
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('docente_cargo') : 'Cargo'}</span> <span class="profile-info-value" style="text-transform: capitalize;">${d.cargo || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('docente_especialidad') : 'Especialidad'}</span> <span class="profile-info-value" style="text-transform: capitalize;">${d.especialidad || noReg}</span></div>
-                    <div class="profile-info-box"><span class="profile-info-label">${typeof t === 'function' ? t('docente_cubiculo') : 'Cubículo'}</span> <span class="profile-info-value">${d.cubiculo || noReg}</span></div>
+                <div style="padding: 30px 0 35px;">
+                    <h5 style="font-size: 13px; font-weight: 800; color: var(--color-text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px;">${typeof t === 'function' ? t('docente_info_academica') : 'Información Académica'}</h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+                        ${cell(typeof t === 'function' ? t('docente_cargo') : 'Cargo', d.cargo)}
+                        ${cell(typeof t === 'function' ? t('docente_especialidad') : 'Especialidad', d.especialidad)}
+                        ${cell(typeof t === 'function' ? t('docente_cubiculo') : 'Cubículo', d.cubiculo)}
+                    </div>
                 </div>
             </div>
-        `,
+        </div>`,
         showConfirmButton: true,
         confirmButtonText: typeof t === 'function' ? t('docente_modal_cerrar') : 'Cerrar',
         buttonsStyling: false,
-        width: '900px',
+        width: '720px',
         customClass: {
-            popup: 'profile-modal-bg',
-            confirmButton: 'profile-btn-close'
+            popup: 'pm-popup',
+            confirmButton: 'pm-btn-close',
+            htmlContainer: 'pm-html-container'
         }
     });
 }
 
+/**
+ * Renderiza las tablas para las vistas independientes de Aspirantes, Exámenes, Curso Propedéutico y Promedio
+ */
+function renderizarVistasAdicionalesDocente() {
+    renderizarTablaAspirantesGeneral(aspirantes);
+    cargarTablaExamenesAPI();
+    cargarTablaPropedeuticoAPI();
+    cargarTablaPromedioAPI();
+}
+
+function renderizarTablaAspirantesGeneral(lista) {
+    const tbody = document.getElementById('tabla-aspirantes-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!lista || lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted); padding: 25px;">No hay aspirantes registrados.</td></tr>`;
+        return;
+    }
+
+    lista.forEach(asp => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid var(--color-border)';
+        tr.innerHTML = `
+            <td style="padding: 12px 15px;">
+                <strong>${asp.nombre}</strong><br>
+                <small style="color: var(--color-text-muted);">${asp.nivel}</small>
+            </td>
+            <td style="padding: 12px 15px;">${asp.programa}</td>
+            <td style="padding: 12px 15px;">
+                <span class="badge" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border);">${asp.mecanismo}</span>
+            </td>
+            <td style="padding: 12px 15px;">${asp.correo}</td>
+            <td style="padding: 12px 15px; text-align: center;">
+                <button class="btn-secondary btn-sm" onclick="switchView('expedientes'); seleccionarAspirante(${asp.id});" style="padding: 6px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--color-border); background: var(--color-card-bg); color: var(--color-text); cursor: pointer;">
+                    <i class="fa-solid fa-folder-open me-1"></i> Expediente
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function filtrarTablaAspirantes() {
+    const input = document.getElementById('buscar-aspirante-tabla');
+    if (!input) return;
+    const query = input.value.toLowerCase().trim();
+    const filtrados = aspirantes.filter(asp => 
+        asp.nombre.toLowerCase().includes(query) || 
+        asp.programa.toLowerCase().includes(query) || 
+        asp.correo.toLowerCase().includes(query) || 
+        asp.mecanismo.toLowerCase().includes(query)
+    );
+    renderizarTablaAspirantesGeneral(filtrados);
+}
+
+async function cargarTablaExamenesAPI(tipo = 'proximos') {
+    const tbody = document.getElementById('tabla-examenes-body');
+    if (!tbody) return;
+
+    // Actualizar botones superiores de pestañas
+    const btnProximos = document.getElementById('tab-examenes-proximos');
+    const btnEnProceso = document.getElementById('tab-examenes-en-proceso');
+    if (btnProximos && btnEnProceso) {
+        if (tipo === 'proximos') {
+            btnProximos.style.background = 'var(--color-primary)';
+            btnProximos.style.color = 'white';
+            btnEnProceso.style.background = 'var(--color-card-bg)';
+            btnEnProceso.style.color = 'var(--color-text-muted)';
+        } else {
+            btnEnProceso.style.background = 'var(--color-primary)';
+            btnEnProceso.style.color = 'white';
+            btnProximos.style.background = 'var(--color-card-bg)';
+            btnProximos.style.color = 'var(--color-text-muted)';
+        }
+    }
+
+    // Actualizar activo en submenú de barra lateral mediante clase CSS dedicada
+    const navProximos = document.getElementById('nav-examenes-proximos');
+    const navEnProceso = document.getElementById('nav-examenes-en-proceso');
+    if (navProximos && navEnProceso) {
+        navProximos.removeAttribute('style');
+        navEnProceso.removeAttribute('style');
+        if (tipo === 'proximos') {
+            navProximos.classList.add('active-sub');
+            navEnProceso.classList.remove('active-sub');
+        } else {
+            navEnProceso.classList.add('active-sub');
+            navProximos.classList.remove('active-sub');
+        }
+    }
+
+    try {
+        const respuesta = await fetch(`/api/solicitud/modalidad/1?tipo=${tipo}`);
+        if (!respuesta.ok) throw new Error("Error al obtener exámenes");
+
+        const data = await respuesta.json();
+        tbody.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            const msj = tipo === 'proximos' 
+                ? 'No hay aspirantes próximos a examen (en etapa de documentación).' 
+                : 'No hay aspirantes en etapa de examen o con examen programado.';
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted); padding: 25px;">${msj}</td></tr>`;
+            return;
+        }
+
+        data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid var(--color-border)';
+
+            let fechaStr = "Por agendar";
+            if (item.fecha) {
+                fechaStr = `${new Date(item.fecha).toLocaleDateString()}${item.hora ? ' ' + item.hora : ''}`;
+            }
+
+            let lugarStr = item.lugar || "Sin asignar";
+
+            let badgePrograma = '';
+            if (item.posgradoTipo === 'DOCTORADO') {
+                badgePrograma = `<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">D</span>`;
+            } else if (item.posgradoTipo === 'MAESTRIA') {
+                badgePrograma = `<span style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">M</span>`;
+            }
+            const nombreOpcion = item.opcionNombre || 'Sin especialidad asignada';
+
+            tr.innerHTML = `
+                <td style="padding: 12px 15px;">
+                    <strong>${item.aspiranteNombre || 'Sin nombre'}</strong><br>
+                    <small style="color: var(--color-text-muted);">${item.correo || ''}</small>
+                </td>
+                <td style="padding: 12px 15px;">${badgePrograma} ${nombreOpcion}</td>
+                <td style="padding: 12px 15px;">
+                    <i class="fa-regular fa-calendar me-1" style="color: var(--color-primary);"></i> ${fechaStr}
+                </td>
+                <td style="padding: 12px 15px;">
+                    <i class="fa-solid fa-location-dot me-1" style="color: var(--color-text-muted);"></i> ${lugarStr}
+                </td>
+                <td style="padding: 12px 15px; text-align: center;">
+                    <span class="badge badge-pendiente" style="padding: 4px 10px; border-radius: 12px; font-size: 11px;">${item.etapaNombre || 'Pendiente'}</span>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error("Error al cargar la tabla de exámenes:", error);
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted); padding: 25px;">Error al cargar datos del servidor.</td></tr>`;
+    }
+}
+
+async function cargarTablaPropedeuticoAPI() {
+    const tbody = document.getElementById('tabla-propedeutico-body');
+    if (!tbody) return;
+
+    try {
+        const respuesta = await fetch('/api/solicitud/modalidad/2');
+        if (!respuesta.ok) throw new Error("Error al obtener propedéutico");
+
+        const data = await respuesta.json();
+        tbody.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted); padding: 25px;">No hay registros de curso propedéutico.</td></tr>`;
+            return;
+        }
+
+        data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid var(--color-border)';
+            let badgePrograma = '';
+            if (item.posgradoTipo === 'DOCTORADO') {
+                badgePrograma = `<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">D</span>`;
+            } else if (item.posgradoTipo === 'MAESTRIA') {
+                badgePrograma = `<span style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">M</span>`;
+            }
+            const nombreOpcion = item.opcionNombre || 'Sin especialidad asignada';
+
+            tr.innerHTML = `
+                <td style="padding: 12px 15px;">
+                    <strong>${item.aspiranteNombre || 'Sin nombre'}</strong><br>
+                    <small style="color: var(--color-text-muted);">${item.correo || ''}</small>
+                </td>
+                <td style="padding: 12px 15px;">${badgePrograma} ${nombreOpcion}</td>
+                <td style="padding: 12px 15px;">100%</td>
+                <td style="padding: 12px 15px;">
+                    <span style="font-weight: 600; color: var(--color-text-muted);">${item.etapaNombre || 'En evaluación'}</span>
+                </td>
+                <td style="padding: 12px 15px; text-align: center;">
+                    <span class="badge badge-pendiente" style="padding: 4px 10px; border-radius: 12px; font-size: 11px;">${item.estadoSolicitud || 'En Curso'}</span>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error("Error al cargar la tabla propedéutico:", error);
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted); padding: 25px;">Error al cargar datos del servidor.</td></tr>`;
+    }
+}
+
+async function cargarTablaPromedioAPI() {
+    const tbody = document.getElementById('tabla-promedio-body');
+    if (!tbody) return;
+
+    try {
+        const [res3, res4] = await Promise.all([
+            fetch('/api/solicitud/modalidad/3'),
+            fetch('/api/solicitud/modalidad/4')
+        ]);
+
+        const data3 = res3.ok ? await res3.json() : [];
+        const data4 = res4.ok ? await res4.json() : [];
+        const data = [...data3, ...data4];
+
+        tbody.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted); padding: 25px;">No hay registros de evaluación por promedio.</td></tr>`;
+            return;
+        }
+
+        data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid var(--color-border)';
+            let badgePrograma = '';
+            if (item.posgradoTipo === 'DOCTORADO') {
+                badgePrograma = `<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">D</span>`;
+            } else if (item.posgradoTipo === 'MAESTRIA') {
+                badgePrograma = `<span style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">M</span>`;
+            }
+            const nombreOpcion = item.opcionNombre || 'Sin especialidad asignada';
+
+            tr.innerHTML = `
+                <td style="padding: 12px 15px;">
+                    <strong>${item.aspiranteNombre || 'Sin nombre'}</strong><br>
+                    <small style="color: var(--color-text-muted);">${item.correo || ''}</small>
+                </td>
+                <td style="padding: 12px 15px;">${badgePrograma} ${nombreOpcion}</td>
+                <td style="padding: 12px 15px; font-weight: 600;">${item.modalidadNombre}</td>
+                <td style="padding: 12px 15px;">${item.etapaNombre || 'En revisión'}</td>
+                <td style="padding: 12px 15px; text-align: center;">
+                    <span class="badge badge-aprobado" style="padding: 4px 10px; border-radius: 12px; font-size: 11px;">${item.estadoSolicitud || 'Registrado'}</span>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error("Error al cargar la tabla promedio:", error);
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted); padding: 25px;">Error al cargar datos del servidor.</td></tr>`;
+    }
+}
+
+
+async function cargarAspirantes() {
+    const totalAspirantes = document.getElementById("totalAspirantes");
+    const tbody = document.getElementById("tablaAspirantes");
+    if (!tbody) return;
+
+    mostrarLoader();
+    try {
+        const respuesta = await fetch("/api/aspirante");
+
+        if (!respuesta.ok) throw new Error("Endpoint no disponible");
+
+        const aspirantes = await respuesta.json();
+        if (totalAspirantes) {
+            totalAspirantes.textContent = aspirantes.length || 0;
+        }
+
+        tbody.innerHTML = "";
+
+        if (!aspirantes || aspirantes.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='3' style='text-align: center; color: var(--color-text-muted); padding: 25px;'>No hay aspirantes registrados.</td></tr>";
+            return;
+        }
+
+        for (const aspirante of aspirantes) {
+            const tr = document.createElement("tr");
+            tr.style.borderBottom = "1px solid var(--color-border)";
+            // Formatear nombre completo
+            const nombreCompleto = `${aspirante.nombre || ''} ${aspirante.primerApellido || ''} ${aspirante.segundoApellido || ''}`.trim();
+
+            async function correoAspirante(idUsuario) {
+                if (!idUsuario) return null;
+                try {
+                    const respuesta1 = await fetch(`/api/usuario/${idUsuario}`);
+                    const usuario1 = await respuesta1.json();
+                    return usuario1.correo;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            async function posgradoAspirante(asp) {
+                if (asp.posgradoNombre) return asp.posgradoNombre;
+                try {
+                    const resExp = await fetch(`/api/aspirante/${asp.id}/expediente`);
+                    if (!resExp.ok) return null;
+                    const exp = await resExp.json();
+                    if (exp.solicitudes && exp.solicitudes.length > 0) {
+                        const sol = exp.solicitudes[0];
+                        return sol.convocatoriaNombre || sol.opcionNombre || null;
+                    }
+                } catch (e) {
+                    return null;
+                }
+                return null;
+            }
+
+            const correoReal = (await correoAspirante(aspirante.idUsuario)) || aspirante.correo || 'Sin correo';
+            const posgradoNombreReal = await posgradoAspirante(aspirante);
+
+            const posgradoTxt = posgradoNombreReal || 'Sin posgrado seleccionado';
+            const badgeClass = posgradoNombreReal ? 'soft-badge-primary' : 'soft-badge-secondary';
+
+            tr.style.cursor = "pointer";
+            tr.onclick = () => verExpedienteAspirante(aspirante.id);
+            tr.innerHTML = `
+                <td style="padding: 12px 15px;">
+                    <strong style="color: var(--color-text); font-size: 0.95rem;">${nombreCompleto || 'Sin nombre'}</strong><br>
+                    <small style="color: var(--color-text-muted); font-size: 0.82rem;">${correoReal}</small>
+                </td>
+                <td style="padding: 12px 15px;">
+                    <span class="soft-badge ${badgeClass}"><i class="fa-solid fa-graduation-cap me-1"></i> ${posgradoTxt}</span>
+                </td>
+                <td style="padding: 12px 15px; text-align: center;">
+                    <button onclick="event.stopPropagation(); verExpedienteAspirante(${aspirante.id});" title="Ver expediente" style="background: transparent; border: none; color: var(--color-primary); font-size: 1.1rem; cursor: pointer; padding: 6px 10px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.15)'" onmouseout="this.style.background='transparent'">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+    } catch (error) {
+        console.error("Error al cargar aspirantes:", error);
+        tbody.innerHTML = "<tr><td colspan='3' style='text-align: center; color: var(--color-text-muted); padding: 25px;'>Esperando API de aspirantes...</td></tr>";
+    } finally {
+        ocultarLoader();
+    }
+}
+
+async function verExpedienteAspirante(id) {
+    mostrarLoader();
+    try {
+        const respuesta = await fetch(`/api/aspirante/${id}/expediente`);
+        if (!respuesta.ok) throw new Error("Aspirante no encontrado");
+
+        const expediente = await respuesta.json();
+        const perfil = expediente.perfil || {};
+        const solicitudes = expediente.solicitudes || [];
+
+        // Llenar el perfil resumido
+        const nombreCompleto = `${perfil.nombre || ''} ${perfil.primerApellido || ''} ${perfil.segundoApellido || ''}`.trim();
+        document.getElementById("perfil_nombreCompleto").textContent = nombreCompleto;
+
+        // Avatar iniciales
+        const iniNombre = perfil.nombre ? perfil.nombre.charAt(0).toUpperCase() : '';
+        const iniApellido = perfil.primerApellido ? perfil.primerApellido.charAt(0).toUpperCase() : '';
+        document.getElementById("perfil_avatar").textContent = (iniNombre + iniApellido) || '--';
+        document.getElementById("perfil_correo").textContent = perfil.correo || "Sin correo";
+
+        document.getElementById("perfil_curp").textContent = perfil.curp || "N/A";
+        document.getElementById("perfil_telefono").textContent = perfil.telefono || "N/A";
+
+        let fechaNac = "N/A";
+        if (perfil.fechaNacimiento) {
+            fechaNac = new Date(perfil.fechaNacimiento).toLocaleDateString();
+        }
+        document.getElementById("perfil_nacimiento").textContent = fechaNac;
+
+        let direccion = perfil.direccion || "";
+        if (perfil.direccionPostal) direccion += ` (CP: ${perfil.direccionPostal})`;
+        document.getElementById("perfil_direccion").textContent = direccion || "N/A";
+
+        document.getElementById("perfil_estadoCivil").textContent = perfil.estadoCivil || "N/A";
+        document.getElementById("perfil_licenciatura").textContent = perfil.licenciatura || "N/A";
+        document.getElementById("perfil_institucionLicenciatura").textContent = perfil.institucionLicenciatura || "N/A";
+
+        document.getElementById("perfil_fechaEgreso").textContent = perfil.fechaEgreso ? new Date(perfil.fechaEgreso).toLocaleDateString() : "N/A";
+        document.getElementById("perfil_fechaTitulacion").textContent = perfil.fechaTitulacion ? new Date(perfil.fechaTitulacion).toLocaleDateString() : "N/A";
+        document.getElementById("perfil_promedio").textContent = perfil.promedio || "N/A";
+
+        let ocupacionInfo = perfil.ocupacion || "N/A";
+        if (perfil.ciudadOcupacion || perfil.estadoOcupacion) ocupacionInfo += ` (${perfil.ciudadOcupacion || ''}, ${perfil.estadoOcupacion || ''})`;
+        if (perfil.telefonoOcupacion) ocupacionInfo += ` - Tel: ${perfil.telefonoOcupacion}`;
+        document.getElementById("perfil_ocupacion").textContent = ocupacionInfo;
+
+        document.getElementById("perfil_otrosEstudios").textContent = perfil.otrosEstudios || "N/A";
+
+        const badgeEstado = document.getElementById("perfil_estado");
+        if (perfil.activo) {
+            badgeEstado.className = "soft-badge soft-badge-success mb-4 d-inline-block";
+            badgeEstado.textContent = "USUARIO ACTIVO";
+        } else {
+            badgeEstado.className = "soft-badge soft-badge-danger mb-4 d-inline-block";
+            badgeEstado.textContent = "USUARIO INACTIVO";
+        }
+
+        // Llenar las solicitudes
+        const contSolicitudes = document.getElementById("contenedorSolicitudes");
+        contSolicitudes.innerHTML = ""; // Limpiar
+
+        if (solicitudes.length === 0) {
+            contSolicitudes.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fa-solid fa-inbox text-muted fs-1 mb-2"></i>
+                    <p class="text-muted">El aspirante aún no ha iniciado ningún proceso de admisión.</p>
+                </div>
+            `;
+        } else {
+            solicitudes.forEach((sol, index) => {
+                let badgeSolicitud = "soft-badge-warning";
+                if (sol.estado === "APROBADO") badgeSolicitud = "soft-badge-success";
+                else if (sol.estado === "RECHAZADO") badgeSolicitud = "soft-badge-danger";
+
+                const d = new Date(sol.creadoEn).toLocaleDateString();
+                const containerId = `sol-docs-${sol.id || index}`;
+                const chevronId = `chevron-${sol.id || index}`;
+
+                // Armar la lista de documentos
+                let htmlDocs = "";
+                if (sol.documentos && sol.documentos.length > 0) {
+                    htmlDocs = `<div style="margin-top: 1rem;"><h6 style="font-size: 0.85rem; font-weight: bold; color: var(--color-text-muted); margin-bottom: 0.75rem; letter-spacing: 0.5px; text-transform: uppercase;">Documentos Adjuntos</h6><div style="border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">`;
+                    sol.documentos.forEach(doc => {
+                        let classBadge = "soft-badge-warning";
+                        if (doc.estadoValidacion === "APROBADO") { classBadge = "soft-badge-success"; }
+                        else if (doc.estadoValidacion === "RECHAZADO") { classBadge = "soft-badge-danger"; }
+
+                        htmlDocs += `
+                            <div class="doc-row-premium" onclick="window.open('/uploads/${doc.rutaArchivo}', '_blank')">
+                                <div style="display: flex; align-items: center;">
+                                    <i class="fa-solid fa-file-pdf doc-icon"></i>
+                                    <span style="font-weight: 500; color: var(--color-text);">${doc.requisitoNombre}</span>
+                                </div>
+                                <div style="display: flex; align-items: center;">
+                                    <span class="soft-badge ${classBadge}" style="margin-right: 1rem;">${doc.estadoValidacion}</span>
+                                    <i class="fa-solid fa-chevron-right chevron-icon"></i>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    htmlDocs += `</div></div>`;
+                } else {
+                    htmlDocs = `<div style="margin-top: 1rem; padding: 1.25rem; text-align: center; border-radius: 8px; background: var(--color-bg);"><p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 0;"><i class="fa-solid fa-folder-minus" style="margin-right: 0.5rem;"></i> No se han adjuntado documentos aún.</p></div>`;
+                }
+
+                contSolicitudes.innerHTML += `
+                    <div style="margin-bottom: 1.25rem; padding: 16px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-card-bg); transition: all 0.2s;">
+                        <div onclick="toggleSolicitudDocs('${containerId}', '${chevronId}')" style="cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; user-select: none;">
+                            <div>
+                                <h5 style="font-weight: bold; margin-bottom: 0.35rem; color: var(--color-text); font-size: 1.15rem; display: flex; align-items: center; gap: 10px;">
+                                    <span>${sol.convocatoriaNombre}</span>
+                                    <i id="${chevronId}" class="fa-solid fa-chevron-down" style="font-size: 0.85rem; color: var(--color-primary); transition: transform 0.3s ease;"></i>
+                                </h5>
+                                ${sol.opcionNombre ? `<div style="margin-bottom: 0.35rem;"><span class="soft-badge soft-badge-secondary"><i class="fa-solid fa-layer-group me-1"></i> Opción: ${sol.opcionNombre}</span></div>` : ''}
+                                <div style="color: var(--color-text-muted); font-size: 0.85rem; font-weight: 500;">
+                                    <span>Iniciado el: ${d}</span> &nbsp;&bull;&nbsp; <span>${sol.modalidadNombre || 'Sin modalidad'}</span>
+                                </div>
+                            </div>
+                            <span class="soft-badge ${badgeSolicitud}">${sol.estado}</span>
+                        </div>
+                        <div id="${containerId}" style="display: none; margin-top: 0.75rem; border-top: 1px dashed var(--color-border); padding-top: 0.75rem;">
+                            ${htmlDocs}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Intercambiar vistas
+        document.getElementById("vistaTablaAspirantes").style.display = "none";
+        document.getElementById("vistaPerfilAspirante").style.display = "block";
+
+    } catch (error) {
+        console.error("Error al cargar expediente:", error);
+        alert("No se pudo cargar el expediente del aspirante.");
+    } finally {
+        ocultarLoader();
+    }
+}
+
+function cerrarExpedienteAspirante() {
+    document.getElementById("vistaPerfilAspirante").style.display = "none";
+    document.getElementById("vistaTablaAspirantes").style.display = "block";
+}
+
+function toggleSolicitudDocs(containerId, chevronId) {
+    const container = document.getElementById(containerId);
+    const chevron = document.getElementById(chevronId);
+    if (!container) return;
+    
+    if (container.style.display === "none" || container.style.display === "") {
+        container.style.display = "block";
+        if (chevron) chevron.style.transform = "rotate(180deg)";
+    } else {
+        container.style.display = "none";
+        if (chevron) chevron.style.transform = "rotate(0deg)";
+    }
+}

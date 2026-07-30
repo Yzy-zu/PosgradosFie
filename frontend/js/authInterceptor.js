@@ -26,9 +26,25 @@ window.fetch = async (...args) => {
             const url = typeof resource === 'string' ? resource : resource?.url || '';
 
             if (!url.includes('/api/auth/login')) {
-                alert("Tu sesión ha expirado o no tienes permisos.");
-                sessionStorage.clear();
-                window.location.href = 'login.html';
+                // Bug 3 Fix: usar SweetAlert2 si está disponible, sin alert() nativo
+                const mensaje = 'Tu sesión ha expirado o no tienes permisos. Serás redirigido al inicio de sesión.';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Sesión Expirada',
+                        text: mensaje,
+                        icon: 'warning',
+                        confirmButtonColor: '#8a1c24',
+                        confirmButtonText: 'Entendido',
+                        allowOutsideClick: false
+                    }).then(() => {
+                        sessionStorage.clear();
+                        window.location.href = 'login.html';
+                    });
+                } else {
+                    console.warn('[Auth] Sesión expirada. Redirigiendo a login...');
+                    sessionStorage.clear();
+                    window.location.href = 'login.html';
+                }
                 return Promise.reject(new Error("Sesión expirada"));
             }
         }

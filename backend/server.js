@@ -53,7 +53,34 @@ app.use('/api/coordinador', require('./routes/coordinador.routes'));
 //app.use('/api/pagos', require('./routes/pagos.routes'));
 app.use('/api/solicitud', require('./routes/solicitud.routes'));
 app.use('/api/documentos', require('./routes/documentos.routes'));
-app.use('/api/requisitos', require('./routes/requisitos.routes'));
+app.use('/api/examen/programacion', require('./routes/programacionExamen.routes'));
+app.use('/api/programacion-examen', require('./routes/programacionExamen.routes'));
+
+// -------------------------------------------------------------------
+// Ruta protegida para servir archivos de solicitud (Bug 10 Fix)
+// Acepta el JWT como query param ?token= para links directos en nueva pestaña
+// -------------------------------------------------------------------
+const jwt = require('jsonwebtoken');
+app.get('/api/files/:filename', (req, res) => {
+    const token = req.query.token || (req.headers['authorization'] && req.headers['authorization'].split(' ')[1]);
+    if (!token) {
+        return res.status(401).json({ mensaje: 'Acceso denegado. Token no proporcionado.' });
+    }
+    try {
+        jwt.verify(token, process.env.JWT_SECRET);
+        const filename = req.params.filename;
+        // Sanear el nombre para evitar path traversal
+        const safeFilename = path.basename(filename);
+        const filePath = path.join(__dirname, 'uploads', safeFilename);
+        res.sendFile(filePath, (err) => {
+            if (err) {
+                return res.status(404).json({ mensaje: 'Archivo no encontrado.' });
+            }
+        });
+    } catch (e) {
+        return res.status(403).json({ mensaje: 'Token inválido o expirado.' });
+    }
+});
 
 
 

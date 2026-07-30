@@ -4,7 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión - Posgrado FIE</title>
+    <title>Portal Aspirantes — Posgrados FIE</title>
+    <meta name="description" content="Portal oficial de aspirantes para los posgrados de la Facultad de Ingeniería Eléctrica.">
+    <link rel="shortcut icon" href="css/favico.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -12,25 +14,30 @@
     <link rel="stylesheet" href="css/style.css">
     <!-- Script de Internacionalización -->
     <script src="js/i18n.js"></script>
-    <!-- Incluir utilidades compartidas -->
-    <script src="js/utils.js"></script>
-    <!-- SweetAlert2 para modales modernos -->
+    <!-- SweetAlert2 para modales modernos (debe cargarse en head para que authInterceptor lo use) -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Preload de imágenes del carrusel: se descargan inmediatamente sin esperar la navegación a #inicio -->
+    <link rel="preload" as="image" href="/files/FIE-Banner-Principal-1.jpg">
+    <link rel="preload" as="image" href="/files/flyer-nuevo-ingreso-26.jpeg">
+    <link rel="preload" as="image" href="/files/flyer-reingreso-2026.jpeg">
 </head>
 
 <body>
 
     <!-- Global Loader (UX) -->
     <div id="global-loader">
-        <div class="spinner"></div>
-        <p style="color:#333; font-weight:bold; font-size:16px;">Cargando información, por favor espera...</p>
+        <img src="css/zorro.png" alt="Zorro Posgrados FIE" class="loader-zorro">
+        <div class="loader-pis-pas">
+            <span class="jump-pis">¡pis</span>
+            <span class="jump-pas">pas!</span>
+        </div>
     </div>
 
     <nav class="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-logo" style="background: transparent;">
                 <img src="css/posgradofie.png" alt="Logo"
-                    style="width: 200%; height: 200%; object-fit: contain; cursor: pointer;" onclick="toggleSidebar()">
+                    style="width: 100%; max-width: 45px; height: auto; object-fit: contain; cursor: pointer;" onclick="toggleSidebar()">
             </div>
             <div style="display: flex; flex-direction: column; justify-content: center;">
                 <span class="text"
@@ -42,10 +49,7 @@
             </div>
         </div>
 
-        <div class="nav-label"
-            style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #4b5563; padding: 10px 15px; margin-top: 10px; font-weight: 800;"
-            data-i18n="sb_label_principal">
-            PRINCIPAL</div>
+
 
         <ul class="side-menu top">
             <li>
@@ -72,16 +76,22 @@
                     <span class="text" data-i18n="sb_documentos">Documentos</span>
                 </a>
             </li>
+            <li id="li-nav-admision" style="display: none;">
+                <a href="#admision" onclick="switchView('admision', this)" id="nav-admision">
+                    <i class="fa-solid fa-clipboard-user"></i>
+                    <span class="text" data-i18n="sb_admision">Admisión</span>
+                </a>
+            </li>
         </ul>
 
         <div class="sidebar-actions">
             <div class="sidebar-settings" onclick="abrirDrawerAjustes()" title="Ajustes" data-i18n-title="sb_ajustes"
                 id="btn-sb-ajustes">
-                <i class="fa-solid fa-gear" style="font-size: 18px;"></i>
+                <i class="fa-solid fa-gear icon-anim-gear" style="font-size: 18px;"></i>
             </div>
             <div class="sidebar-logout" onclick="cerrarSesion()" title="Cerrar Sesión"
                 data-i18n-title="sb_cerrar_sesion" id="btn-sb-logout">
-                <i class="fa-solid fa-right-from-bracket" style="font-size: 18px;"></i>
+                <i class="fa-solid fa-right-from-bracket icon-anim-logout" style="font-size: 18px;"></i>
             </div>
         </div>
     </nav>
@@ -89,8 +99,8 @@
     <main class="main-content" style="position: relative;">
         <header class="topbar-modern">
             <div class="topbar-greeting">
-                <small id="topbar-subtitulo" data-i18n="tb_bienvenido">Bienvenido de vuelta</small>
-                <span id="topbar-nombre-usuario">Cargando...</span>
+                <span id="topbar-nombre-usuario"
+                    style="font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; color: var(--color-text);">Cargando...</span>
             </div>
 
             <!-- Acciones Superiores Derechas -->
@@ -99,7 +109,7 @@
                 <div class="notification-container" onclick="toggleNotificationMenu(event)" style="position: relative;">
                     <div class="notification-trigger"
                         style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; color: var(--color-text); background: var(--color-card-bg);">
-                        <i class="fa-regular fa-bell"></i>
+                        <i class="fa-solid fa-bell icon-anim-bell"></i>
                         <span id="notification-badge" class="notification-badge" style="display: none;"></span>
                     </div>
                     <!-- Mega Dropdown Messages (se mantiene su funcionalidad) -->
@@ -107,13 +117,13 @@
                         <div class="messages-mega-header">
                             <span data-i18n="tb_bandeja">Bandeja de Mensajes</span>
                             <i class="fa-solid fa-check-double" style="cursor: pointer; color: white;"
-                                title="Marcar todos como leídos" onclick="alert('En desarrollo')"></i>
+                                title="Marcar todos como leídos" onclick="Swal.fire({title: 'En desarrollo', text: 'Esta función estará disponible próximamente.', icon: 'info', confirmButtonColor: '#8a1c24'})"></i>
                         </div>
                         <div class="messages-mega-body">
                             <!-- Lista de chats (Izquierda) -->
                             <div class="messages-mega-list" id="notification-list">
                                 <div class="messages-empty-state">
-                                    <i class="fa-solid fa-spinner fa-spin mb-2"></i> <span
+                                    <i class="fa-solid fa-spinner fa-spin" style="margin-bottom: 8px;"></i> <span
                                         data-i18n="tb_cargando">Cargando...</span>
                                 </div>
                             </div>
@@ -130,9 +140,10 @@
                             <!-- Vista vacía de lectura (Derecha) -->
                             <div class="messages-mega-read" id="messages-empty-pane">
                                 <div class="messages-empty-state">
-                                    <i class="fa-regular fa-7x mb-3 opacity-55"></i>
-                                    <p data-i18n="tb_selecciona_msj"><strong>Selecciona un mensaje</strong><br>para ver
-                                        la conversación</p>
+                                    <i class="fa-solid fa-envelope fa-beat-fade"
+                                        style="font-size: 42px; opacity: 0.4; margin-bottom: 12px;"></i>
+                                    <p data-i18n="tb_selecciona_msj" style="margin-bottom: 8px;"><strong>Selecciona un mensaje</strong></p><p>para ver
+                                        su contenido aquí</p>
                                 </div>
                             </div>
                         </div>
@@ -148,47 +159,40 @@
                             id="topbar-iniciales">
                             --
                         </div>
-                        <span id="topbar-first-name" style="font-size: 14px; font-weight: 500; color: var(--color-text);">Perfil</span>
-                        <i class="fa-solid fa-chevron-down" style="font-size: 12px; color: var(--color-text-muted);"></i>
+                        <span id="topbar-first-name"
+                            style="font-size: 14px; font-weight: 500; color: var(--color-text);">Perfil</span>
+                        <i class="fa-solid fa-chevron-down"
+                            style="font-size: 12px; color: var(--color-text-muted);"></i>
                     </div>
                 </div>
             </div> <!-- Flex container end -->
         </header>
 
         <section id="view-inicio" class="view-section active">
-            <!-- Stats Grid -->
-            <div class="stats-grid" id="inicio-stats">
-                <div class="stat-card">
-                    <div class="stat-card-icon" style="background: #eef2ff; color: #6366f1;">
-                        <i class="fa-regular fa-file-lines"></i>
+            <!-- Resumen de Perfil (Diseño Limpio) -->
+            <div class="profile-summary-premium">
+                <div class="summary-metrics">
+                    <div class="metric-item">
+                        <span class="metric-value" id="dash-docs-count">0</span>
+                        <span class="metric-label" data-i18n="dash_docs">Documentos Subidos</span>
+                        <span class="metric-sub" id="dash-docs-sub" style="display: none;">Esperando datos...</span>
                     </div>
-                    <div class="stat-card-info">
-                        <span class="stat-label" data-i18n="dash_docs">Documentos</span>
-                        <span class="stat-value" id="dash-docs-count" style="font-size: 15px; margin-top: 4px;">0 documentos subidos</span>
-                        <span class="stat-sub" id="dash-docs-sub" data-i18n="dash_esperando_datos" style="display: none;">Esperando datos...</span>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item">
+                        <span class="metric-value metric-highlight" id="dash-exp-status">--</span>
+                        <span class="metric-label" data-i18n="dash_expediente">Estado del Expediente</span>
+                        <span class="metric-sub" id="dash-exp-sub" style="display: none;">--</span>
                     </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-icon" style="background: #ecfdf5; color: #10b981;">
-                        <i class="fa-regular fa-folder-open"></i>
-                    </div>
-                    <div class="stat-card-info">
-                        <span class="stat-label" data-i18n="dash_expediente">Expediente</span>
-                        <span class="stat-value" id="dash-exp-status" style="font-size: 15px; margin-top: 4px;">Sin expediente activo</span>
-                        <span class="stat-sub" id="dash-exp-sub" style="display: none;">--</span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-icon" style="background: #fefce8; color: #d97706; border: 1px solid #fde047;">
-                        <i class="fa-solid fa-bullhorn"></i>
-                    </div>
-                    <div class="stat-card-info">
-                        <span class="stat-label" data-i18n="dash_convocatoria">Convocatoria</span>
-                        <span class="stat-value" id="dash-conv-name" style="font-size: 15px; margin-top: 4px;">Ninguna seleccionada</span>
-                        <span class="stat-sub" id="dash-conv-sub" style="display: none;">Maestría FIE</span>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item">
+                        <span class="metric-value" id="dash-conv-name"
+                            style="font-size: 16px; line-height: 1.2; word-wrap: break-word;">Ninguna</span>
+                        <span class="metric-label" data-i18n="dash_convocatoria">Programa</span>
+                        <span class="metric-sub" id="dash-conv-sub" style="display: none;">Maestría FIE</span>
                     </div>
                 </div>
             </div>
+
 
             <!-- Avisos y Comunicados -->
             <div data-i18n="dash_avisos"
@@ -231,10 +235,9 @@
 
         <section id="view-proceso" class="view-section">
             <div style="display: flex; gap: 25px; flex-wrap: wrap;">
-                <div class="card"
+                <div class="premium-panel"
                     style="flex: 1; min-width: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                    <h3 data-i18n="proc_estatus_exp">Estatus del Expediente Digital</h3>
-                    <br>
+                    <h3 data-i18n="proc_estatus_exp" style="margin-bottom: 25px;">Estatus del Expediente Digital</h3>
 
                     <div id="grafica-pastel" class="pie-chart">
                         <div class="pie-center"><span id="txt-porcentaje">0%</span></div>
@@ -248,7 +251,7 @@
                                 data-i18n="proc_rechazados">Rechazados</span> (<strong id="lbl-rechazados">0</strong>)
                         </div>
                         <div class="legend-item"><span class="dot pending"></span> <span
-                                data-i18n="proc_pendientes">Pendientes</span> (<strong id="lbl-pendientes">5</strong>)
+                                data-i18n="proc_pendientes">Pendientes</span> (<strong id="lbl-pendientes">--</strong>)
                         </div>
                     </div>
                 </div>
@@ -263,25 +266,25 @@
             <!-- Contenedor 1: Selección inicial de tarjetas -->
             <div id="seleccion-programa" class="programas-container">
                 <div class="box-programa" onclick="seleccionarPrograma('Maestría en Ingeniería Eléctrica')">
-                    <i class="fa-solid fa-book-bookmark"></i><br><span data-i18n="sb_maestria">Maestría</span>
+                    <i class="fa-solid fa-book-bookmark icon-anim-prog" style="margin-bottom: 8px; display: block;"></i><span
+                        data-i18n="sb_maestria">Maestría</span>
                 </div>
                 <div class="box-programa" onclick="seleccionarPrograma('Doctorado en Ingeniería Eléctrica')">
-                    <i class="fa-solid fa-user-graduate"></i><br><span data-i18n="sb_doctorado">Doctorado</span>
+                    <i class="fa-solid fa-user-graduate icon-anim-prog" style="margin-bottom: 8px; display: block;"></i><span
+                        data-i18n="sb_doctorado">Doctorado</span>
                 </div>
             </div>
 
             <!-- Contenedor 2: Vista detallada del programa seleccionado -->
             <div id="lista-programas-abiertos" class="lista-convocatorias" style="display: none;">
                 <!-- 🚀 NUEVO BOTÓN DE RETORNO INSTITUCIONAL -->
-                <button onclick="regresarAConvocatorias()"
-                    style="background-color: #8a1c24; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 14px; cursor: pointer; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 8px; font-weight: bold; transition: background 0.2s;">
+                <button onclick="regresarAConvocatorias()" class="btn-custom-return">
                     <i class="fa-solid fa-arrow-left"></i> <span data-i18n="conv_cambiar_prog">Cambiar de Programa /
                         Volver</span>
                 </button>
 
-                <p data-i18n="conv_msg_desbloqueo">Has iniciado sesión y desbloqueado los accesos para el registro
+                <p data-i18n="conv_msg_desbloqueo" style="margin-bottom: 20px;">Has iniciado sesión y desbloqueado los accesos para el registro
                     formal al programa seleccionado.</p>
-                <br>
                 <div id="contenedor-tarjetas-programas"></div>
             </div>
         </section>
@@ -291,19 +294,16 @@
             <div id="banner-revision"></div>
 
             <div id="encabezado-documentos"
-                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px;">
+                style="margin-bottom: 20px;">
                 <p data-i18n="doc_msg_completar" style="margin: 0; color: var(--color-text-muted);">Completa cada una de
                     las estaciones requeridas para enviar tu postulación a revisión administrativa.
                 </p>
-                <button type="button" id="btn-cancelar-solicitud" onclick="cancelarSolicitudActual()"
-                    style="background-color: var(--color-danger); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; transition: transform 0.2s;"
-                    onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'"><i
-                        class="fa-solid fa-trash"></i> <span data-i18n="doc_btn_cancelar">Cancelar
-                        Solicitud</span></button>
             </div>
-            <br>
 
-            <div class="stepper-wrapper">
+            <div class="stepper-wrapper" style="margin-top: 55px; margin-bottom: 45px; position: relative;">
+                <!-- Zorro Interactivo -->
+                <img src="css/zorro.png" id="fox-runner" alt="Zorro FIE" style="position: absolute; top: -40px; left: 0; width: 45px; height: auto; z-index: 10; transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transform: translateX(-50%); opacity: 0; pointer-events: none;">
+
                 <div class="step-node active" id="node-0">0<span class="step-label"
                         data-i18n="doc_step_admision">Admisión</span></div>
                 <div class="step-node" id="node-1">1<span class="step-label" id="lbl-step-1"
@@ -316,14 +316,12 @@
             </div>
 
             <div id="panel-estacion-0" class="station-panel active-panel">
-                <div class="card">
-                    <h3><i class="fa-solid fa-circle-info" style="color:#8a1c24;"></i> <span
-                            data-i18n="doc_est0_titulo">Estación 0: Mecanismo de Admisión Seleccionado</span></h3>
-                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est0_desc">De acuerdo
-                        a la normativa institucional, selecciona tu
-                        modalidad de ingreso:</p>
+                <div class="premium-panel">
+                    <h3 data-i18n="doc_est0_titulo">Mecanismo de Admisión</h3>
+                    <p style="margin-bottom: 20px; color: var(--color-text-muted);" data-i18n="doc_est0_desc">Selecciona
+                        la modalidad por la cual deseas ingresar al posgrado:</p>
 
-                    <div id="opciones-admision-maestria" class="modalidad-opciones">
+                    <div id="opciones-admision-maestria" class="file-grid">
                         <!-- Las opciones de admisión se inyectan dinámicamente desde el backend -->
                     </div>
 
@@ -339,77 +337,68 @@
                                 onchange="verificarArchivosEstacion(0)">
                         </div>
 
-                        <!-- Botón para ver más detalles, que será implementado en el futuro -->
-                        <div id="contenedor-detalles-admision" style="margin-top: 10px; display: none;">
-                            <button type="button" class="btn-secondary" style="font-size: 13px;"
-                                onclick="mostrarDetallesAdmision()">
-                                <i class="fa-solid fa-circle-info"></i> <span data-i18n="doc_est0_btn_detalles">Más
-                                    Detalles de esta Modalidad</span>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; flex-wrap: wrap; gap: 15px;">
+                            <button type="button" id="btn-cancelar-solicitud" onclick="cancelarSolicitudActual()" class="btn-custom-cancel" style="margin: 0;">
+                                <i class="fa-solid fa-trash icon-anim-trash"></i> <span data-i18n="doc_btn_cancelar">Cancelar Solicitud</span>
                             </button>
+                            <button type="button" class="btn-primary" id="btn-next-0"
+                                style="width: auto; padding: 12px 30px; margin: 0;" onclick="avanzarEstacion(1)"><span
+                                    data-i18n="doc_est0_btn_confirmar">Confirmar y Continuar</span>
+                                <i class="fa-solid fa-arrow-right icon-anim-next"></i></button>
                         </div>
-                        <br>
-                        <button type="button" class="btn-primary" id="btn-next-0"
-                            style="width: auto; padding: 12px 30px;" onclick="avanzarEstacion(1)"><span
-                                data-i18n="doc_est0_btn_confirmar">Confirmar y Continuar</span>
-                            <i class="fa-solid fa-arrow-right"></i></button>
                     </form>
                 </div>
             </div>
 
             <div id="panel-estacion-1" class="station-panel">
-                <div class="card">
-                    <h3><i class="fa-solid fa-address-card" style="color:#8a1c24;"></i> <span
-                            data-i18n="doc_est1_titulo">Estación 1: Identidad y Datos Generales</span></h3>
-                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est1_desc">Sube los
-                        documentos oficiales de identificación y datos
-                        generales. Los campos con asterisco (*) son obligatorios.</p>
+                <div class="premium-panel">
+                    <h3 data-i18n="doc_est1_titulo">Identidad y Datos Generales</h3>
+                    <p style="margin-bottom: 20px; color: var(--color-text-muted);" data-i18n="doc_est1_desc">Sube los
+                        documentos oficiales requeridos. Asegúrate de que sean legibles y en formato PDF.</p>
                     <form id="form-estacion-1">
                         <div id="grid-dinamico-identidad" class="file-grid">
                             <!-- Los requisitos de IDENTIDAD y GENERAL se inyectan aquí -->
                         </div>
-                        <br>
-                        <div style="display:flex; gap:15px;">
+                        <div style="display:flex; gap:15px; margin-top: 20px;">
                             <button type="button" class="btn-secondary" onclick="cambiarEstacion(0)"><i
                                     class="fa-solid fa-arrow-left"></i> <span
                                     data-i18n="doc_btn_volver">Volver</span></button>
                             <button type="button" class="btn-primary" id="btn-next-1"
                                 style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(2)"><span
                                     data-i18n="doc_btn_siguiente">Siguiente
-                                    Estación</span> <i class="fa-solid fa-arrow-right"></i></button>
+                                    Estación</span> <i class="fa-solid fa-arrow-right icon-anim-next"></i></button>
                         </div>
                     </form>
                 </div>
             </div>
 
             <div id="panel-estacion-2" class="station-panel">
-                <div class="card">
-                    <h3><i class="fa-solid fa-user-tie" style="color:#8a1c24;"></i> <span
-                            data-i18n="doc_est2_titulo">Estación 2: Antecedentes Académicos</span></h3>
-                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est2_desc">Carga tus
+                <div class="premium-panel">
+                    <h3 data-i18n="doc_est2_titulo">Antecedentes Académicos</h3>
+                    <p style="margin-bottom: 20px; color: var(--color-text-muted);" data-i18n="doc_est2_desc">Carga tus
                         títulos, certificados e historial académico oficial.</p>
                     <form id="form-estacion-2">
                         <div id="grid-dinamico-academico" class="file-grid">
                             <!-- Los requisitos ACADEMICOS se inyectan aquí -->
                         </div>
-                        <br>
-                        <div style="display:flex; gap:15px;">
+                        <div style="display:flex; gap:15px; margin-top: 20px;">
                             <button type="button" class="btn-secondary" onclick="cambiarEstacion(1)"><i
                                     class="fa-solid fa-arrow-left"></i> <span
                                     data-i18n="doc_btn_volver">Volver</span></button>
                             <button type="button" class="btn-primary" id="btn-next-2"
                                 style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(3)"><span
                                     data-i18n="doc_btn_siguiente">Siguiente
-                                    Estación</span> <i class="fa-solid fa-arrow-right"></i></button>
+                                    Estación</span> <i class="fa-solid fa-arrow-right icon-anim-next"></i></button>
                         </div>
                     </form>
                 </div>
             </div>
 
             <div id="panel-estacion-3" class="station-panel">
-                <div class="card">
-                    <h3><i class="fa-solid fa-square-poll-vertical" style="color:#8a1c24;"></i> <span
-                            data-i18n="doc_est3_titulo">Estación 3: Evaluación y Cartas</span></h3>
-                    <p style="margin-bottom: 15px; color: var(--color-text-muted);" data-i18n="doc_est3_desc">Sube los
+                <div class="premium-panel">
+                    <h3 data-i18n="doc_est3_titulo">Evaluación y Cartas</h3>
+                    <p style="margin-bottom: 20px; color: var(--color-text-muted);" data-i18n="doc_est3_desc">Sube los
                         resultados de tus certificaciones, exámenes y
                         cartas de recomendación.</p>
                     <form id="form-estacion-3">
@@ -427,19 +416,24 @@
                                     expediente no podré modificarlo después.</span>
                             </label>
                         </div>
-                        <br>
-                        <div id="botones-estacion-3" style="display:flex; gap:15px;">
+                        <div id="botones-estacion-3" style="display:flex; gap:15px; margin-top: 20px;">
                             <button type="button" class="btn-secondary" onclick="cambiarEstacion(2)"><i
                                     class="fa-solid fa-arrow-left"></i> <span
                                     data-i18n="doc_btn_volver">Volver</span></button>
                             <button type="button" class="btn-primary" id="btn-finalizar"
                                 style="width:auto; padding:12px 30px; background-color: var(--color-success);" disabled
                                 onclick="finalizarProcesoEstaciones()"><span data-i18n="doc_btn_concluir">Concluir y
-                                    Enviar Expediente</span> <i class="fa-solid fa-paper-plane"></i></button>
+                                    Enviar Expediente</span> <i
+                                    class="fa-solid fa-paper-plane icon-anim-send"></i></button>
                         </div>
                     </form>
                 </div>
             </div>
+        </section>
+
+        <!-- Nueva Sección Dinámica de Admisión (Examen, Curso, etc.) -->
+        <section id="view-admision" class="view-section">
+            <div id="admision-dinamico-container"></div>
         </section>
 
 
@@ -454,7 +448,7 @@
                     style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; padding: 20px 25px; display: flex; justify-content: space-between; align-items: center;">
                     <h3
                         style="margin: 0; font-size: 18px; display: flex; align-items: center; gap: 10px; font-weight: 600; color: #f8fafc;">
-                        <i class="fa-solid" style="color: var(--color-info);"></i>
+                        <i class="fa-solid fa-magnifying-glass" style="color: var(--color-info);"></i>
                         <span id="modal-doc-titulo" data-i18n="doc_detalles">Detalles del Documento</span>
                     </h3>
                     <button onclick="cerrarModalDoc()"
@@ -503,7 +497,7 @@
         <!-- Settings Drawer -->
         <div id="settings-drawer" class="settings-drawer">
             <div class="drawer-header">
-                <h3><i class="fa-solid fa-gear"></i> <span data-i18n="st_ajustes">Ajustes</span></h3>
+                <h3><i class="fa-solid fa-gear icon-anim-gear"></i> <span data-i18n="st_ajustes">Ajustes</span></h3>
                 <button class="btn-close-drawer" onclick="cerrarDrawerAjustes()"><i
                         class="fa-solid fa-xmark"></i></button>
             </div>
@@ -618,11 +612,6 @@
                 </div>
 
             </div>
-            <div class="drawer-footer">
-                <button class="btn-primary w-100" onclick="cerrarDrawerAjustes()"
-                    style="padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px;">Guardar
-                    Cambios</button>
-            </div>
         </div>
 
     </main>
@@ -630,6 +619,24 @@
     <script src="js/authInterceptor.js"></script>
     <script src="js/utils.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+
+    <!-- Módulos de Workflow Data-Driven -->
+    <script src="js/modulos/documentos/api.js"></script>
+    <script src="js/modulos/documentos/renderer.js"></script>
+    <script src="js/modulos/documentos/index.js"></script>
+
+    <script src="js/modulos/programacionExamen/api.js"></script>
+    <script src="js/modulos/programacionExamen/renderer.js"></script>
+    <script src="js/modulos/programacionExamen/index.js"></script>
+
+    <script src="js/modulos/curso/api.js"></script>
+    <script src="js/modulos/curso/renderer.js"></script>
+    <script src="js/modulos/curso/index.js"></script>
+
+    <script src="js/modulos/promedio/api.js"></script>
+    <script src="js/modulos/promedio/renderer.js"></script>
+    <script src="js/modulos/promedio/index.js"></script>
+
     <script src="js/aspirante.js"></script>
 
 </body>

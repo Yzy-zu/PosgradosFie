@@ -38,11 +38,15 @@ const coordinadorController = {
                     conv.nombre AS programa,
                     c.dictamen,
                     s.estado,
-                    s.estacion_actual
+                    mi.nombre AS modalidadNombre,
+                    ep.nombre AS etapaNombre
                 FROM solicitud s
                 INNER JOIN aspirante a ON s.idAspi = a.id
                 INNER JOIN convocatorias conv ON s.idConvocatoria = conv.id
                 LEFT JOIN coordinacion c ON s.id = c.idSolicitud
+                LEFT JOIN modalidad_ingreso mi ON s.idModalidad = mi.id
+                LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
+                LEFT JOIN modalidad_etapa me ON s.idModalidad = me.modalidad_id AND s.idEtapaActual = me.etapa_id
                 ORDER BY s.id DESC
             `;
             const [aspirantes] = await db.query(query);
@@ -100,11 +104,16 @@ const coordinadorController = {
                     a.*, 
                     u.correo,
                     c.dictamen AS dictamenCoordinacion,
-                    c.observaciones AS observacionesCoordinacion
+                    c.observaciones AS observacionesCoordinacion,
+                    mi.nombre AS modalidadNombre,
+                    ep.nombre AS etapaNombre
                 FROM aspirante a
                 INNER JOIN usuario u ON a.idUsuario = u.id
                 LEFT JOIN solicitud s ON s.idAspi = a.id
                 LEFT JOIN coordinacion c ON s.id = c.idSolicitud
+                LEFT JOIN modalidad_ingreso mi ON s.idModalidad = mi.id
+                LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
+                LEFT JOIN modalidad_etapa me ON s.idModalidad = me.modalidad_id AND s.idEtapaActual = me.etapa_id
                 WHERE a.id = ?
             `, [id]);
 
