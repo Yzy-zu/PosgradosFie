@@ -91,7 +91,12 @@ const getSolicitudActiva = async (req, res) => {
         );
 
         if (resultados.length > 0) {
-            return res.status(200).json({ existe: true, ...resultados[0] });
+            const solicitud = resultados[0];
+            let accionesDisponibles = [];
+            if (solicitud.idEtapaActual) {
+                accionesDisponibles = await WorkflowService.getAccionesDeEtapa(solicitud.idEtapaActual);
+            }
+            return res.status(200).json({ existe: true, accionesDisponibles, ...solicitud });
         } else {
             return res.status(200).json({ existe: false });
         }
@@ -225,6 +230,18 @@ const getEtapasWorkflow = async (req, res) => {
     }
 };
 
+// Obtener acciones correspondientes a la etapa actual de una solicitud
+const getAccionesSolicitud = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const acciones = await WorkflowService.getAccionActual(id);
+        return res.json(acciones);
+    } catch (error) {
+        console.error('Error en getAccionesSolicitud:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
+    }
+};
+
 module.exports = {
     crearSolicitud,
     getSolicitudActiva,
@@ -232,6 +249,7 @@ module.exports = {
     actualizarModalidad,
     enviarExpediente,
     getModalidadesIngreso,
-    getEtapasWorkflow
+    getEtapasWorkflow,
+    getAccionesSolicitud
 };
 

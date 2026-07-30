@@ -54,6 +54,7 @@ app.use('/api/coordinador', require('./routes/coordinador.routes'));
 app.use('/api/solicitud', require('./routes/solicitud.routes'));
 app.use('/api/documentos', require('./routes/documentos.routes'));
 app.use('/api/requisitos', require('./routes/requisitos.routes'));
+app.use('/api/examen/programacion', require('./routes/programacionExamen.routes'));
 
 // -------------------------------------------------------------------
 // Ruta protegida para servir archivos de solicitud (Bug 10 Fix)

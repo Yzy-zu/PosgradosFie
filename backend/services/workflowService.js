@@ -152,6 +152,33 @@ class WorkflowService {
         await db.query('UPDATE solicitud SET estado = ? WHERE id = ?', [nuevoEstado, idSolicitud]);
         return nuevoEstado;
     }
+
+    /**
+     * Obtiene las acciones de negocio vinculadas a una etapa específica.
+     */
+    static async getAccionesDeEtapa(idEtapa) {
+        const [acciones] = await db.query(
+            'SELECT codigo, nombre, descripcion FROM etapa_accion WHERE idEtapa = ? AND activo = 1 ORDER BY id ASC',
+            [idEtapa]
+        );
+        return acciones;
+    }
+
+    /**
+     * Obtiene las acciones de negocio que corresponden a la etapa actual de una solicitud.
+     */
+    static async getAccionActual(idSolicitud) {
+        const [solicitudes] = await db.query(
+            'SELECT idEtapaActual FROM solicitud WHERE id = ?',
+            [idSolicitud]
+        );
+
+        if (solicitudes.length === 0 || !solicitudes[0].idEtapaActual) {
+            return [];
+        }
+
+        return await this.getAccionesDeEtapa(solicitudes[0].idEtapaActual);
+    }
 }
 
 module.exports = WorkflowService;
