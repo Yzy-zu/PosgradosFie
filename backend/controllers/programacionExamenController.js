@@ -1,28 +1,46 @@
-const db = require('../database/db');
+const ProgramacionExamenService = require('../services/programacionExamenService');
 
-// Obtener detalles de la programación de examen para una solicitud específica
-const getProgramacionExamenPorSolicitud = async (req, res) => {
+const programarExamen = async (req, res) => {
     try {
         const { idSolicitud } = req.params;
+        const { fecha, hora, lugar, observaciones } = req.body;
 
-        const [resultados] = await db.query(
-            `SELECT pe.id, pe.idSolicitud, pe.fecha, pe.hora, pe.lugar, pe.observaciones, pe.creadoEn
-             FROM programacion_examen pe
-             WHERE pe.idSolicitud = ?`,
-            [idSolicitud]
-        );
+        if (!fecha || !hora || !lugar) {
+            return res.status(400).json({ success: false, mensaje: 'Fecha, hora y lugar son obligatorios.' });
+        }
 
-        if (resultados.length === 0) {
+        const resultado = await ProgramacionExamenService.programarExamen(idSolicitud, {
+            fecha,
+            hora,
+            lugar,
+            observaciones
+        });
+
+        return res.status(200).json(resultado);
+    } catch (error) {
+        console.error('Error al programar examen:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error interno al programar el examen.' });
+    }
+};
+
+const getProgramacion = async (req, res) => {
+    try {
+        const { idSolicitud } = req.params;
+        const programacion = await ProgramacionExamenService.getProgramacionPorSolicitud(idSolicitud);
+
+        if (!programacion) {
             return res.json({ existe: false, mensaje: 'No hay fecha de examen asignada aún.' });
         }
 
-        return res.json({ existe: true, ...resultados[0] });
+        return res.json({ existe: true, ...programacion });
     } catch (error) {
-        console.error('Error en getProgramacionExamenPorSolicitud:', error);
+        console.error('Error al obtener programación de examen:', error);
         return res.status(500).json({ success: false, mensaje: 'Error al consultar datos de programación de examen.' });
     }
 };
 
 module.exports = {
-    getProgramacionExamenPorSolicitud
+    programarExamen,
+    getProgramacion,
+    getProgramacionExamenPorSolicitud: getProgramacion // Alias para compatibilidad hacia atrás
 };
