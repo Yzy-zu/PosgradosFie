@@ -2,6 +2,73 @@
 let aspirantes = [];
 let idAspiranteActivo = null;
 
+// Registro de Módulos (Data-Driven Architecture)
+const DOCENTE_MODULOS_REGISTRY = {
+    'PROGRAMAR_EXAMEN': typeof moduloProgramacionExamen !== 'undefined' ? moduloProgramacionExamen : null,
+    'HABILITAR_CAPTURA_RESULTADO': typeof moduloProgramacionExamen !== 'undefined' ? moduloProgramacionExamen : null,
+    'CAPTURAR_RESULTADO_EXAMEN': typeof moduloProgramacionExamen !== 'undefined' ? moduloProgramacionExamen : null
+    // Futuros módulos se agregan aquí:
+    // 'EVALUAR_CURSO': moduloCursoPropedeutico,
+    // 'VALIDAR_PROMEDIO': moduloPromedio,
+};
+
+function abrirModalDinamico() {
+    const modal = document.getElementById('modal-docente-dinamico');
+    if (modal) modal.style.display = 'flex';
+}
+
+function cerrarModalDinamico() {
+    const modal = document.getElementById('modal-docente-dinamico');
+    if (modal) modal.style.display = 'none';
+}
+
+// Orquestador Genérico de Solicitudes
+async function abrirWorkflowSolicitud(idSolicitud) {
+    try {
+        const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+        // Usar la ruta del orquestador genérico para obtener la solicitud activa y sus accionesDisponibles
+        const res = await fetch(`/api/solicitud/activa/${idSolicitud}?role=Docente`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!res.ok) throw new Error("No se pudo obtener la solicitud");
+        
+        const solicitudData = await res.json();
+        
+        if (!solicitudData.accionesDisponibles || solicitudData.accionesDisponibles.length === 0) {
+            // alert("No hay acciones disponibles para esta solicitud en este momento.");
+            // Si el docente solo la está viendo en read-only
+            console.log("Solicitud abierta en modo solo lectura (sin acciones).");
+            return;
+        }
+
+        // Limpiar el contenedor del modal
+        const body = document.getElementById('modal-dinamico-body');
+        if (body) body.innerHTML = '';
+
+        // Iterar sobre TODAS las acciones disponibles y ceder el control
+        let modulosEjecutados = 0;
+        solicitudData.accionesDisponibles.forEach(accion => {
+            const moduloRenderer = DOCENTE_MODULOS_REGISTRY[accion.codigo];
+            if (moduloRenderer && typeof moduloRenderer.ejecutar === 'function') {
+                moduloRenderer.ejecutar(solicitudData, accion);
+                modulosEjecutados++;
+            } else {
+                console.warn(`No hay módulo registrado para la acción: ${accion.codigo}`);
+            }
+        });
+
+        if (modulosEjecutados > 0) {
+            abrirModalDinamico();
+        } else {
+            console.log("No se pudo ejecutar ninguna de las acciones disponibles (módulos no registrados).");
+        }
+    } catch (error) {
+        console.error("Error al abrir workflow:", error);
+        alert("Ocurrió un error al cargar la acción.");
+    }
+}
+
 // Conexión Socket.io
 const socket = io();
 socket.on('actualizacionGlobal', () => {
@@ -1114,6 +1181,9 @@ async function cargarTablaExamenesAPI(tipo = 'proximos') {
                 badgePrograma = `<span style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">M</span>`;
             }
             const nombreOpcion = item.opcionNombre || 'Sin especialidad asignada';
+
+            tr.style.cursor = 'pointer';
+            tr.onclick = () => abrirWorkflowSolicitud(item.idAspi);
 
             tr.innerHTML = `
                 <td style="padding: 12px 15px;">

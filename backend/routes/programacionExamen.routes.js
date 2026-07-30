@@ -1,7 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { getProgramacionExamenPorSolicitud } = require('../controllers/programacionExamenController');
+const programacionExamenController = require('../controllers/programacionExamenController');
+const auth = require('../middlewares/auth');
+const validarRol = require('../middlewares/validarRol');
 
-router.get('/solicitud/:idSolicitud', getProgramacionExamenPorSolicitud);
+// Obtener programación de examen para una solicitud
+router.get('/solicitud/:idSolicitud', programacionExamenController.getProgramacion);
+
+// Programar examen (requiere rol de Docente, Coordinador o Administrador)
+router.post('/:idSolicitud', auth, validarRol('DOCENTE', 'COORDINADOR', 'ADMINISTRADOR', 'ADMIN'), programacionExamenController.programarExamen);
 
 module.exports = router;
