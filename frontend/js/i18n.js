@@ -50,6 +50,7 @@ const translations = {
         "st_noti_push": "Notificaciones Push",
         "st_noti_desc": "Avisos dentro de la plataforma",
         "st_btn_guardar": "Guardar Cambios",
+        "sb_admision": "Admision",
 
         // Dynamic Texts (Documents)
         "cat_identidad": "IDENTIDAD Y GENERALES",

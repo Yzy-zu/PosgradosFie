@@ -76,6 +76,12 @@
                     <span class="text" data-i18n="sb_documentos">Documentos</span>
                 </a>
             </li>
+            <li id="li-nav-admision" style="display: none;">
+                <a href="#admision" onclick="switchView('admision', this)" id="nav-admision">
+                    <i class="fa-solid fa-clipboard-user"></i>
+                    <span class="text" data-i18n="sb_admision">Admisión</span>
+                </a>
+            </li>
         </ul>
 
         <div class="sidebar-actions">
@@ -425,6 +431,11 @@
             </div>
         </section>
 
+        <!-- Nueva Sección Dinámica de Admisión (Examen, Curso, etc.) -->
+        <section id="view-admision" class="view-section">
+            <div id="admision-dinamico-container"></div>
+        </section>
+
 
 
 
@@ -608,6 +619,24 @@
     <script src="js/authInterceptor.js"></script>
     <script src="js/utils.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+
+    <!-- Módulos de Workflow Data-Driven -->
+    <script src="js/modulos/documentos/api.js"></script>
+    <script src="js/modulos/documentos/renderer.js"></script>
+    <script src="js/modulos/documentos/index.js"></script>
+
+    <script src="js/modulos/programacionExamen/api.js"></script>
+    <script src="js/modulos/programacionExamen/renderer.js"></script>
+    <script src="js/modulos/programacionExamen/index.js"></script>
+
+    <script src="js/modulos/curso/api.js"></script>
+    <script src="js/modulos/curso/renderer.js"></script>
+    <script src="js/modulos/curso/index.js"></script>
+
+    <script src="js/modulos/promedio/api.js"></script>
+    <script src="js/modulos/promedio/renderer.js"></script>
+    <script src="js/modulos/promedio/index.js"></script>
+
     <script src="js/aspirante.js"></script>
 
 </body>

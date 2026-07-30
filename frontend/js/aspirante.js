@@ -11,20 +11,13 @@ socket.on('actualizacionGlobal', () => {
     const currentHash = window.location.hash;
     if (currentHash === '#inicio' || currentHash === '') {
         if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
-    } else if (currentHash === '#documentos') {
-        // BUG FIX: Only lock the UI if the actual state in DB dictates it or stage is advanced
+    } else if (currentHash === '#documentos' || currentHash === '#admision') {
         if (aspiranteData && aspiranteData.id) {
             fetch(`/api/solicitud/activa/${aspiranteData.id}`)
                 .then(res => res.json())
                 .then(soliData => {
                     if (soliData && soliData.existe) {
-                        const esEtapaAvanzada = soliData.etapaOrden && soliData.etapaOrden >= 2;
-                        if (['EN_REVISION', 'RECHAZADO', 'APROBADO'].includes(soliData.estado) || esEtapaAvanzada) {
-                            if (typeof bloquearInterfazPorRevision === 'function') {
-                                const estadoMostrar = (soliData.estado === 'PENDIENTE' && esEtapaAvanzada) ? 'APROBADO' : soliData.estado;
-                                bloquearInterfazPorRevision(estadoMostrar, soliData);
-                            }
-                        }
+                        hidratarUI(soliData);
                     }
                 })
                 .catch(e => console.error("Error validando estado de solicitud:", e));
@@ -2090,14 +2083,22 @@ async function cargarRequisitosDocumentales(idConvocatoria) {
     }
 }
 
+// Registrador de Módulos por Código de Acción (Data-Driven Architecture)
+const MODULOS_REGISTRY = {
+    'SUBIR_DOCUMENTOS': (soliData, accion) => typeof moduloDocumentos !== 'undefined' && moduloDocumentos.ejecutar(soliData, accion),
+    'PROGRAMAR_EXAMEN': (soliData, accion) => typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutar(soliData, accion),
+    'CAPTURAR_RESULTADO_EXAMEN': (soliData, accion) => typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutar(soliData, accion),
+    'PROGRAMAR_CURSO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
+    'CAPTURAR_RESULTADO_CURSO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
+    'VALIDAR_PROMEDIO': (soliData, accion) => typeof moduloPromedio !== 'undefined' && moduloPromedio.ejecutar(soliData, accion)
+};
+
 /**
  * Hidrata la UI con el progreso guardado en la base de datos (Backend como fuente de verdad)
  */
 function hidratarUI(soliData) {
     currentSolicitudId = soliData.idSolicitud || soliData.id;
     nivelAcademicoSeleccionado = soliData.nivel === 'DOCTORADO' ? 'Doctorado' : 'Maestría';
-    const estacionGuardada = soliData.etapaOrden ? (soliData.etapaOrden - 1) : 0;
-    const esEtapaAvanzada = soliData.etapaOrden && soliData.etapaOrden >= 2;
 
     // Desbloquear navegación
     bloquearConvocatorias(soliData);
@@ -2106,18 +2107,98 @@ function hidratarUI(soliData) {
         navDocumentos.style.display = 'block';
     }
 
+    const navAdmision = document.getElementById('li-nav-admision');
+    if (navAdmision && soliData.etapaOrden && soliData.etapaOrden >= 2) {
+        navAdmision.style.display = 'block';
+    }
+
     // Configurar paneles según el nivel
     configurarPanelesNivel(nivelAcademicoSeleccionado, soliData.idConvocatoria);
 
-    // Mover a la estación donde se quedó (ÚNICAMENTE si sigue en la etapa inicial de subida de documentos)
-    if (!esEtapaAvanzada && estacionGuardada > 0) {
-        cambiarEstacion(Math.min(estacionGuardada, 3));
+    // Validar que existan accionesDisponibles en el workflow
+    if (!soliData.accionesDisponibles || soliData.accionesDisponibles.length === 0) {
+        renderizarErrorWorkflow("No hay acciones disponibles para esta etapa de la solicitud en el sistema.");
+        return;
     }
 
-    // Bloquear la interfaz de subida si está en revisión, rechazado, aprobado o si avanzó de etapa
-    if (['EN_REVISION', 'RECHAZADO', 'APROBADO'].includes(soliData.estado) || esEtapaAvanzada) {
-        const estadoFinal = (soliData.estado === 'PENDIENTE' && esEtapaAvanzada) ? 'APROBADO' : soliData.estado;
-        bloquearInterfazPorRevision(estadoFinal, soliData);
+    // Siempre hidratar el módulo base de Documentos (Expediente) para garantizar el estado de #view-documentos
+    if (typeof moduloDocumentos !== 'undefined') {
+        moduloDocumentos.ejecutar(soliData, { codigo: 'SUBIR_DOCUMENTOS' });
+    }
+
+    // Recorrer TODAS las acciones disponibles y ejecutar su módulo orquestador
+    soliData.accionesDisponibles.forEach(accion => {
+        // Evitar ejecutar doblemente SUBIR_DOCUMENTOS si ya está en la etapa 1
+        if (accion.codigo === 'SUBIR_DOCUMENTOS') return;
+
+        const ejecutarModulo = MODULOS_REGISTRY[accion.codigo];
+        if (typeof ejecutarModulo === 'function') {
+            ejecutarModulo(soliData, accion);
+        } else {
+            console.warn(`No hay módulo registrado para la acción: ${accion.codigo}`);
+        }
+    });
+}
+
+function renderizarErrorWorkflow(mensaje) {
+    const banner = document.getElementById('banner-revision');
+    if (banner) {
+        banner.style.cssText = 'display:block; background:transparent; border:none; box-shadow:none; padding:0; margin-bottom: 20px;';
+        banner.innerHTML = `
+            <div class="status-banner status-rechazado">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div class="status-banner-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div>
+                        <div class="status-banner-title">Error de Workflow</div>
+                        <div class="status-banner-sub">${mensaje}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+async function cargarDocsLecturaAspirante(soliData) {
+    const idAspi = (aspiranteData && aspiranteData.id) ? aspiranteData.id : (soliData.idAspi || soliData.id);
+    if (!idAspi) return;
+
+    try {
+        const res = await fetch(`/api/aspirante/${idAspi}/expediente`);
+        if (!res.ok) return;
+        const dataExp = await res.json();
+        const container = document.getElementById('docs-dinamicos-container');
+        if (container && dataExp.solicitudes && dataExp.solicitudes.length > 0) {
+            const activeSoli = dataExp.solicitudes.find(s => s.id === (soliData.idSolicitud || soliData.id)) || dataExp.solicitudes[0];
+            if (activeSoli && activeSoli.documentos && activeSoli.documentos.length > 0) {
+                container.innerHTML = '';
+                let htmlGrid = '<div class="grid-documentos-revision" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">';
+                activeSoli.documentos.forEach(doc => {
+                    let badgeDoc = '<span class="soft-badge soft-badge-warning">Pendiente</span>';
+                    if (doc.estadoValidacion === 'APROBADO') {
+                        badgeDoc = '<span class="soft-badge soft-badge-success"><i class="fa-solid fa-check me-1"></i> Aprobado</span>';
+                    } else if (doc.estadoValidacion === 'RECHAZADO') {
+                        badgeDoc = '<span class="soft-badge soft-badge-danger"><i class="fa-solid fa-xmark me-1"></i> Rechazado</span>';
+                    }
+                    htmlGrid += `
+                        <div class="card-doc-revision">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="fw-bold mb-0" style="color: var(--color-text);">${doc.requisitoNombre}</h6>
+                                ${badgeDoc}
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top" style="border-color: var(--color-border) !important;">
+                                <a href="/uploads/${doc.rutaArchivo}" target="_blank" class="btn-ver-doc">
+                                    <i class="fa-solid fa-file-pdf me-1"></i> Ver PDF
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                });
+                htmlGrid += '</div>';
+                container.innerHTML = htmlGrid;
+            }
+        }
+    } catch (e) {
+        console.error("Error en cargarDocsLecturaAspirante:", e);
     }
 }
 
