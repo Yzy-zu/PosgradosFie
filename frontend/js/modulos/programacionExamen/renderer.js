@@ -19,7 +19,7 @@ const moduloProgramacionExamenRenderer = {
                         </div>
                         <div style="background: var(--color-bg); padding: 14px; border-radius: 10px; border: 1px solid var(--color-border);">
                             <span style="font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); font-weight: 700; display: block;">Lugar / Enlace</span>
-                            <strong style="font-size: 15px; color: var(--color-text); display: block; margin-top: 4px;">${datosExamen.lugar || 'FIE / Aula Virtual'}</strong>
+                            <strong style="font-size: 15px; color: var(--color-text); display: block; margin-top: 4px;">${datosExamen.lugar || 'Sin asignar'}</strong>
                         </div>
                     </div>
                     ${datosExamen.observaciones ? `

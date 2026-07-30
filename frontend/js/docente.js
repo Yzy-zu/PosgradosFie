@@ -1105,14 +1105,22 @@ async function cargarTablaExamenesAPI(tipo = 'proximos') {
                 fechaStr = `${new Date(item.fecha).toLocaleDateString()}${item.hora ? ' ' + item.hora : ''}`;
             }
 
-            let lugarStr = item.lugar || "FIE / Aula Virtual";
+            let lugarStr = item.lugar || "Sin asignar";
+
+            let badgePrograma = '';
+            if (item.posgradoTipo === 'DOCTORADO') {
+                badgePrograma = `<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">D</span>`;
+            } else if (item.posgradoTipo === 'MAESTRIA') {
+                badgePrograma = `<span style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">M</span>`;
+            }
+            const nombreOpcion = item.opcionNombre || 'Sin especialidad asignada';
 
             tr.innerHTML = `
                 <td style="padding: 12px 15px;">
                     <strong>${item.aspiranteNombre || 'Sin nombre'}</strong><br>
                     <small style="color: var(--color-text-muted);">${item.correo || ''}</small>
                 </td>
-                <td style="padding: 12px 15px;">${item.programa || 'Sin programa'}</td>
+                <td style="padding: 12px 15px;">${badgePrograma} ${nombreOpcion}</td>
                 <td style="padding: 12px 15px;">
                     <i class="fa-regular fa-calendar me-1" style="color: var(--color-primary);"></i> ${fechaStr}
                 </td>
@@ -1150,12 +1158,20 @@ async function cargarTablaPropedeuticoAPI() {
         data.forEach(item => {
             const tr = document.createElement('tr');
             tr.style.borderBottom = '1px solid var(--color-border)';
+            let badgePrograma = '';
+            if (item.posgradoTipo === 'DOCTORADO') {
+                badgePrograma = `<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">D</span>`;
+            } else if (item.posgradoTipo === 'MAESTRIA') {
+                badgePrograma = `<span style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">M</span>`;
+            }
+            const nombreOpcion = item.opcionNombre || 'Sin especialidad asignada';
+
             tr.innerHTML = `
                 <td style="padding: 12px 15px;">
                     <strong>${item.aspiranteNombre || 'Sin nombre'}</strong><br>
                     <small style="color: var(--color-text-muted);">${item.correo || ''}</small>
                 </td>
-                <td style="padding: 12px 15px;">${item.programa || 'Sin programa'}</td>
+                <td style="padding: 12px 15px;">${badgePrograma} ${nombreOpcion}</td>
                 <td style="padding: 12px 15px;">100%</td>
                 <td style="padding: 12px 15px;">
                     <span style="font-weight: 600; color: var(--color-text-muted);">${item.etapaNombre || 'En evaluación'}</span>
@@ -1196,12 +1212,20 @@ async function cargarTablaPromedioAPI() {
         data.forEach(item => {
             const tr = document.createElement('tr');
             tr.style.borderBottom = '1px solid var(--color-border)';
+            let badgePrograma = '';
+            if (item.posgradoTipo === 'DOCTORADO') {
+                badgePrograma = `<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">D</span>`;
+            } else if (item.posgradoTipo === 'MAESTRIA') {
+                badgePrograma = `<span style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">M</span>`;
+            }
+            const nombreOpcion = item.opcionNombre || 'Sin especialidad asignada';
+
             tr.innerHTML = `
                 <td style="padding: 12px 15px;">
                     <strong>${item.aspiranteNombre || 'Sin nombre'}</strong><br>
                     <small style="color: var(--color-text-muted);">${item.correo || ''}</small>
                 </td>
-                <td style="padding: 12px 15px;">${item.programa || 'Sin programa'}</td>
+                <td style="padding: 12px 15px;">${badgePrograma} ${nombreOpcion}</td>
                 <td style="padding: 12px 15px; font-weight: 600;">${item.modalidadNombre}</td>
                 <td style="padding: 12px 15px;">${item.etapaNombre || 'En revisión'}</td>
                 <td style="padding: 12px 15px; text-align: center;">

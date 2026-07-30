@@ -264,6 +264,8 @@ const getSolicitudesPorModalidad = async (req, res) => {
                 u.correo,
                 c.nombre AS programa,
                 c.posgrado_id,
+                p.tipo AS posgradoTipo,
+                op.nombre AS opcionNombre,
                 mi.id AS idModalidad,
                 mi.nombre AS modalidadNombre,
                 ep.id AS idEtapaActual,
@@ -277,6 +279,9 @@ const getSolicitudesPorModalidad = async (req, res) => {
             JOIN aspirante a ON s.idAspi = a.id
             JOIN usuario u ON a.idUsuario = u.id
             JOIN convocatorias c ON s.idConvocatoria = c.id
+            LEFT JOIN posgrado p ON c.posgrado_id = p.id
+            LEFT JOIN convocatoria_opcion co ON s.idConvocatoriaOpcion = co.id
+            LEFT JOIN opcion_posgrado op ON co.opcion_posgrado_id = op.id
             LEFT JOIN modalidad_ingreso mi ON s.idModalidad = mi.id
             LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
             LEFT JOIN programacion_examen pe ON pe.idSolicitud = s.id

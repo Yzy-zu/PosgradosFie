@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarUsuarios();
     cargarConvocatorias(); // Inicializar panel de convocatorias
     cargarPosgradosEnSelect();
+    cargarOpcionesPosgradoGlobal();
     cargarAspirantes();
     cargarNotificacionesAdmin(); // Inicializar panel de notificaciones
     cargarCatalogoRequisitosUI(); // Inicializar catálogo de requisitos
