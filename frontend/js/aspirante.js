@@ -12,14 +12,18 @@ socket.on('actualizacionGlobal', () => {
     if (currentHash === '#inicio' || currentHash === '') {
         if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
     } else if (currentHash === '#documentos') {
-        // BUG FIX: Only lock the UI if the actual state in DB dictates it
+        // BUG FIX: Only lock the UI if the actual state in DB dictates it or stage is advanced
         if (aspiranteData && aspiranteData.id) {
             fetch(`/api/solicitud/activa/${aspiranteData.id}`)
                 .then(res => res.json())
                 .then(soliData => {
-                    if (soliData && soliData.existe && ['EN_REVISION', 'RECHAZADO', 'APROBADO'].includes(soliData.estado)) {
-                        if (typeof bloquearInterfazPorRevision === 'function') {
-                            bloquearInterfazPorRevision(soliData.estado);
+                    if (soliData && soliData.existe) {
+                        const esEtapaAvanzada = soliData.etapaOrden && soliData.etapaOrden >= 2;
+                        if (['EN_REVISION', 'RECHAZADO', 'APROBADO'].includes(soliData.estado) || esEtapaAvanzada) {
+                            if (typeof bloquearInterfazPorRevision === 'function') {
+                                const estadoMostrar = (soliData.estado === 'PENDIENTE' && esEtapaAvanzada) ? 'APROBADO' : soliData.estado;
+                                bloquearInterfazPorRevision(estadoMostrar, soliData);
+                            }
                         }
                     }
                 })
@@ -1103,7 +1107,7 @@ function verificarArchivosEstacion(estacion) {
 }
 
 // Bloquear toda la UI de carga cuando el expediente esté bajo revisión o con dictamen
-async function bloquearInterfazPorRevision(estadoActual = 'EN_REVISION') {
+async function bloquearInterfazPorRevision(estadoActual = 'EN_REVISION', soliData = null) {
     const banner = document.getElementById('banner-revision');
     const encabezado = document.getElementById('encabezado-documentos');
 
@@ -1123,9 +1127,10 @@ async function bloquearInterfazPorRevision(estadoActual = 'EN_REVISION') {
             badge = 'RECHAZADO';
             statusKey = 'rechazado';
             iconClass = 'fa-solid fa-circle-xmark';
-        } else if (estadoActual === 'APROBADO') {
-            textBanner = 'Expediente Aprobado';
-            textSub = 'Felicidades, tu expediente ha sido validado satisfactoriamente';
+        } else if (estadoActual === 'APROBADO' || (soliData && soliData.etapaOrden && soliData.etapaOrden >= 2)) {
+            textBanner = 'Documentación Aprobada';
+            const nombreEtapa = (soliData && soliData.etapaNombre) ? soliData.etapaNombre : 'Proceso de Admisión';
+            textSub = `Tus documentos han sido aprobados satisfactoriamente. Etapa actual: <strong>${nombreEtapa}</strong>`;
             badge = 'APROBADO';
             statusKey = 'aprobado';
             iconClass = 'fa-solid fa-circle-check';
@@ -2092,6 +2097,7 @@ function hidratarUI(soliData) {
     currentSolicitudId = soliData.idSolicitud || soliData.id;
     nivelAcademicoSeleccionado = soliData.nivel === 'DOCTORADO' ? 'Doctorado' : 'Maestría';
     const estacionGuardada = soliData.etapaOrden ? (soliData.etapaOrden - 1) : 0;
+    const esEtapaAvanzada = soliData.etapaOrden && soliData.etapaOrden >= 2;
 
     // Desbloquear navegación
     bloquearConvocatorias(soliData);
@@ -2103,14 +2109,15 @@ function hidratarUI(soliData) {
     // Configurar paneles según el nivel
     configurarPanelesNivel(nivelAcademicoSeleccionado, soliData.idConvocatoria);
 
-    // Mover a la estación donde se quedó
-    if (estacionGuardada > 0) {
+    // Mover a la estación donde se quedó (ÚNICAMENTE si sigue en la etapa inicial de subida de documentos)
+    if (!esEtapaAvanzada && estacionGuardada > 0) {
         cambiarEstacion(Math.min(estacionGuardada, 3));
     }
 
-    // Bloquear si está en revisión, rechazado o aprobado
-    if (['EN_REVISION', 'RECHAZADO', 'APROBADO'].includes(soliData.estado)) {
-        bloquearInterfazPorRevision(soliData.estado);
+    // Bloquear la interfaz de subida si está en revisión, rechazado, aprobado o si avanzó de etapa
+    if (['EN_REVISION', 'RECHAZADO', 'APROBADO'].includes(soliData.estado) || esEtapaAvanzada) {
+        const estadoFinal = (soliData.estado === 'PENDIENTE' && esEtapaAvanzada) ? 'APROBADO' : soliData.estado;
+        bloquearInterfazPorRevision(estadoFinal, soliData);
     }
 }
 

@@ -6,8 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Docente — FIE Posgrados</title>
     <link rel="shortcut icon" href="css/favico.png">
+
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
     <link rel="stylesheet" href="css/style.css">
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="js/authInterceptor.js"></script>
     <script src="js/utils.js"></script>
@@ -53,9 +60,33 @@
                 </a>
             </li>
             <li>
+                <a href="#expedientes" onclick="switchView('expedientes')" id="nav-expedientes">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span class="text" data-i18n="sb_expedientes">Expedientes</span>
+                </a>
+            </li>
+            <li>
                 <a href="#aspirantes" onclick="switchView('aspirantes')" id="nav-aspirantes">
-                    <i class="fa-solid fa-id-card-clip"></i>
+                    <i class="fa-solid fa-users"></i>
                     <span class="text" data-i18n="sb_aspirantes">Aspirantes</span>
+                </a>
+            </li>
+            <li>
+                <a href="#examenes" onclick="switchView('examenes')" id="nav-examenes">
+                    <i class="fa-solid fa-file-pen"></i>
+                    <span class="text" data-i18n="sb_examenes">Exámenes</span>
+                </a>
+            </li>
+            <li>
+                <a href="#curso-propedeutico" onclick="switchView('curso-propedeutico')" id="nav-curso-propedeutico">
+                    <i class="fa-solid fa-book-open-reader"></i>
+                    <span class="text" data-i18n="sb_curso_propedeutico">Curso Propedéutico</span>
+                </a>
+            </li>
+            <li>
+                <a href="#promedio" onclick="switchView('promedio')" id="nav-promedio">
+                    <i class="fa-solid fa-calculator"></i>
+                    <span class="text" data-i18n="sb_promedio">Promedio</span>
                 </a>
             </li>
         </ul>
@@ -73,7 +104,6 @@
     <main class="main-content" style="position: relative;">
         <header class="topbar-modern">
             <div class="topbar-greeting">
-                <small id="topbar-subtitulo" data-i18n="tb_bienvenido">Bienvenido de vuelta</small>
                 <span id="topbar-nombre-usuario" data-i18n="docente_revisor">Docente</span>
             </div>
 
@@ -142,7 +172,7 @@
 
         <section id="view-inicio" class="view-section active">
             <div class="stats-grid" id="inicio-stats" style="margin-bottom: 30px;">
-                <div class="stat-card" onclick="switchView('aspirantes')" style="cursor:pointer;">
+                <div class="stat-card" onclick="switchView('expedientes')" style="cursor:pointer;">
                     <div class="stat-card-icon" style="background: #e0f2fe; color: #0284c7;">
                         <i class="fa-solid fa-users icon-anim-stat"></i>
                     </div>
@@ -153,7 +183,7 @@
                     </div>
                 </div>
 
-                <div class="stat-card" onclick="switchView('aspirantes')" style="cursor:pointer;">
+                <div class="stat-card" onclick="switchView('expedientes')" style="cursor:pointer;">
                     <div class="stat-card-icon" style="background: #ecfdf5; color: #10b981;">
                         <i class="fa-solid fa-circle-check icon-anim-stat"></i>
                     </div>
@@ -164,7 +194,7 @@
                     </div>
                 </div>
 
-                <div class="stat-card" onclick="switchView('aspirantes')" style="cursor:pointer;">
+                <div class="stat-card" onclick="switchView('expedientes')" style="cursor:pointer;">
                     <div class="stat-card-icon" style="background: #fef2f2; color: #ef4444;">
                         <i class="fa-solid fa-circle-exclamation icon-anim-stat"></i>
                     </div>
@@ -176,7 +206,7 @@
                     </div>
                 </div>
 
-                <div class="stat-card" onclick="switchView('aspirantes')" style="cursor:pointer;">
+                <div class="stat-card" onclick="switchView('expedientes')" style="cursor:pointer;">
                     <div class="stat-card-icon" style="background: #fffbeb; color: #f59e0b;">
                         <i class="fa-solid fa-clock icon-anim-stat"></i>
                     </div>
@@ -216,9 +246,7 @@
             </div>
         </section>
 
-        <section id="view-aspirantes" class="view-section">
-            <h2><i class="fa-solid fa-folder-open"></i> <span data-i18n="docente_revision_expedientes">Revisión y
-                    Expedientes</span></h2>
+        <section id="view-expedientes" class="view-section">
             <div class="aspirantes-layout">
                 <div class="aspirantes-sidebar"
                     style="background: var(--color-card-bg); border-color: var(--color-border);">
@@ -309,6 +337,230 @@
 
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: ASPIRANTES -->
+        <section id="view-aspirantes" class="view-section">
+            <!-- VISTA DE TABLA -->
+            <div id="vistaTablaAspirantes">
+                <div class="card"
+                    style="padding: 20px; overflow-x: auto; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
+                    <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
+                        <thead>
+                            <tr
+                                style="border-bottom: 2px solid var(--color-border); font-size: 13px; text-transform: uppercase; color: var(--color-text-muted);">
+                                <th style="padding: 12px 15px;">Aspirante</th>
+                                <th style="padding: 12px 15px;">Posgrado</th>
+                                <th style="padding: 12px 15px; text-align: center;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaAspirantes"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VISTA DE PERFIL (Expediente Clínico / Académico) -->
+            <div id="vistaPerfilAspirante" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <button class="btn-secondary shadow-sm" onclick="cerrarExpedienteAspirante()"
+                        style="border-radius: 8px; font-weight: 600; padding: 8px 16px; border: 1px solid var(--color-border); background: var(--color-card-bg); color: var(--color-text); cursor: pointer;">
+                        <i class="fa-solid fa-arrow-left me-2"></i> Volver a la lista
+                    </button>
+                    <button class="btn-primary shadow-sm" id="btnVerExpedienteCompleto"
+                        style="display: none; border-radius: 8px; font-weight: 600; padding: 8px 16px; background: var(--color-primary); color: white; border: none; cursor: pointer;">
+                        <i class="fa-solid fa-file-pdf me-2"></i> Expediente
+                    </button>
+                </div>
+
+                <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                    <!-- Columna Izquierda: Perfil Premium -->
+                    <div style="flex: 1 1 300px; max-width: 400px;">
+                        <div class="profile-card-premium" style="height: 100%;">
+                            <!-- Avatar con iniciales dinámico -->
+                            <div id="perfil_avatar" class="avatar-initials mb-3">
+                                --
+                            </div>
+
+                            <h4 class="mb-1 fw-bold" style="color: var(--color-text);" id="perfil_nombreCompleto">
+                                Cargando...</h4>
+                            <p class="text-muted mb-3" style="font-size: 0.9rem;" id="perfil_correo">correo@ejemplo.com
+                            </p>
+
+                            <span class="soft-badge soft-badge-success mb-4 d-inline-block"
+                                id="perfil_estado">Activo</span>
+
+                            <hr style="border-color: var(--color-border); margin: 20px 0;">
+
+                            <div class="text-start px-2" style="overflow-x: hidden; word-wrap: break-word;">
+                                <!-- Datos Personales -->
+                                <h6 class="text-muted small fw-bold mb-3 border-bottom pb-1"
+                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">
+                                    Datos Personales</h6>
+                                <div class="mb-3">
+                                    <div class="profile-label-premium">CURP</div>
+                                    <div class="profile-value-premium" id="perfil_curp">-</div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="profile-label-premium">TELÉFONO</div>
+                                    <div class="profile-value-premium" id="perfil_telefono">-</div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="profile-label-premium">NACIMIENTO</div>
+                                    <div class="profile-value-premium" id="perfil_nacimiento">-</div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="profile-label-premium">ESTADO CIVIL</div>
+                                    <div class="profile-value-premium" id="perfil_estadoCivil">-</div>
+                                </div>
+                                <div class="mb-4">
+                                    <div class="profile-label-premium">DIRECCIÓN</div>
+                                    <div class="profile-value-premium" id="perfil_direccion" style="line-height: 1.4;">-
+                                    </div>
+                                </div>
+
+                                <!-- Datos Académicos -->
+                                <h6 class="text-muted small fw-bold mb-3 border-bottom pb-1"
+                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">
+                                    Antecedentes Académicos</h6>
+                                <div class="mb-3">
+                                    <div class="profile-label-premium">LICENCIATURA</div>
+                                    <div class="profile-value-premium" id="perfil_licenciatura">-</div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="profile-label-premium">INSTITUCIÓN</div>
+                                    <div class="profile-value-premium" id="perfil_institucionLicenciatura"
+                                        style="line-height: 1.4;">-</div>
+                                </div>
+                                <div style="display: flex; flex-wrap: wrap; margin-left: -10px; margin-right: -10px;">
+                                    <div
+                                        style="flex: 0 0 50%; padding-left: 10px; padding-right: 10px; margin-bottom: 16px;">
+                                        <div class="profile-label-premium">EGRESO</div>
+                                        <div class="profile-value-premium" id="perfil_fechaEgreso">-</div>
+                                    </div>
+                                    <div
+                                        style="flex: 0 0 50%; padding-left: 10px; padding-right: 10px; margin-bottom: 16px;">
+                                        <div class="profile-label-premium">TITULACIÓN</div>
+                                        <div class="profile-value-premium" id="perfil_fechaTitulacion">-</div>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <div class="profile-label-premium">PROMEDIO</div>
+                                    <div class="profile-value-premium" id="perfil_promedio">-</div>
+                                </div>
+
+                                <!-- Otros Datos -->
+                                <h6 class="text-muted small fw-bold mb-3 border-bottom pb-1"
+                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">
+                                    Ocupación / Otros</h6>
+                                <div class="mb-3">
+                                    <div class="profile-label-premium">OCUPACIÓN</div>
+                                    <div class="profile-value-premium" id="perfil_ocupacion">-</div>
+                                </div>
+                                <div class="mb-1">
+                                    <div class="profile-label-premium">OTROS ESTUDIOS</div>
+                                    <div class="profile-value-premium" id="perfil_otrosEstudios"
+                                        style="line-height: 1.4;">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha: Solicitudes y Documentos -->
+                    <div style="flex: 2 1 500px;">
+                        <div class="card shadow-sm"
+                            style="height: 100%; border-radius: 16px; background: var(--color-card-bg); border: 1px solid var(--color-border);">
+                            <div style="padding: 24px 24px 12px 24px; border-bottom: 1px solid var(--color-border);">
+                                <h5
+                                    style="margin: 0; font-weight: bold; color: var(--color-text); font-size: 18px; letter-spacing: -0.5px;">
+                                    Trámites de Admisión</h5>
+                            </div>
+                            <div style="padding: 24px;" id="contenedorSolicitudes">
+                                <div style="text-align: center; padding: 40px 0;">
+                                    <i class="fa-solid fa-spinner fa-spin text-primary" style="font-size: 24px;"></i>
+                                    <p style="color: var(--color-text-muted); margin-top: 10px;">Cargando expediente...
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: EXÁMENES -->
+        <section id="view-examenes" class="view-section">
+            <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                <button id="tab-examenes-en-proceso" onclick="switchView('examenes-en-proceso')"
+                    style="padding: 8px 16px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-card-bg); color: var(--color-text-muted); font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s;">
+                    <i class="fa-solid fa-calendar-check me-1"></i> En Examen
+                </button>
+                <button id="tab-examenes-proximos" onclick="switchView('examenes-proximos')"
+                    style="padding: 8px 16px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-primary); color: white; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s;">
+                    <i class="fa-regular fa-clock me-1"></i> Próximos a Examen
+                </button>
+            </div>
+            <div class="card"
+                style="padding: 20px; overflow-x: auto; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
+                <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
+                    <thead>
+                        <tr
+                            style="border-bottom: 2px solid var(--color-border); font-size: 13px; text-transform: uppercase; color: var(--color-text-muted);">
+                            <th style="padding: 12px 15px;">Aspirante</th>
+                            <th style="padding: 12px 15px;">Programa</th>
+                            <th style="padding: 12px 15px;">Fecha / Hora</th>
+                            <th style="padding: 12px 15px;">Lugar / Enlace</th>
+                            <th style="padding: 12px 15px; text-align: center;">Estado Examen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-examenes-body">
+                        <!-- Filas inyectadas por JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: CURSO PROPEDÉUTICO -->
+        <section id="view-curso-propedeutico" class="view-section">
+            <div class="card"
+                style="padding: 20px; overflow-x: auto; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
+                <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
+                    <thead>
+                        <tr
+                            style="border-bottom: 2px solid var(--color-border); font-size: 13px; text-transform: uppercase; color: var(--color-text-muted);">
+                            <th style="padding: 12px 15px;">Aspirante</th>
+                            <th style="padding: 12px 15px;">Programa</th>
+                            <th style="padding: 12px 15px;">Asistencia</th>
+                            <th style="padding: 12px 15px;">Calificación Propedéutico</th>
+                            <th style="padding: 12px 15px; text-align: center;">Estatus</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-propedeutico-body">
+                        <!-- Filas inyectadas por JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: PROMEDIO -->
+        <section id="view-promedio" class="view-section">
+            <div class="card"
+                style="padding: 20px; overflow-x: auto; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
+                <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
+                    <thead>
+                        <tr
+                            style="border-bottom: 2px solid var(--color-border); font-size: 13px; text-transform: uppercase; color: var(--color-text-muted);">
+                            <th style="padding: 12px 15px;">Aspirante</th>
+                            <th style="padding: 12px 15px;">Programa</th>
+                            <th style="padding: 12px 15px;">Promedio Licenciatura</th>
+                            <th style="padding: 12px 15px;">Promedio Mínimo Requerido</th>
+                            <th style="padding: 12px 15px; text-align: center;">Dictamen Promedio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-promedio-body">
+                        <!-- Filas inyectadas por JS -->
+                    </tbody>
+                </table>
             </div>
         </section>
 

@@ -3,7 +3,11 @@ const translations = {
         // Sidebar
         "sb_label_principal": "PRINCIPAL",
         "sb_inicio": "Inicio",
+        "sb_expedientes": "Expedientes",
         "sb_aspirantes": "Aspirantes",
+        "sb_examenes": "Exámenes",
+        "sb_curso_propedeutico": "Curso",
+        "sb_promedio": "Promedio",
         "sb_proceso": "Proceso",
         "sb_convocatorias": "Convocatorias",
         "sb_documentos": "Documentos",
@@ -213,13 +217,14 @@ const translations = {
         "prof_fecha_registro": "Fecha Registro",
         "det_nivel": "Nivel",
         "docente_archivos": "Archivos del Aspirante",
-        "docente_revisa_doc": "Revisa el documento haciendo clic en 'Ver'.",
+        "docente_revisa_doc": "Revisa el documento haciendo click en el",
         "tb_marcar_leidos": "Marcar todos como leídos",
         "docente_sin_nombre": "Sin nombre",
         "docente_sin_solicitud": "Sin Solicitud",
         "docente_sin_correo": "Sin correo",
         "docente_por_asignar": "Por asignar",
-        "docente_revision_expedientes": "Revisión y Expedientes",
+        "docente_revision_expedientes": "Expedientes",
+        "docente_instruccion_click": "Haz clic en un registro de la lista de la izquierda",
 
         // DB Requirements
         "Acta Nacimiento": "Acta Nacimiento",
@@ -246,7 +251,11 @@ const translations = {
         // Sidebar
         "sb_label_principal": "MAIN",
         "sb_inicio": "Dashboard",
+        "sb_expedientes": "Files",
         "sb_aspirantes": "Applicants",
+        "sb_examenes": "Exams",
+        "sb_curso_propedeutico": "Preparatory Course",
+        "sb_promedio": "GPA / Average",
         "sb_proceso": "Process",
         "sb_convocatorias": "Admissions",
         "sb_documentos": "Documents",
@@ -463,6 +472,7 @@ const translations = {
         "docente_sin_correo": "No email",
         "docente_por_asignar": "Unassigned",
         "docente_revision_expedientes": "File Review & Evaluation",
+        "docente_instruccion_click": "Click on a record in the list on the left",
 
         // DB Requirements
         "Acta Nacimiento": "Birth Certificate",

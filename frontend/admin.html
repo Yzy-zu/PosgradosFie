@@ -132,7 +132,8 @@
         <header class="topbar-modern">
             <div class="topbar-greeting">
                 <small id="topbar-subtitulo" data-i18n="tb_bienvenido">Bienvenido al sistema</small>
-                <span id="seccion-titulo" style="font-size: 22px; font-weight: 800; color: var(--color-text);">Panel de Administración</span>
+                <span id="seccion-titulo" style="font-size: 22px; font-weight: 800; color: var(--color-text);">Panel de
+                    Administración</span>
             </div>
 
             <!-- Acciones Superiores Derechas -->
@@ -148,7 +149,8 @@
                         <div class="messages-mega-header">
                             <span data-i18n="tb_bandeja">Bandeja de Mensajes</span>
                         </div>
-                        <div class="messages-mega-body" style="min-height: 100px; padding: 20px; text-align: center; color: var(--color-text-muted);">
+                        <div class="messages-mega-body"
+                            style="min-height: 100px; padding: 20px; text-align: center; color: var(--color-text-muted);">
                             <p>Usa la sección "Notificaciones" de la barra lateral para gestionar los avisos.</p>
                         </div>
                     </div>
@@ -172,130 +174,132 @@
 
         <p class="text-muted mb-4 px-4 pt-3" id="seccion-descripcion">Bienvenido al sistema de gestión de Posgrados.</p>
 
-            <!-- SECCIÓN: DASHBOARD -->
-            <div id="seccion-dashboard" class="view-section">
-                <div class="stats-grid">
-                    <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#usuarios'">
-                        <div class="stat-card-icon" style="background: #eef2ff; color: #6366f1;">
-                            <i class="fa-solid fa-users icon-anim-stat"></i>
-                        </div>
-                        <div class="stat-card-info">
-                            <span class="stat-label">Usuarios</span>
-                            <span class="stat-value" id="totalUsuarios">0</span>
-                        </div>
+        <!-- SECCIÓN: DASHBOARD -->
+        <div id="seccion-dashboard" class="view-section">
+            <div class="stats-grid">
+                <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#usuarios'">
+                    <div class="stat-card-icon" style="background: #eef2ff; color: #6366f1;">
+                        <i class="fa-solid fa-users icon-anim-stat"></i>
                     </div>
-
-                    <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#posgrados'">
-                        <div class="stat-card-icon" style="background: #ecfdf5; color: #10b981;">
-                            <i class="fa-solid fa-graduation-cap icon-anim-stat"></i>
-                        </div>
-                        <div class="stat-card-info">
-                            <span class="stat-label">Posgrados</span>
-                            <span class="stat-value" id="totalPosgrados">0</span>
-                        </div>
+                    <div class="stat-card-info">
+                        <span class="stat-label">Usuarios</span>
+                        <span class="stat-value" id="totalUsuarios">0</span>
                     </div>
+                </div>
 
-                    <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#aspirantes'">
-                        <div class="stat-card-icon" style="background: #fffbeb; color: #f59e0b;">
-                            <i class="fa-solid fa-address-card icon-anim-stat"></i>
-                        </div>
-                        <div class="stat-card-info">
-                            <span class="stat-label">Aspirantes</span>
-                            <span class="stat-value" id="totalAspirantes">0</span>
-                        </div>
+                <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#posgrados'">
+                    <div class="stat-card-icon" style="background: #ecfdf5; color: #10b981;">
+                        <i class="fa-solid fa-graduation-cap icon-anim-stat"></i>
                     </div>
-
-                    <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#solicitudes'">
-                        <div class="stat-card-icon" style="background: #fef2f2; color: #ef4444;">
-                            <i class="fa-solid fa-file-contract icon-anim-stat"></i>
-                        </div>
-                        <div class="stat-card-info">
-                            <span class="stat-label">Solicitudes</span>
-                            <span class="stat-value" id="totalSolicitudes">0</span>
-                        </div>
+                    <div class="stat-card-info">
+                        <span class="stat-label">Posgrados</span>
+                        <span class="stat-value" id="totalPosgrados">0</span>
                     </div>
+                </div>
 
-                    <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#convocatorias'">
-                        <div class="stat-card-icon" style="background: #fdf4ff; color: #d946ef;">
-                            <i class="fa-solid fa-bullhorn icon-anim-stat"></i>
-                        </div>
-                        <div class="stat-card-info">
-                            <span class="stat-label">Convocatorias</span>
-                            <span class="stat-value" id="totalConvocatorias">0</span>
-                        </div>
+                <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#aspirantes'">
+                    <div class="stat-card-icon" style="background: #fffbeb; color: #f59e0b;">
+                        <i class="fa-solid fa-address-card icon-anim-stat"></i>
                     </div>
+                    <div class="stat-card-info">
+                        <span class="stat-label">Aspirantes</span>
+                        <span class="stat-value" id="totalAspirantes">0</span>
+                    </div>
+                </div>
 
-                    <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#documentos'">
-                        <div class="stat-card-icon" style="background: #fff7ed; color: #f97316;">
-                            <i class="fa-solid fa-folder-open icon-anim-stat"></i>
-                        </div>
-                        <div class="stat-card-info">
-                            <span class="stat-label">Documentos</span>
-                            <span class="stat-value" id="totalDocumentos">0</span>
-                        </div>
+                <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#solicitudes'">
+                    <div class="stat-card-icon" style="background: #fef2f2; color: #ef4444;">
+                        <i class="fa-solid fa-file-contract icon-anim-stat"></i>
+                    </div>
+                    <div class="stat-card-info">
+                        <span class="stat-label">Solicitudes</span>
+                        <span class="stat-value" id="totalSolicitudes">0</span>
+                    </div>
+                </div>
+
+                <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#convocatorias'">
+                    <div class="stat-card-icon" style="background: #fdf4ff; color: #d946ef;">
+                        <i class="fa-solid fa-bullhorn icon-anim-stat"></i>
+                    </div>
+                    <div class="stat-card-info">
+                        <span class="stat-label">Convocatorias</span>
+                        <span class="stat-value" id="totalConvocatorias">0</span>
+                    </div>
+                </div>
+
+                <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#documentos'">
+                    <div class="stat-card-icon" style="background: #fff7ed; color: #f97316;">
+                        <i class="fa-solid fa-folder-open icon-anim-stat"></i>
+                    </div>
+                    <div class="stat-card-info">
+                        <span class="stat-label">Documentos</span>
+                        <span class="stat-value" id="totalDocumentos">0</span>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- SECCIÓN: USUARIOS -->
-            <div id="seccion-usuarios" class="view-section">
-                <div class="card mt-2 shadow-sm" style="flex:auto;">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0" style="color: var(--color-text);"><i class="fa-solid fa-list-ul"></i> Usuarios registrados
-                        </h5>
-                        <button class="btn btn-primary" style="width:auto; padding: 8px 15px;" data-bs-toggle="modal"
-                            data-bs-target="#modalUsuario">
-                            <i class="fa-solid fa-plus"></i> Nuevo Usuario
-                        </button>
-                    </div>
+        <!-- SECCIÓN: USUARIOS -->
+        <div id="seccion-usuarios" class="view-section">
+            <div class="card mt-2 shadow-sm" style="flex:auto;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0" style="color: var(--color-text);"><i class="fa-solid fa-list-ul"></i> Usuarios
+                        registrados
+                    </h5>
+                    <button class="btn btn-primary" style="width:auto; padding: 8px 15px;" data-bs-toggle="modal"
+                        data-bs-target="#modalUsuario">
+                        <i class="fa-solid fa-plus"></i> Nuevo Usuario
+                    </button>
+                </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Usuario / Correo</th>
-                                    <th>Rol</th>
-                                    <th>Estado</th>
-                                    <th class="text-end">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tablaUsuarios"></tbody>
-                        </table>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Usuario / Correo</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th class="text-end">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaUsuarios"></tbody>
+                    </table>
                 </div>
             </div>
+        </div>
 
-            <!-- OTRAS SECCIONES (Cascarones) -->
-            <div id="seccion-posgrados" class="view-section">
-                <div class="card mt-2 shadow-sm" style="flex:auto;">
-                    <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i> ola</p>
+        <!-- OTRAS SECCIONES (Cascarones) -->
+        <div id="seccion-posgrados" class="view-section">
+            <div class="card mt-2 shadow-sm" style="flex:auto;">
+                <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i> ola</p>
+            </div>
+        </div>
+
+        <div id="seccion-convocatorias" class="view-section">
+            <div class="card mt-2 shadow-sm" style="flex:auto;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0" style="color: var(--color-text);"><i class="fa-solid fa-bullhorn"></i>
+                        Convocatorias</h5>
+                    <button class="btn btn-primary" style="width:auto; padding: 8px 15px;"
+                        onclick="crearConvocatoria()">
+                        <i class="fa-solid fa-plus"></i> Nueva Convocatoria
+                    </button>
+                </div>
+                <!-- Grid donde se dibujarán las tarjetas de cada convocatoria -->
+                <div id="contenedorConvocatorias" class="dashboard-grid mt-3">
+                    <!-- Las tarjetas se inyectarán con JS -->
                 </div>
             </div>
-
-            <div id="seccion-convocatorias" class="view-section">
-                <div class="card mt-2 shadow-sm" style="flex:auto;">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0" style="color: var(--color-text);"><i class="fa-solid fa-bullhorn"></i>
-                            Convocatorias</h5>
-                        <button class="btn btn-primary" style="width:auto; padding: 8px 15px;"
-                            onclick="crearConvocatoria()">
-                            <i class="fa-solid fa-plus"></i> Nueva Convocatoria
-                        </button>
-                    </div>
-                    <!-- Grid donde se dibujarán las tarjetas de cada convocatoria -->
-                    <div id="contenedorConvocatorias" class="dashboard-grid mt-3">
-                        <!-- Las tarjetas se inyectarán con JS -->
-                    </div>
-                </div>
-            </div>
+        </div>
 
         <div id="seccion-aspirantes" class="view-section">
             <!-- VISTA DE TABLA -->
             <div id="vistaTablaAspirantes">
                 <div class="card mt-2 shadow-sm" style="flex:auto;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0" style="color: var(--color-text);"><i class="fa-solid fa-users"></i> Aspirantes registrados
+                        <h5 class="mb-0" style="color: var(--color-text);"><i class="fa-solid fa-users"></i> Aspirantes
+                            registrados
                         </h5>
                     </div>
                     <div class="table-responsive">
@@ -336,7 +340,8 @@
                                 --
                             </div>
 
-                            <h4 class="mb-1 fw-bold" style="color: var(--color-text);" id="perfil_nombreCompleto">Cargando...</h4>
+                            <h4 class="mb-1 fw-bold" style="color: var(--color-text);" id="perfil_nombreCompleto">
+                                Cargando...</h4>
                             <p class="text-muted mb-3" style="font-size: 0.9rem;" id="perfil_correo">correo@ejemplo.com
                             </p>
 
@@ -348,7 +353,8 @@
                             <div class="text-start px-2" style="overflow-x: hidden; word-wrap: break-word;">
                                 <!-- Datos Personales -->
                                 <h6 class="text-muted small fw-bold mb-3 border-bottom pb-1"
-                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">Datos Personales</h6>
+                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">
+                                    Datos Personales</h6>
                                 <div class="mb-3">
                                     <div class="profile-label-premium">CURP</div>
                                     <div class="profile-value-premium" id="perfil_curp">-</div>
@@ -373,7 +379,8 @@
 
                                 <!-- Datos Académicos -->
                                 <h6 class="text-muted small fw-bold mb-3 border-bottom pb-1"
-                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">Antecedentes Académicos</h6>
+                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">
+                                    Antecedentes Académicos</h6>
                                 <div class="mb-3">
                                     <div class="profile-label-premium">LICENCIATURA</div>
                                     <div class="profile-value-premium" id="perfil_licenciatura">-</div>
@@ -400,7 +407,8 @@
 
                                 <!-- Otros Datos -->
                                 <h6 class="text-muted small fw-bold mb-3 border-bottom pb-1"
-                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">Ocupación / Otros</h6>
+                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">
+                                    Ocupación / Otros</h6>
                                 <div class="mb-3">
                                     <div class="profile-label-premium">OCUPACIÓN</div>
                                     <div class="profile-value-premium" id="perfil_ocupacion">-</div>
@@ -417,8 +425,10 @@
                     <!-- Columna Derecha: Solicitudes y Documentos -->
                     <div class="col-md-8">
                         <div class="card shadow-sm h-100" style="border-radius: 16px;">
-                            <div class="card-header pt-4 pb-2 px-4" style="background: transparent; border-bottom: 1px solid var(--color-border);">
-                                <h5 class="mb-0 fw-bold" style="color: var(--color-text); letter-spacing: -0.5px;">Trámites de
+                            <div class="card-header pt-4 pb-2 px-4"
+                                style="background: transparent; border-bottom: 1px solid var(--color-border);">
+                                <h5 class="mb-0 fw-bold" style="color: var(--color-text); letter-spacing: -0.5px;">
+                                    Trámites de
                                     Admisión</h5>
                             </div>
                             <div class="card-body px-4 pb-4" id="contenedorSolicitudes">
@@ -605,7 +615,8 @@
                                     </div>
 
                                     <div class="mb-3 text-start" id="contenedorBtnDetalles" style="display:none;">
-                                        <button type="button" class="btn btn-link text-decoration-none" style="color: #4b5563; padding: 0; font-weight: 500;"
+                                        <button type="button" class="btn btn-link text-decoration-none"
+                                            style="color: #4b5563; padding: 0; font-weight: 500;"
                                             onclick="toggleDetallesUsuario()" id="btnToggleDetalles">
                                             <i class="fa-solid fa-chevron-right"></i> Ver detalles específicos del rol
                                         </button>
@@ -802,8 +813,7 @@
                                     </h6>
                                     <div class="row mt-3 mb-3">
                                         <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio
-                                                Curso Propedéutico</label><input type="text"
-                                                id="convocatoria_inicioCurso"
+                                                Curso</label><input type="text" id="convocatoria_inicioCurso"
                                                 class="form-control form-control-sm date-single"></div>
                                         <div class="col-6"><label class="form-label fw-bold text-muted small">Fin Curso
                                                 Propedéutico</label><input type="text" id="convocatoria_finCurso"

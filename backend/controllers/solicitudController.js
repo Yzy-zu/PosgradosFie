@@ -242,6 +242,55 @@ const getAccionesSolicitud = async (req, res) => {
     }
 };
 
+// Obtener solicitudes filtradas por modalidad de ingreso (con filtro opcional por etapa: proximos vs en_examen)
+const getSolicitudesPorModalidad = async (req, res) => {
+    try {
+        const { idModalidad } = req.params;
+        const { tipo } = req.query; // 'proximos' (etapa 1) o 'en_examen' (etapa > 1)
+
+        let filtroEtapa = '';
+        if (tipo === 'proximos') {
+            filtroEtapa = 'AND (s.idEtapaActual = 1 OR s.idEtapaActual IS NULL)';
+        } else if (tipo === 'en_examen') {
+            filtroEtapa = 'AND s.idEtapaActual > 1';
+        }
+
+        const query = `
+            SELECT 
+                s.id AS idSolicitud,
+                s.idAspi,
+                s.estado AS estadoSolicitud,
+                CONCAT(a.nombre, ' ', a.primerApellido, ' ', COALESCE(a.segundoApellido, '')) AS aspiranteNombre,
+                u.correo,
+                c.nombre AS programa,
+                c.posgrado_id,
+                mi.id AS idModalidad,
+                mi.nombre AS modalidadNombre,
+                ep.id AS idEtapaActual,
+                ep.nombre AS etapaNombre,
+                pe.id AS idProgramacion,
+                pe.fecha,
+                pe.hora,
+                pe.lugar,
+                pe.observaciones
+            FROM solicitud s
+            JOIN aspirante a ON s.idAspi = a.id
+            JOIN usuario u ON a.idUsuario = u.id
+            JOIN convocatorias c ON s.idConvocatoria = c.id
+            LEFT JOIN modalidad_ingreso mi ON s.idModalidad = mi.id
+            LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
+            LEFT JOIN programacion_examen pe ON pe.idSolicitud = s.id
+            WHERE s.idModalidad = ? AND s.estado != 'CANCELADO' ${filtroEtapa}
+            ORDER BY s.creadoEn DESC
+        `;
+        const [resultados] = await db.query(query, [idModalidad]);
+        return res.json(resultados);
+    } catch (error) {
+        console.error('Error en getSolicitudesPorModalidad:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al consultar la modalidad.' });
+    }
+};
+
 module.exports = {
     crearSolicitud,
     getSolicitudActiva,
@@ -250,6 +299,7 @@ module.exports = {
     enviarExpediente,
     getModalidadesIngreso,
     getEtapasWorkflow,
-    getAccionesSolicitud
+    getAccionesSolicitud,
+    getSolicitudesPorModalidad
 };
 

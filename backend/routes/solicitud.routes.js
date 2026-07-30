@@ -15,7 +15,8 @@ const {
     enviarExpediente,
     getModalidadesIngreso,
     getEtapasWorkflow,
-    getAccionesSolicitud
+    getAccionesSolicitud,
+    getSolicitudesPorModalidad
 } = require('../controllers/solicitudController');
 
 router.post('/crear', crearSolicitud);
@@ -28,5 +29,6 @@ router.put('/enviar/:id', enviarExpediente);
 router.get('/ingreso/modalidades', getModalidadesIngreso);
 router.get('/workflow/:idModalidad/etapas', getEtapasWorkflow);
 router.get('/acciones/:id', getAccionesSolicitud);
+router.get('/modalidad/:idModalidad', getSolicitudesPorModalidad);
 
 module.exports = router;
