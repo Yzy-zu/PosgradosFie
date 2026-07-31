@@ -2181,8 +2181,8 @@ function hidratarUI(soliData) {
     }
 
     // Si el aspirante ya tiene calificación capturada, inyectar el resultado en la sección de admisión
-    const admisionContainer = document.getElementById('admision-dinamico-container');
-    if (admisionContainer && soliData.calificacion !== undefined && soliData.calificacion !== null) {
+    const resultadoContainer = document.getElementById('resultado-dinamico-container');
+    if (resultadoContainer && soliData.calificacion !== undefined && soliData.calificacion !== null) {
         const resultadoHtml = `
             <div class="status-banner status-aprobado" style="margin-bottom: 20px;">
                 <div style="display: flex; align-items: center; gap: 15px;">
@@ -2220,13 +2220,19 @@ function hidratarUI(soliData) {
             </div>
         `;
         
-        // Si no se ejecutó ningún módulo (ej. está en PUBLICAR_RESULTADO), reemplazamos. 
-        // Si sí se ejecutó (ej. está en CAPTURAR_RESULTADO_EXAMEN todavía), lo anexamos.
-        if (!moduloAdmisionEjecutado) {
-            admisionContainer.innerHTML = resultadoHtml;
-        } else {
-            admisionContainer.innerHTML += resultadoHtml;
+        resultadoContainer.innerHTML = resultadoHtml;
+        
+        // Ocultar el contenedor de módulos dinámicos para que no se dupliquen 
+        // los avisos del examen una vez que ya hay resultado publicado.
+        const admisionContainer = document.getElementById('admision-dinamico-container');
+        if (admisionContainer) {
+            admisionContainer.style.display = 'none';
         }
+    } else {
+        // Asegurar que esté visible si no hay calificación final aún
+        const admisionContainer = document.getElementById('admision-dinamico-container');
+        if (admisionContainer) admisionContainer.style.display = 'block';
+        if (resultadoContainer) resultadoContainer.innerHTML = '';
     }
 }
 

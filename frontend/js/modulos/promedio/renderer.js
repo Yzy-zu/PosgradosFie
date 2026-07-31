@@ -7,9 +7,11 @@ const moduloPromedioRenderer = {
         const estado = soliData.estado || 'EN_REVISION';
         const dictamen = (datosPromedio && datosPromedio.dictamen) ? datosPromedio.dictamen : null;
         
-        const esValidado = (dictamen && dictamen.promedioValido === 1) || estado === 'APROBADO' || etapa.toLowerCase().includes('resultado') || etapa.toLowerCase().includes('inscripción');
+        const esValidado = (dictamen && dictamen.promedioValido === 1) || estado === 'APROBADO';
+        const esRechazado = (dictamen && dictamen.promedioValido === 0) || estado === 'RECHAZADO';
 
         if (esValidado) {
+            // 1. ESTADO APROBADO (Tarjeta Verde Existente)
             const promedioMostrar = (dictamen && dictamen.promedio !== null && dictamen.promedio !== undefined) ? dictamen.promedio : (soliData.promedioCapturado || soliData.promedio || 'Aprobado');
             const obsHtml = (dictamen && dictamen.observaciones) ? `
                 <div style="margin-top: 20px; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px;">
@@ -49,7 +51,49 @@ const moduloPromedioRenderer = {
                     ${obsHtml}
                 </div>
             `;
+        } else if (esRechazado) {
+            // 2. ESTADO RECHAZADO (Tarjeta Roja Faltante)
+            const promedioMostrar = (dictamen && dictamen.promedio !== null && dictamen.promedio !== undefined) ? dictamen.promedio : (soliData.promedioCapturado || soliData.promedio || 'N/A');
+            const obsHtml = (dictamen && dictamen.observaciones) ? `
+                <div style="margin-top: 20px; background: rgba(0,0,0,0.15); padding: 15px; border-radius: 8px;">
+                    <strong style="font-size: 13px; text-transform: uppercase; display: block; margin-bottom: 5px;">Motivo del Dictamen / Observaciones</strong>
+                    <span style="font-size: 14px;">${dictamen.observaciones}</span>
+                </div>
+            ` : '';
+
+            container.innerHTML = `
+                <div class="status-banner status-rechazado" style="margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div class="status-banner-icon"><i class="fa-solid fa-calculator"></i></div>
+                        <div>
+                            <div class="status-banner-title">Evaluación por Promedio FIE</div>
+                            <div class="status-banner-sub">Etapa actual: <strong>${etapa}</strong></div>
+                        </div>
+                    </div>
+                    <div><span class="status-banner-badge" style="background: #ef4444; color: white;">RECHAZADO</span></div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white; padding: 25px; border-radius: 14px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);">
+                    <h4 style="margin: 0 0 15px 0; font-size: 20px; display: flex; align-items: center; gap: 10px; color: white;">
+                        <i class="fa-solid fa-circle-xmark" style="color: #fca5a5; font-size: 24px;"></i> Dictamen de Promedio No Válido
+                    </h4>
+                    <p style="margin-bottom: 20px; opacity: 0.9;">El comité académico ha auditado tu expediente y determinado que el promedio acreditado no cumple con el requisito estipulado para este programa.</p>
+                    
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
+                            <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">Promedio Auditado</span>
+                            <strong style="font-size: 32px; display: block;">${promedioMostrar}</strong>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
+                            <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">Dictamen</span>
+                            <strong style="font-size: 28px; display: block;">No Válido</strong>
+                        </div>
+                    </div>
+                    ${obsHtml}
+                </div>
+            `;
         } else {
+            // 3. ESTADO EN CURSO (Tarjeta Actual Tal Cual Está)
             container.innerHTML = `
                 <div class="status-banner status-aprobado" style="margin-bottom: 20px;">
                     <div style="display: flex; align-items: center; gap: 15px;">
