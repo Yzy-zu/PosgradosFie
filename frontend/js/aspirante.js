@@ -1336,7 +1336,7 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
             if (rutaArchivo && doc.estadoValidacion !== 'APROBADO') {
                 (async () => {
                     try {
-                        const res = await fetch(`/uploads/${rutaArchivo}`, { method: 'HEAD' });
+                        const res = await fetch(`/api/files/${rutaArchivo}`, { method: 'HEAD', headers: { Authorization: `Bearer ${sessionStorage.getItem('token') || localStorage.getItem('token')}` } });
                         const cl = res.headers.get('content-length');
                         const pesoStr = formatearPeso(parseInt(cl, 10));
                         const sizeEl = document.getElementById(`${cardId}-size`);
@@ -2116,29 +2116,24 @@ function hidratarUI(soliData) {
     // Configurar paneles según el nivel
     configurarPanelesNivel(nivelAcademicoSeleccionado, soliData.idConvocatoria);
 
-    // Validar que existan accionesDisponibles en el workflow
-    if (!soliData.accionesDisponibles || soliData.accionesDisponibles.length === 0) {
-        renderizarErrorWorkflow("No hay acciones disponibles para esta etapa de la solicitud en el sistema.");
-        return;
-    }
-
     // Siempre hidratar el módulo base de Documentos (Expediente) para garantizar el estado de #view-documentos
     if (typeof moduloDocumentos !== 'undefined') {
         moduloDocumentos.ejecutar(soliData, { codigo: 'SUBIR_DOCUMENTOS' });
     }
 
-    // Recorrer TODAS las acciones disponibles y ejecutar su módulo orquestador
-    soliData.accionesDisponibles.forEach(accion => {
-        // Evitar ejecutar doblemente SUBIR_DOCUMENTOS si ya está en la etapa 1
-        if (accion.codigo === 'SUBIR_DOCUMENTOS') return;
+    // Recorrer las acciones disponibles adicionales y ejecutar sus módulos
+    if (soliData.accionesDisponibles && soliData.accionesDisponibles.length > 0) {
+        soliData.accionesDisponibles.forEach(accion => {
+            if (accion.codigo === 'SUBIR_DOCUMENTOS') return;
 
-        const ejecutarModulo = MODULOS_REGISTRY[accion.codigo];
-        if (typeof ejecutarModulo === 'function') {
-            ejecutarModulo(soliData, accion);
-        } else {
-            console.warn(`No hay módulo registrado para la acción: ${accion.codigo}`);
-        }
-    });
+            const ejecutarModulo = MODULOS_REGISTRY[accion.codigo];
+            if (typeof ejecutarModulo === 'function') {
+                ejecutarModulo(soliData, accion);
+            } else {
+                console.warn(`No hay módulo registrado para la acción: ${accion.codigo}`);
+            }
+        });
+    }
 }
 
 function renderizarErrorWorkflow(mensaje) {
@@ -2187,7 +2182,7 @@ async function cargarDocsLecturaAspirante(soliData) {
                                 ${badgeDoc}
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top" style="border-color: var(--color-border) !important;">
-                                <a href="/uploads/${doc.rutaArchivo}" target="_blank" class="btn-ver-doc">
+                                <a href="javascript:void(0)" onclick="window.open('/api/files/${doc.rutaArchivo}?token=' + (sessionStorage.getItem('token') || localStorage.getItem('token')), '_blank')" class="btn-ver-doc">
                                     <i class="fa-solid fa-file-pdf me-1"></i> Ver PDF
                                 </a>
                             </div>

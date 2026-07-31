@@ -16,7 +16,9 @@ const {
     getModalidadesIngreso,
     getEtapasWorkflow,
     getAccionesSolicitud,
-    getSolicitudesPorModalidad
+    getSolicitudesPorModalidad,
+    getSolicitudesPorModalidadCodigo,
+    getSolicitudesActivas
 } = require('../controllers/solicitudController');
 
 router.post('/crear', crearSolicitud);
@@ -30,5 +32,7 @@ router.get('/ingreso/modalidades', getModalidadesIngreso);
 router.get('/workflow/:idModalidad/etapas', getEtapasWorkflow);
 router.get('/acciones/:id', getAccionesSolicitud);
 router.get('/modalidad/:idModalidad', getSolicitudesPorModalidad);
+router.get('/modalidad/codigo/:codigo', getSolicitudesPorModalidadCodigo);
+router.get('/activas', getSolicitudesActivas);
 
 module.exports = router;

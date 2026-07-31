@@ -39,8 +39,43 @@ const getProgramacion = async (req, res) => {
     }
 };
 
+const confirmarExamen = async (req, res) => {
+    try {
+        const { idSolicitud } = req.params;
+        const resultado = await ProgramacionExamenService.confirmarExamen(idSolicitud);
+        return res.status(200).json(resultado);
+    } catch (error) {
+        console.error('Error al confirmar aplicación de examen:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error interno al confirmar el examen.' });
+    }
+};
+
+const capturarResultado = async (req, res) => {
+    try {
+        const { idSolicitud } = req.params;
+        const { calificacion, aprobado, observaciones } = req.body;
+
+        if (aprobado === undefined) {
+            return res.status(400).json({ success: false, mensaje: 'El dictamen (aprobado/no aprobado) es obligatorio.' });
+        }
+
+        const resultado = await ProgramacionExamenService.capturarResultado(idSolicitud, {
+            calificacion,
+            aprobado,
+            observaciones
+        });
+
+        return res.status(200).json(resultado);
+    } catch (error) {
+        console.error('Error al capturar resultado de examen:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error interno al capturar resultado.' });
+    }
+};
+
 module.exports = {
     programarExamen,
     getProgramacion,
-    getProgramacionExamenPorSolicitud: getProgramacion // Alias para compatibilidad hacia atrás
+    getProgramacionExamenPorSolicitud: getProgramacion, // Alias para compatibilidad hacia atrás
+    confirmarExamen,
+    capturarResultado
 };

@@ -1319,7 +1319,7 @@ async function verExpedienteAspirante(id) {
                         else if (doc.estadoValidacion === "RECHAZADO") { classBadge = "soft-badge-danger"; }
 
                         htmlDocs += `
-                            <div class="doc-row-premium" onclick="window.open('/uploads/${doc.rutaArchivo}', '_blank')">
+                            <div class="doc-row-premium" onclick="window.open('/api/files/${doc.rutaArchivo}?token=' + (sessionStorage.getItem('token') || localStorage.getItem('token')), '_blank')">
                                 <div class="d-flex align-items-center">
                                     <i class="fa-solid fa-file-pdf doc-icon"></i>
                                     <span style="font-weight: 500; color: var(--color-text);">${doc.requisitoNombre}</span>

@@ -37,8 +37,7 @@ app.use(cors({
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, '../frontend')));
-// Servir la carpeta de uploads de manera estática
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// La carpeta de uploads ya no se sirve de manera estática para proteger los archivos (Prioridad 2)
 // Servir imágenes y flyers generales
 app.use('/files', express.static(path.join(__dirname, 'files')));
 app.use('/api/auth', require('./routes/auth.routes'));
@@ -55,6 +54,7 @@ app.use('/api/solicitud', require('./routes/solicitud.routes'));
 app.use('/api/documentos', require('./routes/documentos.routes'));
 app.use('/api/examen/programacion', require('./routes/programacionExamen.routes'));
 app.use('/api/programacion-examen', require('./routes/programacionExamen.routes'));
+app.use('/api/requisitos', require('./routes/requisitos.routes'));
 
 // -------------------------------------------------------------------
 // Ruta protegida para servir archivos de solicitud (Bug 10 Fix)

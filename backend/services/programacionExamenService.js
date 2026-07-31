@@ -50,6 +50,15 @@ class ProgramacionExamenService {
     }
 
     /**
+     * Confirma la aplicación del examen (El docente marca que ya se aplicó)
+     * Esto avanza la etapa hacia la captura de resultados.
+     */
+    static async confirmarExamen(idSolicitud) {
+        await WorkflowService.avanzarEtapa(idSolicitud);
+        return { success: true, mensaje: 'Aplicación del examen confirmada exitosamente.' };
+    }
+
+    /**
      * Obtiene la programación de examen actual de una solicitud
      */
     static async getProgramacionPorSolicitud(idSolicitud) {
@@ -58,6 +67,29 @@ class ProgramacionExamenService {
             [idSolicitud]
         );
         return resultados.length > 0 ? resultados[0] : null;
+    }
+
+    /**
+     * Captura el resultado del examen (calificación y si aprobó)
+     */
+    static async capturarResultado(idSolicitud, datosCaptura) {
+        const { calificacion, aprobado, observaciones } = datosCaptura;
+        
+        // Se guarda en resultado_examen, NO en programacion_examen
+        await db.query(
+            `INSERT INTO resultado_examen (idSolicitud, calificacion, aprobado, observaciones, fechaCaptura)
+             VALUES (?, ?, ?, ?, NOW())
+             ON DUPLICATE KEY UPDATE 
+             calificacion = VALUES(calificacion), 
+             aprobado = VALUES(aprobado), 
+             observaciones = VALUES(observaciones),
+             fechaCaptura = NOW()`,
+            [idSolicitud, calificacion, aprobado ? 1 : 0, observaciones || null]
+        );
+
+        // Avanzamos etapa en el workflow
+        await WorkflowService.avanzarEtapa(idSolicitud);
+        return { success: true, mensaje: 'Resultado capturado correctamente.' };
     }
 }
 
