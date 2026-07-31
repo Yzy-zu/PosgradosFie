@@ -12,6 +12,7 @@ const moduloProgramacionExamen = {
     // Para el docente (Orquestado dinámicamente)
     ejecutar(soliData, accionData) {
         if (typeof moduloProgramacionExamenDocenteRenderer !== 'undefined') {
+            soliData.accionActiva = accionData.codigo;
             moduloProgramacionExamenDocenteRenderer.renderizar(soliData);
         } else {
             console.error("moduloProgramacionExamenDocenteRenderer no está cargado.");

@@ -1851,6 +1851,7 @@ function bloquearConvocatorias(soliData = null) {
                                 <strong style="color: var(--color-text); font-size: 16px; display: inline-block; margin-top: 8px;">Programa de ${nivel} en Ciencias en Ingeniería Eléctrica</strong><br>
                                 <span style="font-size: 14px; color: var(--color-text-muted);">${typeof t === 'function' ? t('conv_opcion_sel') : 'Modalidad:'} <strong>${opcionElegida}</strong></span>
                             </p>
+                             
                             
                             <button onclick="switchView('documentos')" class="btn-continuar-sol">
                                 <i class="fa-solid fa-arrow-right" style="margin-right: 8px;"></i> ${typeof t === 'function' ? t('conv_btn_continuar') : 'Continuar Solicitud'}
@@ -2020,7 +2021,7 @@ function abrirModalInfoModalidad(modKey, titulo) {
 }
 
 
-async function cargarRequisitosDocumentales(idConvocatoria) {
+async function cargarRequisitosDocumentales(idConvocatoria, documentosSubidos = []) {
     mostrarLoader();
     try {
         const res = await fetch(`/api/convocatorias/${idConvocatoria}/requisitos`);
@@ -2044,13 +2045,37 @@ async function cargarRequisitosDocumentales(idConvocatoria) {
             let htmlEvaluacion = '';
 
             requisitos.forEach(req => {
+                const docSubido = documentosSubidos.find(d => parseInt(d.idRequisito) === req.id);
                 const isRequired = req.obligatorio ? '*' : '';
-                const requiredAttr = req.obligatorio ? 'required' : '';
+                const requiredAttr = (req.obligatorio && !docSubido) ? 'required' : '';
+                
+                let displayHtml = '';
+                let fileBoxClass = 'file-box';
+                
+                if (docSubido) {
+                    fileBoxClass = 'file-box file-selected';
+                    let iconColor = 'var(--color-primary)';
+                    let statusText = 'Enviado';
+                    if (docSubido.estadoValidacion === 'APROBADO') {
+                        iconColor = 'var(--color-success)';
+                        statusText = 'Aprobado';
+                    } else if (docSubido.estadoValidacion === 'RECHAZADO') {
+                        iconColor = 'var(--color-danger)';
+                        statusText = 'Rechazado';
+                    }
+                    displayHtml = `
+                        <div class="file-name-display" style="color: ${iconColor};">
+                            <i class="fa-solid fa-file-pdf"></i> ${statusText}
+                            ${docSubido.estadoValidacion === 'RECHAZADO' && docSubido.comentarios ? `<br><small style="color:var(--color-danger)">Motivo: ${docSubido.comentarios}</small>` : ''}
+                        </div>
+                    `;
+                }
 
                 const htmlReq = `
-                    <div class="file-box">
+                    <div class="${fileBoxClass}">
                         <label><i class="fa-solid fa-file-arrow-up"></i> ${req.descripcion} <span style="color:red;">${isRequired}</span></label>
                         <input type="file" name="${req.id}" accept=".pdf" onchange="verificarArchivosEstacion(estacionActual)" ${requiredAttr}>
+                        ${displayHtml}
                     </div>
                 `;
 
@@ -2091,6 +2116,8 @@ const MODULOS_REGISTRY = {
     'HABILITAR_CAPTURA_RESULTADO': (soliData, accion) => typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutarAspirante ? moduloProgramacionExamen.ejecutarAspirante(soliData, accion) : typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutar(soliData, accion),
     'PROGRAMAR_CURSO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
     'CAPTURAR_RESULTADO_CURSO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
+    'CAPTURAR_RESULTADO_PROPEDEUTICO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
+    'PUBLICAR_RESULTADO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
     'VALIDAR_PROMEDIO': (soliData, accion) => typeof moduloPromedio !== 'undefined' && moduloPromedio.ejecutar(soliData, accion)
 };
 
@@ -2113,8 +2140,13 @@ function hidratarUI(soliData) {
         navAdmision.style.display = 'block';
     }
 
-    // Configurar paneles según el nivel
-    configurarPanelesNivel(nivelAcademicoSeleccionado, soliData.idConvocatoria);
+    // Si ya tiene modalidad, avanzamos a la estación 1 (Identidad) para no empezar desde cero
+    if (soliData.idModalidad && estacionActual === 0) {
+        cambiarEstacion(1);
+    }
+
+    // Configurar paneles según el nivel y pasar documentos ya subidos
+    configurarPanelesNivel(nivelAcademicoSeleccionado, soliData.idConvocatoria, soliData.documentosSubidos || []);
 
     // Siempre hidratar el módulo base de Documentos (Expediente) para garantizar el estado de #view-documentos
     if (typeof moduloDocumentos !== 'undefined') {
@@ -2122,6 +2154,7 @@ function hidratarUI(soliData) {
     }
 
     // Recorrer las acciones disponibles adicionales y ejecutar sus módulos
+    let moduloAdmisionEjecutado = false;
     if (soliData.accionesDisponibles && soliData.accionesDisponibles.length > 0) {
         soliData.accionesDisponibles.forEach(accion => {
             if (accion.codigo === 'SUBIR_DOCUMENTOS') return;
@@ -2129,10 +2162,60 @@ function hidratarUI(soliData) {
             const ejecutarModulo = MODULOS_REGISTRY[accion.codigo];
             if (typeof ejecutarModulo === 'function') {
                 ejecutarModulo(soliData, accion);
+                moduloAdmisionEjecutado = true;
             } else {
                 console.warn(`No hay módulo registrado para la acción: ${accion.codigo}`);
             }
         });
+    }
+
+    // Si el aspirante ya tiene calificación capturada, inyectar el resultado en la sección de admisión
+    const admisionContainer = document.getElementById('admision-dinamico-container');
+    if (admisionContainer && soliData.calificacion !== undefined && soliData.calificacion !== null) {
+        const resultadoHtml = `
+            <div class="status-banner status-aprobado" style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div class="status-banner-icon"><i class="fa-solid fa-flag-checkered"></i></div>
+                    <div>
+                        <div class="status-banner-title">Evaluación Finalizada</div>
+                        <div class="status-banner-sub">Etapa actual: <strong>${soliData.etapaNombre || 'Resultados'}</strong></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 25px; border-radius: 14px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
+                <h4 style="margin: 0 0 15px 0; font-size: 20px; display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-trophy" style="color: #fef08a; font-size: 24px;"></i> ¡Felicidades, tu calificación ha sido capturada!
+                </h4>
+                <p style="margin-bottom: 20px; opacity: 0.9;">Tu examen de admisión ha sido evaluado y los resultados ya forman parte de tu expediente institucional.</p>
+                
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
+                        <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">Calificación Obtenida</span>
+                        <strong style="font-size: 32px; display: block;">${soliData.calificacion}</strong>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
+                        <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">Dictamen</span>
+                        <strong style="font-size: 28px; display: block;">${soliData.resultadoAprobado ? 'Aprobado' : 'No Aprobado'}</strong>
+                    </div>
+                </div>
+                
+                ${soliData.resultadoObservaciones ? `
+                <div style="margin-top: 20px; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px;">
+                    <strong style="font-size: 13px; text-transform: uppercase; display: block; margin-bottom: 5px;">Observaciones del Comité</strong>
+                    <span style="font-size: 14px;">${soliData.resultadoObservaciones}</span>
+                </div>
+                ` : ''}
+            </div>
+        `;
+        
+        // Si no se ejecutó ningún módulo (ej. está en PUBLICAR_RESULTADO), reemplazamos. 
+        // Si sí se ejecutó (ej. está en CAPTURAR_RESULTADO_EXAMEN todavía), lo anexamos.
+        if (!moduloAdmisionEjecutado) {
+            admisionContainer.innerHTML = resultadoHtml;
+        } else {
+            admisionContainer.innerHTML += resultadoHtml;
+        }
     }
 }
 
@@ -2201,7 +2284,7 @@ async function cargarDocsLecturaAspirante(soliData) {
 /**
  * Extrae la lógica de pintar paneles para reusarla sin llamar a /crear
  */
-function configurarPanelesNivel(nivel, idConvocatoria) {
+function configurarPanelesNivel(nivel, idConvocatoria, documentosSubidos = []) {
     if (idConvocatoria) sessionStorage.setItem('idConvocatoriaPendiente', idConvocatoria);
 
     if (nivel === "Doctorado") {
@@ -2217,7 +2300,7 @@ function configurarPanelesNivel(nivel, idConvocatoria) {
         actualizarCostosAdmision();
     }
 
-    if (idConvocatoria) cargarRequisitosDocumentales(idConvocatoria);
+    if (idConvocatoria) cargarRequisitosDocumentales(idConvocatoria, documentosSubidos);
 }
 
 // ==== MANEJO DE UI PARA INPUTS DE ARCHIVOS ====

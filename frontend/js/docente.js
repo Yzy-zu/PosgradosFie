@@ -6,10 +6,10 @@ let idAspiranteActivo = null;
 const DOCENTE_MODULOS_REGISTRY = {
     'PROGRAMAR_EXAMEN': typeof moduloProgramacionExamen !== 'undefined' ? moduloProgramacionExamen : null,
     'HABILITAR_CAPTURA_RESULTADO': typeof moduloProgramacionExamen !== 'undefined' ? moduloProgramacionExamen : null,
-    'CAPTURAR_RESULTADO_EXAMEN': typeof moduloProgramacionExamen !== 'undefined' ? moduloProgramacionExamen : null
-    // Futuros módulos se agregan aquí:
-    // 'EVALUAR_CURSO': moduloCursoPropedeutico,
-    // 'VALIDAR_PROMEDIO': moduloPromedio,
+    'CAPTURAR_RESULTADO_EXAMEN': typeof moduloProgramacionExamen !== 'undefined' ? moduloProgramacionExamen : null,
+    'PROGRAMAR_CURSO': typeof moduloCurso !== 'undefined' ? moduloCurso : null,
+    'CAPTURAR_RESULTADO_CURSO': typeof moduloCurso !== 'undefined' ? moduloCurso : null,
+    'CAPTURAR_RESULTADO_PROPEDEUTICO': typeof moduloCurso !== 'undefined' ? moduloCurso : null
 };
 
 function abrirModalDinamico() {
@@ -66,6 +66,32 @@ async function abrirWorkflowSolicitud(idSolicitud) {
     } catch (error) {
         console.error("Error al abrir workflow:", error);
         alert("Ocurrió un error al cargar la acción.");
+    }
+}
+
+async function abrirModalReprogramarExamen(idAspi) {
+    try {
+        const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+        const res = await fetch(`/api/solicitud/activa/${idAspi}?role=Docente`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("No se pudo obtener la solicitud");
+        
+        const solicitudData = await res.json();
+        
+        const body = document.getElementById('modal-dinamico-body');
+        if (body) body.innerHTML = '';
+
+        if (typeof moduloProgramacionExamenDocenteRenderer !== 'undefined') {
+            solicitudData.modoReprogramar = true;
+            moduloProgramacionExamenDocenteRenderer.renderizarProgramacion(solicitudData);
+            abrirModalDinamico();
+        } else {
+            alert("No se pudo cargar el módulo de programación de examen.");
+        }
+    } catch (error) {
+        console.error("Error al abrir reprogramación:", error);
+        alert("Ocurrió un error al abrir el formulario de reprogramación.");
     }
 }
 
@@ -1263,6 +1289,9 @@ function renderExamenesCards(dataList) {
             estadoLabel = 'Esperando captura de resultado';
             disableCapturar = '';
             accionCapturar = `abrirWorkflowSolicitud(${item.idAspi})`;
+            if (tieneProgramacion) {
+                disableEditar = '';
+            }
         } else {
             // Posiblemente finalizado (ya pasó esa etapa)
             uiEstadoId = 'finalizado';
@@ -1277,8 +1306,8 @@ function renderExamenesCards(dataList) {
                 <button class="${disableProgramar ? '' : 'btn-primary'}" onclick="abrirWorkflowSolicitud(${item.idAspi})" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableProgramar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'border: none; cursor: pointer;'}" ${disableProgramar}>
                     <i class="fa-solid fa-calendar-plus" style="margin-right: 4px;"></i> Programar
                 </button>
-                <button class="${disableEditar ? '' : 'btn-secondary'}" onclick="abrirWorkflowSolicitud(${item.idAspi})" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableEditar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'cursor: pointer;'}" ${disableEditar}>
-                    <i class="fa-solid fa-pen" style="margin-right: 4px;"></i> Editar
+                <button class="${disableEditar ? '' : 'btn-secondary'}" onclick="abrirModalReprogramarExamen(${item.idAspi})" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableEditar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'cursor: pointer;'}" ${disableEditar}>
+                    <i class="fa-solid fa-pen" style="margin-right: 4px;"></i> Reprogramar
                 </button>
                 <button class="${disableCapturar ? '' : 'btn-primary'}" onclick="${accionCapturar}" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableCapturar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'border: none; cursor: pointer; background: var(--color-primary); color: white;'}" ${disableCapturar}>
                     <i class="fa-solid fa-graduation-cap" style="margin-right: 4px;"></i> Capturar
@@ -1362,53 +1391,233 @@ function filtrarTablaExamenesUI() {
     renderExamenesCards(filtrados);
 }
 
-async function cargarTablaPropedeuticoPorCodigo(codigo) {
-    const tbody = document.getElementById('tabla-propedeutico-body');
-    if (!tbody) return;
+let cursosActivos = [];
+
+async function cargarTablaPropedeuticoPorCodigo(codigo = 'PROPEDEUTICO') {
+    const contenedor = document.getElementById('contenedor-curso-cards');
+    if (!contenedor) return;
 
     try {
         const respuesta = await fetch(`/api/solicitud/modalidad/codigo/${codigo}`);
-        if (!respuesta.ok) throw new Error("Error al obtener propedéutico");
+        if (!respuesta.ok) throw new Error("Error al obtener solicitudes para curso propedéutico");
 
         const data = await respuesta.json();
-        tbody.innerHTML = '';
-
-        if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted); padding: 25px;">No hay registros de curso propedéutico.</td></tr>`;
-            return;
-        }
-
-        data.forEach(item => {
-            const tr = document.createElement('tr');
-            tr.style.borderBottom = '1px solid var(--color-border)';
-            let badgePrograma = '';
-            if (item.posgradoTipo === 'DOCTORADO') {
-                badgePrograma = `<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">D</span>`;
-            } else if (item.posgradoTipo === 'MAESTRIA') {
-                badgePrograma = `<span style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">M</span>`;
+        
+        const nuevosCursos = data.map(sol => {
+            const acciones = sol.accionesDisponibles || [];
+            
+            const accionValida = acciones.find(a => 
+                DOCENTE_MODULOS_REGISTRY[a.codigo] && 
+                DOCENTE_MODULOS_REGISTRY[a.codigo] === moduloCurso
+            );
+            
+            if (accionValida) {
+                return { ...sol, accionActual: accionValida.codigo };
             }
-            const nombreOpcion = item.opcionNombre || 'Sin especialidad asignada';
+            if (sol.etapaNombre && sol.etapaNombre.toLowerCase().includes('propedéutico')) {
+                return { ...sol, accionActual: sol.idProgramacion ? 'CAPTURAR_RESULTADO_CURSO' : 'PROGRAMAR_CURSO' };
+            }
+            return { ...sol, accionActual: 'FINALIZADO' };
+        }).filter(resultado => resultado !== null);
 
-            tr.innerHTML = `
-                <td style="padding: 12px 15px;">
-                    <strong>${item.aspiranteNombre || 'Sin nombre'}</strong><br>
-                    <small style="color: var(--color-text-muted);">${item.correo || ''}</small>
-                </td>
-                <td style="padding: 12px 15px;">${badgePrograma} ${nombreOpcion}</td>
-                <td style="padding: 12px 15px;">100%</td>
-                <td style="padding: 12px 15px;">
-                    <span style="font-weight: 600; color: var(--color-text-muted);">${item.etapaNombre || 'En evaluación'}</span>
-                </td>
-                <td style="padding: 12px 15px; text-align: center;">
-                    <span class="badge badge-pendiente" style="padding: 4px 10px; border-radius: 12px; font-size: 11px;">${item.estadoSolicitud || 'En Curso'}</span>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
+        cursosActivos = nuevosCursos;
+        renderCursosCards(cursosActivos);
     } catch (error) {
         console.error("Error al cargar la tabla propedéutico:", error);
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted); padding: 25px;">Error al cargar datos del servidor.</td></tr>`;
+        contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">Error al cargar datos del servidor.</div>`;
     }
+}
+
+function renderCursosCards(dataList) {
+    const contenedor = document.getElementById('contenedor-curso-cards');
+    if (!contenedor) return;
+    contenedor.innerHTML = '';
+
+    let contPendientes = 0;
+    let contProgramados = 0;
+    let contEsperando = 0;
+    let contFinalizados = 0;
+
+    if (dataList.length === 0) {
+        contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">No hay aspirantes en proceso de propedéutico que coincidan con los filtros.</div>`;
+    }
+
+    dataList.forEach(item => {
+        const tieneProgramacion = !!item.idProgramacion || !!item.fecha;
+        const accion = item.accionActual;
+        
+        let uiEstadoId = 'sin_programar';
+        let borderColor = 'var(--color-border)';
+        let estadoLabel = 'Sin programar';
+        
+        let disableProgramar = 'disabled';
+        let disableEditar = 'disabled';
+        let disableCapturar = 'disabled';
+
+        if (accion === 'PROGRAMAR_CURSO') {
+            if (!tieneProgramacion) {
+                contPendientes++;
+                uiEstadoId = 'sin_programar';
+                estadoLabel = '● Sin programar';
+                disableProgramar = '';
+            } else {
+                contProgramados++;
+                uiEstadoId = 'programado';
+                borderColor = 'var(--color-primary)';
+                estadoLabel = '✓ Curso programado';
+                disableEditar = '';
+                disableCapturar = '';
+            }
+        } else if (accion === 'CAPTURAR_RESULTADO_CURSO' || accion === 'CAPTURAR_RESULTADO_PROPEDEUTICO') {
+            uiEstadoId = 'esperando';
+            contEsperando++;
+            borderColor = 'var(--color-primary)';
+            estadoLabel = 'Esperando resultado';
+            disableEditar = '';
+            disableCapturar = '';
+        } else {
+            uiEstadoId = 'finalizado';
+            contFinalizados++;
+            borderColor = '#22c55e';
+            estadoLabel = 'Resultado registrado';
+        }
+
+        const botonHTML = `
+            <div style="display: flex; gap: 8px; margin-top: 4px;">
+                <button class="${disableProgramar ? '' : 'btn-primary'}" onclick="abrirProgramacionCurso(${item.idSolicitud}, '${(item.aspiranteNombre || '').replace(/'/g, "\\'")}')" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableProgramar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'border: none; cursor: pointer;'}" ${disableProgramar}>
+                    <i class="fa-solid fa-calendar-plus" style="margin-right: 4px;"></i> Programar
+                </button>
+                <button class="${disableEditar ? '' : 'btn-secondary'}" onclick="abrirReprogramacionCurso(${item.idSolicitud}, '${(item.aspiranteNombre || '').replace(/'/g, "\\'")}')" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableEditar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'cursor: pointer;'}" ${disableEditar}>
+                    <i class="fa-solid fa-pen" style="margin-right: 4px;"></i> Reprogramar
+                </button>
+                <button class="${disableCapturar ? '' : 'btn-primary'}" onclick="abrirCapturaCurso(${item.idSolicitud}, '${(item.aspiranteNombre || '').replace(/'/g, "\\'")}')" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableCapturar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'border: none; cursor: pointer; background: var(--color-primary); color: white;'}" ${disableCapturar}>
+                    <i class="fa-solid fa-graduation-cap" style="margin-right: 4px;"></i> Capturar
+                </button>
+            </div>
+        `;
+
+        item.uiEstadoId = uiEstadoId;
+
+        let programBadge = '';
+        if (item.posgradoTipo === 'DOCTORADO') {
+            programBadge = `<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">D</span>`;
+        } else if (item.posgradoTipo === 'MAESTRIA') {
+            programBadge = `<span style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">M</span>`;
+        }
+
+        const card = document.createElement('div');
+        card.style.background = 'var(--color-card-bg)';
+        card.style.border = `1px solid ${borderColor}`;
+        card.style.borderRadius = '12px';
+        card.style.padding = '20px';
+        card.style.display = 'flex';
+        card.style.flexDirection = 'column';
+        card.style.gap = '16px';
+        card.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h4 style="margin: 0; font-size: 16px; color: var(--color-text); font-weight: bold;">${item.aspiranteNombre}</h4>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--color-text-muted);">${programBadge} ${item.opcionNombre || 'Sin especialidad'}</p>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 8px; font-size: 13px; color: var(--color-text);">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-book-open-reader" style="color: var(--color-text-muted);"></i>
+                    <span>Modalidad: ${item.modalidadNombre || 'Curso Propedéutico'}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-layer-group" style="color: var(--color-text-muted);"></i>
+                    <span>Etapa: ${item.etapaNombre || 'Propedéutico'}</span>
+                </div>
+            </div>
+            <div style="padding-top: 12px; border-top: 1px solid var(--color-border); margin-top: auto;">
+                <div style="font-size: 12px; font-weight: bold; color: ${borderColor}; margin-bottom: 12px; display: flex; align-items: center;">
+                    ${estadoLabel}
+                </div>
+                ${botonHTML}
+            </div>
+        `;
+        contenedor.appendChild(card);
+    });
+
+    const elemPend = document.getElementById('stat-curso-pendientes');
+    const elemProg = document.getElementById('stat-curso-programados');
+    const elemEsp = document.getElementById('stat-curso-esperando');
+    const elemFin = document.getElementById('stat-curso-finalizados');
+
+    if (elemPend) elemPend.textContent = contPendientes;
+    if (elemProg) elemProg.textContent = contProgramados;
+    if (elemEsp) elemEsp.textContent = contEsperando;
+    if (elemFin) elemFin.textContent = contFinalizados;
+}
+
+function filtrarTablaPropedeuticoUI() {
+    const textoInput = document.getElementById('filtro-curso-texto');
+    const estadoSelect = document.getElementById('filtro-curso-estado');
+    const programaSelect = document.getElementById('filtro-curso-programa');
+
+    const texto = textoInput ? textoInput.value.toLowerCase() : '';
+    const estado = estadoSelect ? estadoSelect.value : '';
+    const programa = programaSelect ? programaSelect.value : '';
+
+    const filtrados = cursosActivos.filter(item => {
+        const matchTexto = item.aspiranteNombre.toLowerCase().includes(texto) || (item.opcionNombre && item.opcionNombre.toLowerCase().includes(texto));
+        const matchEstado = estado === '' || item.uiEstadoId === estado;
+        const matchPrograma = programa === '' || (item.posgradoTipo && item.posgradoTipo.toLowerCase().includes(programa.toLowerCase()));
+        return matchTexto && matchEstado && matchPrograma;
+    });
+
+    renderCursosCards(filtrados);
+}
+
+function abrirProgramacionCurso(idSolicitud, aspiranteNombre) {
+    const modal = document.getElementById('modal-docente-dinamico');
+    const body = document.getElementById('modal-dinamico-body');
+    if (!modal || !body) return;
+    body.innerHTML = '';
+    modal.style.display = 'flex';
+    
+    moduloCurso.ejecutar({
+        idSolicitud,
+        aspiranteNombre,
+        esDocente: true,
+        accionActiva: 'PROGRAMAR_CURSO',
+        modoReprogramar: false
+    });
+}
+
+function abrirReprogramacionCurso(idSolicitud, aspiranteNombre) {
+    const modal = document.getElementById('modal-docente-dinamico');
+    const body = document.getElementById('modal-dinamico-body');
+    if (!modal || !body) return;
+    body.innerHTML = '';
+    modal.style.display = 'flex';
+    
+    moduloCurso.ejecutar({
+        idSolicitud,
+        aspiranteNombre,
+        esDocente: true,
+        accionActiva: 'PROGRAMAR_CURSO',
+        modoReprogramar: true
+    });
+}
+
+function abrirCapturaCurso(idSolicitud, aspiranteNombre) {
+    const modal = document.getElementById('modal-docente-dinamico');
+    const body = document.getElementById('modal-dinamico-body');
+    if (!modal || !body) return;
+    body.innerHTML = '';
+    modal.style.display = 'flex';
+    
+    moduloCurso.ejecutar({
+        idSolicitud,
+        aspiranteNombre,
+        esDocente: true,
+        accionActiva: 'CAPTURAR_RESULTADO_CURSO',
+        modoCapturar: true
+    });
 }
 
 async function cargarTablaPromedioPorCodigo(codigo) {

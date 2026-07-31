@@ -77,7 +77,8 @@ const getSolicitudActiva = async (req, res) => {
                     op.nombre AS opcionElegida,
                     mi.nombre AS modalidadNombre,
                     ep.nombre AS etapaNombre,
-                    me.orden AS etapaOrden
+                    me.orden AS etapaOrden,
+                    re.calificacion, re.aprobado AS resultadoAprobado, re.observaciones AS resultadoObservaciones, re.fechaCaptura
              FROM solicitud s
              JOIN convocatorias c ON s.idConvocatoria = c.id
              LEFT JOIN convocatoria_opcion co ON s.idConvocatoriaOpcion = co.id
@@ -85,6 +86,7 @@ const getSolicitudActiva = async (req, res) => {
              LEFT JOIN modalidad_ingreso mi ON s.idModalidad = mi.id
              LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
              LEFT JOIN modalidad_etapa me ON s.idModalidad = me.modalidad_id AND s.idEtapaActual = me.etapa_id
+             LEFT JOIN resultado_examen re ON s.id = re.idSolicitud
              WHERE s.idAspi = ? AND s.estado != 'CANCELADO'
              ORDER BY s.creadoEn DESC LIMIT 1`,
             [idAspi]
@@ -96,6 +98,27 @@ const getSolicitudActiva = async (req, res) => {
             if (solicitud.idEtapaActual) {
                 accionesDisponibles = await WorkflowService.getAccionesDeEtapa(solicitud.idEtapaActual);
             }
+
+            // Buscar documentos subidos para esta solicitud
+            const [documentos] = await db.query(
+                `SELECT sd.id as idDocumento, sd.idSolicitud, sd.idRequisito, sd.rutaArchivo, sd.estadoValidacion, sd.comentarios, sd.intentos, cr.nombre as requisitoNombre
+                 FROM solicitud_documentos sd
+                 JOIN catalogo_requisitos cr ON sd.idRequisito = cr.id
+                 WHERE sd.idSolicitud = ?
+                 ORDER BY sd.intentos ASC`,
+                [solicitud.id]
+            );
+
+            // Filtrar solo el último intento por requisito
+            const mapaDocs = {};
+            documentos.forEach(doc => {
+                const key = doc.idRequisito;
+                if (!mapaDocs[key] || doc.intentos > mapaDocs[key].intentos) {
+                    mapaDocs[key] = doc;
+                }
+            });
+            solicitud.documentosSubidos = Object.values(mapaDocs);
+
             return res.status(200).json({ existe: true, accionesDisponibles, ...solicitud });
         } else {
             return res.status(200).json({ existe: false });
@@ -163,7 +186,7 @@ const enviarExpediente = async (req, res) => {
 
         // Obtener los requisitos OBLIGATORIOS de la convocatoria
         const [requisitosObligatorios] = await db.query(
-            'SELECT id FROM convocatoria_requisitos WHERE convocatoria_id = ? AND obligatorio = 1',
+            'SELECT requisito_id as id FROM convocatoria_requisitos WHERE convocatoria_id = ? AND obligatorio = 1',
             [solicitud.idConvocatoria]
         );
         if (requisitosObligatorios.length > 0) {
@@ -326,11 +349,12 @@ const getSolicitudesPorModalidadCodigo = async (req, res) => {
                 mi.codigo AS modalidadCodigo,
                 ep.id AS idEtapaActual,
                 ep.nombre AS etapaNombre,
-                pe.id AS idProgramacion,
-                pe.fecha,
+                COALESCE(pe.id, pc.id) AS idProgramacion,
+                COALESCE(pe.fecha, pc.fechaInicio) AS fecha,
+                pc.fechaFin,
                 pe.hora,
-                pe.lugar,
-                pe.observaciones
+                COALESCE(pe.lugar, pc.aula) AS lugar,
+                COALESCE(pe.observaciones, pc.observaciones) AS observaciones
             FROM solicitud s
             JOIN aspirante a ON s.idAspi = a.id
             JOIN usuario u ON a.idUsuario = u.id
@@ -342,6 +366,7 @@ const getSolicitudesPorModalidadCodigo = async (req, res) => {
             LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
             LEFT JOIN modalidad_etapa me ON s.idModalidad = me.modalidad_id AND s.idEtapaActual = me.etapa_id
             LEFT JOIN programacion_examen pe ON pe.idSolicitud = s.id
+            LEFT JOIN programacion_curso pc ON pc.idSolicitud = s.id
             WHERE mi.codigo = ? AND s.estado != 'CANCELADO' ${filtroEtapa}
             ORDER BY s.creadoEn DESC
         `;

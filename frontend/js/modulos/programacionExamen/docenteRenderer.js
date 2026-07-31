@@ -13,7 +13,7 @@ const moduloProgramacionExamenDocenteRenderer = {
         
         if (!modalTitulo || !modalBody) return;
 
-        modalTitulo.innerHTML = '<i class="fa-solid fa-calendar-check"></i> Programar Examen';
+        modalTitulo.innerHTML = soliData.modoReprogramar ? '<i class="fa-solid fa-pen-to-square"></i> Reprogramar Examen' : '<i class="fa-solid fa-calendar-check"></i> Programar Examen';
 
         // Crear contenedor para el módulo
         const divContainer = document.createElement('div');
@@ -21,7 +21,7 @@ const moduloProgramacionExamenDocenteRenderer = {
         
         divContainer.innerHTML = `
             <div style="margin-bottom: 20px;">
-                <p>Programe la fecha, hora y lugar del examen para el aspirante <strong>${soliData.aspiranteNombre || 'Seleccionado'}</strong>.</p>
+                <p>${soliData.modoReprogramar ? 'Actualice' : 'Programe'} la fecha, hora y lugar del examen para el aspirante <strong>${soliData.aspiranteNombre || 'Seleccionado'}</strong>.</p>
             </div>
             
             <form id="form-programar-examen" onsubmit="event.preventDefault();">
@@ -48,7 +48,7 @@ const moduloProgramacionExamenDocenteRenderer = {
 
                 <div style="display: flex; justify-content: flex-end; gap: 12px;">
                     <button type="button" class="btn-secondary" onclick="document.getElementById('modal-docente-dinamico').style.display='none'" style="padding: 10px 20px; border-radius: 6px; font-weight: 600;">Cancelar</button>
-                    <button type="button" class="btn-primary" id="btn-guardar-programacion" style="padding: 10px 20px; border-radius: 6px; font-weight: 600; border: none;">Guardar Programación</button>
+                    <button type="button" class="btn-primary" id="btn-guardar-programacion" style="padding: 10px 20px; border-radius: 6px; font-weight: 600; border: none;">${soliData.modoReprogramar ? 'Actualizar Programación' : 'Guardar Programación'}</button>
                 </div>
             </form>
         `;

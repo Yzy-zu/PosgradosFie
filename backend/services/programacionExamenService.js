@@ -87,9 +87,13 @@ class ProgramacionExamenService {
             [idSolicitud, calificacion, aprobado ? 1 : 0, observaciones || null]
         );
 
-        // Avanzamos etapa en el workflow
-        await WorkflowService.avanzarEtapa(idSolicitud);
-        return { success: true, mensaje: 'Resultado capturado correctamente.' };
+        // Al capturar la calificación final del examen, avanzamos la solicitud directamente a la etapa de Resultado (etapa 6)
+        const [etapasResultado] = await db.query("SELECT id FROM etapa_proceso WHERE nombre = 'Resultado' LIMIT 1");
+        const idEtapaResultado = etapasResultado.length > 0 ? etapasResultado[0].id : 6;
+
+        await db.query('UPDATE solicitud SET idEtapaActual = ? WHERE id = ?', [idEtapaResultado, idSolicitud]);
+
+        return { success: true, mensaje: 'Resultado capturado y etapa avanzada a Resultado correctamente.' };
     }
 }
 
