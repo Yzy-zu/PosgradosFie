@@ -2117,7 +2117,18 @@ const MODULOS_REGISTRY = {
     'PROGRAMAR_CURSO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
     'CAPTURAR_RESULTADO_CURSO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
     'CAPTURAR_RESULTADO_PROPEDEUTICO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
-    'PUBLICAR_RESULTADO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
+    'PUBLICAR_RESULTADO': (soliData, accion) => {
+        const codigoMod = (soliData.modalidadCodigo || soliData.modalidadNombre || '').toUpperCase();
+        if (codigoMod.includes('PROMEDIO')) {
+            if (typeof moduloPromedio !== 'undefined') moduloPromedio.ejecutar(soliData, accion);
+        } else if (codigoMod.includes('EXAMEN')) {
+            if (typeof moduloProgramacionExamen !== 'undefined') {
+                (moduloProgramacionExamen.ejecutarAspirante || moduloProgramacionExamen.ejecutar)(soliData, accion);
+            }
+        } else {
+            if (typeof moduloCurso !== 'undefined') moduloCurso.ejecutar(soliData, accion);
+        }
+    },
     'VALIDAR_PROMEDIO': (soliData, accion) => typeof moduloPromedio !== 'undefined' && moduloPromedio.ejecutar(soliData, accion)
 };
 
@@ -2136,7 +2147,7 @@ function hidratarUI(soliData) {
     }
 
     const navAdmision = document.getElementById('li-nav-admision');
-    if (navAdmision && soliData.etapaOrden && soliData.etapaOrden >= 2) {
+    if (navAdmision && ((soliData.etapaOrden && soliData.etapaOrden >= 2) || (soliData.idEtapaActual && soliData.idEtapaActual > 1))) {
         navAdmision.style.display = 'block';
     }
 

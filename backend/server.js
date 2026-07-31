@@ -55,7 +55,9 @@ app.use('/api/documentos', require('./routes/documentos.routes'));
 app.use('/api/examen/programacion', require('./routes/programacionExamen.routes'));
 app.use('/api/programacion-examen', require('./routes/programacionExamen.routes'));
 app.use('/api/programacion-curso', require('./routes/programacionCurso.routes'));
+app.use('/api/validacion-promedio', require('./routes/validacionPromedio.routes'));
 app.use('/api/requisitos', require('./routes/requisitos.routes'));
+
 
 // -------------------------------------------------------------------
 // Ruta protegida para servir archivos de solicitud (Bug 10 Fix)

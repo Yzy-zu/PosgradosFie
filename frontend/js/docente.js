@@ -9,7 +9,8 @@ const DOCENTE_MODULOS_REGISTRY = {
     'CAPTURAR_RESULTADO_EXAMEN': typeof moduloProgramacionExamen !== 'undefined' ? moduloProgramacionExamen : null,
     'PROGRAMAR_CURSO': typeof moduloCurso !== 'undefined' ? moduloCurso : null,
     'CAPTURAR_RESULTADO_CURSO': typeof moduloCurso !== 'undefined' ? moduloCurso : null,
-    'CAPTURAR_RESULTADO_PROPEDEUTICO': typeof moduloCurso !== 'undefined' ? moduloCurso : null
+    'CAPTURAR_RESULTADO_PROPEDEUTICO': typeof moduloCurso !== 'undefined' ? moduloCurso : null,
+    'VALIDAR_PROMEDIO': typeof moduloPromedio !== 'undefined' ? moduloPromedio : null
 };
 
 function abrirModalDinamico() {
@@ -1620,50 +1621,171 @@ function abrirCapturaCurso(idSolicitud, aspiranteNombre) {
     });
 }
 
-async function cargarTablaPromedioPorCodigo(codigo) {
-    const tbody = document.getElementById('tabla-promedio-body');
-    if (!tbody) return;
+let promediosActivos = [];
+
+async function cargarTablaPromedioPorCodigo(codigo = 'PROMEDIO') {
+    const contenedor = document.getElementById('contenedor-promedio-cards');
+    if (!contenedor) return;
 
     try {
         const respuesta = await fetch(`/api/solicitud/modalidad/codigo/${codigo}`);
-        const data = respuesta.ok ? await respuesta.json() : [];
+        if (!respuesta.ok) throw new Error("Error al obtener solicitudes para evaluación de promedio");
 
-        tbody.innerHTML = '';
+        const data = await respuesta.json();
+        promediosActivos = data;
+        renderPromediosCards(promediosActivos);
+    } catch (error) {
+        console.error("Error al cargar la sección de promedio:", error);
+        contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">Error al cargar datos del servidor.</div>`;
+    }
+}
 
-        if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted); padding: 25px;">No hay registros de evaluación por promedio.</td></tr>`;
-            return;
+function renderPromediosCards(dataList) {
+    const contenedor = document.getElementById('contenedor-promedio-cards');
+    if (!contenedor) return;
+    contenedor.innerHTML = '';
+
+    let contPendientes = 0;
+    let contAprobados = 0;
+    let contRechazados = 0;
+
+    if (!dataList || dataList.length === 0) {
+        contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">No hay aspirantes registrados por promedio FIE.</div>`;
+        
+        const elemPend = document.getElementById('stat-promedio-pendientes');
+        const elemAprob = document.getElementById('stat-promedio-aprobados');
+        const elemRech = document.getElementById('stat-promedio-rechazados');
+
+        if (elemPend) elemPend.textContent = '0';
+        if (elemAprob) elemAprob.textContent = '0';
+        if (elemRech) elemRech.textContent = '0';
+        return;
+    }
+
+    dataList.forEach(item => {
+        const acciones = item.accionesDisponibles || [];
+        const tieneAccionValidar = acciones.some(a => a.codigo === 'VALIDAR_PROMEDIO') || item.idEtapaActual === 5;
+        const estado = item.estadoSolicitud || 'PENDIENTE';
+        let uiEstadoId = 'pendiente';
+        let borderColor = 'var(--color-border)';
+        let estadoLabel = '● En revisión de promedio';
+        let badgeHTML = '';
+        let disableAuditar = true;
+
+        if (estado === 'APROBADO' || (item.etapaNombre && item.etapaNombre.toLowerCase().includes('resultado'))) {
+            uiEstadoId = 'aprobado';
+            contAprobados++;
+            borderColor = '#22c55e';
+            estadoLabel = '✓ Promedio Válido';
+            badgeHTML = `<span style="background: #f0fdf4; color: #16a34a; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #bbf7d0; margin-left: 8px;">APROBADO</span>`;
+            disableAuditar = true;
+        } else if (estado === 'RECHAZADO') {
+            uiEstadoId = 'rechazado';
+            contRechazados++;
+            borderColor = '#ef4444';
+            estadoLabel = '✕ Promedio Rechazado';
+            badgeHTML = `<span style="background: #fef2f2; color: #dc2626; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #fecaca; margin-left: 8px;">RECHAZADO</span>`;
+            disableAuditar = true;
+        } else if (!tieneAccionValidar) {
+            // Aspirante aún está en Etapa 1 (Documentación) o etapa previa
+            uiEstadoId = 'pendiente';
+            contPendientes++;
+            borderColor = '#f97316';
+            estadoLabel = '● En revisión de documentos';
+            badgeHTML = `<span style="background: #fff7ed; color: #ea580c; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #fed7aa; margin-left: 8px;">DOCUMENTACIÓN</span>`;
+            disableAuditar = true;
+        } else {
+            // Etapa de Validación de Promedio activa (Etapa 5)
+            uiEstadoId = 'pendiente';
+            contPendientes++;
+            borderColor = '#f97316';
+            estadoLabel = '● Listo para dictamen de promedio';
+            badgeHTML = `<span style="background: #fff7ed; color: #ea580c; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #fed7aa; margin-left: 8px;">PENDIENTE</span>`;
+            disableAuditar = false;
         }
 
-        data.forEach(item => {
-            const tr = document.createElement('tr');
-            tr.style.borderBottom = '1px solid var(--color-border)';
-            let badgePrograma = '';
-            if (item.posgradoTipo === 'DOCTORADO') {
-                badgePrograma = `<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">D</span>`;
-            } else if (item.posgradoTipo === 'MAESTRIA') {
-                badgePrograma = `<span style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">M</span>`;
-            }
-            const nombreOpcion = item.opcionNombre || 'Sin especialidad asignada';
+        item.uiEstadoId = uiEstadoId;
 
-            tr.innerHTML = `
-                <td style="padding: 12px 15px;">
-                    <strong>${item.aspiranteNombre || 'Sin nombre'}</strong><br>
-                    <small style="color: var(--color-text-muted);">${item.correo || ''}</small>
-                </td>
-                <td style="padding: 12px 15px;">${badgePrograma} ${nombreOpcion}</td>
-                <td style="padding: 12px 15px; font-weight: 600;">${item.modalidadNombre}</td>
-                <td style="padding: 12px 15px;">${item.etapaNombre || 'En revisión'}</td>
-                <td style="padding: 12px 15px; text-align: center;">
-                    <span class="badge badge-aprobado" style="padding: 4px 10px; border-radius: 12px; font-size: 11px;">${item.estadoSolicitud || 'Registrado'}</span>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    } catch (error) {
-        console.error("Error al cargar la tabla promedio:", error);
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted); padding: 25px;">Error al cargar datos del servidor.</td></tr>`;
-    }
+        let programBadge = '';
+        if (item.posgradoTipo === 'DOCTORADO') {
+            programBadge = `<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">D</span>`;
+        } else if (item.posgradoTipo === 'MAESTRIA') {
+            programBadge = `<span style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">M</span>`;
+        }
+
+        const botonHTML = disableAuditar ? `
+            <button disabled style="width: 100%; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px; border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text-muted); cursor: not-allowed;" title="El aspirante aún no tiene aprobada su documentación para auditar el promedio">
+                <i class="fa-solid fa-lock me-1"></i> Esperando validación documental
+            </button>
+        ` : `
+            <button class="btn-primary" onclick="moduloPromedio.auditarPromedio(${item.idSolicitud}, () => cargarTablaPromedioPorCodigo('PROMEDIO'))" style="width: 100%; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px; border: none; cursor: pointer; background: var(--color-primary); color: white;">
+                <i class="fa-solid fa-file-signature me-1"></i> Auditar / Validar Promedio
+            </button>
+        `;
+
+        const card = document.createElement('div');
+        card.style.background = 'var(--color-card-bg)';
+        card.style.border = `1px solid ${borderColor}`;
+        card.style.borderRadius = '12px';
+        card.style.padding = '20px';
+        card.style.display = 'flex';
+        card.style.flexDirection = 'column';
+        card.style.gap = '16px';
+        card.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h4 style="margin: 0; font-size: 16px; color: var(--color-text); font-weight: bold;">${item.aspiranteNombre}</h4>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--color-text-muted);">${programBadge} ${item.opcionNombre || 'Sin especialidad'}</p>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 8px; font-size: 13px; color: var(--color-text);">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-calculator" style="color: var(--color-text-muted);"></i>
+                    <span>Modalidad: ${item.modalidadNombre || 'Promedio FIE'}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-layer-group" style="color: var(--color-text-muted);"></i>
+                    <span>Etapa: ${item.etapaNombre || 'Validación de Promedio'}</span>
+                </div>
+            </div>
+            <div style="padding-top: 12px; border-top: 1px solid var(--color-border); margin-top: auto;">
+                <div style="font-size: 12px; font-weight: bold; color: ${borderColor}; margin-bottom: 12px; display: flex; align-items: center;">
+                    ${estadoLabel} ${badgeHTML}
+                </div>
+                ${botonHTML}
+            </div>
+        `;
+        contenedor.appendChild(card);
+    });
+
+    const elemPend = document.getElementById('stat-promedio-pendientes');
+    const elemAprob = document.getElementById('stat-promedio-aprobados');
+    const elemRech = document.getElementById('stat-promedio-rechazados');
+
+    if (elemPend) elemPend.textContent = contPendientes;
+    if (elemAprob) elemAprob.textContent = contAprobados;
+    if (elemRech) elemRech.textContent = contRechazados;
+}
+
+function filtrarTablaPromedioUI() {
+    const textoInput = document.getElementById('filtro-promedio-texto');
+    const estadoSelect = document.getElementById('filtro-promedio-estado');
+    const programaSelect = document.getElementById('filtro-promedio-programa');
+
+    const texto = textoInput ? textoInput.value.toLowerCase() : '';
+    const estado = estadoSelect ? estadoSelect.value : '';
+    const programa = programaSelect ? programaSelect.value : '';
+
+    const filtrados = promediosActivos.filter(item => {
+        const matchTexto = item.aspiranteNombre.toLowerCase().includes(texto) || (item.opcionNombre && item.opcionNombre.toLowerCase().includes(texto));
+        const matchEstado = estado === '' || item.uiEstadoId === estado;
+        const matchPrograma = programa === '' || (item.posgradoTipo && item.posgradoTipo.toLowerCase().includes(programa.toLowerCase()));
+        return matchTexto && matchEstado && matchPrograma;
+    });
+
+    renderPromediosCards(filtrados);
 }
 
 

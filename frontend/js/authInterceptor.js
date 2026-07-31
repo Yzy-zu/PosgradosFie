@@ -5,7 +5,7 @@ window.fetch = async (...args) => {
     let [resource, config] = args;
 
     // 1. Obtener el token (asegúrate de que el nombre coincida con tu login)
-    const token = sessionStorage.getItem('token'); 
+    const token = sessionStorage.getItem('token');
 
     config = config || {};
     config.headers = config.headers || {};

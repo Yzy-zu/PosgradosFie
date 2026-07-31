@@ -580,23 +580,50 @@
 
         <!-- SECCIÓN: PROMEDIO -->
         <section id="view-promedio" class="view-section">
-            <div class="card"
-                style="padding: 20px; overflow-x: auto; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
-                <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
-                    <thead>
-                        <tr
-                            style="border-bottom: 2px solid var(--color-border); font-size: 13px; text-transform: uppercase; color: var(--color-text-muted);">
-                            <th style="padding: 12px 15px;">Aspirante</th>
-                            <th style="padding: 12px 15px;">Programa</th>
-                            <th style="padding: 12px 15px;">Promedio Licenciatura</th>
-                            <th style="padding: 12px 15px;">Promedio Mínimo Requerido</th>
-                            <th style="padding: 12px 15px; text-align: center;">Dictamen Promedio</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-promedio-body">
-                        <!-- Filas inyectadas por JS -->
-                    </tbody>
-                </table>
+            
+            <!-- TOOLBAR: Filtros y KPIs compactos -->
+            <div class="card" style="padding: 16px; margin-bottom: 24px; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                
+                <!-- Buscador y Filtros (Mitad Izquierda) -->
+                <div style="display: flex; gap: 12px; flex: 1; max-width: 60%;">
+                    <div style="flex: 1; position: relative; min-width: 200px;">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
+                        <input type="text" id="filtro-promedio-texto" placeholder="Buscar aspirante..." oninput="filtrarTablaPromedioUI()" style="width: 100%; padding: 8px 12px 8px 35px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
+                    </div>
+                    <div style="width: 160px; flex-shrink: 0;">
+                        <select id="filtro-promedio-estado" onchange="filtrarTablaPromedioUI()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
+                            <option value="">Estados (Todos)</option>
+                            <option value="pendiente">Pendientes de dictamen</option>
+                            <option value="aprobado">Promedio Válido</option>
+                            <option value="rechazado">Promedio Rechazado</option>
+                        </select>
+                    </div>
+                    <div style="width: 160px; flex-shrink: 0;">
+                        <select id="filtro-promedio-programa" onchange="filtrarTablaPromedioUI()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
+                            <option value="">Programas (Todos)</option>
+                            <option value="Maestría">Maestría</option>
+                            <option value="Doctorado">Doctorado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- KPIs compactos (Mitad Derecha) -->
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <div title="Pendientes" style="display: flex; align-items: center; gap: 8px; background: #fff7ed; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #f97316; border: 1px solid #fed7aa;">
+                        <i class="fa-solid fa-clock-rotate-left"></i> <span id="stat-promedio-pendientes">0</span>
+                    </div>
+                    <div title="Promedios Aprobados" style="display: flex; align-items: center; gap: 8px; background: #f0fdf4; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #22c55e; border: 1px solid #bbf7d0;">
+                        <i class="fa-solid fa-circle-check"></i> <span id="stat-promedio-aprobados">0</span>
+                    </div>
+                    <div title="Promedios Rechazados" style="display: flex; align-items: center; gap: 8px; background: #fef2f2; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #ef4444; border: 1px solid #fecaca;">
+                        <i class="fa-solid fa-circle-xmark"></i> <span id="stat-promedio-rechazados">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENEDOR DE TARJETAS -->
+            <div id="contenedor-promedio-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+                <!-- Tarjetas inyectadas por JS -->
             </div>
         </section>
 
@@ -777,6 +804,10 @@
     <script src="js/modulos/curso/docenteRenderer.js"></script>
     <script src="js/modulos/curso/renderer.js"></script>
     <script src="js/modulos/curso/index.js"></script>
+    
+    <script src="js/modulos/promedio/api.js"></script>
+    <script src="js/modulos/promedio/renderer.js"></script>
+    <script src="js/modulos/promedio/index.js"></script>
     
     <script src="js/docente.js"></script>
 </body>
