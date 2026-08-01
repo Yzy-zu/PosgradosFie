@@ -234,24 +234,94 @@
         </section>
 
         <section id="view-proceso" class="view-section">
+            <style>
+            /* Estilos del Mapa de Progreso (Candy Crush Style - Adaptado) */
+            .mapa-fondo {
+                background: transparent;
+                border-radius: 20px;
+                padding: 40px 20px;
+                width: 100%;
+                min-height: 450px;
+                position: relative;
+                overflow: hidden;
+            }
+            .mapa-ruta-svg {
+                position: absolute;
+                top: 0; left: 0; width: 100%; height: 100%;
+                z-index: 1; pointer-events: none;
+            }
+            .mapa-ruta-path {
+                fill: none;
+                stroke: var(--color-text-muted);
+                stroke-width: 12;
+                stroke-dasharray: 20, 15;
+                opacity: 0.3;
+            }
+            .mapa-ruta-path-fill {
+                fill: none;
+                stroke: var(--color-primary);
+                stroke-width: 12;
+                stroke-dasharray: 20, 15;
+                transition: stroke-dashoffset 1s ease;
+            }
+            .mapa-nivel {
+                width: 60px; height: 60px;
+                position: absolute;
+                z-index: 2;
+                display: flex; align-items: center; justify-content: center;
+                transform: translate(-50%, -50%);
+                transition: transform 0.2s, filter 0.2s;
+                cursor: pointer;
+                background-image: url('css/coin.png');
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+            }
+            .mapa-nivel-final {
+                width: 90px; height: 90px;
+                background-image: url('css/posgradofie.png');
+            }
+            .mapa-nivel:hover { transform: translate(-50%, -55%) scale(1.05); }
+            
+            .mapa-nivel.pendiente {
+                filter: grayscale(100%) opacity(0.6);
+            }
+            .mapa-nivel.completado, .mapa-nivel.actual {
+                filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));
+            }
+            .mapa-titulo {
+                position: absolute;
+                top: 40px; /* Debajo de la moneda */
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 13px;
+                font-weight: 800;
+                color: var(--color-text);
+                text-align: center;
+                white-space: nowrap;
+                text-shadow: 0 2px 4px var(--color-card-bg), 0 -2px 4px var(--color-card-bg), 2px 0 4px var(--color-card-bg), -2px 0 4px var(--color-card-bg);
+            }
+            .mapa-zorro {
+                position: absolute;
+                width: 80px; height: auto;
+                z-index: 5;
+                transform: translate(-50%, -100%);
+                animation: saltoZorro 1.2s infinite ease-in-out;
+                filter: drop-shadow(0 10px 5px rgba(0,0,0,0.4));
+                pointer-events: none;
+            }
+            @keyframes saltoZorro {
+                0%, 100% { transform: translate(-50%, -90%); }
+                50% { transform: translate(-50%, -120%); }
+            }
+
+            </style>
             <div style="display: flex; gap: 25px; flex-wrap: wrap;">
-                <div class="premium-panel"
-                    style="flex: 1; min-width: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                    <h3 data-i18n="proc_estatus_exp" style="margin-bottom: 25px;">Estatus del Expediente Digital</h3>
-
-                    <div id="grafica-pastel" class="pie-chart">
-                        <div class="pie-center"><span id="txt-porcentaje">0%</span></div>
-                    </div>
-
-                    <div class="chart-legend">
-                        <div class="legend-item"><span class="dot approved"></span> <span
-                                data-i18n="proc_aprobados">Aprobados</span> (<strong id="lbl-aprobados">0</strong>)
-                        </div>
-                        <div class="legend-item"><span class="dot rejected"></span> <span
-                                data-i18n="proc_rechazados">Rechazados</span> (<strong id="lbl-rechazados">0</strong>)
-                        </div>
-                        <div class="legend-item"><span class="dot pending"></span> <span
-                                data-i18n="proc_pendientes">Pendientes</span> (<strong id="lbl-pendientes">--</strong>)
+                <div class="premium-panel" style="flex: 1; min-width: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
+                    <h3 data-i18n="proc_estatus_exp" style="margin-bottom: 25px; font-weight: 800; font-size: 24px;">Tu Ruta de Admisión</h3>
+                    <div id="mapa-proceso-container" class="mapa-fondo">
+                        <div style="text-align: center; padding: 40px; color: white; font-size: 18px; font-weight: bold;">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Cargando tu ruta...
                         </div>
                     </div>
                 </div>

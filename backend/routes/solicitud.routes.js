@@ -18,11 +18,13 @@ const {
     getAccionesSolicitud,
     getSolicitudesPorModalidad,
     getSolicitudesPorModalidadCodigo,
-    getSolicitudesActivas
+    getSolicitudesActivas,
+    getMapaProceso
 } = require('../controllers/solicitudController');
 
 router.post('/crear', crearSolicitud);
-router.get('/activa/:idAspi', getSolicitudActiva);
+router.get('/activa/:idAspi', verificarToken, getSolicitudActiva);
+router.get('/mapa/:idAspi', verificarToken, getMapaProceso);
 router.put('/cancelar/:id', cancelarSolicitud);
 router.put('/modalidad/:id', actualizarModalidad);
 router.put('/enviar/:id', enviarExpediente);

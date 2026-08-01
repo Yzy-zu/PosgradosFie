@@ -442,6 +442,72 @@ const getSolicitudesActivas = async (req, res) => {
     }
 };
 
+// Obtener mapa del proceso (niveles)
+const getMapaProceso = async (req, res) => {
+    try {
+        const { idAspi } = req.params;
+
+        // 1. Obtener solicitud activa
+        const [solicitudes] = await db.query(
+            "SELECT s.id, s.estado, s.idModalidad, s.idEtapaActual, me.orden AS etapaActualOrden " +
+            "FROM solicitud s " +
+            "LEFT JOIN modalidad_etapa me ON s.idModalidad = me.modalidad_id AND s.idEtapaActual = me.etapa_id " +
+            "WHERE s.idAspi = ? AND s.estado != 'CANCELADO' " +
+            "ORDER BY s.creadoEn DESC LIMIT 1",
+            [idAspi]
+        );
+
+        if (solicitudes.length === 0) {
+            return res.status(404).json({ mensaje: 'No hay solicitud activa.' });
+        }
+
+        const solicitud = solicitudes[0];
+        
+        // Si no tiene modalidad aún asignada, no hay mapa
+        if (!solicitud.idModalidad) {
+            return res.status(200).json([]);
+        }
+
+        // El orden actual, si no tiene etapa es 1 (inicio)
+        let ordenActual = solicitud.etapaActualOrden || 1;
+        
+        // Si el proceso ya finalizó exitosamente, marcamos todo como completado
+        if (solicitud.estado === 'APROBADO') {
+            ordenActual = 9999;
+        }
+
+        // 2. Obtener las etapas de la modalidad
+        const [etapas] = await db.query(
+            `SELECT me.orden, ep.id, ep.nombre 
+             FROM modalidad_etapa me 
+             JOIN etapa_proceso ep ON me.etapa_id = ep.id 
+             WHERE me.modalidad_id = ? 
+             ORDER BY me.orden ASC`,
+            [solicitud.idModalidad]
+        );
+
+        // Agregar etapa inicial "Convocatoria"
+        etapas.unshift({ orden: 0, id: 'convocatoria', nombre: 'Convocatoria' });
+
+        // 3. Mapear estado
+        const mapa = etapas.map(etapa => {
+            let status = 'pendiente';
+            if (etapa.orden < ordenActual) status = 'completado';
+            else if (etapa.orden === ordenActual) status = 'actual';
+            
+            return {
+                ...etapa,
+                status
+            };
+        });
+
+        return res.status(200).json(mapa);
+    } catch (error) {
+        console.error('Error en getMapaProceso:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
+    }
+};
+
 module.exports = {
     crearSolicitud,
     getSolicitudActiva,
@@ -453,6 +519,7 @@ module.exports = {
     getAccionesSolicitud,
     getSolicitudesPorModalidad,
     getSolicitudesPorModalidadCodigo,
-    getSolicitudesActivas
+    getSolicitudesActivas,
+    getMapaProceso
 };
 

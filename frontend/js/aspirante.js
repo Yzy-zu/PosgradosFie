@@ -325,36 +325,55 @@ async function cargarStatsInicio() {
 }
 
 /**
- * Bug 6 Fix: Carga datos reales del expediente para actualizar la gráfica de proceso
+ * Fase 2: Carga los datos del mapa desde el nuevo endpoint
  */
 async function cargarDatosProceso() {
-    if (!aspiranteData || !aspiranteData.id || !currentSolicitudId) {
-        // Sin solicitud activa: mostrar gráfica en cero
-        actualizarGraficaProceso(0, 0, 0);
+    if (!aspiranteData || !aspiranteData.id) {
+        renderizarMapaProceso([], 0);
         return;
     }
 
     mostrarLoader();
     try {
-        const res = await fetch(`/api/aspirante/${aspiranteData.id}/expediente`);
-        if (!res.ok) return;
-
-        const data = await res.json();
-        const solicitudActiva = data.solicitudes?.find(s => s.idSolicitud === currentSolicitudId);
-
-        if (!solicitudActiva || !solicitudActiva.documentos || solicitudActiva.documentos.length === 0) {
-            actualizarGraficaProceso(0, 0, 0);
+        const headers = { 'Authorization': `Bearer ${sessionStorage.getItem('token')}` };
+        const [resMapa, resExp] = await Promise.all([
+            fetch(`/api/solicitud/mapa/${aspiranteData.id}`, { headers }),
+            fetch(`/api/aspirante/${aspiranteData.id}/expediente`, { headers })
+        ]);
+        
+        if (!resMapa.ok) {
+            renderizarMapaProceso([], 0);
             return;
         }
 
-        const docs = solicitudActiva.documentos;
-        const total = docs.length;
-        const aprobados = docs.filter(d => d.estadoValidacion === 'APROBADO').length;
-        const rechazados = docs.filter(d => d.estadoValidacion === 'RECHAZADO').length;
+        const etapas = await resMapa.json();
+        const expData = resExp.ok ? await resExp.json() : null;
 
-        actualizarGraficaProceso(aprobados, rechazados, total);
+        let avance = 0;
+        
+        // Find current stage
+        const actualIndex = etapas.findIndex(e => e.status === 'actual');
+        
+        if (actualIndex > 0) {
+            const etapaActual = etapas[actualIndex];
+            // Si la etapa actual es Documentación (id=1)
+            if (etapaActual.id === 1 && expData && expData.solicitudes) {
+                const solActiva = expData.solicitudes.find(s => s.estado !== 'CANCELADO');
+                if (solActiva && solActiva.documentos) {
+                    const total = solActiva.documentos.length;
+                    const aprobados = solActiva.documentos.filter(d => d.estadoValidacion === 'APROBADO').length;
+                    avance = total > 0 ? (aprobados / total) : 0.05; // 0.05 minimo para ver zorro avanzar poquito
+                }
+            } else {
+                // Otras etapas podrían tener lógicas de avance, por ahora 0.1
+                avance = 0.1; 
+            }
+        }
+
+        renderizarMapaProceso(etapas, avance);
     } catch (error) {
-        console.error('Error al cargar datos de proceso:', error);
+        console.error('Error al cargar datos del mapa:', error);
+        renderizarMapaProceso([], 0);
     } finally {
         ocultarLoader();
     }
@@ -605,7 +624,7 @@ function abrirNotificacion(remitenteKey, element) {
 
         let chatHtml = `<div style="max-height: 400px; overflow-y: auto; text-align: left; padding: 10px; background: var(--color-bg); border-radius: 8px;">`;
         let lastDateStr = '';
-        
+
         grupo.mensajes.forEach(notif => {
             const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
             const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
@@ -770,8 +789,8 @@ async function activarModulosPostRegistro(nombrePrograma) {
     }
 
     // Ejecutar actualización de gráficas inicial si existen los elementos
-    if (document.getElementById('grafica-pastel')) {
-        actualizarGraficaProceso();
+    if (document.getElementById('mapa-proceso-container')) {
+        cargarDatosProceso();
     }
 }
 
@@ -899,7 +918,7 @@ function cambiarEstacion(nuevaEstacion) {
 
     // BUG-04 Fix: solo marcar como 'completed' al avanzar; al retroceder limpiar 'completed' del nodo actual
     const nodeActual = document.getElementById(`node-${estacionActual}`);
-    const nodeNuevo  = document.getElementById(`node-${nuevaEstacion}`);
+    const nodeNuevo = document.getElementById(`node-${nuevaEstacion}`);
 
     nodeActual.classList.remove('active');
     if (nuevaEstacion > estacionActual) {
@@ -923,17 +942,17 @@ function actualizarPosicionZorro(salto = true) {
     const fox = document.getElementById('fox-runner');
     const nodo = document.getElementById(`node-${estacionActual}`);
     const wrapper = document.querySelector('.stepper-wrapper');
-    
+
     // Solo calcular si está visible
     if (fox && nodo && wrapper && wrapper.offsetParent !== null) {
         fox.style.opacity = '1';
         const offsetLeft = nodo.offsetLeft + (nodo.offsetWidth / 2);
         fox.style.left = `${offsetLeft}px`;
-        
+
         // Actualizar la línea de progreso (animación tipo agua)
         const porcentaje = (estacionActual / 3) * 100;
         wrapper.style.setProperty('--progress', `${porcentaje}%`);
-        
+
         if (salto) {
             fox.style.transform = 'translate(-50%, -20px)';
             setTimeout(() => {
@@ -1023,7 +1042,7 @@ async function avanzarEstacion(nuevaEstacion) {
     // Ya no avanzamos la estacion_actual desde el frontend. 
     // El avance ocurre automáticamente al subir los documentos o al ser evaluados por el servidor según la modalidad_etapa.
     // Solo avanzamos la vista localmente.
-    
+
     ocultarLoader();
     if (boton) boton.disabled = false;
     cambiarEstacion(nuevaEstacion);
@@ -1436,17 +1455,17 @@ function abrirModalDoc(docStr) {
                 try {
                     enlace.style.opacity = '0.6';
                     enlace.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Cargando...`;
-                    
+
                     const res = await fetch(`/api/files/${doc.rutaArchivo}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
-                    
+
                     if (!res.ok) throw new Error('Error al obtener el archivo');
-                    
+
                     const blob = await res.blob();
                     const objectUrl = URL.createObjectURL(blob);
                     window.open(objectUrl, '_blank');
-                    
+
                     setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
                 } catch (error) {
                     console.error("Error al descargar archivo:", error);
@@ -1707,65 +1726,133 @@ function cargarConvocatorias() {
 }
 
 /**
- * Actualiza la gráfica de proceso con datos reales del expediente
- * @param {number} aprobados - Documentos aprobados
- * @param {number} rechazados - Documentos rechazados
- * @param {number} total - Total de documentos
+ * Actualiza la /**
+ * Renderiza el mapa dinámico interactivo estilo Candy Crush
  */
-function actualizarGraficaProceso(aprobados = 0, rechazados = 0, total = 5) {
-    const pieChart = document.getElementById('grafica-pastel');
-    const legend = document.querySelector('#view-proceso .chart-legend');
+function renderizarMapaProceso(etapas, avance = 0) {
+    const container = document.getElementById('mapa-proceso-container');
+    if (!container) return;
 
-    if (total === 0) {
-        if (pieChart) pieChart.style.display = 'none';
-        if (legend) legend.style.display = 'none';
-        
-        let emptyState = document.getElementById('proceso-empty');
-        if (!emptyState && pieChart) {
-            emptyState = document.createElement('div');
-            emptyState.id = 'proceso-empty';
-            emptyState.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: var(--color-text-muted);">
-                    <i class="fa-solid fa-chart-pie" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
-                    <h4 style="margin-bottom: 10px; color: var(--color-text);">${typeof t === 'function' ? t('proc_empty_title') : 'Aún no hay solicitud'}</h4>
-                    <p style="font-size: 14px;">${typeof t === 'function' ? t('proc_empty_desc') : 'Inicia tu proceso en una convocatoria para ver tu progreso.'}</p>
-                </div>
-            `;
-            pieChart.parentNode.insertBefore(emptyState, pieChart);
-        } else if (emptyState) {
-            emptyState.style.display = 'block';
-        }
+    if (!etapas || etapas.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--color-text-muted); margin-top: 100px;">
+                <i class="fa-solid fa-map-location-dot" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                <h4 style="margin-bottom: 10px; font-size: 24px; color: var(--color-text);">Aún no hay ruta</h4>
+                <p style="font-size: 16px;">Selecciona una convocatoria e inicia tu proceso para ver tu mapa.</p>
+            </div>
+        `;
         return;
     }
 
-    if (document.getElementById('proceso-empty')) document.getElementById('proceso-empty').style.display = 'none';
-    if (pieChart) pieChart.style.display = 'flex';
-    if (legend) legend.style.display = 'flex';
+    const width = container.clientWidth || 800;
+    const height = container.clientHeight || 450;
+    
+    let htmlNiveles = '';
+    let svgRuta = '';
+    
+    // Coordenadas para la meta
+    let lastX = 0, lastY = 0;
+    let zorroX = 0, zorroY = 0;
+    let tieneActual = false;
 
-    const pendientes = total - aprobados - rechazados;
+    // Generar ruta horizontal (de izquierda a derecha) con oscilación en Y
+    const paddingLeft = 40;
+    const paddingRight = 120; // Espacio extra para que quepa el logo de la FIE
+    const paddingY = 100;
+    const availableWidth = width - paddingLeft - paddingRight;
+    const availableHeight = height - (paddingY * 2);
+    const stepX = availableWidth / Math.max(1, (etapas.length - 1));
+    
+    const startX = paddingLeft;
 
-    if (document.getElementById('lbl-aprobados')) document.getElementById('lbl-aprobados').innerText = aprobados;
-    if (document.getElementById('lbl-rechazados')) document.getElementById('lbl-rechazados').innerText = rechazados;
-    if (document.getElementById('lbl-pendientes')) document.getElementById('lbl-pendientes').innerText = pendientes;
+    const coords = [];
+    etapas.forEach((etapa, index) => {
+        // Oscilación en Y usando Math.sin (incrementado a 3.5 ciclos para más curvas)
+        const wave = Math.sin((index / (etapas.length - 1 || 1)) * Math.PI * 3.5);
+        const cx = startX + (stepX * index);
+        const cy = paddingY + (availableHeight / 2) + (wave * (availableHeight / 2));
+        
+        lastX = cx;
+        lastY = cy;
 
-    const porcAprobado = total > 0 ? (aprobados / total) * 100 : 0;
-    const porcRechazado = total > 0 ? (rechazados / total) * 100 : 0;
-    const finAprobados = porcAprobado;
-    const finRechazados = finAprobados + porcRechazado;
+        coords.push({ cx, cy, status: etapa.status, nombre: etapa.nombre, index });
 
-    const grafica = document.getElementById('grafica-pastel');
-    if (grafica) {
-        grafica.style.background = `conic-gradient(
-            #27ae60 0% ${finAprobados}%, 
-            #c0392b ${finAprobados}% ${finRechazados}%, 
-            #7f8c8d ${finRechazados}% 100%
-        )`;
+        const isLast = index === etapas.length - 1;
+        
+        // HTML del nivel
+        htmlNiveles += `
+            <div class="mapa-nivel ${etapa.status} ${isLast ? 'mapa-nivel-final' : ''}" style="left: ${cx}px; top: ${cy}px;">
+                <div class="mapa-titulo" ${isLast ? 'style="top: 50px;"' : ''}>${etapa.nombre}</div>
+            </div>
+        `;
+    });
+
+    // Posición inicial del Zorro por defecto
+    const actualNode = coords.find(c => c.status === 'actual');
+    if (actualNode) {
+        zorroX = actualNode.cx;
+        zorroY = actualNode.cy;
+        tieneActual = true;
+    } else if (coords.length > 0 && coords[coords.length - 1].status === 'completado') {
+        zorroX = coords[coords.length - 1].cx;
+        zorroY = coords[coords.length - 1].cy;
+    } else if (coords.length > 0) {
+        zorroX = coords[0].cx;
+        zorroY = coords[0].cy;
     }
 
-    const txtPorcentaje = document.getElementById('txt-porcentaje');
-    if (txtPorcentaje) {
-        txtPorcentaje.innerText = `${Math.round(porcAprobado)}%`;
+    for (let i = 0; i < coords.length - 1; i++) {
+        const c1 = coords[i];
+        const c2 = coords[i+1];
+        
+        const cp1X = c1.cx + (stepX / 2);
+        const cp1Y = c1.cy;
+        const cp2X = c2.cx - (stepX / 2);
+        const cp2Y = c2.cy;
+        
+        const pathData = `M ${c1.cx} ${c1.cy} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${c2.cx} ${c2.cy}`;
+        
+        let pathClass = 'mapa-ruta-path'; // pendiente
+        let strokeAttrs = '';
+
+        if (c1.status === 'completado' && (c2.status === 'completado' || c2.status === 'actual')) {
+            // Tramo completamente recorrido
+            pathClass = 'mapa-ruta-path-fill';
+            svgRuta += `<path class="${pathClass}" d="${pathData}"></path>`;
+        } else if (c1.status === 'actual') {
+            // Tramo en progreso (de actual al siguiente)
+            svgRuta += `<path class="mapa-ruta-path" d="${pathData}"></path>`; // Fondo
+            
+            // Línea llena parcialmente
+            pathClass = 'mapa-ruta-path-fill partial-path';
+            const offset = 100 - (avance * 100);
+            strokeAttrs = `pathLength="100" style="stroke-dasharray: 100; stroke-dashoffset: ${offset};"`;
+            svgRuta += `<path class="${pathClass}" d="${pathData}" ${strokeAttrs}></path>`;
+            
+            // Aproximar Zorro a la curva Bezier si hay avance
+            if (avance > 0) {
+                const t = avance;
+                const invT = 1 - t;
+                zorroX = invT*invT*invT*c1.cx + 3*invT*invT*t*cp1X + 3*invT*t*t*cp2X + t*t*t*c2.cx;
+                zorroY = invT*invT*invT*c1.cy + 3*invT*invT*t*cp1Y + 3*invT*t*t*cp2Y + t*t*t*c2.cy;
+            }
+        } else {
+            // Línea pendiente
+            svgRuta += `<path class="${pathClass}" d="${pathData}"></path>`;
+        }
     }
+    
+    const svgHTML = `
+        <svg class="mapa-ruta-svg" preserveAspectRatio="none">
+            ${svgRuta}
+        </svg>
+    `;
+
+    const zorroHTML = zorroX && zorroY ? `
+        <img src="css/zorro.png" class="mapa-zorro" style="left: ${zorroX}px; top: ${zorroY}px;" alt="Zorro actual">
+    ` : '';
+
+    container.innerHTML = svgHTML + htmlNiveles + zorroHTML;
 }
 
 
@@ -2048,10 +2135,10 @@ async function cargarRequisitosDocumentales(idConvocatoria, documentosSubidos = 
                 const docSubido = documentosSubidos.find(d => parseInt(d.idRequisito) === req.id);
                 const isRequired = req.obligatorio ? '*' : '';
                 const requiredAttr = (req.obligatorio && !docSubido) ? 'required' : '';
-                
+
                 let displayHtml = '';
                 let fileBoxClass = 'file-box';
-                
+
                 if (docSubido) {
                     fileBoxClass = 'file-box file-selected';
                     let iconColor = 'var(--color-primary)';
@@ -2196,9 +2283,9 @@ function hidratarUI(soliData) {
             
             <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 25px; border-radius: 14px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
                 <h4 style="margin: 0 0 15px 0; font-size: 20px; display: flex; align-items: center; gap: 10px;">
-                    <i class="fa-solid fa-trophy" style="color: #fef08a; font-size: 24px;"></i> ¡Felicidades, tu calificación ha sido capturada!
+                    <i class="fa-solid fa-trophy" style="color: #fef08a; font-size: 24px;"></i> Felicidades, tu calificacion ha sido registrada!
                 </h4>
-                <p style="margin-bottom: 20px; opacity: 0.9;">Tu examen de admisión ha sido evaluado y los resultados ya forman parte de tu expediente institucional.</p>
+                <p style="margin-bottom: 20px; opacity: 0.9;">Tu examen de admisión ha sido evaluado y los resultados ya se integraron a tu proceso.</p>
                 
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                     <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
@@ -2206,7 +2293,7 @@ function hidratarUI(soliData) {
                         <strong style="font-size: 32px; display: block;">${soliData.calificacion}</strong>
                     </div>
                     <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
-                        <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">Dictamen</span>
+                        <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">Resultado</span>
                         <strong style="font-size: 28px; display: block;">${soliData.resultadoAprobado ? 'Aprobado' : 'No Aprobado'}</strong>
                     </div>
                 </div>
@@ -2219,9 +2306,9 @@ function hidratarUI(soliData) {
                 ` : ''}
             </div>
         `;
-        
+
         resultadoContainer.innerHTML = resultadoHtml;
-        
+
         // Ocultar el contenedor de módulos dinámicos para que no se dupliquen 
         // los avisos del examen una vez que ya hay resultado publicado.
         const admisionContainer = document.getElementById('admision-dinamico-container');
