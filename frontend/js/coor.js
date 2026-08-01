@@ -435,15 +435,13 @@ async function verExpediente(idAspirante) {
 ========================================================== */
 
 let listaDocentesCache = null;
-
-// A. Cargar la tabla de entrevistas
 // A. Cargar la tabla de entrevistas
 async function cargarEntrevistas() {
     console.log('Vista Entrevistas activa');
     const tbody = document.getElementById('tablaEntrevistasBody');
     if (!tbody) return;
 
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">
         <div class="spinner-border spinner-border-sm text-primary me-2"></div>
         Cargando la agenda de entrevistas...
     </td></tr>`;
@@ -456,7 +454,7 @@ async function cargarEntrevistas() {
         tbody.innerHTML = '';
 
         if (!entrevistas || entrevistas.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">
                 <i class="fa-solid fa-calendar-xmark fa-2x mb-2 d-block opacity-50"></i>
                 No hay entrevistas registradas o pendientes.
             </td></tr>`;
@@ -484,42 +482,61 @@ async function cargarEntrevistas() {
             const horaRaw = ent.hora || '';
             const lugarRaw = ent.lugar || ent.lugar_link || '';
 
+            // Limpiamos la fecha si viene en formato ISO (e.g. 2026-08-04T06:00:00.000Z)
+            const fechaLimpia = fechaRaw.includes('T') ? fechaRaw.split('T')[0] : fechaRaw;
+
             let fechaStr = 'Sin agendar';
-            if (fechaRaw) {
-                fechaStr = `${fechaRaw} ${horaRaw ? horaRaw.substring(0, 5) : ''}`.trim();
+            if (fechaLimpia) {
+                const horaLimpia = horaRaw ? horaRaw.substring(0, 5) : '';
+                fechaStr = `${fechaLimpia} ${horaLimpia}`.trim();
             }
 
-            const fechaValida = !!fechaRaw;
+            const fechaValida = !!fechaLimpia;
             const badgeEstado = fechaValida 
                 ? `<span class="badge bg-success">Programada</span>` 
                 : `<span class="badge bg-warning text-dark">Pendiente</span>`;
 
-            // Estructura HTML del renglón (sin onclick inline para evitar errores de comillas/sintaxis)
+            // 4. Formatear Lugar / Ubicación para su celda independiente
+            const esLink = lugarRaw.startsWith('http://') || lugarRaw.startsWith('https://');
+            const lugarTexto = lugarRaw.trim() ? lugarRaw.trim() : 'Sin especificar';
+
+            const htmlLugar = esLink 
+                ? `<a href="${lugarRaw}" target="_blank" class="btn btn-sm btn-outline-primary fw-medium">
+                     <i class="fa-solid fa-video me-1"></i> Abrir Enlace
+                   </a>`
+                : `<span class="text-secondary fw-medium">
+                     <i class="fa-solid fa-location-dot me-1 text-muted"></i>${lugarTexto}
+                   </span>`;
+
+            // 5. Estructura HTML de las 6 celdas
             tr.innerHTML = `
-                <td class="py-3">
+                <td class="py-3 align-middle">
                     <div class="fw-bold text-dark"></div>
                     <small class="text-muted font-monospace">${folioCurp}</small>
                 </td>
-                <td><span class="fw-medium text-secondary">${programa}</span></td>
-                <td><span class="fw-bold text-dark">${nombreDocente}</span></td>
-                <td>
+                <td class="align-middle"><span class="fw-medium text-secondary">${programa}</span></td>
+                <td class="align-middle"><span class="fw-bold text-dark">${nombreDocente}</span></td>
+                <td class="align-middle">
                     ${badgeEstado}
                     <small class="d-block text-muted mt-1 font-monospace">${fechaStr}</small>
                 </td>
-                <td class="text-end action-cell"></td>
+                <td class="align-middle">
+                    ${htmlLugar}
+                </td>
+                <td class="text-end align-middle action-cell"></td>
             `;
 
-            // Insertar el texto de manera segura
+            // Insertar el nombre del aspirante de manera segura
             tr.querySelector('.fw-bold.text-dark').textContent = nombreAspirante;
 
-            // Crear el botón mediante DOM para evitar el SyntaxError
+            // Crear el botón de acción mediante el DOM
             const btn = document.createElement('button');
-            btn.className = 'btn btn-sm btn-outline-primary';
+            btn.className = 'btn btn-sm btn-outline-primary fw-medium';
             btn.innerHTML = `<i class="fa-solid fa-calendar-plus me-1"></i> ${fechaValida ? 'Editar' : 'Programar'}`;
             
-            // Asignar el evento dinámicamente
+            // Asignar evento click pasando fechaLimpia para que el input date funcione correctamente
             btn.addEventListener('click', () => {
-                abrirModalEntrevista(idSolicitud, nombreAspirante, fechaRaw, horaRaw, idDocente, lugarRaw);
+                abrirModalEntrevista(idSolicitud, nombreAspirante, fechaLimpia, horaRaw, idDocente, lugarRaw);
             });
 
             tr.querySelector('.action-cell').appendChild(btn);
@@ -528,7 +545,7 @@ async function cargarEntrevistas() {
 
     } catch (err) {
         console.error('Error al cargar entrevistas:', err);
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">
             <i class="fa-solid fa-triangle-exclamation me-1"></i> Error al conectar con el módulo de entrevistas.
         </td></tr>`;
     }
@@ -686,11 +703,14 @@ async function guardarEntrevista(event) {
 }
 
 /* ==========================================================
-   6. NOTIFICACIONES
+   6. NOTIFICACIONES (Header Dropdown)
 ========================================================== */
 async function cargarNotificaciones() { 
-    console.log('Vista Notificaciones activa'); 
-    const contenedor = document.getElementById("tablaNotificaciones");
+    console.log('Cargando notificaciones del header...'); 
+    const contenedor = document.getElementById("listaNotificacionesContainer");
+    const badge = document.getElementById("badgeNotificaciones");
+    const cantTexto = document.getElementById("cantNotifTexto");
+
     if (!contenedor) return;
 
     try {
@@ -698,55 +718,86 @@ async function cargarNotificaciones() {
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
 
         const notificaciones = await respuesta.json();
-        contenedor.innerHTML = "";
+        
+        // 1. Filtrar solo las notificaciones activas para el dropdown
+        const notifsActivas = (notificaciones || []).filter(n => 
+            n.activa == 1 || n.activa === 'true' || n.activa === true || n.estatus === 'Activa'
+        );
 
-        if (!notificaciones || notificaciones.length === 0) {
-            contenedor.innerHTML = `<tr><td colspan='5' class='text-center text-muted py-5'>
-                <i class="fa-solid fa-inbox fs-2 mb-3 opacity-25"></i>
-                <p class="mb-0">No hay notificaciones registradas.</p>
-            </td></tr>`;
+        const total = notifsActivas.length;
+
+        // 2. Actualizar contadores visuales
+        if (badge) {
+            badge.textContent = total;
+            badge.style.display = total > 0 ? 'inline-block' : 'none';
+        }
+        if (cantTexto) {
+            cantTexto.textContent = `${total} ${total === 1 ? 'activa' : 'activas'}`;
+        }
+
+        // 3. Caso sin notificaciones
+        if (total === 0) {
+            contenedor.innerHTML = `
+                <div class="p-4 text-center text-muted small">
+                    <i class="fa-regular fa-bell-slash fa-2x mb-2 opacity-50 d-block"></i>
+                    No hay avisos o notificaciones activas.
+                </div>`;
             return;
         }
 
-        notificaciones.forEach(notif => {
-            const tr = document.createElement("tr");
-
+        // 4. Generar elementos del dropdown
+        contenedor.innerHTML = "";
+        notifsActivas.forEach(notif => {
             const tituloTexto = notif.titulo || notif.nombre || 'Sin título';
-
-            let destinoIcon = 'fa-users';
             let destinoText = (notif.destino || 'todos').toLowerCase();
-            let destinoBg = 'bg-primary bg-opacity-10 text-primary';
+            
+            let destinoIcon = 'fa-users';
+            if (destinoText === 'aspirantes') destinoIcon = 'fa-graduation-cap';
+            if (destinoText === 'docentes') destinoIcon = 'fa-chalkboard-user';
+            if (destinoText === 'secretario') destinoIcon = 'fa-file-signature';
 
-            if (destinoText === 'aspirantes') { destinoIcon = 'fa-graduation-cap'; destinoBg = 'bg-info bg-opacity-10 text-info'; }
-            if (destinoText === 'docentes') { destinoIcon = 'fa-chalkboard-user'; destinoBg = 'bg-warning bg-opacity-10 text-warning'; }
-            if (destinoText === 'secretario') { destinoIcon = 'fa-file-signature'; destinoBg = 'bg-success bg-opacity-10 text-success'; }
+            const item = document.createElement("a");
+            item.className = "dropdown-item p-3 border-bottom text-wrap";
+            item.href = "#";
 
-            let esActiva = notif.activa == 1 || notif.activa === 'true' || notif.activa === true || notif.estatus === 'Activa';
-            let estadoClass = esActiva ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger';
-            let estadoText = esActiva ? 'Activa' : 'Inactiva';
-
-            tr.style.cursor = "pointer";
+            // Permite hacer clic para editar si la función existe
             if (typeof editarNotificacion === 'function') {
-                tr.onclick = () => editarNotificacion(notif.id || notif.id_notificacion);
+                item.onclick = (e) => {
+                    e.preventDefault();
+                    editarNotificacion(notif.id || notif.id_notificacion);
+                };
             }
 
-            tr.innerHTML = `
-                <td>${notif.id || notif.id_notificacion}</td>
-                <td><span class="fw-bold text-dark">${tituloTexto}</span></td>
-                <td><span class="text-muted small d-inline-block text-truncate" style="max-width: 250px;">${notif.mensaje || ''}</span></td>
-                <td><span class="badge rounded-pill px-3 py-2 ${destinoBg}"><i class="fa-solid ${destinoIcon} me-1"></i> ${destinoText}</span></td>
-                <td><span class="badge rounded-pill px-3 py-2 ${estadoClass}">${estadoText}</span></td>
+            item.innerHTML = `
+                <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                    <strong class="text-dark small">${tituloTexto}</strong>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.65rem;">
+                        Activa
+                    </span>
+                </div>
+                <p class="mb-1 text-secondary small" style="font-size: 0.825rem; line-height: 1.3;">
+                    ${notif.mensaje || ''}
+                </p>
+                <small class="text-muted d-block" style="font-size: 0.7rem;">
+                    <i class="fa-solid ${destinoIcon} me-1"></i>Para: <span class="text-capitalize">${destinoText}</span>
+                </small>
             `;
-            contenedor.appendChild(tr);
+            
+            contenedor.appendChild(item);
         });
+
     } catch (error) {
         console.warn("Error al cargar notificaciones:", error);
-        contenedor.innerHTML = `<tr><td colspan='5' class='text-center text-muted py-5'>
-            <i class="fa-solid fa-plug-circle-exclamation fs-2 mb-3 opacity-25"></i>
-            <p class="mb-0">Error al conectar con el servidor de notificaciones.</p>
-        </td></tr>`;
+        contenedor.innerHTML = `
+            <div class="p-3 text-center text-danger small">
+                <i class="fa-solid fa-plug-circle-exclamation me-1"></i> No se pudo conectar con el servidor.
+            </div>`;
     }
 }
+
+// Ejecutar automáticamente al cargar el documento
+document.addEventListener('DOMContentLoaded', cargarNotificaciones);
+
 // ==========================================
 // FUNCIÓN PARA ABRIR EL MODAL Y ASIGNAR EL ID
 // ==========================================
