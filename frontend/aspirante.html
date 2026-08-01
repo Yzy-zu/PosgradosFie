@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Aspirantes — Posgrados FIE</title>
-    <meta name="description" content="Portal oficial de aspirantes para los posgrados de la Facultad de Ingeniería Eléctrica.">
+    <meta name="description"
+        content="Portal oficial de aspirantes para los posgrados de la Facultad de Ingeniería Eléctrica.">
     <link rel="shortcut icon" href="css/favico.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,7 +38,8 @@
         <div class="sidebar-header">
             <div class="sidebar-logo" style="background: transparent;">
                 <img src="css/posgradofie.png" alt="Logo"
-                    style="width: 100%; max-width: 45px; height: auto; object-fit: contain; cursor: pointer;" onclick="toggleSidebar()">
+                    style="width: 100%; max-width: 45px; height: auto; object-fit: contain; cursor: pointer;"
+                    onclick="toggleSidebar()">
             </div>
             <div style="display: flex; flex-direction: column; justify-content: center;">
                 <span class="text"
@@ -117,7 +119,8 @@
                         <div class="messages-mega-header">
                             <span data-i18n="tb_bandeja">Bandeja de Mensajes</span>
                             <i class="fa-solid fa-check-double" style="cursor: pointer; color: white;"
-                                title="Marcar todos como leídos" onclick="Swal.fire({title: 'En desarrollo', text: 'Esta función estará disponible próximamente.', icon: 'info', confirmButtonColor: '#8a1c24'})"></i>
+                                title="Marcar todos como leídos"
+                                onclick="Swal.fire({title: 'En desarrollo', text: 'Esta función estará disponible próximamente.', icon: 'info', confirmButtonColor: '#8a1c24'})"></i>
                         </div>
                         <div class="messages-mega-body">
                             <!-- Lista de chats (Izquierda) -->
@@ -142,7 +145,9 @@
                                 <div class="messages-empty-state">
                                     <i class="fa-solid fa-envelope fa-beat-fade"
                                         style="font-size: 42px; opacity: 0.4; margin-bottom: 12px;"></i>
-                                    <p data-i18n="tb_selecciona_msj" style="margin-bottom: 8px;"><strong>Selecciona un mensaje</strong></p><p>para ver
+                                    <p data-i18n="tb_selecciona_msj" style="margin-bottom: 8px;"><strong>Selecciona un
+                                            mensaje</strong></p>
+                                    <p>para ver
                                         su contenido aquí</p>
                                 </div>
                             </div>
@@ -235,92 +240,124 @@
 
         <section id="view-proceso" class="view-section">
             <style>
-            /* Estilos del Mapa de Progreso (Candy Crush Style - Adaptado) */
-            .mapa-fondo {
-                background: transparent;
-                border-radius: 20px;
-                padding: 40px 20px;
-                width: 100%;
-                min-height: 450px;
-                position: relative;
-                overflow: hidden;
-            }
-            .mapa-ruta-svg {
-                position: absolute;
-                top: 0; left: 0; width: 100%; height: 100%;
-                z-index: 1; pointer-events: none;
-            }
-            .mapa-ruta-path {
-                fill: none;
-                stroke: var(--color-text-muted);
-                stroke-width: 12;
-                stroke-dasharray: 20, 15;
-                opacity: 0.3;
-            }
-            .mapa-ruta-path-fill {
-                fill: none;
-                stroke: var(--color-primary);
-                stroke-width: 12;
-                stroke-dasharray: 20, 15;
-                transition: stroke-dashoffset 1s ease;
-            }
-            .mapa-nivel {
-                width: 60px; height: 60px;
-                position: absolute;
-                z-index: 2;
-                display: flex; align-items: center; justify-content: center;
-                transform: translate(-50%, -50%);
-                transition: transform 0.2s, filter 0.2s;
-                cursor: pointer;
-                background-image: url('css/coin.png');
-                background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;
-            }
-            .mapa-nivel-final {
-                width: 90px; height: 90px;
-                background-image: url('css/posgradofie.png');
-            }
-            .mapa-nivel:hover { transform: translate(-50%, -55%) scale(1.05); }
-            
-            .mapa-nivel.pendiente {
-                filter: grayscale(100%) opacity(0.6);
-            }
-            .mapa-nivel.completado, .mapa-nivel.actual {
-                filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));
-            }
-            .mapa-titulo {
-                position: absolute;
-                top: 40px; /* Debajo de la moneda */
-                left: 50%;
-                transform: translateX(-50%);
-                font-size: 13px;
-                font-weight: 800;
-                color: var(--color-text);
-                text-align: center;
-                white-space: nowrap;
-                text-shadow: 0 2px 4px var(--color-card-bg), 0 -2px 4px var(--color-card-bg), 2px 0 4px var(--color-card-bg), -2px 0 4px var(--color-card-bg);
-            }
-            .mapa-zorro {
-                position: absolute;
-                width: 80px; height: auto;
-                z-index: 5;
-                transform: translate(-50%, -100%);
-                animation: saltoZorro 1.2s infinite ease-in-out;
-                filter: drop-shadow(0 10px 5px rgba(0,0,0,0.4));
-                pointer-events: none;
-            }
-            @keyframes saltoZorro {
-                0%, 100% { transform: translate(-50%, -90%); }
-                50% { transform: translate(-50%, -120%); }
-            }
+                /* Estilos del Mapa de Progres*/
+                .mapa-fondo {
+                    background: transparent;
+                    border-radius: 20px;
+                    padding: 40px 20px;
+                    width: 100%;
+                    min-height: 450px;
+                    position: relative;
+                    overflow: hidden;
+                }
 
+                .mapa-ruta-svg {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: 1;
+                    pointer-events: none;
+                }
+
+                .mapa-ruta-path {
+                    fill: none;
+                    stroke: var(--color-text-muted);
+                    stroke-width: 12;
+                    stroke-dasharray: 20, 15;
+                    opacity: 0.3;
+                }
+
+                .mapa-ruta-path-fill {
+                    fill: none;
+                    stroke: var(--color-primary);
+                    stroke-width: 12;
+                    stroke-dasharray: 20, 15;
+                    transition: stroke-dashoffset 1s ease;
+                }
+
+                .mapa-nivel {
+                    width: 60px;
+                    height: 60px;
+                    position: absolute;
+                    z-index: 2;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transform: translate(-50%, -50%);
+                    transition: transform 0.2s, filter 0.2s;
+                    cursor: pointer;
+                    background-image: url('css/coin.png');
+                    background-size: contain;
+                    background-repeat: no-repeat;
+                    background-position: center;
+                }
+
+                .mapa-nivel-final {
+                    width: 90px;
+                    height: 90px;
+                    background-image: url('css/posgradofie.png');
+                }
+
+                .mapa-nivel:hover {
+                    transform: translate(-50%, -55%) scale(1.05);
+                }
+
+                .mapa-nivel.pendiente {
+                    filter: grayscale(100%) opacity(0.6);
+                }
+
+                .mapa-nivel.completado,
+                .mapa-nivel.actual {
+                    filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.3));
+                }
+
+                .mapa-titulo {
+                    position: absolute;
+                    top: 40px;
+                    /* Debajo de la moneda */
+                    left: 50%;
+                    transform: translateX(-50%);
+                    font-size: 13px;
+                    font-weight: 800;
+                    color: var(--color-text);
+                    text-align: center;
+                    white-space: nowrap;
+                    text-shadow: 0 2px 4px var(--color-card-bg), 0 -2px 4px var(--color-card-bg), 2px 0 4px var(--color-card-bg), -2px 0 4px var(--color-card-bg);
+                }
+
+                .mapa-zorro {
+                    position: absolute;
+                    width: 80px;
+                    height: auto;
+                    z-index: 5;
+                    transform: translate(-50%, -100%);
+                    animation: saltoZorro 1.2s infinite ease-in-out;
+                    filter: drop-shadow(0 10px 5px rgba(0, 0, 0, 0.4));
+                    pointer-events: none;
+                }
+
+                @keyframes saltoZorro {
+
+                    0%,
+                    100% {
+                        transform: translate(-50%, -90%);
+                    }
+
+                    50% {
+                        transform: translate(-50%, -120%);
+                    }
+                }
             </style>
             <div style="display: flex; gap: 25px; flex-wrap: wrap;">
-                <div class="premium-panel" style="flex: 1; min-width: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
-                    <h3 data-i18n="proc_estatus_exp" style="margin-bottom: 25px; font-weight: 800; font-size: 24px;">Tu Ruta de Admisión</h3>
+                <div class="premium-panel"
+                    style="flex: 1; min-width: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
+                    <h3 data-i18n="proc_estatus_exp" style="margin-bottom: 25px; font-weight: 800; font-size: 24px;">Tu
+                        Ruta de Admisión</h3>
                     <div id="mapa-proceso-container" class="mapa-fondo">
-                        <div style="text-align: center; padding: 40px; color: white; font-size: 18px; font-weight: bold;">
+                        <div
+                            style="text-align: center; padding: 40px; color: white; font-size: 18px; font-weight: bold;">
                             <i class="fa-solid fa-spinner fa-spin"></i> Cargando tu ruta...
                         </div>
                     </div>
@@ -336,12 +373,12 @@
             <!-- Contenedor 1: Selección inicial de tarjetas -->
             <div id="seleccion-programa" class="programas-container">
                 <div class="box-programa" onclick="seleccionarPrograma('Maestría en Ingeniería Eléctrica')">
-                    <i class="fa-solid fa-book-bookmark icon-anim-prog" style="margin-bottom: 8px; display: block;"></i><span
-                        data-i18n="sb_maestria">Maestría</span>
+                    <i class="fa-solid fa-book-bookmark icon-anim-prog"
+                        style="margin-bottom: 8px; display: block;"></i><span data-i18n="sb_maestria">Maestría</span>
                 </div>
                 <div class="box-programa" onclick="seleccionarPrograma('Doctorado en Ingeniería Eléctrica')">
-                    <i class="fa-solid fa-user-graduate icon-anim-prog" style="margin-bottom: 8px; display: block;"></i><span
-                        data-i18n="sb_doctorado">Doctorado</span>
+                    <i class="fa-solid fa-user-graduate icon-anim-prog"
+                        style="margin-bottom: 8px; display: block;"></i><span data-i18n="sb_doctorado">Doctorado</span>
                 </div>
             </div>
 
@@ -353,7 +390,8 @@
                         Volver</span>
                 </button>
 
-                <p data-i18n="conv_msg_desbloqueo" style="margin-bottom: 20px;">Has iniciado sesión y desbloqueado los accesos para el registro
+                <p data-i18n="conv_msg_desbloqueo" style="margin-bottom: 20px;">Has iniciado sesión y desbloqueado los
+                    accesos para el registro
                     formal al programa seleccionado.</p>
                 <div id="contenedor-tarjetas-programas"></div>
             </div>
@@ -363,8 +401,7 @@
             <!-- Banner de Revisión -->
             <div id="banner-revision"></div>
 
-            <div id="encabezado-documentos"
-                style="margin-bottom: 20px;">
+            <div id="encabezado-documentos" style="margin-bottom: 20px;">
                 <p data-i18n="doc_msg_completar" style="margin: 0; color: var(--color-text-muted);">Completa cada una de
                     las estaciones requeridas para enviar tu postulación a revisión administrativa.
                 </p>
@@ -372,7 +409,8 @@
 
             <div class="stepper-wrapper" style="margin-top: 55px; margin-bottom: 45px; position: relative;">
                 <!-- Zorro Interactivo -->
-                <img src="css/zorro.png" id="fox-runner" alt="Zorro FIE" style="position: absolute; top: -40px; left: 0; width: 45px; height: auto; z-index: 10; transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transform: translateX(-50%); opacity: 0; pointer-events: none;">
+                <img src="css/zorro.png" id="fox-runner" alt="Zorro FIE"
+                    style="position: absolute; top: -40px; left: 0; width: 45px; height: auto; z-index: 10; transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transform: translateX(-50%); opacity: 0; pointer-events: none;">
 
                 <div class="step-node active" id="node-0">0<span class="step-label"
                         data-i18n="doc_step_admision">Admisión</span></div>
@@ -408,9 +446,12 @@
                         </div>
 
 
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; flex-wrap: wrap; gap: 15px;">
-                            <button type="button" id="btn-cancelar-solicitud" onclick="cancelarSolicitudActual()" class="btn-custom-cancel" style="margin: 0;">
-                                <i class="fa-solid fa-trash icon-anim-trash"></i> <span data-i18n="doc_btn_cancelar">Cancelar Solicitud</span>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; flex-wrap: wrap; gap: 15px;">
+                            <button type="button" id="btn-cancelar-solicitud" onclick="cancelarSolicitudActual()"
+                                class="btn-custom-cancel" style="margin: 0;">
+                                <i class="fa-solid fa-trash icon-anim-trash"></i> <span
+                                    data-i18n="doc_btn_cancelar">Cancelar Solicitud</span>
                             </button>
                             <button type="button" class="btn-primary" id="btn-next-0"
                                 style="width: auto; padding: 12px 30px; margin: 0;" onclick="avanzarEstacion(1)"><span
