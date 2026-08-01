@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 
 // Registrar aspirante (con usuario asociado)
 const registrarAspirante = async (req, res) => {
+    let connection;
     try {
         const {
             nombre, primerApellido, segundoApellido, curp,
@@ -56,8 +57,11 @@ const registrarAspirante = async (req, res) => {
         // Encriptar contraseña
         const passwordHash = await bcrypt.hash(password, 10);
 
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+
         // Insertar usuario
-        const [resultadoUsuario] = await db.query(
+        const [resultadoUsuario] = await connection.query(
             'INSERT INTO usuario(correo, password, rol) VALUES(?, ?, ?)',
             [correo, passwordHash, 'aspirante']
         );
@@ -65,17 +69,22 @@ const registrarAspirante = async (req, res) => {
         const idUsuario = resultadoUsuario.insertId;
 
         // Insertar aspirante
-        await db.query(
+        await connection.query(
             `INSERT INTO aspirante
             (nombre, primerApellido, segundoApellido, curp, correo, telefono, fechaNacimiento, direccion, rfc, idUsuario)
             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [nombre, primerApellido, segundoApellido, curp, correo, telefono, fechaNacimiento, direccion, rfc, idUsuario]
         );
 
+        await connection.commit();
+
         return res.status(201).json({ mensaje: 'Aspirante registrado correctamente.' });
     } catch (error) {
+        if (connection) await connection.rollback();
         console.error('Error en registrarAspirante:', error);
         return res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
+    } finally {
+        if (connection) connection.release();
     }
 };
 

@@ -37,6 +37,28 @@ const moduloProgramacionExamenAPI = {
             console.error("Error en moduloProgramacionExamenAPI (guardarProgramacion):", e);
             throw e;
         }
+    },
+
+    async capturarResultado(idSolicitud, datos) {
+        try {
+            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+            const res = await fetch(`/api/programacion-examen/capturar/${idSolicitud}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(datos)
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.mensaje || 'Error al capturar resultado');
+            }
+            return data;
+        } catch (e) {
+            console.error("Error en moduloProgramacionExamenAPI (capturarResultado):", e);
+            throw e;
+        }
     }
 };
 

@@ -191,7 +191,8 @@ function switchView(viewId) {
             const titulos = {
                 'proceso': typeof t === 'function' ? t('sb_proceso') : 'Proceso',
                 'convocatorias': typeof t === 'function' ? t('sb_convocatorias') : 'Convocatorias',
-                'documentos': typeof t === 'function' ? t('sb_documentos') : 'Documentos'
+                'documentos': typeof t === 'function' ? t('sb_documentos') : 'Documentos',
+                'admision': typeof t === 'function' ? t('sb_admision') : 'Admisión'
             };
             topbarNombre.innerText = titulos[viewId] || (viewId.charAt(0).toUpperCase() + viewId.slice(1));
             // Bug 6 Fix: cargar datos reales para la gráfica de proceso
@@ -239,9 +240,10 @@ async function cargarStatsInicio() {
     const statConvName = document.getElementById('dash-conv-name');
     const statConvSub = document.getElementById('dash-conv-sub');
 
-    if (statDocsSub) { statDocsSub.style.display = 'block'; statDocsSub.innerText = 'Cargando...'; }
-    if (statExpSub) { statExpSub.style.display = 'block'; statExpSub.innerText = 'Cargando...'; }
-    if (statConvSub) { statConvSub.style.display = 'block'; statConvSub.innerText = 'Cargando...'; }
+    const cargandoTxt = typeof t === 'function' ? t('tb_cargando') : 'Cargando...';
+    if (statDocsSub) { statDocsSub.style.display = 'block'; statDocsSub.innerText = cargandoTxt; }
+    if (statExpSub) { statExpSub.style.display = 'block'; statExpSub.innerText = cargandoTxt; }
+    if (statConvSub) { statConvSub.style.display = 'block'; statConvSub.innerText = cargandoTxt; }
 
     mostrarLoader();
     try {
@@ -253,25 +255,24 @@ async function cargarStatsInicio() {
                 // 1. Estado de Expediente
                 if (statExpStatus) {
                     if (soliData.estado === 'RECHAZADO') {
-                        statExpStatus.innerText = 'Expediente Rechazado';
+                        statExpStatus.innerText = typeof t === 'function' ? t('dash_exp_rechazado') : 'Expediente Rechazado';
                         statExpStatus.style.color = '';
                     } else if (soliData.estado === 'APROBADO') {
-                        statExpStatus.innerText = 'Expediente Aprobado';
+                        statExpStatus.innerText = typeof t === 'function' ? t('dash_exp_aprobado') : 'Expediente Aprobado';
                         statExpStatus.style.color = '';
                     } else {
-                        statExpStatus.innerText = 'Expediente Activo';
+                        statExpStatus.innerText = typeof t === 'function' ? t('dash_exp_activo') : 'Expediente Activo';
                         statExpStatus.style.color = '#10b981';
                     }
                 }
                 if (statExpSub) {
-                    const estado = soliData.estado === 'NUEVO' ? 'Fase Inicial' :
-                        (soliData.estado === 'EN_REVISION' ? 'En Revisión' :
-                            (soliData.estado === 'RECHAZADO' ? 'Requiere Atención' : soliData.estado));
+                    const estado = soliData.estado === 'NUEVO' ? (typeof t === 'function' ? t('dash_fase_inicial') : 'Fase Inicial') :
+                        (soliData.estado === 'EN_REVISION' ? (typeof t === 'function' ? t('dash_en_revision') : 'En Revisión') :
+                            (soliData.estado === 'RECHAZADO' ? (typeof t === 'function' ? t('dash_requiere_atencion') : 'Requiere Atención') : soliData.estado));
                     statExpSub.innerText = estado;
                 }
 
                 // 2. Convocatoria y Documentos
-                // Bug 9 Fix: renombrar variable local para no ocultar la global
                 const idSolicitudActual = soliData.idSolicitud || soliData.id;
 
                 // Fetch Convocatorias para el nombre
@@ -281,7 +282,7 @@ async function cargarStatsInicio() {
                     const convActual = convocatorias.find(c => c.id === soliData.idConvocatoria);
                     if (convActual) {
                         if (statConvName) statConvName.innerText = convActual.nombre;
-                        if (statConvSub) statConvSub.innerText = convActual.nivel === 'DOCTORADO' ? 'Doctorado FIE' : 'Maestría FIE';
+                        if (statConvSub) statConvSub.innerText = convActual.nivel === 'DOCTORADO' ? (typeof t === 'function' ? t('dash_doctorado_fie') : 'Doctorado FIE') : (typeof t === 'function' ? t('dash_maestria_fie') : 'Maestría FIE');
                     }
                 }
 
@@ -289,31 +290,33 @@ async function cargarStatsInicio() {
                 const resExp = await fetch(`/api/aspirante/${aspiranteData.id}/expediente`);
                 if (resExp.ok) {
                     const expData = await resExp.json();
-                    // Bug 9 Fix: usar idSolicitudActual (variable local renombrada)
                     const soliActiva = expData.solicitudes?.find(s => s.idSolicitud === idSolicitudActual);
                     if (soliActiva && soliActiva.documentos) {
                         const docsSubidos = soliActiva.documentos.filter(d => d.rutaArchivo).length;
-                        if (statDocsCount) statDocsCount.innerText = `${docsSubidos} documentos subidos`;
-                        if (statDocsSub) statDocsSub.innerText = 'Revisar progreso';
+                        const suffix = docsSubidos === 1 ? (typeof t === 'function' ? t('dash_docs_subidos_singular') : 'documento subido') : (typeof t === 'function' ? t('dash_docs_subidos_plural') : 'documentos subidos');
+                        if (statDocsCount) statDocsCount.innerText = `${docsSubidos} ${suffix}`;
+                        if (statDocsSub) statDocsSub.innerText = typeof t === 'function' ? t('dash_revisar_progreso') : 'Revisar progreso';
                     } else {
-                        if (statDocsCount) statDocsCount.innerText = '0 documentos subidos';
-                        if (statDocsSub) statDocsSub.innerText = 'Comenzar a subir';
+                        const suffix = typeof t === 'function' ? t('dash_docs_subidos_plural') : 'documentos subidos';
+                        if (statDocsCount) statDocsCount.innerText = `0 ${suffix}`;
+                        if (statDocsSub) statDocsSub.innerText = typeof t === 'function' ? t('dash_comenzar_subir') : 'Comenzar a subir';
                     }
                 }
             } else {
                 // No hay solicitud activa
                 if (statExpStatus) {
-                    statExpStatus.innerText = 'Sin expediente activo';
+                    statExpStatus.innerText = typeof t === 'function' ? t('dash_exp_sin_solicitud') : 'Sin expediente activo';
                     statExpStatus.style.color = 'var(--color-text)';
                 }
                 if (statExpSub) {
-                    statExpSub.innerText = 'Visita Convocatorias';
+                    statExpSub.innerText = typeof t === 'function' ? t('dash_exp_visita_conv') : 'Visita Convocatorias';
                 }
 
-                if (statConvName) statConvName.innerText = 'Ninguna seleccionada';
+                if (statConvName) statConvName.innerText = typeof t === 'function' ? t('dash_ninguna_sel') : 'Ninguna seleccionada';
                 if (statConvSub) statConvSub.style.display = 'none';
 
-                if (statDocsCount) statDocsCount.innerText = '0 documentos subidos';
+                const suffix = typeof t === 'function' ? t('dash_docs_subidos_plural') : 'documentos subidos';
+                if (statDocsCount) statDocsCount.innerText = `0 ${suffix}`;
                 if (statDocsSub) statDocsSub.style.display = 'none';
             }
         }
@@ -325,36 +328,55 @@ async function cargarStatsInicio() {
 }
 
 /**
- * Bug 6 Fix: Carga datos reales del expediente para actualizar la gráfica de proceso
+ * Fase 2: Carga los datos del mapa desde el nuevo endpoint
  */
 async function cargarDatosProceso() {
-    if (!aspiranteData || !aspiranteData.id || !currentSolicitudId) {
-        // Sin solicitud activa: mostrar gráfica en cero
-        actualizarGraficaProceso(0, 0, 0);
+    if (!aspiranteData || !aspiranteData.id) {
+        renderizarMapaProceso([], 0);
         return;
     }
 
     mostrarLoader();
     try {
-        const res = await fetch(`/api/aspirante/${aspiranteData.id}/expediente`);
-        if (!res.ok) return;
-
-        const data = await res.json();
-        const solicitudActiva = data.solicitudes?.find(s => s.idSolicitud === currentSolicitudId);
-
-        if (!solicitudActiva || !solicitudActiva.documentos || solicitudActiva.documentos.length === 0) {
-            actualizarGraficaProceso(0, 0, 0);
+        const headers = { 'Authorization': `Bearer ${sessionStorage.getItem('token')}` };
+        const [resMapa, resExp] = await Promise.all([
+            fetch(`/api/solicitud/mapa/${aspiranteData.id}`, { headers }),
+            fetch(`/api/aspirante/${aspiranteData.id}/expediente`, { headers })
+        ]);
+        
+        if (!resMapa.ok) {
+            renderizarMapaProceso([], 0);
             return;
         }
 
-        const docs = solicitudActiva.documentos;
-        const total = docs.length;
-        const aprobados = docs.filter(d => d.estadoValidacion === 'APROBADO').length;
-        const rechazados = docs.filter(d => d.estadoValidacion === 'RECHAZADO').length;
+        const etapas = await resMapa.json();
+        const expData = resExp.ok ? await resExp.json() : null;
 
-        actualizarGraficaProceso(aprobados, rechazados, total);
+        let avance = 0;
+        
+        // Find current stage
+        const actualIndex = etapas.findIndex(e => e.status === 'actual');
+        
+        if (actualIndex > 0) {
+            const etapaActual = etapas[actualIndex];
+            // Si la etapa actual es Documentación (id=1)
+            if (etapaActual.id === 1 && expData && expData.solicitudes) {
+                const solActiva = expData.solicitudes.find(s => s.estado !== 'CANCELADO');
+                if (solActiva && solActiva.documentos) {
+                    const total = solActiva.documentos.length;
+                    const aprobados = solActiva.documentos.filter(d => d.estadoValidacion === 'APROBADO').length;
+                    avance = total > 0 ? (aprobados / total) : 0.05; // 0.05 minimo para ver zorro avanzar poquito
+                }
+            } else {
+                // Otras etapas podrían tener lógicas de avance, por ahora 0.1
+                avance = 0.1; 
+            }
+        }
+
+        renderizarMapaProceso(etapas, avance);
     } catch (error) {
-        console.error('Error al cargar datos de proceso:', error);
+        console.error('Error al cargar datos del mapa:', error);
+        renderizarMapaProceso([], 0);
     } finally {
         ocultarLoader();
     }
@@ -605,7 +627,7 @@ function abrirNotificacion(remitenteKey, element) {
 
         let chatHtml = `<div style="max-height: 400px; overflow-y: auto; text-align: left; padding: 10px; background: var(--color-bg); border-radius: 8px;">`;
         let lastDateStr = '';
-        
+
         grupo.mensajes.forEach(notif => {
             const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
             const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
@@ -770,8 +792,8 @@ async function activarModulosPostRegistro(nombrePrograma) {
     }
 
     // Ejecutar actualización de gráficas inicial si existen los elementos
-    if (document.getElementById('grafica-pastel')) {
-        actualizarGraficaProceso();
+    if (document.getElementById('mapa-proceso-container')) {
+        cargarDatosProceso();
     }
 }
 
@@ -899,7 +921,7 @@ function cambiarEstacion(nuevaEstacion) {
 
     // BUG-04 Fix: solo marcar como 'completed' al avanzar; al retroceder limpiar 'completed' del nodo actual
     const nodeActual = document.getElementById(`node-${estacionActual}`);
-    const nodeNuevo  = document.getElementById(`node-${nuevaEstacion}`);
+    const nodeNuevo = document.getElementById(`node-${nuevaEstacion}`);
 
     nodeActual.classList.remove('active');
     if (nuevaEstacion > estacionActual) {
@@ -923,17 +945,17 @@ function actualizarPosicionZorro(salto = true) {
     const fox = document.getElementById('fox-runner');
     const nodo = document.getElementById(`node-${estacionActual}`);
     const wrapper = document.querySelector('.stepper-wrapper');
-    
+
     // Solo calcular si está visible
     if (fox && nodo && wrapper && wrapper.offsetParent !== null) {
         fox.style.opacity = '1';
         const offsetLeft = nodo.offsetLeft + (nodo.offsetWidth / 2);
         fox.style.left = `${offsetLeft}px`;
-        
+
         // Actualizar la línea de progreso (animación tipo agua)
         const porcentaje = (estacionActual / 3) * 100;
         wrapper.style.setProperty('--progress', `${porcentaje}%`);
-        
+
         if (salto) {
             fox.style.transform = 'translate(-50%, -20px)';
             setTimeout(() => {
@@ -1023,7 +1045,7 @@ async function avanzarEstacion(nuevaEstacion) {
     // Ya no avanzamos la estacion_actual desde el frontend. 
     // El avance ocurre automáticamente al subir los documentos o al ser evaluados por el servidor según la modalidad_etapa.
     // Solo avanzamos la vista localmente.
-    
+
     ocultarLoader();
     if (boton) boton.disabled = false;
     cambiarEstacion(nuevaEstacion);
@@ -1108,23 +1130,25 @@ async function bloquearInterfazPorRevision(estadoActual = 'EN_REVISION', soliDat
     if (banner) {
         banner.style.cssText = 'display:block; background:transparent; border:none; box-shadow:none; padding:0; margin-bottom: 20px;';
 
-        let textBanner = 'Expediente bajo revisión';
-        let textSub = 'Serás notificado si se requiere alguna corrección';
-        let badge = 'EN REVISIÓN';
+        let textBanner = typeof t === 'function' ? t('doc_exp_bajo_revision') : 'Expediente bajo revisión';
+        let textSub = typeof t === 'function' ? t('doc_notif_correccion') : 'Serás notificado si se requiere alguna corrección';
+        let badge = typeof t === 'function' ? t('toast_rev_badge') : 'EN REVISIÓN';
         let statusKey = 'en_revision';
         let iconClass = 'fa-solid fa-lock';
 
         if (estadoActual === 'RECHAZADO') {
-            textBanner = 'Expediente Rechazado';
-            textSub = 'Revisa los comentarios y corrige los documentos necesarios';
-            badge = 'RECHAZADO';
+            textBanner = typeof t === 'function' ? t('dash_exp_rechazado') : 'Expediente Rechazado';
+            textSub = typeof t === 'function' ? t('docente_motivo_ph') : 'Revisa los comentarios y corrige los documentos necesarios';
+            badge = typeof t === 'function' ? t('doc_rechazado') : 'RECHAZADO';
             statusKey = 'rechazado';
             iconClass = 'fa-solid fa-circle-xmark';
         } else if (estadoActual === 'APROBADO' || (soliData && soliData.etapaOrden && soliData.etapaOrden >= 2)) {
-            textBanner = 'Documentación Aprobada';
-            const nombreEtapa = (soliData && soliData.etapaNombre) ? soliData.etapaNombre : 'Proceso de Admisión';
-            textSub = `Tus documentos han sido aprobados satisfactoriamente. Etapa actual: <strong>${nombreEtapa}</strong>`;
-            badge = 'APROBADO';
+            textBanner = typeof t === 'function' ? t('doc_doc_aprobada') : 'Documentación Aprobada';
+            const nombreEtapa = (soliData && soliData.etapaNombre) ? soliData.etapaNombre : (typeof t === 'function' ? t('sb_proceso') : 'Proceso de Admisión');
+            const etapaLabel = typeof t === 'function' ? t('doc_etapa_actual') : 'Etapa actual';
+            const descLabel = typeof t === 'function' ? t('doc_doc_aprobada_desc') : 'Tus documentos han sido aprobados satisfactoriamente.';
+            textSub = `${descLabel} ${etapaLabel}: <strong>${nombreEtapa}</strong>`;
+            badge = typeof t === 'function' ? t('doc_aprobado') : 'APROBADO';
             statusKey = 'aprobado';
             iconClass = 'fa-solid fa-circle-check';
         }
@@ -1235,21 +1259,12 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
         return `${bytes} B`;
     };
 
-    const formatearFecha = (raw, estado, pesoStr) => {
-        if (estado === 'APROBADO') {
-            try {
-                if (!raw) return 'Aprobado recientemente';
-                const date = new Date(raw);
-                if (isNaN(date.getTime())) return `Aprobado el ${raw.split('T')[0]}`;
-                const isEn = typeof getIdiomaActual === 'function' && getIdiomaActual() === 'en';
-                const langCode = isEn ? 'en-US' : 'es-ES';
-                const dateStr = date.toLocaleDateString(langCode, { day: 'numeric', month: 'short', year: 'numeric' });
-                return `Aprobado el ${dateStr}`;
-            } catch (e) {
-                return 'Aprobado recientemente';
-            }
-        }
-        return pesoStr ? `PDF · ${pesoStr}` : 'PDF';
+    const obtenerExtensionArchivo = (ruta) => {
+        if (!ruta || typeof ruta !== 'string') return 'PDF';
+        const partes = ruta.split('.');
+        if (partes.length < 2) return 'PDF';
+        const ext = partes.pop().toUpperCase();
+        return (ext && ext.length <= 5) ? ext : 'PDF';
     };
 
     const catKeyMap = {
@@ -1308,10 +1323,9 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
                     break;
             }
 
-            // Fetch real file size asynchronously via HEAD request
             const rutaArchivo = doc.rutaArchivo;
             const cardId = `doc-card-${doc.idDocumento || doc.id || Math.random().toString(36).slice(2)}`;
-            const fechaSubidaStr = formatearFecha(doc.fechaSubida || doc.creadoEn || doc.fecha_actualizacion, doc.estadoValidacion, null);
+            const tipoArchivoStr = obtenerExtensionArchivo(rutaArchivo);
             const docDataStr = encodeURIComponent(JSON.stringify(doc));
 
             html += `
@@ -1322,7 +1336,7 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
                         </div>
                         <div>
                             <div class="doc-card-v2-title">${doc.requisitoNombre ? (typeof t === 'function' ? t(doc.requisitoNombre) : doc.requisitoNombre) : (typeof t === 'function' ? t('doc_doc_adjunto') : 'Documento adjunto')}</div>
-                            <div class="doc-card-v2-date" id="${cardId}-size">${fechaSubidaStr}</div>
+                            <div class="doc-card-v2-date" id="${cardId}-size">${tipoArchivoStr}</div>
                         </div>
                     </div>
                     <div class="doc-card-v2-footer">
@@ -1332,18 +1346,6 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
                 </div>
             `;
 
-            // After building HTML, fetch file size in background
-            if (rutaArchivo && doc.estadoValidacion !== 'APROBADO') {
-                (async () => {
-                    try {
-                        const res = await fetch(`/uploads/${rutaArchivo}`, { method: 'HEAD' });
-                        const cl = res.headers.get('content-length');
-                        const pesoStr = formatearPeso(parseInt(cl, 10));
-                        const sizeEl = document.getElementById(`${cardId}-size`);
-                        if (sizeEl && pesoStr) sizeEl.textContent = `PDF · ${pesoStr}`;
-                    } catch (_) { /* silently ignore */ }
-                })();
-            }
         }); // end docsGrupo.forEach
 
         html += `</div>`;
@@ -1436,17 +1438,17 @@ function abrirModalDoc(docStr) {
                 try {
                     enlace.style.opacity = '0.6';
                     enlace.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Cargando...`;
-                    
+
                     const res = await fetch(`/api/files/${doc.rutaArchivo}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
-                    
+
                     if (!res.ok) throw new Error('Error al obtener el archivo');
-                    
+
                     const blob = await res.blob();
                     const objectUrl = URL.createObjectURL(blob);
                     window.open(objectUrl, '_blank');
-                    
+
                     setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
                 } catch (error) {
                     console.error("Error al descargar archivo:", error);
@@ -1707,65 +1709,134 @@ function cargarConvocatorias() {
 }
 
 /**
- * Actualiza la gráfica de proceso con datos reales del expediente
- * @param {number} aprobados - Documentos aprobados
- * @param {number} rechazados - Documentos rechazados
- * @param {number} total - Total de documentos
+ * Actualiza la /**
+ * Renderiza el mapa dinámico interactivo estilo Candy Crush
  */
-function actualizarGraficaProceso(aprobados = 0, rechazados = 0, total = 5) {
-    const pieChart = document.getElementById('grafica-pastel');
-    const legend = document.querySelector('#view-proceso .chart-legend');
+function renderizarMapaProceso(etapas, avance = 0) {
+    const container = document.getElementById('mapa-proceso-container');
+    if (!container) return;
 
-    if (total === 0) {
-        if (pieChart) pieChart.style.display = 'none';
-        if (legend) legend.style.display = 'none';
-        
-        let emptyState = document.getElementById('proceso-empty');
-        if (!emptyState && pieChart) {
-            emptyState = document.createElement('div');
-            emptyState.id = 'proceso-empty';
-            emptyState.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: var(--color-text-muted);">
-                    <i class="fa-solid fa-chart-pie" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
-                    <h4 style="margin-bottom: 10px; color: var(--color-text);">${typeof t === 'function' ? t('proc_empty_title') : 'Aún no hay solicitud'}</h4>
-                    <p style="font-size: 14px;">${typeof t === 'function' ? t('proc_empty_desc') : 'Inicia tu proceso en una convocatoria para ver tu progreso.'}</p>
-                </div>
-            `;
-            pieChart.parentNode.insertBefore(emptyState, pieChart);
-        } else if (emptyState) {
-            emptyState.style.display = 'block';
-        }
+    if (!etapas || etapas.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--color-text-muted); margin-top: 100px;">
+                <i class="fa-solid fa-map-location-dot" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                <h4 style="margin-bottom: 10px; font-size: 24px; color: var(--color-text);">${typeof t === 'function' ? t('dash_sin_ruta') : 'Aún no hay ruta'}</h4>
+                <p style="font-size: 16px;">${typeof t === 'function' ? t('dash_sin_ruta_desc') : 'Selecciona una convocatoria e inicia tu proceso para ver tu mapa.'}</p>
+            </div>
+        `;
         return;
     }
 
-    if (document.getElementById('proceso-empty')) document.getElementById('proceso-empty').style.display = 'none';
-    if (pieChart) pieChart.style.display = 'flex';
-    if (legend) legend.style.display = 'flex';
+    const width = container.clientWidth || 800;
+    const height = container.clientHeight || 450;
+    
+    let htmlNiveles = '';
+    let svgRuta = '';
+    
+    // Coordenadas para la meta
+    let lastX = 0, lastY = 0;
+    let zorroX = 0, zorroY = 0;
+    let tieneActual = false;
 
-    const pendientes = total - aprobados - rechazados;
+    // Generar ruta horizontal (de izquierda a derecha) con oscilación en Y
+    const paddingLeft = 40;
+    const paddingRight = 120; // Espacio extra para que quepa el logo de la FIE
+    const paddingY = 100;
+    const availableWidth = width - paddingLeft - paddingRight;
+    const availableHeight = height - (paddingY * 2);
+    const stepX = availableWidth / Math.max(1, (etapas.length - 1));
+    
+    const startX = paddingLeft;
 
-    if (document.getElementById('lbl-aprobados')) document.getElementById('lbl-aprobados').innerText = aprobados;
-    if (document.getElementById('lbl-rechazados')) document.getElementById('lbl-rechazados').innerText = rechazados;
-    if (document.getElementById('lbl-pendientes')) document.getElementById('lbl-pendientes').innerText = pendientes;
+    const coords = [];
+    etapas.forEach((etapa, index) => {
+        // Oscilación en Y usando Math.sin (incrementado a 3.5 ciclos para más curvas)
+        const wave = Math.sin((index / (etapas.length - 1 || 1)) * Math.PI * 3.5);
+        const cx = startX + (stepX * index);
+        const cy = paddingY + (availableHeight / 2) + (wave * (availableHeight / 2));
+        
+        lastX = cx;
+        lastY = cy;
 
-    const porcAprobado = total > 0 ? (aprobados / total) * 100 : 0;
-    const porcRechazado = total > 0 ? (rechazados / total) * 100 : 0;
-    const finAprobados = porcAprobado;
-    const finRechazados = finAprobados + porcRechazado;
+        coords.push({ cx, cy, status: etapa.status, nombre: etapa.nombre, index });
 
-    const grafica = document.getElementById('grafica-pastel');
-    if (grafica) {
-        grafica.style.background = `conic-gradient(
-            #27ae60 0% ${finAprobados}%, 
-            #c0392b ${finAprobados}% ${finRechazados}%, 
-            #7f8c8d ${finRechazados}% 100%
-        )`;
+        const isLast = index === etapas.length - 1;
+        const nombreEtapaFmt = typeof t === 'function' ? t(etapa.nombre) : etapa.nombre;
+        
+        // HTML del nivel
+        htmlNiveles += `
+            <div class="mapa-nivel ${etapa.status} ${isLast ? 'mapa-nivel-final' : ''}" style="left: ${cx}px; top: ${cy}px;">
+                <div class="mapa-titulo" ${isLast ? 'style="top: 50px;"' : ''}>${nombreEtapaFmt}</div>
+            </div>
+        `;
+    });
+
+    // Posición inicial del Zorro por defecto
+    const actualNode = coords.find(c => c.status === 'actual');
+    if (actualNode) {
+        zorroX = actualNode.cx;
+        zorroY = actualNode.cy;
+        tieneActual = true;
+    } else if (coords.length > 0 && coords[coords.length - 1].status === 'completado') {
+        zorroX = coords[coords.length - 1].cx;
+        zorroY = coords[coords.length - 1].cy;
+    } else if (coords.length > 0) {
+        zorroX = coords[0].cx;
+        zorroY = coords[0].cy;
     }
 
-    const txtPorcentaje = document.getElementById('txt-porcentaje');
-    if (txtPorcentaje) {
-        txtPorcentaje.innerText = `${Math.round(porcAprobado)}%`;
+    for (let i = 0; i < coords.length - 1; i++) {
+        const c1 = coords[i];
+        const c2 = coords[i+1];
+        
+        const cp1X = c1.cx + (stepX / 2);
+        const cp1Y = c1.cy;
+        const cp2X = c2.cx - (stepX / 2);
+        const cp2Y = c2.cy;
+        
+        const pathData = `M ${c1.cx} ${c1.cy} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${c2.cx} ${c2.cy}`;
+        
+        let pathClass = 'mapa-ruta-path'; // pendiente
+        let strokeAttrs = '';
+
+        if (c1.status === 'completado' && (c2.status === 'completado' || c2.status === 'actual')) {
+            // Tramo completamente recorrido
+            pathClass = 'mapa-ruta-path-fill';
+            svgRuta += `<path class="${pathClass}" d="${pathData}"></path>`;
+        } else if (c1.status === 'actual') {
+            // Tramo en progreso (de actual al siguiente)
+            svgRuta += `<path class="mapa-ruta-path" d="${pathData}"></path>`; // Fondo
+            
+            // Línea llena parcialmente
+            pathClass = 'mapa-ruta-path-fill partial-path';
+            const offset = 100 - (avance * 100);
+            strokeAttrs = `pathLength="100" style="stroke-dasharray: 100; stroke-dashoffset: ${offset};"`;
+            svgRuta += `<path class="${pathClass}" d="${pathData}" ${strokeAttrs}></path>`;
+            
+            // Aproximar Zorro a la curva Bezier si hay avance
+            if (avance > 0) {
+                const t = avance;
+                const invT = 1 - t;
+                zorroX = invT*invT*invT*c1.cx + 3*invT*invT*t*cp1X + 3*invT*t*t*cp2X + t*t*t*c2.cx;
+                zorroY = invT*invT*invT*c1.cy + 3*invT*invT*t*cp1Y + 3*invT*t*t*cp2Y + t*t*t*c2.cy;
+            }
+        } else {
+            // Línea pendiente
+            svgRuta += `<path class="${pathClass}" d="${pathData}"></path>`;
+        }
     }
+    
+    const svgHTML = `
+        <svg class="mapa-ruta-svg" preserveAspectRatio="none">
+            ${svgRuta}
+        </svg>
+    `;
+
+    const zorroHTML = zorroX && zorroY ? `
+        <img src="css/zorro.png" class="mapa-zorro" style="left: ${zorroX}px; top: ${zorroY}px;" alt="Zorro actual">
+    ` : '';
+
+    container.innerHTML = svgHTML + htmlNiveles + zorroHTML;
 }
 
 
@@ -1851,6 +1922,7 @@ function bloquearConvocatorias(soliData = null) {
                                 <strong style="color: var(--color-text); font-size: 16px; display: inline-block; margin-top: 8px;">Programa de ${nivel} en Ciencias en Ingeniería Eléctrica</strong><br>
                                 <span style="font-size: 14px; color: var(--color-text-muted);">${typeof t === 'function' ? t('conv_opcion_sel') : 'Modalidad:'} <strong>${opcionElegida}</strong></span>
                             </p>
+                             
                             
                             <button onclick="switchView('documentos')" class="btn-continuar-sol">
                                 <i class="fa-solid fa-arrow-right" style="margin-right: 8px;"></i> ${typeof t === 'function' ? t('conv_btn_continuar') : 'Continuar Solicitud'}
@@ -2020,7 +2092,7 @@ function abrirModalInfoModalidad(modKey, titulo) {
 }
 
 
-async function cargarRequisitosDocumentales(idConvocatoria) {
+async function cargarRequisitosDocumentales(idConvocatoria, documentosSubidos = []) {
     mostrarLoader();
     try {
         const res = await fetch(`/api/convocatorias/${idConvocatoria}/requisitos`);
@@ -2044,13 +2116,37 @@ async function cargarRequisitosDocumentales(idConvocatoria) {
             let htmlEvaluacion = '';
 
             requisitos.forEach(req => {
+                const docSubido = documentosSubidos.find(d => parseInt(d.idRequisito) === req.id);
                 const isRequired = req.obligatorio ? '*' : '';
-                const requiredAttr = req.obligatorio ? 'required' : '';
+                const requiredAttr = (req.obligatorio && !docSubido) ? 'required' : '';
+
+                let displayHtml = '';
+                let fileBoxClass = 'file-box';
+
+                if (docSubido) {
+                    fileBoxClass = 'file-box file-selected';
+                    let iconColor = 'var(--color-primary)';
+                    let statusText = 'Enviado';
+                    if (docSubido.estadoValidacion === 'APROBADO') {
+                        iconColor = 'var(--color-success)';
+                        statusText = 'Aprobado';
+                    } else if (docSubido.estadoValidacion === 'RECHAZADO') {
+                        iconColor = 'var(--color-danger)';
+                        statusText = 'Rechazado';
+                    }
+                    displayHtml = `
+                        <div class="file-name-display" style="color: ${iconColor};">
+                            <i class="fa-solid fa-file-pdf"></i> ${statusText}
+                            ${docSubido.estadoValidacion === 'RECHAZADO' && docSubido.comentarios ? `<br><small style="color:var(--color-danger)">Motivo: ${docSubido.comentarios}</small>` : ''}
+                        </div>
+                    `;
+                }
 
                 const htmlReq = `
-                    <div class="file-box">
+                    <div class="${fileBoxClass}">
                         <label><i class="fa-solid fa-file-arrow-up"></i> ${req.descripcion} <span style="color:red;">${isRequired}</span></label>
                         <input type="file" name="${req.id}" accept=".pdf" onchange="verificarArchivosEstacion(estacionActual)" ${requiredAttr}>
+                        ${displayHtml}
                     </div>
                 `;
 
@@ -2091,6 +2187,19 @@ const MODULOS_REGISTRY = {
     'HABILITAR_CAPTURA_RESULTADO': (soliData, accion) => typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutarAspirante ? moduloProgramacionExamen.ejecutarAspirante(soliData, accion) : typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutar(soliData, accion),
     'PROGRAMAR_CURSO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
     'CAPTURAR_RESULTADO_CURSO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
+    'CAPTURAR_RESULTADO_PROPEDEUTICO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
+    'PUBLICAR_RESULTADO': (soliData, accion) => {
+        const codigoMod = (soliData.modalidadCodigo || soliData.modalidadNombre || '').toUpperCase();
+        if (codigoMod.includes('PROMEDIO')) {
+            if (typeof moduloPromedio !== 'undefined') moduloPromedio.ejecutar(soliData, accion);
+        } else if (codigoMod.includes('EXAMEN')) {
+            if (typeof moduloProgramacionExamen !== 'undefined') {
+                (moduloProgramacionExamen.ejecutarAspirante || moduloProgramacionExamen.ejecutar)(soliData, accion);
+            }
+        } else {
+            if (typeof moduloCurso !== 'undefined') moduloCurso.ejecutar(soliData, accion);
+        }
+    },
     'VALIDAR_PROMEDIO': (soliData, accion) => typeof moduloPromedio !== 'undefined' && moduloPromedio.ejecutar(soliData, accion)
 };
 
@@ -2109,36 +2218,93 @@ function hidratarUI(soliData) {
     }
 
     const navAdmision = document.getElementById('li-nav-admision');
-    if (navAdmision && soliData.etapaOrden && soliData.etapaOrden >= 2) {
+    if (navAdmision && ((soliData.etapaOrden && soliData.etapaOrden >= 2) || (soliData.idEtapaActual && soliData.idEtapaActual > 1))) {
         navAdmision.style.display = 'block';
     }
 
-    // Configurar paneles según el nivel
-    configurarPanelesNivel(nivelAcademicoSeleccionado, soliData.idConvocatoria);
-
-    // Validar que existan accionesDisponibles en el workflow
-    if (!soliData.accionesDisponibles || soliData.accionesDisponibles.length === 0) {
-        renderizarErrorWorkflow("No hay acciones disponibles para esta etapa de la solicitud en el sistema.");
-        return;
+    // Si ya tiene modalidad, avanzamos a la estación 1 (Identidad) para no empezar desde cero
+    if (soliData.idModalidad && estacionActual === 0) {
+        cambiarEstacion(1);
     }
+
+    // Configurar paneles según el nivel y pasar documentos ya subidos
+    configurarPanelesNivel(nivelAcademicoSeleccionado, soliData.idConvocatoria, soliData.documentosSubidos || []);
 
     // Siempre hidratar el módulo base de Documentos (Expediente) para garantizar el estado de #view-documentos
     if (typeof moduloDocumentos !== 'undefined') {
         moduloDocumentos.ejecutar(soliData, { codigo: 'SUBIR_DOCUMENTOS' });
     }
 
-    // Recorrer TODAS las acciones disponibles y ejecutar su módulo orquestador
-    soliData.accionesDisponibles.forEach(accion => {
-        // Evitar ejecutar doblemente SUBIR_DOCUMENTOS si ya está en la etapa 1
-        if (accion.codigo === 'SUBIR_DOCUMENTOS') return;
+    // Recorrer las acciones disponibles adicionales y ejecutar sus módulos
+    let moduloAdmisionEjecutado = false;
+    if (soliData.accionesDisponibles && soliData.accionesDisponibles.length > 0) {
+        soliData.accionesDisponibles.forEach(accion => {
+            if (accion.codigo === 'SUBIR_DOCUMENTOS') return;
 
-        const ejecutarModulo = MODULOS_REGISTRY[accion.codigo];
-        if (typeof ejecutarModulo === 'function') {
-            ejecutarModulo(soliData, accion);
-        } else {
-            console.warn(`No hay módulo registrado para la acción: ${accion.codigo}`);
+            const ejecutarModulo = MODULOS_REGISTRY[accion.codigo];
+            if (typeof ejecutarModulo === 'function') {
+                ejecutarModulo(soliData, accion);
+                moduloAdmisionEjecutado = true;
+            } else {
+                console.warn(`No hay módulo registrado para la acción: ${accion.codigo}`);
+            }
+        });
+    }
+
+    // Si el aspirante ya tiene calificación capturada, inyectar el resultado en la sección de admisión
+    const resultadoContainer = document.getElementById('resultado-dinamico-container');
+    if (resultadoContainer && soliData.calificacion !== undefined && soliData.calificacion !== null) {
+        const resultadoHtml = `
+            <div class="status-banner status-aprobado" style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div class="status-banner-icon"><i class="fa-solid fa-flag-checkered"></i></div>
+                    <div>
+                        <div class="status-banner-title">${typeof t === 'function' ? t('exam_evaluacion_finalizada') : 'Evaluación Finalizada'}</div>
+                        <div class="status-banner-sub">${typeof t === 'function' ? t('doc_etapa_actual') : 'Etapa actual'}: <strong>${soliData.etapaNombre || (typeof t === 'function' ? t('conv_resultados') : 'Resultados')}</strong></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 25px; border-radius: 14px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
+                <h4 style="margin: 0 0 15px 0; font-size: 20px; display: flex; align-items: center; gap: 10px; color: white;">
+                    <i class="fa-solid fa-trophy" style="color: #fef08a; font-size: 24px;"></i> ${typeof t === 'function' ? t('exam_felicidades_calif') : 'Felicidades, tu calificacion ha sido registrada!'}
+                </h4>
+                <p style="margin-bottom: 20px; opacity: 0.9;">${typeof t === 'function' ? t('exam_evaluado_desc') : 'Tu examen de admisión ha sido evaluado y los resultados ya se integraron a tu proceso.'}</p>
+                
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
+                        <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">${typeof t === 'function' ? t('exam_calif_obtenida') : 'Calificación Obtenida'}</span>
+                        <strong style="font-size: 32px; display: block;">${soliData.calificacion}</strong>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
+                        <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">${typeof t === 'function' ? t('exam_resultado') : 'Resultado'}</span>
+                        <strong style="font-size: 28px; display: block;">${soliData.resultadoAprobado ? (typeof t === 'function' ? t('exam_aprobado') : 'Aprobado') : (typeof t === 'function' ? t('exam_no_aprobado') : 'No Aprobado')}</strong>
+                    </div>
+                </div>
+                
+                ${soliData.resultadoObservaciones ? `
+                <div style="margin-top: 20px; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px;">
+                    <strong style="font-size: 13px; text-transform: uppercase; display: block; margin-bottom: 5px;">${typeof t === 'function' ? t('exam_obs_comite') : 'Observaciones del Comité'}</strong>
+                    <span style="font-size: 14px;">${soliData.resultadoObservaciones}</span>
+                </div>
+                ` : ''}
+            </div>
+        `;
+
+        resultadoContainer.innerHTML = resultadoHtml;
+
+        // Ocultar el contenedor de módulos dinámicos para que no se dupliquen 
+        // los avisos del examen una vez que ya hay resultado publicado.
+        const admisionContainer = document.getElementById('admision-dinamico-container');
+        if (admisionContainer) {
+            admisionContainer.style.display = 'none';
         }
-    });
+    } else {
+        // Asegurar que esté visible si no hay calificación final aún
+        const admisionContainer = document.getElementById('admision-dinamico-container');
+        if (admisionContainer) admisionContainer.style.display = 'block';
+        if (resultadoContainer) resultadoContainer.innerHTML = '';
+    }
 }
 
 function renderizarErrorWorkflow(mensaje) {
@@ -2187,7 +2353,7 @@ async function cargarDocsLecturaAspirante(soliData) {
                                 ${badgeDoc}
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top" style="border-color: var(--color-border) !important;">
-                                <a href="/uploads/${doc.rutaArchivo}" target="_blank" class="btn-ver-doc">
+                                <a href="javascript:void(0)" onclick="window.open('/api/files/${doc.rutaArchivo}?token=' + (sessionStorage.getItem('token') || localStorage.getItem('token')), '_blank')" class="btn-ver-doc">
                                     <i class="fa-solid fa-file-pdf me-1"></i> Ver PDF
                                 </a>
                             </div>
@@ -2206,7 +2372,7 @@ async function cargarDocsLecturaAspirante(soliData) {
 /**
  * Extrae la lógica de pintar paneles para reusarla sin llamar a /crear
  */
-function configurarPanelesNivel(nivel, idConvocatoria) {
+function configurarPanelesNivel(nivel, idConvocatoria, documentosSubidos = []) {
     if (idConvocatoria) sessionStorage.setItem('idConvocatoriaPendiente', idConvocatoria);
 
     if (nivel === "Doctorado") {
@@ -2222,7 +2388,7 @@ function configurarPanelesNivel(nivel, idConvocatoria) {
         actualizarCostosAdmision();
     }
 
-    if (idConvocatoria) cargarRequisitosDocumentales(idConvocatoria);
+    if (idConvocatoria) cargarRequisitosDocumentales(idConvocatoria, documentosSubidos);
 }
 
 // ==== MANEJO DE UI PARA INPUTS DE ARCHIVOS ====

@@ -47,12 +47,18 @@ const obtenerConvocatoria = async (req, res) => {
 
 // Crear convocatoria con requisitos y opciones
 const crearConvocatorias = async (req, res) => {
+    let connection;
     try {
         const { nombre, descripcion, fecha_inicio, fecha_fin, estado, requisitos, opciones, posgrado_id, tipo, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, duracion, modalidad, inicioCurso, finCurso, inicioExamen, finExamen } = req.body;
 
-        const [resultado] = await db.query(
-            'INSERT INTO convocatorias (nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, tipo, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, duracion, modalidad, inicioCurso, finCurso, inicioExamen, finExamen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id || null, tipo || 'MAESTRIA', fechaInicioDocumentos || null, fechaFinDocumentos || null, fechaEntrevistaInicio || null, fechaEntrevistaFin || null, fechaInicioEscolar || null, fechaResultados || null, duracion || 0, modalidad || 'Escolarizada', inicioCurso || null, finCurso || null, inicioExamen || null, finExamen || null]
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        const idCreador = req.usuario ? req.usuario.id : (req.body.creado_por || 1);
+
+        const [resultado] = await connection.query(
+            'INSERT INTO convocatorias (nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, tipo, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, duracion, modalidad, inicioCurso, finCurso, inicioExamen, finExamen, creado_por) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id || null, tipo || 'MAESTRIA', fechaInicioDocumentos || null, fechaFinDocumentos || null, fechaEntrevistaInicio || null, fechaEntrevistaFin || null, fechaInicioEscolar || null, fechaResultados || null, duracion || 0, modalidad || 'Escolarizada', inicioCurso || null, finCurso || null, inicioExamen || null, finExamen || null, idCreador]
         );
 
         const convocatoriaId = resultado.insertId;
@@ -60,7 +66,7 @@ const crearConvocatorias = async (req, res) => {
         // Insertar requisitos si existen
         if (requisitos && requisitos.length > 0) {
             const reqValues = requisitos.map(r => [convocatoriaId, r.id, r.obligatorio ? 1 : 0]);
-            await db.query(
+            await connection.query(
                 'INSERT INTO convocatoria_requisitos (convocatoria_id, requisito_id, obligatorio) VALUES ?',
                 [reqValues]
             );
@@ -69,34 +75,43 @@ const crearConvocatorias = async (req, res) => {
         // Insertar opciones de posgrado si existen
         if (opciones && opciones.length > 0) {
             const opValues = opciones.map(o => [convocatoriaId, o.idOpcionPosgrado, o.cupos]);
-            await db.query(
+            await connection.query(
                 'INSERT INTO convocatoria_opcion (convocatoria_id, opcion_posgrado_id, cupos) VALUES ?',
                 [opValues]
             );
         }
 
+        await connection.commit();
+
         // Emitir evento global a todos los clientes (Admin, Docentes, Aspirantes)
         req.app.get('io').emit('actualizacionGlobal');
         return res.json({ success: true, mensaje: 'Convocatoria creada correctamente' });
     } catch (error) {
+        if (connection) await connection.rollback();
         console.error('Error en crearConvocatorias:', error);
         return res.status(500).json({ success: false, mensaje: 'Error al crear convocatoria' });
+    } finally {
+        if (connection) connection.release();
     }
 };
 
 // Actualizar convocatoria con requisitos
 const actualizarConvocatorias = async (req, res) => {
+    let connection;
     try {
         const { id } = req.params;
         const { nombre, descripcion, fecha_inicio, fecha_fin, estado, requisitos, posgrado_id, tipo, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, duracion, modalidad, inicioCurso, finCurso, inicioExamen, finExamen } = req.body;
 
-        await db.query(
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        await connection.query(
             'UPDATE convocatorias SET nombre=?, descripcion=?, fecha_inicio=?, fecha_fin=?, estado=?, posgrado_id=?, tipo=?, fechaInicioDocumentos=?, fechaFinDocumentos=?, fechaEntrevistaInicio=?, fechaEntrevistaFin=?, fechaInicioEscolar=?, fechaResultados=?, duracion=?, modalidad=?, inicioCurso=?, finCurso=?, inicioExamen=?, finExamen=? WHERE id=?',
             [nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id || null, tipo || 'MAESTRIA', fechaInicioDocumentos || null, fechaFinDocumentos || null, fechaEntrevistaInicio || null, fechaEntrevistaFin || null, fechaInicioEscolar || null, fechaResultados || null, duracion || 0, modalidad || 'Escolarizada', inicioCurso || null, finCurso || null, inicioExamen || null, finExamen || null, id]
         );
 
         // Obtener requisitos actuales
-        const [existentes] = await db.query('SELECT id, requisito_id FROM convocatoria_requisitos WHERE convocatoria_id = ?', [id]);
+        const [existentes] = await connection.query('SELECT id, requisito_id FROM convocatoria_requisitos WHERE convocatoria_id = ?', [id]);
         
         const nuevosIds = requisitos ? requisitos.map(r => r.id.toString()) : [];
         
@@ -104,7 +119,7 @@ const actualizarConvocatorias = async (req, res) => {
         const paraEliminar = existentes.filter(e => !nuevosIds.includes(e.requisito_id.toString()));
         for (const req of paraEliminar) {
             try {
-                await db.query('DELETE FROM convocatoria_requisitos WHERE id = ?', [req.id]);
+                await connection.query('DELETE FROM convocatoria_requisitos WHERE id = ?', [req.id]);
             } catch (err) {
                 if (err.code === 'ER_ROW_IS_REFERENCED_2') {
                     // No podemos eliminarlo porque ya hay documentos subidos, lo omitimos silenciosamente
@@ -120,22 +135,22 @@ const actualizarConvocatorias = async (req, res) => {
             for (const r of requisitos) {
                 const existe = existentes.find(e => e.requisito_id.toString() === r.id.toString());
                 if (existe) {
-                    await db.query('UPDATE convocatoria_requisitos SET obligatorio = ? WHERE id = ?', [r.obligatorio ? 1 : 0, existe.id]);
+                    await connection.query('UPDATE convocatoria_requisitos SET obligatorio = ? WHERE id = ?', [r.obligatorio ? 1 : 0, existe.id]);
                 } else {
-                    await db.query('INSERT INTO convocatoria_requisitos (convocatoria_id, requisito_id, obligatorio) VALUES (?, ?, ?)', [id, r.id, r.obligatorio ? 1 : 0]);
+                    await connection.query('INSERT INTO convocatoria_requisitos (convocatoria_id, requisito_id, obligatorio) VALUES (?, ?, ?)', [id, r.id, r.obligatorio ? 1 : 0]);
                 }
             }
         }
 
         // Manejar opciones de posgrado
         const { opciones } = req.body;
-        const [existentesOpciones] = await db.query('SELECT id, opcion_posgrado_id FROM convocatoria_opcion WHERE convocatoria_id = ?', [id]);
+        const [existentesOpciones] = await connection.query('SELECT id, opcion_posgrado_id FROM convocatoria_opcion WHERE convocatoria_id = ?', [id]);
         const nuevosIdsOpciones = opciones ? opciones.map(o => o.idOpcionPosgrado.toString()) : [];
         
         const paraEliminarOpciones = existentesOpciones.filter(e => !nuevosIdsOpciones.includes(e.opcion_posgrado_id.toString()));
         for (const opc of paraEliminarOpciones) {
             try {
-                await db.query('DELETE FROM convocatoria_opcion WHERE id = ?', [opc.id]);
+                await connection.query('DELETE FROM convocatoria_opcion WHERE id = ?', [opc.id]);
             } catch (err) {
                 console.warn(`No se pudo eliminar la opcion ${opc.id} de la convocatoria porque está en uso.`);
             }
@@ -145,19 +160,24 @@ const actualizarConvocatorias = async (req, res) => {
             for (const o of opciones) {
                 const existeOpc = existentesOpciones.find(e => e.opcion_posgrado_id.toString() === o.idOpcionPosgrado.toString());
                 if (existeOpc) {
-                    await db.query('UPDATE convocatoria_opcion SET cupos = ? WHERE id = ?', [o.cupos, existeOpc.id]);
+                    await connection.query('UPDATE convocatoria_opcion SET cupos = ? WHERE id = ?', [o.cupos, existeOpc.id]);
                 } else {
-                    await db.query('INSERT INTO convocatoria_opcion (convocatoria_id, opcion_posgrado_id, cupos) VALUES (?, ?, ?)', [id, o.idOpcionPosgrado, o.cupos]);
+                    await connection.query('INSERT INTO convocatoria_opcion (convocatoria_id, opcion_posgrado_id, cupos) VALUES (?, ?, ?)', [id, o.idOpcionPosgrado, o.cupos]);
                 }
             }
         }
+
+        await connection.commit();
 
         // Emitir evento global a todos los clientes
         req.app.get('io').emit('actualizacionGlobal');
         return res.json({ success: true, mensaje: 'Convocatoria actualizada correctamente' });
     } catch (error) {
+        if (connection) await connection.rollback();
         console.error('Error en actualizarConvocatorias:', error);
         return res.status(500).json({ success: false, mensaje: 'Error al actualizar convocatoria' });
+    } finally {
+        if (connection) connection.release();
     }
 };
 

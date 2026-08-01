@@ -77,7 +77,8 @@ const getSolicitudActiva = async (req, res) => {
                     op.nombre AS opcionElegida,
                     mi.nombre AS modalidadNombre,
                     ep.nombre AS etapaNombre,
-                    me.orden AS etapaOrden
+                    me.orden AS etapaOrden,
+                    re.calificacion, re.aprobado AS resultadoAprobado, re.observaciones AS resultadoObservaciones, re.fechaCaptura
              FROM solicitud s
              JOIN convocatorias c ON s.idConvocatoria = c.id
              LEFT JOIN convocatoria_opcion co ON s.idConvocatoriaOpcion = co.id
@@ -85,6 +86,7 @@ const getSolicitudActiva = async (req, res) => {
              LEFT JOIN modalidad_ingreso mi ON s.idModalidad = mi.id
              LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
              LEFT JOIN modalidad_etapa me ON s.idModalidad = me.modalidad_id AND s.idEtapaActual = me.etapa_id
+             LEFT JOIN resultado_examen re ON s.id = re.idSolicitud
              WHERE s.idAspi = ? AND s.estado != 'CANCELADO'
              ORDER BY s.creadoEn DESC LIMIT 1`,
             [idAspi]
@@ -96,6 +98,27 @@ const getSolicitudActiva = async (req, res) => {
             if (solicitud.idEtapaActual) {
                 accionesDisponibles = await WorkflowService.getAccionesDeEtapa(solicitud.idEtapaActual);
             }
+
+            // Buscar documentos subidos para esta solicitud
+            const [documentos] = await db.query(
+                `SELECT sd.id as idDocumento, sd.idSolicitud, sd.idRequisito, sd.rutaArchivo, sd.estadoValidacion, sd.comentarios, sd.intentos, cr.nombre as requisitoNombre
+                 FROM solicitud_documentos sd
+                 JOIN catalogo_requisitos cr ON sd.idRequisito = cr.id
+                 WHERE sd.idSolicitud = ?
+                 ORDER BY sd.intentos ASC`,
+                [solicitud.id]
+            );
+
+            // Filtrar solo el último intento por requisito
+            const mapaDocs = {};
+            documentos.forEach(doc => {
+                const key = doc.idRequisito;
+                if (!mapaDocs[key] || doc.intentos > mapaDocs[key].intentos) {
+                    mapaDocs[key] = doc;
+                }
+            });
+            solicitud.documentosSubidos = Object.values(mapaDocs);
+
             return res.status(200).json({ existe: true, accionesDisponibles, ...solicitud });
         } else {
             return res.status(200).json({ existe: false });
@@ -163,7 +186,7 @@ const enviarExpediente = async (req, res) => {
 
         // Obtener los requisitos OBLIGATORIOS de la convocatoria
         const [requisitosObligatorios] = await db.query(
-            'SELECT id FROM convocatoria_requisitos WHERE convocatoria_id = ? AND obligatorio = 1',
+            'SELECT requisito_id as id FROM convocatoria_requisitos WHERE convocatoria_id = ? AND obligatorio = 1',
             [solicitud.idConvocatoria]
         );
         if (requisitosObligatorios.length > 0) {
@@ -203,7 +226,7 @@ const enviarExpediente = async (req, res) => {
 // Obtener modalidades (Nuevos Endpoints Fase 1)
 const getModalidadesIngreso = async (req, res) => {
     try {
-        const [resultados] = await db.query('SELECT id, nombre, descripcion FROM modalidad_ingreso WHERE activo = 1 ORDER BY id ASC');
+        const [resultados] = await db.query('SELECT id, codigo, icono, nombre, descripcion FROM modalidad_ingreso WHERE activo = 1 ORDER BY id ASC');
         return res.json(resultados);
     } catch (error) {
         console.error('Error en getModalidadesIngreso:', error);
@@ -250,9 +273,9 @@ const getSolicitudesPorModalidad = async (req, res) => {
 
         let filtroEtapa = '';
         if (tipo === 'proximos') {
-            filtroEtapa = 'AND (s.idEtapaActual = 1 OR s.idEtapaActual IS NULL)';
+            filtroEtapa = 'AND (me.orden = 1 OR s.idEtapaActual IS NULL)';
         } else if (tipo === 'en_examen') {
-            filtroEtapa = 'AND s.idEtapaActual > 1';
+            filtroEtapa = 'AND me.orden > 1';
         }
 
         const query = `
@@ -284,6 +307,7 @@ const getSolicitudesPorModalidad = async (req, res) => {
             LEFT JOIN opcion_posgrado op ON co.opcion_posgrado_id = op.id
             LEFT JOIN modalidad_ingreso mi ON s.idModalidad = mi.id
             LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
+            LEFT JOIN modalidad_etapa me ON s.idModalidad = me.modalidad_id AND s.idEtapaActual = me.etapa_id
             LEFT JOIN programacion_examen pe ON pe.idSolicitud = s.id
             WHERE s.idModalidad = ? AND s.estado != 'CANCELADO' ${filtroEtapa}
             ORDER BY s.creadoEn DESC
@@ -296,6 +320,194 @@ const getSolicitudesPorModalidad = async (req, res) => {
     }
 };
 
+// Obtener solicitudes filtradas por codigo de modalidad de ingreso
+const getSolicitudesPorModalidadCodigo = async (req, res) => {
+    try {
+        const { codigo } = req.params;
+        const { tipo } = req.query; // 'proximos' (etapa 1) o 'en_examen' (etapa > 1)
+
+        let filtroEtapa = '';
+        if (tipo === 'proximos') {
+            filtroEtapa = 'AND (me.orden = 1 OR s.idEtapaActual IS NULL)';
+        } else if (tipo === 'en_examen') {
+            filtroEtapa = 'AND me.orden > 1';
+        }
+
+        const query = `
+            SELECT 
+                s.id AS idSolicitud,
+                s.idAspi,
+                s.estado AS estadoSolicitud,
+                CONCAT(a.nombre, ' ', a.primerApellido, ' ', COALESCE(a.segundoApellido, '')) AS aspiranteNombre,
+                u.correo,
+                c.nombre AS programa,
+                c.posgrado_id,
+                p.tipo AS posgradoTipo,
+                op.nombre AS opcionNombre,
+                mi.id AS idModalidad,
+                mi.nombre AS modalidadNombre,
+                mi.codigo AS modalidadCodigo,
+                ep.id AS idEtapaActual,
+                ep.nombre AS etapaNombre,
+                COALESCE(pe.id, pc.id) AS idProgramacion,
+                COALESCE(pe.fecha, pc.fechaInicio) AS fecha,
+                pc.fechaFin,
+                pe.hora,
+                COALESCE(pe.lugar, pc.aula) AS lugar,
+                COALESCE(pe.observaciones, pc.observaciones) AS observaciones
+            FROM solicitud s
+            JOIN aspirante a ON s.idAspi = a.id
+            JOIN usuario u ON a.idUsuario = u.id
+            JOIN convocatorias c ON s.idConvocatoria = c.id
+            LEFT JOIN posgrado p ON c.posgrado_id = p.id
+            LEFT JOIN convocatoria_opcion co ON s.idConvocatoriaOpcion = co.id
+            LEFT JOIN opcion_posgrado op ON co.opcion_posgrado_id = op.id
+            JOIN modalidad_ingreso mi ON s.idModalidad = mi.id
+            LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
+            LEFT JOIN modalidad_etapa me ON s.idModalidad = me.modalidad_id AND s.idEtapaActual = me.etapa_id
+            LEFT JOIN programacion_examen pe ON pe.idSolicitud = s.id
+            LEFT JOIN programacion_curso pc ON pc.idSolicitud = s.id
+            WHERE mi.codigo = ? AND s.estado != 'CANCELADO' ${filtroEtapa}
+            ORDER BY s.creadoEn DESC
+        `;
+        const [resultados] = await db.query(query, [codigo]);
+
+        // Evitamos N+1 tanto en HTTP como en DB almacenando en caché las acciones por etapa
+        const accionesPorEtapa = {};
+        const solicitudesConAcciones = [];
+
+        for (const sol of resultados) {
+            let acciones = [];
+            if (sol.idEtapaActual) {
+                if (!accionesPorEtapa[sol.idEtapaActual]) {
+                    accionesPorEtapa[sol.idEtapaActual] = await WorkflowService.getAccionesDeEtapa(sol.idEtapaActual);
+                }
+                acciones = accionesPorEtapa[sol.idEtapaActual];
+            }
+            solicitudesConAcciones.push({
+                ...sol,
+                accionesDisponibles: acciones
+            });
+        }
+
+        return res.json(solicitudesConAcciones);
+    } catch (error) {
+        console.error('Error en getSolicitudesPorModalidadCodigo:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al consultar la modalidad por código.' });
+    }
+};
+
+// Obtener todas las solicitudes activas independientemente de la modalidad
+const getSolicitudesActivas = async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                s.id AS idSolicitud,
+                s.idAspi,
+                s.estado AS estadoSolicitud,
+                CONCAT(a.nombre, ' ', a.primerApellido, ' ', COALESCE(a.segundoApellido, '')) AS aspiranteNombre,
+                u.correo,
+                c.nombre AS programa,
+                c.posgrado_id,
+                p.tipo AS posgradoTipo,
+                op.nombre AS opcionNombre,
+                mi.id AS idModalidad,
+                mi.nombre AS modalidadNombre,
+                ep.id AS idEtapaActual,
+                ep.nombre AS etapaNombre,
+                pe.id AS idProgramacion,
+                pe.fecha,
+                pe.hora,
+                pe.lugar,
+                pe.observaciones
+            FROM solicitud s
+            JOIN aspirante a ON s.idAspi = a.id
+            JOIN usuario u ON a.idUsuario = u.id
+            JOIN convocatorias c ON s.idConvocatoria = c.id
+            LEFT JOIN posgrado p ON c.posgrado_id = p.id
+            LEFT JOIN convocatoria_opcion co ON s.idConvocatoriaOpcion = co.id
+            LEFT JOIN opcion_posgrado op ON co.opcion_posgrado_id = op.id
+            LEFT JOIN modalidad_ingreso mi ON s.idModalidad = mi.id
+            LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
+            LEFT JOIN programacion_examen pe ON pe.idSolicitud = s.id
+            WHERE s.estado != 'CANCELADO'
+            GROUP BY s.id
+            ORDER BY s.creadoEn DESC
+        `;
+        const [resultados] = await db.query(query);
+        return res.json(resultados);
+    } catch (error) {
+        console.error('Error en getSolicitudesActivas:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al consultar las solicitudes.' });
+    }
+};
+
+// Obtener mapa del proceso (niveles)
+const getMapaProceso = async (req, res) => {
+    try {
+        const { idAspi } = req.params;
+
+        // 1. Obtener solicitud activa
+        const [solicitudes] = await db.query(
+            "SELECT s.id, s.estado, s.idModalidad, s.idEtapaActual, me.orden AS etapaActualOrden " +
+            "FROM solicitud s " +
+            "LEFT JOIN modalidad_etapa me ON s.idModalidad = me.modalidad_id AND s.idEtapaActual = me.etapa_id " +
+            "WHERE s.idAspi = ? AND s.estado != 'CANCELADO' " +
+            "ORDER BY s.creadoEn DESC LIMIT 1",
+            [idAspi]
+        );
+
+        if (solicitudes.length === 0) {
+            return res.status(404).json({ mensaje: 'No hay solicitud activa.' });
+        }
+
+        const solicitud = solicitudes[0];
+        
+        // Si no tiene modalidad aún asignada, no hay mapa
+        if (!solicitud.idModalidad) {
+            return res.status(200).json([]);
+        }
+
+        // El orden actual, si no tiene etapa es 1 (inicio)
+        let ordenActual = solicitud.etapaActualOrden || 1;
+        
+        // Si el proceso ya finalizó exitosamente, marcamos todo como completado
+        if (solicitud.estado === 'APROBADO') {
+            ordenActual = 9999;
+        }
+
+        // 2. Obtener las etapas de la modalidad
+        const [etapas] = await db.query(
+            `SELECT me.orden, ep.id, ep.nombre 
+             FROM modalidad_etapa me 
+             JOIN etapa_proceso ep ON me.etapa_id = ep.id 
+             WHERE me.modalidad_id = ? 
+             ORDER BY me.orden ASC`,
+            [solicitud.idModalidad]
+        );
+
+        // Agregar etapa inicial "Convocatoria"
+        etapas.unshift({ orden: 0, id: 'convocatoria', nombre: 'Convocatoria' });
+
+        // 3. Mapear estado
+        const mapa = etapas.map(etapa => {
+            let status = 'pendiente';
+            if (etapa.orden < ordenActual) status = 'completado';
+            else if (etapa.orden === ordenActual) status = 'actual';
+            
+            return {
+                ...etapa,
+                status
+            };
+        });
+
+        return res.status(200).json(mapa);
+    } catch (error) {
+        console.error('Error en getMapaProceso:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
+    }
+};
+
 module.exports = {
     crearSolicitud,
     getSolicitudActiva,
@@ -305,6 +517,9 @@ module.exports = {
     getModalidadesIngreso,
     getEtapasWorkflow,
     getAccionesSolicitud,
-    getSolicitudesPorModalidad
+    getSolicitudesPorModalidad,
+    getSolicitudesPorModalidadCodigo,
+    getSolicitudesActivas,
+    getMapaProceso
 };
 

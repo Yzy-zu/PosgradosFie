@@ -10,4 +10,10 @@ router.get('/solicitud/:idSolicitud', programacionExamenController.getProgramaci
 // Programar examen (requiere rol de Docente, Coordinador o Administrador)
 router.post('/:idSolicitud', auth, validarRol('DOCENTE', 'COORDINADOR', 'ADMINISTRADOR', 'ADMIN'), programacionExamenController.programarExamen);
 
+// Confirmar aplicación del examen
+router.post('/confirmar/:idSolicitud', auth, validarRol('DOCENTE', 'COORDINADOR', 'ADMINISTRADOR', 'ADMIN'), programacionExamenController.confirmarExamen);
+
+// Capturar resultado del examen
+router.post('/capturar/:idSolicitud', auth, validarRol('DOCENTE', 'COORDINADOR', 'ADMINISTRADOR', 'ADMIN'), programacionExamenController.capturarResultado);
+
 module.exports = router;

@@ -11,7 +11,7 @@ const ExamenAPI = {
     /**
      * Obtiene el token de autenticación actual
      */
-    getToken: () => localStorage.getItem('token'),
+    getToken: () => sessionStorage.getItem('token') || localStorage.getItem('token'),
 
     /**
      * Configuración base para las peticiones fetch

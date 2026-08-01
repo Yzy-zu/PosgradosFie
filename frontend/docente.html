@@ -71,24 +71,8 @@
                     <span class="text" data-i18n="sb_aspirantes">Aspirantes</span>
                 </a>
             </li>
-            <li>
-                <a href="#examenes" onclick="switchView('examenes')" id="nav-examenes">
-                    <i class="fa-solid fa-file-pen"></i>
-                    <span class="text" data-i18n="sb_examenes">Exámenes</span>
-                </a>
-            </li>
-            <li>
-                <a href="#curso-propedeutico" onclick="switchView('curso-propedeutico')" id="nav-curso-propedeutico">
-                    <i class="fa-solid fa-book-open-reader"></i>
-                    <span class="text" data-i18n="sb_curso_propedeutico">Curso Propedéutico</span>
-                </a>
-            </li>
-            <li>
-                <a href="#promedio" onclick="switchView('promedio')" id="nav-promedio">
-                    <i class="fa-solid fa-calculator"></i>
-                    <span class="text" data-i18n="sb_promedio">Promedio</span>
-                </a>
-            </li>
+            <!-- Los menús de modalidades se inyectarán aquí dinámicamente -->
+            <div id="dynamic-menu-container"></div>
         </ul>
 
         <div class="sidebar-actions">
@@ -490,77 +474,156 @@
 
         <!-- SECCIÓN: EXÁMENES -->
         <section id="view-examenes" class="view-section">
-            <div style="display: flex; gap: 12px; margin-bottom: 16px;">
-                <button id="tab-examenes-en-proceso" onclick="switchView('examenes-en-proceso')"
-                    style="padding: 8px 16px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-card-bg); color: var(--color-text-muted); font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s;">
-                    <i class="fa-solid fa-calendar-check me-1"></i> En Examen
-                </button>
-                <button id="tab-examenes-proximos" onclick="switchView('examenes-proximos')"
-                    style="padding: 8px 16px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-primary); color: white; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s;">
-                    <i class="fa-regular fa-clock me-1"></i> Próximos a Examen
-                </button>
+            
+            <!-- TOOLBAR: Filtros y KPIs compactos -->
+            <div class="card" style="padding: 16px; margin-bottom: 24px; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                
+                <!-- Buscador y Filtros (Mitad Izquierda) -->
+                <div style="display: flex; gap: 12px; flex: 1; max-width: 60%;">
+                    <div style="flex: 1; position: relative; min-width: 200px;">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
+                        <input type="text" id="filtro-examen-texto" placeholder="Buscar aspirante..." oninput="filtrarTablaExamenesUI()" style="width: 100%; padding: 8px 12px 8px 35px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
+                    </div>
+                    <div style="width: 160px; flex-shrink: 0;">
+                        <select id="filtro-examen-estado" onchange="filtrarTablaExamenesUI()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
+                            <option value="">Estados (Todos)</option>
+                            <option value="sin_programar">Sin programar</option>
+                            <option value="programado">Programado</option>
+                            <option value="esperando">Esperando resultado</option>
+                            <option value="finalizado">Finalizados</option>
+                        </select>
+                    </div>
+                    <div style="width: 160px; flex-shrink: 0;">
+                        <select id="filtro-examen-programa" onchange="filtrarTablaExamenesUI()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
+                            <option value="">Programas (Todos)</option>
+                            <option value="Maestría">Maestría</option>
+                            <option value="Doctorado">Doctorado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- KPIs compactos (Mitad Derecha) -->
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <div title="Pendientes" style="display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #64748b; border: 1px solid #e2e8f0;">
+                        <i class="fa-solid fa-calendar-plus"></i> <span id="stat-exam-pendientes">0</span>
+                    </div>
+                    <div title="Programados hoy" style="display: flex; align-items: center; gap: 8px; background: #eff6ff; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #3b82f6; border: 1px solid #bfdbfe;">
+                        <i class="fa-solid fa-calendar-check"></i> <span id="stat-exam-hoy">0</span>
+                    </div>
+                    <div title="Esperando resultado" style="display: flex; align-items: center; gap: 8px; background: #fff7ed; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #f97316; border: 1px solid #fed7aa;">
+                        <i class="fa-solid fa-clock-rotate-left"></i> <span id="stat-exam-esperando">0</span>
+                    </div>
+                    <div title="Finalizados" style="display: flex; align-items: center; gap: 8px; background: #f0fdf4; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #22c55e; border: 1px solid #bbf7d0;">
+                        <i class="fa-solid fa-check-double"></i> <span id="stat-exam-finalizados">0</span>
+                    </div>
+                </div>
             </div>
-            <div class="card"
-                style="padding: 20px; overflow-x: auto; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
-                <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
-                    <thead>
-                        <tr
-                            style="border-bottom: 2px solid var(--color-border); font-size: 13px; text-transform: uppercase; color: var(--color-text-muted);">
-                            <th style="padding: 12px 15px;">Aspirante</th>
-                            <th style="padding: 12px 15px;">Programa</th>
-                            <th style="padding: 12px 15px;">Fecha / Hora</th>
-                            <th style="padding: 12px 15px;">Lugar</th>
-                            <th style="padding: 12px 15px; text-align: center;">Estado Examen</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-examenes-body">
-                        <!-- Filas inyectadas por JS -->
-                    </tbody>
-                </table>
+
+            <!-- CONTENEDOR DE TARJETAS -->
+            <div id="contenedor-examenes-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+                <!-- Tarjetas inyectadas por JS -->
             </div>
         </section>
 
         <!-- SECCIÓN: CURSO PROPEDÉUTICO -->
         <section id="view-curso-propedeutico" class="view-section">
-            <div class="card"
-                style="padding: 20px; overflow-x: auto; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
-                <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
-                    <thead>
-                        <tr
-                            style="border-bottom: 2px solid var(--color-border); font-size: 13px; text-transform: uppercase; color: var(--color-text-muted);">
-                            <th style="padding: 12px 15px;">Aspirante</th>
-                            <th style="padding: 12px 15px;">Programa</th>
-                            <th style="padding: 12px 15px;">Asistencia</th>
-                            <th style="padding: 12px 15px;">Calificación Propedéutico</th>
-                            <th style="padding: 12px 15px; text-align: center;">Estatus</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-propedeutico-body">
-                        <!-- Filas inyectadas por JS -->
-                    </tbody>
-                </table>
+            
+            <!-- TOOLBAR: Filtros y KPIs compactos -->
+            <div class="card" style="padding: 16px; margin-bottom: 24px; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                
+                <!-- Buscador y Filtros (Mitad Izquierda) -->
+                <div style="display: flex; gap: 12px; flex: 1; max-width: 60%;">
+                    <div style="flex: 1; position: relative; min-width: 200px;">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
+                        <input type="text" id="filtro-curso-texto" placeholder="Buscar aspirante..." oninput="filtrarTablaPropedeuticoUI()" style="width: 100%; padding: 8px 12px 8px 35px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
+                    </div>
+                    <div style="width: 160px; flex-shrink: 0;">
+                        <select id="filtro-curso-estado" onchange="filtrarTablaPropedeuticoUI()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
+                            <option value="">Estados (Todos)</option>
+                            <option value="sin_programar">Sin programar</option>
+                            <option value="programado">Programado</option>
+                            <option value="esperando">Esperando resultado</option>
+                            <option value="finalizado">Finalizados</option>
+                        </select>
+                    </div>
+                    <div style="width: 160px; flex-shrink: 0;">
+                        <select id="filtro-curso-programa" onchange="filtrarTablaPropedeuticoUI()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
+                            <option value="">Programas (Todos)</option>
+                            <option value="Maestría">Maestría</option>
+                            <option value="Doctorado">Doctorado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- KPIs compactos (Mitad Derecha) -->
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <div title="Pendientes" style="display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #64748b; border: 1px solid #e2e8f0;">
+                        <i class="fa-solid fa-calendar-plus"></i> <span id="stat-curso-pendientes">0</span>
+                    </div>
+                    <div title="Programados" style="display: flex; align-items: center; gap: 8px; background: #eff6ff; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #3b82f6; border: 1px solid #bfdbfe;">
+                        <i class="fa-solid fa-book-open"></i> <span id="stat-curso-programados">0</span>
+                    </div>
+                    <div title="Esperando resultado" style="display: flex; align-items: center; gap: 8px; background: #fff7ed; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #f97316; border: 1px solid #fed7aa;">
+                        <i class="fa-solid fa-clock-rotate-left"></i> <span id="stat-curso-esperando">0</span>
+                    </div>
+                    <div title="Finalizados" style="display: flex; align-items: center; gap: 8px; background: #f0fdf4; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #22c55e; border: 1px solid #bbf7d0;">
+                        <i class="fa-solid fa-check-double"></i> <span id="stat-curso-finalizados">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENEDOR DE TARJETAS -->
+            <div id="contenedor-curso-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+                <!-- Tarjetas inyectadas por JS -->
             </div>
         </section>
 
         <!-- SECCIÓN: PROMEDIO -->
         <section id="view-promedio" class="view-section">
-            <div class="card"
-                style="padding: 20px; overflow-x: auto; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
-                <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
-                    <thead>
-                        <tr
-                            style="border-bottom: 2px solid var(--color-border); font-size: 13px; text-transform: uppercase; color: var(--color-text-muted);">
-                            <th style="padding: 12px 15px;">Aspirante</th>
-                            <th style="padding: 12px 15px;">Programa</th>
-                            <th style="padding: 12px 15px;">Promedio Licenciatura</th>
-                            <th style="padding: 12px 15px;">Promedio Mínimo Requerido</th>
-                            <th style="padding: 12px 15px; text-align: center;">Dictamen Promedio</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-promedio-body">
-                        <!-- Filas inyectadas por JS -->
-                    </tbody>
-                </table>
+            
+            <!-- TOOLBAR: Filtros y KPIs compactos -->
+            <div class="card" style="padding: 16px; margin-bottom: 24px; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                
+                <!-- Buscador y Filtros (Mitad Izquierda) -->
+                <div style="display: flex; gap: 12px; flex: 1; max-width: 60%;">
+                    <div style="flex: 1; position: relative; min-width: 200px;">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
+                        <input type="text" id="filtro-promedio-texto" placeholder="Buscar aspirante..." oninput="filtrarTablaPromedioUI()" style="width: 100%; padding: 8px 12px 8px 35px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
+                    </div>
+                    <div style="width: 160px; flex-shrink: 0;">
+                        <select id="filtro-promedio-estado" onchange="filtrarTablaPromedioUI()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
+                            <option value="">Estados (Todos)</option>
+                            <option value="pendiente">Pendientes de dictamen</option>
+                            <option value="aprobado">Promedio Válido</option>
+                            <option value="rechazado">Promedio Rechazado</option>
+                        </select>
+                    </div>
+                    <div style="width: 160px; flex-shrink: 0;">
+                        <select id="filtro-promedio-programa" onchange="filtrarTablaPromedioUI()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
+                            <option value="">Programas (Todos)</option>
+                            <option value="Maestría">Maestría</option>
+                            <option value="Doctorado">Doctorado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- KPIs compactos (Mitad Derecha) -->
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <div title="Pendientes" style="display: flex; align-items: center; gap: 8px; background: #fff7ed; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #f97316; border: 1px solid #fed7aa;">
+                        <i class="fa-solid fa-clock-rotate-left"></i> <span id="stat-promedio-pendientes">0</span>
+                    </div>
+                    <div title="Promedios Aprobados" style="display: flex; align-items: center; gap: 8px; background: #f0fdf4; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #22c55e; border: 1px solid #bbf7d0;">
+                        <i class="fa-solid fa-circle-check"></i> <span id="stat-promedio-aprobados">0</span>
+                    </div>
+                    <div title="Promedios Rechazados" style="display: flex; align-items: center; gap: 8px; background: #fef2f2; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #ef4444; border: 1px solid #fecaca;">
+                        <i class="fa-solid fa-circle-xmark"></i> <span id="stat-promedio-rechazados">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENEDOR DE TARJETAS -->
+            <div id="contenedor-promedio-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+                <!-- Tarjetas inyectadas por JS -->
             </div>
         </section>
 
@@ -736,6 +799,15 @@
     <script src="js/modulos/programacionExamen/api.js"></script>
     <script src="js/modulos/programacionExamen/docenteRenderer.js"></script>
     <script src="js/modulos/programacionExamen/index.js"></script>
+    
+    <script src="js/modulos/curso/api.js"></script>
+    <script src="js/modulos/curso/docenteRenderer.js"></script>
+    <script src="js/modulos/curso/renderer.js"></script>
+    <script src="js/modulos/curso/index.js"></script>
+    
+    <script src="js/modulos/promedio/api.js"></script>
+    <script src="js/modulos/promedio/renderer.js"></script>
+    <script src="js/modulos/promedio/index.js"></script>
     
     <script src="js/docente.js"></script>
 </body>

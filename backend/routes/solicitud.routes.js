@@ -16,11 +16,15 @@ const {
     getModalidadesIngreso,
     getEtapasWorkflow,
     getAccionesSolicitud,
-    getSolicitudesPorModalidad
+    getSolicitudesPorModalidad,
+    getSolicitudesPorModalidadCodigo,
+    getSolicitudesActivas,
+    getMapaProceso
 } = require('../controllers/solicitudController');
 
 router.post('/crear', crearSolicitud);
-router.get('/activa/:idAspi', getSolicitudActiva);
+router.get('/activa/:idAspi', verificarToken, getSolicitudActiva);
+router.get('/mapa/:idAspi', verificarToken, getMapaProceso);
 router.put('/cancelar/:id', cancelarSolicitud);
 router.put('/modalidad/:id', actualizarModalidad);
 router.put('/enviar/:id', enviarExpediente);
@@ -30,5 +34,7 @@ router.get('/ingreso/modalidades', getModalidadesIngreso);
 router.get('/workflow/:idModalidad/etapas', getEtapasWorkflow);
 router.get('/acciones/:id', getAccionesSolicitud);
 router.get('/modalidad/:idModalidad', getSolicitudesPorModalidad);
+router.get('/modalidad/codigo/:codigo', getSolicitudesPorModalidadCodigo);
+router.get('/activas', getSolicitudesActivas);
 
 module.exports = router;

@@ -1,0 +1,104 @@
+# AUDITORÍA TÉCNICA DEL SISTEMA DE POSGRADOS FIE
+Generado por: Arquitecto de Software (Antigravity)
+Proyecto: Gestión del proceso de admisión a posgrados (Estadía Universitaria)
+
+=======================================================
+RESUMEN DE PUNTUACIONES (ALTO NIVEL)
+=======================================================
+* Arquitectura: 8.5/10 (Excelente Motor de Workflow Data-Driven, penalizado por SQL en Controladores).
+* Escalabilidad: 8/10 (Backend stateless y preparado para concurrencia, Frontend monolítico difícil de escalar).
+* Legibilidad: 7/10 (Buena organización de carpetas, código backend entendible pero frontend muy espagueti).
+* Mantenibilidad: 6.5/10 (Los archivos JS gigantes del frontend dificultarán mucho el mantenimiento).
+* Organización: 8/10 (Estructura de archivos intuitiva y estándar).
+
+
+=======================================================
+1. AUDITORÍA DEL BACKEND Y LÓGICA BASE
+=======================================================
+
+🔴 CRÍTICO: Seguridad y Hasheo de Contraseñas
+- Archivo: `backend/controllers/authController.js` y `backend/controllers/aspiranteController.js`
+- Problema: Inconsistencia en autenticación. `aspiranteController` usa `bcrypt.hash(password, 10)` al registrar, pero `authController` busca el usuario con `contraseña = ?` en texto plano en la consulta SQL. 
+- Riesgo: Los usuarios registrados con hash nunca podrán iniciar sesión. Además, si se guardan contraseñas en plano, es una vulnerabilidad severa.
+- Solución: El login debe recuperar el hash de la BD por correo y compararlo usando `bcrypt.compare(passwordPlano, usuarioDB.contraseña)`.
+
+🔴 CRÍTICO: Fuga de Tokens en URLs
+- Archivo: `backend/server.js` (Ruta `/api/files/:filename`)
+- Problema: Autenticas la descarga de archivos pasando el JWT en la URL (`?token=`).
+- Riesgo: El JWT queda en el historial del navegador, logs del servidor y caché. Cualquiera puede robar la sesión.
+- Solución: Generar Signed URLs (URL temporales) o usar HttpOnly Cookies.
+
+🟠 IMPORTANTE: Fat Controllers (Consultas SQL masivas)
+- Archivo: Múltiples controladores (`solicitudController.js`, `documentoController.js`)
+- Problema: Haces consultas SQL complejas (con joins, templates gigantes) incrustadas directamente dentro de la lógica HTTP, en lugar de usar un Service o Repository (como atinadamente hiciste en `validacionPromedioService.js`).
+- Riesgo: Alto acoplamiento. Imposible hacer Unit Testing. Difícil mantenimiento.
+- Solución: Mueve esas consultas a capas de servicio (`SolicitudService.js`).
+
+🟠 IMPORTANTE: Estados de negocio hardcodeados
+- Archivo: `backend/services/workflowService.js` (y tabla `solicitud`)
+- Problema: Aunque las etapas y modalidades son dinámicas, los estados internos (`'RECHAZADO'`, `'APROBADO'`, `'EN_REVISION'`) son Magic Strings en el código y en el ENUM de la base de datos.
+- Riesgo: Pierdes parte de la ventaja de tu arquitectura Data-Driven.
+- Solución: Define un catálogo `cat_estado_solicitud` en BD, o centraliza los strings en un archivo `constants.js`.
+
+🟡 MEJORA: Validaciones de Entrada (Input Validation)
+- Problema: Validas entradas a mano (`if (!nombre) return ...`). 
+- Solución: Usar un middleware de validación (ej. `express-validator`).
+
+🟡 MEJORA: Manejo de Errores Global y Transacciones
+- Problema: Muchos try-catch repetidos que devuelven siempre lo mismo. Faltan transacciones SQL (`BEGIN`/`COMMIT`) cuando haces un SELECT y luego un INSERT/UPDATE dependiente.
+- Solución: Implementar middleware de error global y `connection.beginTransaction()`.
+
+
+=======================================================
+2. AUDITORÍA DE LA BASE DE DATOS
+=======================================================
+
+🟠 IMPORTANTE: Tipos de Datos Exagerados
+- Tabla: `evaluacion`
+- Problema: El campo `notaExamen` está definido como `DECIMAL(65,30)`.
+- Riesgo: Desperdicio brutal de espacio y memoria.
+- Solución: Cambiar a `DECIMAL(5,2)` o `TINYINT` si la calificación es entera del 0 al 100.
+
+🟠 IMPORTANTE: Normalización en Programación de Exámenes
+- Tabla: `programacion_examen` vs `resultado_examen`
+- Problema: `resultado_examen` tiene un `UNIQUE KEY` en `idSolicitud` (bien hecho, relación 1:1), pero `programacion_examen` no lo tiene. 
+- Riesgo: Podrías programarle a la misma solicitud múltiples exámenes simultáneamente, rompiendo el frontend.
+- Solución: Añadir `UNIQUE KEY(idSolicitud)` a `programacion_examen` (o añadir estado de reprogramación).
+
+🟡 MEJORA: Convenciones de Nomenclatura (Naming)
+- Problema: Mezclas camelCase y snake_case (ej. `idConvocatoriaOpcion` y `posgrado_id`). Nombres de llaves foráneas como `1` o `2`.
+- Solución: Renombrar todo a snake_case y usar constraints descriptivos (`fk_modulo_tabla`).
+
+🟢 CORRECTO: Estructura Workflow (Excelente)
+- El diseño puente `modalidad_etapa` con el campo `orden` y su Unique Index compuesto demuestran una excelente comprensión del diseño relacional. 10/10.
+
+
+=======================================================
+3. AUDITORÍA DEL FRONTEND (VANILLA JS)
+=======================================================
+
+🔴 CRÍTICO: Archivos God Object (Spaghetti Code)
+- Archivos: `aspirante.js` (121 KB), `docente.js`, `admin.js`
+- Problema: Estos archivos escuchan WebSockets, manipulan el router, inyectan HTML, declaran modales con SweetAlert, y hacen fetch. Todo en un solo sitio.
+- Riesgo: Total inestabilidad al agregar características nuevas. Depuración extremadamente difícil. 
+- Solución: Separar responsabilidades (MVC). Crear archivos `.api.js`, `.ui.js` y `.controller.js`.
+
+🟠 IMPORTANTE: Estado Global Contaminado
+- Archivo: `aspirante.js`
+- Problema: Asignas variables a `window` (`window.nombreAspiranteCompleto`, `window.convocatoriasDisponibles`). 
+- Riesgo: Colisión de nombres y mutación impredecible por otros scripts.
+- Solución: Usar Módulos ES6 o encasular el estado en clases o funciones de cierre (closures).
+
+🟠 IMPORTANTE: CSS Inline y HTML Inyectado
+- Archivos: Renderers y Modales de SweetAlert
+- Problema: Inyectas bloques enormes de HTML con estilos en línea `style="..."` desde JavaScript.
+- Riesgo: Imposible mantener los estilos. Si el diseño cambia, tienes que cazar código JS.
+- Solución: Trasladar las utilidades de diseño a la hoja de estilo CSS o usar `cat_templates` HTML.
+
+🟡 MEJORA: Conflictos de Módulos
+- Archivo: `modulos/curso/renderer.js`
+- Problema: Usas exportación tipo Node.js (`module.exports = ...`) en código pensado para el navegador.
+- Solución: Migrar a Módulos ES6 (`export const`).
+
+🟢 CORRECTO: Router y Sockets
+- La implementación del Hash Router y la delegación de eventos vía WebSockets para recargar secciones de la UI en tiempo real son prácticas destacadas y proporcionan una excelente Experiencia de Usuario (UX).

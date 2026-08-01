@@ -392,7 +392,7 @@ async function verExpediente(idAspirante) {
                         <strong>${d.nombreRequisito || 'Requisito'}</strong> 
                         <span class="badge bg-light text-dark ms-1">${d.categoria || 'GENERAL'}</span>
                     </div>
-                    <a href="/uploads/${d.rutaArchivo}" target="_blank" class="btn btn-sm btn-outline-primary">
+                    <a href="javascript:void(0)" onclick="window.open('/api/files/${d.rutaArchivo}?token=' + (sessionStorage.getItem('token') || localStorage.getItem('token')), '_blank')" class="btn btn-sm btn-outline-primary">
                         <i class="fa-solid fa-file-pdf me-1"></i> Ver Documento
                     </a>
                 </li>
