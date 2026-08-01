@@ -191,7 +191,8 @@ function switchView(viewId) {
             const titulos = {
                 'proceso': typeof t === 'function' ? t('sb_proceso') : 'Proceso',
                 'convocatorias': typeof t === 'function' ? t('sb_convocatorias') : 'Convocatorias',
-                'documentos': typeof t === 'function' ? t('sb_documentos') : 'Documentos'
+                'documentos': typeof t === 'function' ? t('sb_documentos') : 'Documentos',
+                'admision': typeof t === 'function' ? t('sb_admision') : 'Admisión'
             };
             topbarNombre.innerText = titulos[viewId] || (viewId.charAt(0).toUpperCase() + viewId.slice(1));
             // Bug 6 Fix: cargar datos reales para la gráfica de proceso
@@ -239,9 +240,10 @@ async function cargarStatsInicio() {
     const statConvName = document.getElementById('dash-conv-name');
     const statConvSub = document.getElementById('dash-conv-sub');
 
-    if (statDocsSub) { statDocsSub.style.display = 'block'; statDocsSub.innerText = 'Cargando...'; }
-    if (statExpSub) { statExpSub.style.display = 'block'; statExpSub.innerText = 'Cargando...'; }
-    if (statConvSub) { statConvSub.style.display = 'block'; statConvSub.innerText = 'Cargando...'; }
+    const cargandoTxt = typeof t === 'function' ? t('tb_cargando') : 'Cargando...';
+    if (statDocsSub) { statDocsSub.style.display = 'block'; statDocsSub.innerText = cargandoTxt; }
+    if (statExpSub) { statExpSub.style.display = 'block'; statExpSub.innerText = cargandoTxt; }
+    if (statConvSub) { statConvSub.style.display = 'block'; statConvSub.innerText = cargandoTxt; }
 
     mostrarLoader();
     try {
@@ -253,25 +255,24 @@ async function cargarStatsInicio() {
                 // 1. Estado de Expediente
                 if (statExpStatus) {
                     if (soliData.estado === 'RECHAZADO') {
-                        statExpStatus.innerText = 'Expediente Rechazado';
+                        statExpStatus.innerText = typeof t === 'function' ? t('dash_exp_rechazado') : 'Expediente Rechazado';
                         statExpStatus.style.color = '';
                     } else if (soliData.estado === 'APROBADO') {
-                        statExpStatus.innerText = 'Expediente Aprobado';
+                        statExpStatus.innerText = typeof t === 'function' ? t('dash_exp_aprobado') : 'Expediente Aprobado';
                         statExpStatus.style.color = '';
                     } else {
-                        statExpStatus.innerText = 'Expediente Activo';
+                        statExpStatus.innerText = typeof t === 'function' ? t('dash_exp_activo') : 'Expediente Activo';
                         statExpStatus.style.color = '#10b981';
                     }
                 }
                 if (statExpSub) {
-                    const estado = soliData.estado === 'NUEVO' ? 'Fase Inicial' :
-                        (soliData.estado === 'EN_REVISION' ? 'En Revisión' :
-                            (soliData.estado === 'RECHAZADO' ? 'Requiere Atención' : soliData.estado));
+                    const estado = soliData.estado === 'NUEVO' ? (typeof t === 'function' ? t('dash_fase_inicial') : 'Fase Inicial') :
+                        (soliData.estado === 'EN_REVISION' ? (typeof t === 'function' ? t('dash_en_revision') : 'En Revisión') :
+                            (soliData.estado === 'RECHAZADO' ? (typeof t === 'function' ? t('dash_requiere_atencion') : 'Requiere Atención') : soliData.estado));
                     statExpSub.innerText = estado;
                 }
 
                 // 2. Convocatoria y Documentos
-                // Bug 9 Fix: renombrar variable local para no ocultar la global
                 const idSolicitudActual = soliData.idSolicitud || soliData.id;
 
                 // Fetch Convocatorias para el nombre
@@ -281,7 +282,7 @@ async function cargarStatsInicio() {
                     const convActual = convocatorias.find(c => c.id === soliData.idConvocatoria);
                     if (convActual) {
                         if (statConvName) statConvName.innerText = convActual.nombre;
-                        if (statConvSub) statConvSub.innerText = convActual.nivel === 'DOCTORADO' ? 'Doctorado FIE' : 'Maestría FIE';
+                        if (statConvSub) statConvSub.innerText = convActual.nivel === 'DOCTORADO' ? (typeof t === 'function' ? t('dash_doctorado_fie') : 'Doctorado FIE') : (typeof t === 'function' ? t('dash_maestria_fie') : 'Maestría FIE');
                     }
                 }
 
@@ -289,31 +290,33 @@ async function cargarStatsInicio() {
                 const resExp = await fetch(`/api/aspirante/${aspiranteData.id}/expediente`);
                 if (resExp.ok) {
                     const expData = await resExp.json();
-                    // Bug 9 Fix: usar idSolicitudActual (variable local renombrada)
                     const soliActiva = expData.solicitudes?.find(s => s.idSolicitud === idSolicitudActual);
                     if (soliActiva && soliActiva.documentos) {
                         const docsSubidos = soliActiva.documentos.filter(d => d.rutaArchivo).length;
-                        if (statDocsCount) statDocsCount.innerText = `${docsSubidos} documentos subidos`;
-                        if (statDocsSub) statDocsSub.innerText = 'Revisar progreso';
+                        const suffix = docsSubidos === 1 ? (typeof t === 'function' ? t('dash_docs_subidos_singular') : 'documento subido') : (typeof t === 'function' ? t('dash_docs_subidos_plural') : 'documentos subidos');
+                        if (statDocsCount) statDocsCount.innerText = `${docsSubidos} ${suffix}`;
+                        if (statDocsSub) statDocsSub.innerText = typeof t === 'function' ? t('dash_revisar_progreso') : 'Revisar progreso';
                     } else {
-                        if (statDocsCount) statDocsCount.innerText = '0 documentos subidos';
-                        if (statDocsSub) statDocsSub.innerText = 'Comenzar a subir';
+                        const suffix = typeof t === 'function' ? t('dash_docs_subidos_plural') : 'documentos subidos';
+                        if (statDocsCount) statDocsCount.innerText = `0 ${suffix}`;
+                        if (statDocsSub) statDocsSub.innerText = typeof t === 'function' ? t('dash_comenzar_subir') : 'Comenzar a subir';
                     }
                 }
             } else {
                 // No hay solicitud activa
                 if (statExpStatus) {
-                    statExpStatus.innerText = 'Sin expediente activo';
+                    statExpStatus.innerText = typeof t === 'function' ? t('dash_exp_sin_solicitud') : 'Sin expediente activo';
                     statExpStatus.style.color = 'var(--color-text)';
                 }
                 if (statExpSub) {
-                    statExpSub.innerText = 'Visita Convocatorias';
+                    statExpSub.innerText = typeof t === 'function' ? t('dash_exp_visita_conv') : 'Visita Convocatorias';
                 }
 
-                if (statConvName) statConvName.innerText = 'Ninguna seleccionada';
+                if (statConvName) statConvName.innerText = typeof t === 'function' ? t('dash_ninguna_sel') : 'Ninguna seleccionada';
                 if (statConvSub) statConvSub.style.display = 'none';
 
-                if (statDocsCount) statDocsCount.innerText = '0 documentos subidos';
+                const suffix = typeof t === 'function' ? t('dash_docs_subidos_plural') : 'documentos subidos';
+                if (statDocsCount) statDocsCount.innerText = `0 ${suffix}`;
                 if (statDocsSub) statDocsSub.style.display = 'none';
             }
         }
@@ -1127,23 +1130,25 @@ async function bloquearInterfazPorRevision(estadoActual = 'EN_REVISION', soliDat
     if (banner) {
         banner.style.cssText = 'display:block; background:transparent; border:none; box-shadow:none; padding:0; margin-bottom: 20px;';
 
-        let textBanner = 'Expediente bajo revisión';
-        let textSub = 'Serás notificado si se requiere alguna corrección';
-        let badge = 'EN REVISIÓN';
+        let textBanner = typeof t === 'function' ? t('doc_exp_bajo_revision') : 'Expediente bajo revisión';
+        let textSub = typeof t === 'function' ? t('doc_notif_correccion') : 'Serás notificado si se requiere alguna corrección';
+        let badge = typeof t === 'function' ? t('toast_rev_badge') : 'EN REVISIÓN';
         let statusKey = 'en_revision';
         let iconClass = 'fa-solid fa-lock';
 
         if (estadoActual === 'RECHAZADO') {
-            textBanner = 'Expediente Rechazado';
-            textSub = 'Revisa los comentarios y corrige los documentos necesarios';
-            badge = 'RECHAZADO';
+            textBanner = typeof t === 'function' ? t('dash_exp_rechazado') : 'Expediente Rechazado';
+            textSub = typeof t === 'function' ? t('docente_motivo_ph') : 'Revisa los comentarios y corrige los documentos necesarios';
+            badge = typeof t === 'function' ? t('doc_rechazado') : 'RECHAZADO';
             statusKey = 'rechazado';
             iconClass = 'fa-solid fa-circle-xmark';
         } else if (estadoActual === 'APROBADO' || (soliData && soliData.etapaOrden && soliData.etapaOrden >= 2)) {
-            textBanner = 'Documentación Aprobada';
-            const nombreEtapa = (soliData && soliData.etapaNombre) ? soliData.etapaNombre : 'Proceso de Admisión';
-            textSub = `Tus documentos han sido aprobados satisfactoriamente. Etapa actual: <strong>${nombreEtapa}</strong>`;
-            badge = 'APROBADO';
+            textBanner = typeof t === 'function' ? t('doc_doc_aprobada') : 'Documentación Aprobada';
+            const nombreEtapa = (soliData && soliData.etapaNombre) ? soliData.etapaNombre : (typeof t === 'function' ? t('sb_proceso') : 'Proceso de Admisión');
+            const etapaLabel = typeof t === 'function' ? t('doc_etapa_actual') : 'Etapa actual';
+            const descLabel = typeof t === 'function' ? t('doc_doc_aprobada_desc') : 'Tus documentos han sido aprobados satisfactoriamente.';
+            textSub = `${descLabel} ${etapaLabel}: <strong>${nombreEtapa}</strong>`;
+            badge = typeof t === 'function' ? t('doc_aprobado') : 'APROBADO';
             statusKey = 'aprobado';
             iconClass = 'fa-solid fa-circle-check';
         }
@@ -1254,21 +1259,12 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
         return `${bytes} B`;
     };
 
-    const formatearFecha = (raw, estado, pesoStr) => {
-        if (estado === 'APROBADO') {
-            try {
-                if (!raw) return 'Aprobado recientemente';
-                const date = new Date(raw);
-                if (isNaN(date.getTime())) return `Aprobado el ${raw.split('T')[0]}`;
-                const isEn = typeof getIdiomaActual === 'function' && getIdiomaActual() === 'en';
-                const langCode = isEn ? 'en-US' : 'es-ES';
-                const dateStr = date.toLocaleDateString(langCode, { day: 'numeric', month: 'short', year: 'numeric' });
-                return `Aprobado el ${dateStr}`;
-            } catch (e) {
-                return 'Aprobado recientemente';
-            }
-        }
-        return pesoStr ? `PDF · ${pesoStr}` : 'PDF';
+    const obtenerExtensionArchivo = (ruta) => {
+        if (!ruta || typeof ruta !== 'string') return 'PDF';
+        const partes = ruta.split('.');
+        if (partes.length < 2) return 'PDF';
+        const ext = partes.pop().toUpperCase();
+        return (ext && ext.length <= 5) ? ext : 'PDF';
     };
 
     const catKeyMap = {
@@ -1327,10 +1323,9 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
                     break;
             }
 
-            // Fetch real file size asynchronously via HEAD request
             const rutaArchivo = doc.rutaArchivo;
             const cardId = `doc-card-${doc.idDocumento || doc.id || Math.random().toString(36).slice(2)}`;
-            const fechaSubidaStr = formatearFecha(doc.fechaSubida || doc.creadoEn || doc.fecha_actualizacion, doc.estadoValidacion, null);
+            const tipoArchivoStr = obtenerExtensionArchivo(rutaArchivo);
             const docDataStr = encodeURIComponent(JSON.stringify(doc));
 
             html += `
@@ -1341,7 +1336,7 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
                         </div>
                         <div>
                             <div class="doc-card-v2-title">${doc.requisitoNombre ? (typeof t === 'function' ? t(doc.requisitoNombre) : doc.requisitoNombre) : (typeof t === 'function' ? t('doc_doc_adjunto') : 'Documento adjunto')}</div>
-                            <div class="doc-card-v2-date" id="${cardId}-size">${fechaSubidaStr}</div>
+                            <div class="doc-card-v2-date" id="${cardId}-size">${tipoArchivoStr}</div>
                         </div>
                     </div>
                     <div class="doc-card-v2-footer">
@@ -1351,18 +1346,6 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
                 </div>
             `;
 
-            // After building HTML, fetch file size in background
-            if (rutaArchivo && doc.estadoValidacion !== 'APROBADO') {
-                (async () => {
-                    try {
-                        const res = await fetch(`/api/files/${rutaArchivo}`, { method: 'HEAD', headers: { Authorization: `Bearer ${sessionStorage.getItem('token') || localStorage.getItem('token')}` } });
-                        const cl = res.headers.get('content-length');
-                        const pesoStr = formatearPeso(parseInt(cl, 10));
-                        const sizeEl = document.getElementById(`${cardId}-size`);
-                        if (sizeEl && pesoStr) sizeEl.textContent = `PDF · ${pesoStr}`;
-                    } catch (_) { /* silently ignore */ }
-                })();
-            }
         }); // end docsGrupo.forEach
 
         html += `</div>`;
@@ -1737,8 +1720,8 @@ function renderizarMapaProceso(etapas, avance = 0) {
         container.innerHTML = `
             <div style="text-align: center; padding: 40px; color: var(--color-text-muted); margin-top: 100px;">
                 <i class="fa-solid fa-map-location-dot" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
-                <h4 style="margin-bottom: 10px; font-size: 24px; color: var(--color-text);">Aún no hay ruta</h4>
-                <p style="font-size: 16px;">Selecciona una convocatoria e inicia tu proceso para ver tu mapa.</p>
+                <h4 style="margin-bottom: 10px; font-size: 24px; color: var(--color-text);">${typeof t === 'function' ? t('dash_sin_ruta') : 'Aún no hay ruta'}</h4>
+                <p style="font-size: 16px;">${typeof t === 'function' ? t('dash_sin_ruta_desc') : 'Selecciona una convocatoria e inicia tu proceso para ver tu mapa.'}</p>
             </div>
         `;
         return;
@@ -1778,11 +1761,12 @@ function renderizarMapaProceso(etapas, avance = 0) {
         coords.push({ cx, cy, status: etapa.status, nombre: etapa.nombre, index });
 
         const isLast = index === etapas.length - 1;
+        const nombreEtapaFmt = typeof t === 'function' ? t(etapa.nombre) : etapa.nombre;
         
         // HTML del nivel
         htmlNiveles += `
             <div class="mapa-nivel ${etapa.status} ${isLast ? 'mapa-nivel-final' : ''}" style="left: ${cx}px; top: ${cy}px;">
-                <div class="mapa-titulo" ${isLast ? 'style="top: 50px;"' : ''}>${etapa.nombre}</div>
+                <div class="mapa-titulo" ${isLast ? 'style="top: 50px;"' : ''}>${nombreEtapaFmt}</div>
             </div>
         `;
     });
@@ -2275,32 +2259,32 @@ function hidratarUI(soliData) {
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <div class="status-banner-icon"><i class="fa-solid fa-flag-checkered"></i></div>
                     <div>
-                        <div class="status-banner-title">Evaluación Finalizada</div>
-                        <div class="status-banner-sub">Etapa actual: <strong>${soliData.etapaNombre || 'Resultados'}</strong></div>
+                        <div class="status-banner-title">${typeof t === 'function' ? t('exam_evaluacion_finalizada') : 'Evaluación Finalizada'}</div>
+                        <div class="status-banner-sub">${typeof t === 'function' ? t('doc_etapa_actual') : 'Etapa actual'}: <strong>${soliData.etapaNombre || (typeof t === 'function' ? t('conv_resultados') : 'Resultados')}</strong></div>
                     </div>
                 </div>
             </div>
             
             <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 25px; border-radius: 14px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
-                <h4 style="margin: 0 0 15px 0; font-size: 20px; display: flex; align-items: center; gap: 10px;">
-                    <i class="fa-solid fa-trophy" style="color: #fef08a; font-size: 24px;"></i> Felicidades, tu calificacion ha sido registrada!
+                <h4 style="margin: 0 0 15px 0; font-size: 20px; display: flex; align-items: center; gap: 10px; color: white;">
+                    <i class="fa-solid fa-trophy" style="color: #fef08a; font-size: 24px;"></i> ${typeof t === 'function' ? t('exam_felicidades_calif') : 'Felicidades, tu calificacion ha sido registrada!'}
                 </h4>
-                <p style="margin-bottom: 20px; opacity: 0.9;">Tu examen de admisión ha sido evaluado y los resultados ya se integraron a tu proceso.</p>
+                <p style="margin-bottom: 20px; opacity: 0.9;">${typeof t === 'function' ? t('exam_evaluado_desc') : 'Tu examen de admisión ha sido evaluado y los resultados ya se integraron a tu proceso.'}</p>
                 
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                     <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
-                        <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">Calificación Obtenida</span>
+                        <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">${typeof t === 'function' ? t('exam_calif_obtenida') : 'Calificación Obtenida'}</span>
                         <strong style="font-size: 32px; display: block;">${soliData.calificacion}</strong>
                     </div>
                     <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
-                        <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">Resultado</span>
-                        <strong style="font-size: 28px; display: block;">${soliData.resultadoAprobado ? 'Aprobado' : 'No Aprobado'}</strong>
+                        <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">${typeof t === 'function' ? t('exam_resultado') : 'Resultado'}</span>
+                        <strong style="font-size: 28px; display: block;">${soliData.resultadoAprobado ? (typeof t === 'function' ? t('exam_aprobado') : 'Aprobado') : (typeof t === 'function' ? t('exam_no_aprobado') : 'No Aprobado')}</strong>
                     </div>
                 </div>
                 
                 ${soliData.resultadoObservaciones ? `
                 <div style="margin-top: 20px; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px;">
-                    <strong style="font-size: 13px; text-transform: uppercase; display: block; margin-bottom: 5px;">Observaciones del Comité</strong>
+                    <strong style="font-size: 13px; text-transform: uppercase; display: block; margin-bottom: 5px;">${typeof t === 'function' ? t('exam_obs_comite') : 'Observaciones del Comité'}</strong>
                     <span style="font-size: 14px;">${soliData.resultadoObservaciones}</span>
                 </div>
                 ` : ''}

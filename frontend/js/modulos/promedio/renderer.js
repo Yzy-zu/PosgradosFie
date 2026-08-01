@@ -3,7 +3,7 @@ const moduloPromedioRenderer = {
         const container = document.getElementById('admision-dinamico-container');
         if (!container) return;
 
-        const etapa = soliData.etapaNombre || 'Validación de Promedio';
+        const etapa = soliData.etapaNombre || (typeof t === 'function' ? t('mod_promedio') : 'Validación de Promedio');
         const estado = soliData.estado || 'EN_REVISION';
         const dictamen = (datosPromedio && datosPromedio.dictamen) ? datosPromedio.dictamen : null;
         
@@ -11,11 +11,11 @@ const moduloPromedioRenderer = {
         const esRechazado = (dictamen && dictamen.promedioValido === 0) || estado === 'RECHAZADO';
 
         if (esValidado) {
-            // 1. ESTADO APROBADO (Tarjeta Verde Existente)
-            const promedioMostrar = (dictamen && dictamen.promedio !== null && dictamen.promedio !== undefined) ? dictamen.promedio : (soliData.promedioCapturado || soliData.promedio || 'Aprobado');
+            // 1. ESTADO APROBADO
+            const promedioMostrar = (dictamen && dictamen.promedio !== null && dictamen.promedio !== undefined) ? dictamen.promedio : (soliData.promedioCapturado || soliData.promedio || (typeof t === 'function' ? t('doc_aprobado') : 'Aprobado'));
             const obsHtml = (dictamen && dictamen.observaciones) ? `
                 <div style="margin-top: 20px; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px;">
-                    <strong style="font-size: 13px; text-transform: uppercase; display: block; margin-bottom: 5px;">Observaciones del Comité</strong>
+                    <strong style="font-size: 13px; text-transform: uppercase; display: block; margin-bottom: 5px;">${typeof t === 'function' ? t('exam_obs_comite') : 'Observaciones del Comité'}</strong>
                     <span style="font-size: 14px;">${dictamen.observaciones}</span>
                 </div>
             ` : '';
@@ -25,38 +25,38 @@ const moduloPromedioRenderer = {
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <div class="status-banner-icon"><i class="fa-solid fa-calculator"></i></div>
                         <div>
-                            <div class="status-banner-title">Evaluación por Promedio FIE</div>
-                            <div class="status-banner-sub">Etapa actual: <strong>${etapa}</strong></div>
+                            <div class="status-banner-title">${typeof t === 'function' ? t('prom_evaluacion_titulo') : 'Evaluación por Promedio FIE'}</div>
+                            <div class="status-banner-sub">${typeof t === 'function' ? t('doc_etapa_actual') : 'Etapa actual'}: <strong>${etapa}</strong></div>
                         </div>
                     </div>
-                    <div><span class="status-banner-badge" style="background: #10b981; color: white;">VALIDADO</span></div>
+                    <div><span class="status-banner-badge" style="background: #10b981; color: white;">${typeof t === 'function' ? t('prom_validado') : 'VALIDADO'}</span></div>
                 </div>
 
                 <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 25px; border-radius: 14px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
                     <h4 style="margin: 0 0 15px 0; font-size: 20px; display: flex; align-items: center; gap: 10px; color: white;">
-                        <i class="fa-solid fa-trophy" style="color: #fef08a; font-size: 24px;"></i> ¡Felicidades, tu promedio ha sido validado!
+                        <i class="fa-solid fa-trophy" style="color: #fef08a; font-size: 24px;"></i> ${typeof t === 'function' ? t('prom_felicidades') : '¡Felicidades, tu promedio ha sido validado!'}
                     </h4>
-                    <p style="margin-bottom: 20px; opacity: 0.9;">Tu certificado de estudios e historial académico han sido auditados y aprobados por el comité de posgrados.</p>
+                    <p style="margin-bottom: 20px; opacity: 0.9;">${typeof t === 'function' ? t('prom_felicidades_desc') : 'Tu certificado de estudios e historial académico han sido auditados y aprobados por el comité de posgrados.'}</p>
                     
                     <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                         <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
-                            <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">Promedio Verificado</span>
+                            <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">${typeof t === 'function' ? t('prom_verificado') : 'Promedio Verificado'}</span>
                             <strong style="font-size: 32px; display: block;">${promedioMostrar}</strong>
                         </div>
                         <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
-                            <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">Dictamen</span>
-                            <strong style="font-size: 28px; display: block;">Promedio Válido</strong>
+                            <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">${typeof t === 'function' ? t('prom_dictamen') : 'Dictamen'}</span>
+                            <strong style="font-size: 28px; display: block;">${typeof t === 'function' ? t('prom_valido') : 'Promedio Válido'}</strong>
                         </div>
                     </div>
                     ${obsHtml}
                 </div>
             `;
         } else if (esRechazado) {
-            // 2. ESTADO RECHAZADO (Tarjeta Roja Faltante)
+            // 2. ESTADO RECHAZADO
             const promedioMostrar = (dictamen && dictamen.promedio !== null && dictamen.promedio !== undefined) ? dictamen.promedio : (soliData.promedioCapturado || soliData.promedio || 'N/A');
             const obsHtml = (dictamen && dictamen.observaciones) ? `
                 <div style="margin-top: 20px; background: rgba(0,0,0,0.15); padding: 15px; border-radius: 8px;">
-                    <strong style="font-size: 13px; text-transform: uppercase; display: block; margin-bottom: 5px;">Motivo del Dictamen / Observaciones</strong>
+                    <strong style="font-size: 13px; text-transform: uppercase; display: block; margin-bottom: 5px;">${typeof t === 'function' ? t('exam_obs_comite') : 'Motivo del Dictamen / Observaciones'}</strong>
                     <span style="font-size: 14px;">${dictamen.observaciones}</span>
                 </div>
             ` : '';
@@ -66,41 +66,41 @@ const moduloPromedioRenderer = {
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <div class="status-banner-icon"><i class="fa-solid fa-calculator"></i></div>
                         <div>
-                            <div class="status-banner-title">Evaluación por Promedio FIE</div>
-                            <div class="status-banner-sub">Etapa actual: <strong>${etapa}</strong></div>
+                            <div class="status-banner-title">${typeof t === 'function' ? t('prom_evaluacion_titulo') : 'Evaluación por Promedio FIE'}</div>
+                            <div class="status-banner-sub">${typeof t === 'function' ? t('doc_etapa_actual') : 'Etapa actual'}: <strong>${etapa}</strong></div>
                         </div>
                     </div>
-                    <div><span class="status-banner-badge" style="background: #ef4444; color: white;">RECHAZADO</span></div>
+                    <div><span class="status-banner-badge" style="background: #ef4444; color: white;">${typeof t === 'function' ? t('doc_rechazado') : 'RECHAZADO'}</span></div>
                 </div>
 
                 <div style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white; padding: 25px; border-radius: 14px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);">
                     <h4 style="margin: 0 0 15px 0; font-size: 20px; display: flex; align-items: center; gap: 10px; color: white;">
-                        <i class="fa-solid fa-circle-xmark" style="color: #fca5a5; font-size: 24px;"></i> Dictamen de Promedio No Válido
+                        <i class="fa-solid fa-circle-xmark" style="color: #fca5a5; font-size: 24px;"></i> ${typeof t === 'function' ? t('prom_no_valido_titulo') : 'Dictamen de Promedio No Válido'}
                     </h4>
-                    <p style="margin-bottom: 20px; opacity: 0.9;">El comité académico ha auditado tu expediente y determinado que el promedio acreditado no cumple con el requisito estipulado para este programa.</p>
+                    <p style="margin-bottom: 20px; opacity: 0.9;">${typeof t === 'function' ? t('prom_no_valido_desc') : 'El comité académico ha auditado tu expediente y determinado que el promedio acreditado no cumple con el requisito estipulado para este programa.'}</p>
                     
                     <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                         <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
-                            <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">Promedio Auditado</span>
+                            <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">${typeof t === 'function' ? t('prom_auditado') : 'Promedio Auditado'}</span>
                             <strong style="font-size: 32px; display: block;">${promedioMostrar}</strong>
                         </div>
                         <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
-                            <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">Dictamen</span>
-                            <strong style="font-size: 28px; display: block;">No Válido</strong>
+                            <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">${typeof t === 'function' ? t('prom_dictamen') : 'Dictamen'}</span>
+                            <strong style="font-size: 28px; display: block;">${typeof t === 'function' ? t('prom_no_valido') : 'No Válido'}</strong>
                         </div>
                     </div>
                     ${obsHtml}
                 </div>
             `;
         } else {
-            // 3. ESTADO EN CURSO (Tarjeta Actual Tal Cual Está)
+            // 3. ESTADO EN CURSO
             container.innerHTML = `
                 <div class="status-banner status-aprobado" style="margin-bottom: 20px;">
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <div class="status-banner-icon"><i class="fa-solid fa-calculator"></i></div>
                         <div>
-                            <div class="status-banner-title">Evaluación por Promedio FIE</div>
-                            <div class="status-banner-sub">Etapa actual: <strong>${etapa}</strong></div>
+                            <div class="status-banner-title">${typeof t === 'function' ? t('prom_evaluacion_titulo') : 'Evaluación por Promedio FIE'}</div>
+                            <div class="status-banner-sub">${typeof t === 'function' ? t('doc_etapa_actual') : 'Etapa actual'}: <strong>${etapa}</strong></div>
                         </div>
                     </div>
                     <div><span class="status-banner-badge">${estado}</span></div>
@@ -108,10 +108,10 @@ const moduloPromedioRenderer = {
                 <div style="background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 14px; padding: 25px; margin-top: 20px;">
                     <h4 style="margin-bottom: 10px; color: var(--color-text); font-weight: 700;">
                         <i class="fa-solid fa-award" style="color: var(--color-primary); margin-right: 8px;"></i>
-                        Dictamen de Promedio Académico en Curso
+                        ${typeof t === 'function' ? t('prom_en_curso_titulo') : 'Dictamen de Promedio Académico en Curso'}
                     </h4>
                     <p style="color: var(--color-text-muted); font-size: 14px; margin-bottom: 0;">
-                        Tu certificado de estudios e historial de calificaciones está siendo verificado por el comité académico de posgrados.
+                        ${typeof t === 'function' ? t('prom_en_curso_desc') : 'Tu certificado de estudios e historial de calificaciones está siendo verificado por el comité académico de posgrados.'}
                     </p>
                 </div>
             `;
