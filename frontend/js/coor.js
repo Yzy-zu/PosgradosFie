@@ -17,13 +17,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. Delegación global de eventos submit para el formulario de entrevistas
-    // Esto garantiza que e.preventDefault() funcione aunque el modal se inyecte dinámicamente
+    // 4. Delegación global de eventos submit Y click para el modal de entrevistas
     document.addEventListener('submit', (e) => {
         if (e.target && (e.target.id === 'formModalEntrevista' || e.target.id === 'formEntrevista')) {
             guardarEntrevista(e);
         }
     });
+
+    // Escuchar directamente el clic en el botón del modal por si no hay un elemento <form>
+    const btnGuardarModal = document.getElementById('btnGuardarEntrevista');
+    if (btnGuardarModal) {
+        btnGuardarModal.addEventListener('click', (e) => {
+            guardarEntrevista(e);
+        });
+    }
 
     // 5. Cierre de sesión
     const logoutBtn = document.getElementById('menuLogout');
@@ -450,16 +457,16 @@ async function cargarEntrevistas() {
         entrevistas.forEach(ent => {
             const tr = document.createElement('tr');
             
-            // 1. Manejo de IDs según la estructura de la DB (idSoli / id_solicitud)
+            // 1. Manejo de IDs según la estructura de la DB
             const idSolicitud = ent.idSoli || ent.id_solicitud || ent.id;
             const idDocente = ent.idUsua || ent.id_docente || ent.id_usuario || '';
 
-            // 2. Nombre del Aspirante (desde tabla aspirante/solicitud)
+            // 2. Nombre del Aspirante
             const nombreAspirante = ent.nombre_completo || 
                 `${ent.nombre || ''} ${ent.primerApellido || ''} ${ent.segundoApellido || ''}`.trim() || 
                 'Aspirante';
 
-            // 3. Nombre del Docente asignado (desde tabla docente/evaluacion)
+            // 3. Nombre del Docente asignado
             const nombreDocente = ent.docente_asignado || 
                 `${ent.docenteNombre || ''} ${ent.docenteApellido || ''}`.trim() || 
                 (idDocente ? `Docente ID: ${idDocente}` : 'Sin docente');
@@ -470,7 +477,7 @@ async function cargarEntrevistas() {
             // 5. Programa / Opción Posgrado
             const programa = ent.programa || ent.opcion_posgrado || ent.posgrado_nombre || 'Sin asignación';
 
-            // 6. Formatear fecha de entrevista (si está agendada en convocatoria o evaluación)
+            // 6. Formatear fecha de entrevista
             const fechaRaw = ent.fecha_entrevista || ent.fechaEntrevista || '';
             let fechaStr = 'Sin agendar';
             if (fechaRaw) {
@@ -486,7 +493,7 @@ async function cargarEntrevistas() {
                 ? `<span class="badge bg-success">Programada</span>` 
                 : `<span class="badge bg-warning text-dark">Pendiente</span>`;
 
-            // Escapar cadenas para evitar que rompan el HTML inline
+            // Escapar cadenas
             const nombreEscapado = nombreAspirante.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
             const lugarEscapado = (ent.lugar || ent.lugar_link || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
@@ -518,31 +525,23 @@ async function cargarEntrevistas() {
         </td></tr>`;
     }
 }
+
 // B. Llenar el select de docentes
 async function cargarDocentesSelect() {
     const select = document.getElementById('selectDocente');
-    if (!select) {
-        console.warn('⚠️ No se encontró el elemento <select id="selectDocente"> en el DOM.');
-        return;
-    }
+    if (!select) return;
 
     try {
         if (!listaDocentesCache || listaDocentesCache.length === 0) {
-            console.log(' Solicitando docentes al servidor (/api/coordinador/docentes)...');
             const res = await fetch('/api/coordinador/docentes');
-            
             if (!res.ok) {
-                console.error(` Error al obtener docentes: HTTP ${res.status}`);
                 select.innerHTML = '<option value="" disabled selected>Error al cargar docentes</option>';
                 return;
             }
-
             listaDocentesCache = await res.json();
-            console.log(' Docentes recibidos del servidor:', listaDocentesCache);
         }
 
         if (!Array.isArray(listaDocentesCache) || listaDocentesCache.length === 0) {
-            console.warn('⚠️ La lista de docentes llegó vacía desde la base de datos/API.');
             select.innerHTML = '<option value="" disabled selected>No hay docentes disponibles</option>';
             return;
         }
@@ -551,12 +550,10 @@ async function cargarDocentesSelect() {
         
         listaDocentesCache.forEach(d => {
             const idDoc = d.id_docente ?? d.id_usuario ?? d.id_docente_asignado ?? d.id;
-            const nombreDoc = d.nombre_completo ?? d.nombre_docente ?? d.nombre ?? `${d.nombres || ''} ${d.apellidos || ''}`.trim();
+            const nombreDoc = d.nombre_completo ?? d.nombre_docente ?? `${d.nombre || ''} ${d.primerApellido || d.apellidos || ''}`.trim();
 
             if (idDoc !== undefined && nombreDoc) {
                 htmlOptions += `<option value="${idDoc}">${nombreDoc}</option>`;
-            } else {
-                console.warn('⚠️ Objeto docente con formato no reconocido:', d);
             }
         });
 
@@ -583,7 +580,7 @@ async function abrirModalEntrevista(idSolicitud, nombreAspirante, fecha = '', id
     if (inputSolicitud) inputSolicitud.value = idSolicitud;
     if (txtNombre) txtNombre.textContent = nombreAspirante;
     
-    // Parseo seguro de fecha y hora sin desajustes por UTC
+    // Parseo seguro de fecha y hora
     if (fecha) {
         const partes = fecha.split('T');
         if (inputFecha) inputFecha.value = partes[0] || '';
@@ -595,12 +592,11 @@ async function abrirModalEntrevista(idSolicitud, nombreAspirante, fecha = '', id
     
     if (inputLugar) inputLugar.value = lugar;
 
-    // Cargar opciones en el select
+    // Cargar docentes en el select
     await cargarDocentesSelect();
 
     if (selectDocente) {
         const targetVal = (idDocente && idDocente !== 'null' && idDocente !== 'undefined') ? String(idDocente) : '';
-        // Asignación con diferimiento leve para asegurar el refresco de las opciones en el DOM
         setTimeout(() => {
             selectDocente.value = targetVal;
         }, 0);
@@ -611,57 +607,62 @@ async function abrirModalEntrevista(idSolicitud, nombreAspirante, fecha = '', id
 }
 
 // D. Guardar/programar entrevista
-async function guardarEntrevista(e) {
-    if (e) e.preventDefault();
+async function guardarEntrevista(event) {
+    if (event) event.preventDefault();
 
-    const idSolicitud = document.getElementById('modalEntrevistaIdSolicitud')?.value;
-    const idDocente = document.getElementById('selectDocente')?.value;
-    const fecha = document.getElementById('modalEntrevistaFecha')?.value;
-    const hora = document.getElementById('modalEntrevistaHora')?.value;
-    const lugar = document.getElementById('modalEntrevistaLugar')?.value;
+    console.log("Intentando guardar entrevista...");
 
-    if (!idSolicitud || !idDocente || !fecha || !hora) {
-        Swal.fire('Campos requeridos', 'Por favor selecciona el docente y asigna fecha y hora completas.', 'warning');
+    // Captura de datos desde el modal
+    const idSoli = document.getElementById('modalEntrevistaIdSolicitud')?.value;
+    const idUsua = document.getElementById('selectDocente')?.value;
+    const fecha  = document.getElementById('modalEntrevistaFecha')?.value;
+    const hora   = document.getElementById('modalEntrevistaHora')?.value;
+    const lugar  = document.getElementById('modalEntrevistaLugar')?.value || 'Por definir';
+
+    // Validación básica en frontend
+    if (!idSoli || !idUsua || !fecha || !hora) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Campos requeridos',
+            text: 'Por favor selecciona el docente y asigna fecha y hora completas.'
+        });
         return;
     }
 
-    const fechaHoraCompleta = `${fecha}T${hora}:00`;
+    const payload = {
+        idSoli: parseInt(idSoli),
+        idUsua: parseInt(idUsua),
+        fecha: fecha,
+        hora: hora,
+        lugar: lugar
+    };
 
     try {
-        const res = await fetch(`/api/coordinador/solicitud/${idSolicitud}/entrevista`, {
+        // CAMBIA '/api/entrevistas' POR TU RUTA DE BACKEND ACTUAL
+        const response = await fetch('/api/entrevistas', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id_docente: idDocente,
-                fecha_entrevista: fechaHoraCompleta,
-                hora: hora,
-                lugar_link: lugar
-            })
+            body: JSON.stringify(payload)
         });
 
-        const data = await res.json().catch(() => ({}));
+        const res = await response.json();
 
-        if (res.ok) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Entrevista Agendada',
-                text: 'Se guardó la información correctamente.',
-                timer: 1500,
-                showConfirmButton: false
-            });
+        if (response.ok && res.success) {
+            Swal.fire('¡Éxito!', 'La entrevista ha sido agendada correctamente.', 'success');
+            
+            // Cerrar el modal
+            const modalEl = document.getElementById('modalEntrevista');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
 
-            const modalElement = document.getElementById('modalEntrevista');
-            const bsModal = bootstrap.Modal.getInstance(modalElement);
-            if (bsModal) bsModal.hide();
-
-            cargarEntrevistas();
-            cargarMetricas();
+            // Recargar o actualizar la vista
+            setTimeout(() => location.reload(), 1500);
         } else {
-            Swal.fire('Error', data.mensaje || data.error || 'No se pudo guardar la entrevista.', 'error');
+            Swal.fire('Error', res.message || 'No se pudo guardar la entrevista.', 'error');
         }
-    } catch (err) {
-        console.error('Error al guardar la entrevista:', err);
-        Swal.fire('Error de conexión', 'Ocurrió un fallo en el cliente al intentar procesar la entrevista.', 'error');
+    } catch (error) {
+        console.error("Error de conexión:", error);
+        Swal.fire('Error', 'Ocurrió un error al conectar con el servidor.', 'error');
     }
 }
 
@@ -727,8 +728,33 @@ async function cargarNotificaciones() {
         </td></tr>`;
     }
 }
+// ==========================================
+// FUNCIÓN PARA ABRIR EL MODAL Y ASIGNAR EL ID
+// ==========================================
+function abrirModalProgramar(idSolicitud) {
+    console.log("Abriendo modal para la solicitud ID:", idSolicitud);
+    
+    // 1. Asignamos el idSolicitud al input oculto (para no perder el ID)
+    const inputSolicitud = document.getElementById('idSolicitud');
+    if (inputSolicitud) {
+        inputSolicitud.value = idSolicitud;
+    }
 
-// Expuestos al Scope Global para listeners en el DOM (onClick / inline events)
+    // 2. Reseteamos la selección del docente a la opción por defecto sin borrar las opciones
+    const selectDocente = document.getElementById('id_docente');
+    if (selectDocente) {
+        selectDocente.selectedIndex = 0; // Selecciona "Seleccione un docente..."
+    }
+
+    // 3. Abrimos el modal con Bootstrap
+    const modalElement = document.getElementById('modalEntrevista');
+    if (modalElement) {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modal.show();
+    }
+}
+
+// Expuestos al Scope Global para listeners en el DOM
 window.abrirModalEntrevista = abrirModalEntrevista;
 window.guardarEntrevista = guardarEntrevista;
 window.verExpediente = verExpediente;

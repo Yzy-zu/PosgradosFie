@@ -176,58 +176,66 @@
             </tr>
         </thead>
         <tbody id="tablaEntrevistasBody">
-            <!-- Renderizado dinámico con JS -->
         </tbody>
     </table>
 </div>
 </section>
 
 <!-- MODAL PARA AGENDAR/EDITAR ENTREVISTA -->
-<div class="modal fade" id="modalEntrevista" tabindex="-1" aria-labelledby="modalEntrevistaLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold" id="modalEntrevistaLabel">
-                    <i class="fa-solid fa-user-clock me-2"></i>Agendar Entrevista
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="formAgendaEntrevista">
-                <div class="modal-body">
-                    <input type="hidden" id="entrevista_id_solicitud" name="idSolicitud">
+<div class="modal fade" id="modalEntrevista" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="formModalEntrevista">
+        
+        <!-- Campo Oculto con el ID que espera coor.js -->
+        <input type="hidden" id="modalEntrevistaIdSolicitud" name="idSolicitud" value="">
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="entrevista_fecha" class="form-label fw-semibold">Fecha:</label>
-                            <input type="date" id="entrevista_fecha" class="form-control" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="entrevista_hora" class="form-label fw-semibold">Hora:</label>
-                            <input type="time" id="entrevista_hora" class="form-control" required>
-                        </div>
-                    </div>
-
-<div class="mb-3">
-    <label for="selectDocente" class="form-label">Asignar Docente</label>
-    <select class="form-select" id="selectDocente" name="id_docente">
-        <option value="">Cargando docentes...</option>
-    </select>
-</div>
-
-                    <div class="mb-3">
-                        <label for="entrevista_lugar" class="form-label fw-semibold">Lugar o Enlace (Meet/Teams/Aula):</label>
-                        <input type="text" id="entrevista_lugar" class="form-control" placeholder="Ej. https://meet.google.com/xyz o Aula 3" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Entrevista
-                    </button>
-                </div>
-            </form>
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fa-solid fa-user-clock me-2"></i>Agendar Entrevista</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
+
+        <div class="modal-body">
+          <!-- Nombre del aspirante cargado dinámicamente -->
+          <div class="mb-3">
+            <span class="text-muted small d-block">Aspirante:</span>
+            <strong id="modalEntrevistaNombre" class="fs-6 text-dark">-</strong>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Fecha:</label>
+              <input type="date" id="modalEntrevistaFecha" class="form-control" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Hora:</label>
+              <input type="time" id="modalEntrevistaHora" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="selectDocente" class="form-label fw-bold">Asignar Docente:</label>
+            <select id="selectDocente" name="idDocente" class="form-select" required>
+              <option value="" disabled selected>Cargando docentes...</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">Lugar o Enlace (Meet/Teams/Aula):</label>
+            <input type="text" id="modalEntrevistaLugar" class="form-control" placeholder="Ej: Aula Omega B1 o enlace de Google Meet">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" id="btnGuardarEntrevista" onclick="guardarEntrevista()" class="btn btn-danger px-4">
+            <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Entrevista
+          </button>
+        </div>
+
+      </form>
     </div>
+  </div>
 </div>
 
             <!-- VISTA 5: DICTÁMENES -->
