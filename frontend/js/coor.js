@@ -104,10 +104,18 @@ async function cargarMetricas() {
         const res = await fetch('/api/coordinador/metricas');
         if (res.ok) {
             const data = await res.json();
-            document.getElementById('cantSolicitudes').textContent = data.totales || 0;
-            document.getElementById('cantPendientes').textContent = data.pendientes || 0;
-            document.getElementById('cantEntrevistas').textContent = data.entrevistas || 0;
-            document.getElementById('cantAceptados').textContent = data.aceptados || 0;
+            
+            const elSolicitudes = document.getElementById('cantSolicitudes');
+            if (elSolicitudes) elSolicitudes.textContent = data.totales || 0;
+
+            const elPendientes = document.getElementById('cantPendientes');
+            if (elPendientes) elPendientes.textContent = data.pendientes || 0;
+
+            const elEntrevistas = document.getElementById('cantEntrevistas');
+            if (elEntrevistas) elEntrevistas.textContent = data.entrevistas || 0;
+
+            const elAceptados = document.getElementById('cantAceptados');
+            if (elAceptados) elAceptados.textContent = data.aceptados || 0;
         }
     } catch (err) {
         console.error('Error al cargar métricas:', err);
@@ -429,6 +437,7 @@ async function verExpediente(idAspirante) {
 let listaDocentesCache = null;
 
 // A. Cargar la tabla de entrevistas
+// A. Cargar la tabla de entrevistas
 async function cargarEntrevistas() {
     console.log('Vista Entrevistas activa');
     const tbody = document.getElementById('tablaEntrevistasBody');
@@ -457,49 +466,38 @@ async function cargarEntrevistas() {
         entrevistas.forEach(ent => {
             const tr = document.createElement('tr');
             
-            // 1. Manejo de IDs según la estructura de la DB
+            // 1. Manejo de IDs
             const idSolicitud = ent.idSoli || ent.id_solicitud || ent.id;
             const idDocente = ent.idUsua || ent.id_docente || ent.id_usuario || '';
 
-            // 2. Nombre del Aspirante
+            // 2. Nombres y datos
             const nombreAspirante = ent.nombre_completo || 
                 `${ent.nombre || ''} ${ent.primerApellido || ''} ${ent.segundoApellido || ''}`.trim() || 
                 'Aspirante';
 
-            // 3. Nombre del Docente asignado
-            const nombreDocente = ent.docente_asignado || 
-                `${ent.docenteNombre || ''} ${ent.docenteApellido || ''}`.trim() || 
-                (idDocente ? `Docente ID: ${idDocente}` : 'Sin docente');
-
-            // 4. Folio o CURP
+            const nombreDocente = ent.docente || "Sin docente";  
             const folioCurp = ent.curp || ent.folio || 'Sin CURP';
-
-            // 5. Programa / Opción Posgrado
             const programa = ent.programa || ent.opcion_posgrado || ent.posgrado_nombre || 'Sin asignación';
 
-            // 6. Formatear fecha de entrevista
-            const fechaRaw = ent.fecha_entrevista || ent.fechaEntrevista || '';
+            // 3. Fecha y Hora
+            const fechaRaw = ent.fecha || '';
+            const horaRaw = ent.hora || '';
+            const lugarRaw = ent.lugar || ent.lugar_link || '';
+
             let fechaStr = 'Sin agendar';
             if (fechaRaw) {
-                const partes = fechaRaw.split('T');
-                const f = partes[0] || '';
-                const h = partes[1] ? partes[1].substring(0, 5) : '';
-                fechaStr = `${f} ${h}`.trim();
+                fechaStr = `${fechaRaw} ${horaRaw ? horaRaw.substring(0, 5) : ''}`.trim();
             }
 
             const fechaValida = !!fechaRaw;
-                
             const badgeEstado = fechaValida 
                 ? `<span class="badge bg-success">Programada</span>` 
                 : `<span class="badge bg-warning text-dark">Pendiente</span>`;
 
-            // Escapar cadenas
-            const nombreEscapado = nombreAspirante.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-            const lugarEscapado = (ent.lugar || ent.lugar_link || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-
+            // Estructura HTML del renglón (sin onclick inline para evitar errores de comillas/sintaxis)
             tr.innerHTML = `
                 <td class="py-3">
-                    <div class="fw-bold text-dark">${nombreAspirante}</div>
+                    <div class="fw-bold text-dark"></div>
                     <small class="text-muted font-monospace">${folioCurp}</small>
                 </td>
                 <td><span class="fw-medium text-secondary">${programa}</span></td>
@@ -508,13 +506,23 @@ async function cargarEntrevistas() {
                     ${badgeEstado}
                     <small class="d-block text-muted mt-1 font-monospace">${fechaStr}</small>
                 </td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary" 
-                            onclick="abrirModalEntrevista(${idSolicitud}, '${nombreEscapado}', '${fechaRaw}', '${idDocente}', '${lugarEscapado}')">
-                        <i class="fa-solid fa-calendar-plus me-1"></i> ${fechaValida ? 'Editar' : 'Programar'}
-                    </button>
-                </td>
+                <td class="text-end action-cell"></td>
             `;
+
+            // Insertar el texto de manera segura
+            tr.querySelector('.fw-bold.text-dark').textContent = nombreAspirante;
+
+            // Crear el botón mediante DOM para evitar el SyntaxError
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-sm btn-outline-primary';
+            btn.innerHTML = `<i class="fa-solid fa-calendar-plus me-1"></i> ${fechaValida ? 'Editar' : 'Programar'}`;
+            
+            // Asignar el evento dinámicamente
+            btn.addEventListener('click', () => {
+                abrirModalEntrevista(idSolicitud, nombreAspirante, fechaRaw, horaRaw, idDocente, lugarRaw);
+            });
+
+            tr.querySelector('.action-cell').appendChild(btn);
             tbody.appendChild(tr);
         });
 
@@ -566,7 +574,14 @@ async function cargarDocentesSelect() {
 }
 
 // C. Abrir el modal de entrevista
-async function abrirModalEntrevista(idSolicitud, nombreAspirante, fecha = '', idDocente = '', lugar = '') {
+async function abrirModalEntrevista(
+    idSolicitud,
+    nombreAspirante,
+    fecha = '',
+    hora = '',
+    idDocente = '',
+    lugar = ''
+) {
     const modalElement = document.getElementById('modalEntrevista');
     if (!modalElement) return;
 
@@ -579,90 +594,94 @@ async function abrirModalEntrevista(idSolicitud, nombreAspirante, fecha = '', id
 
     if (inputSolicitud) inputSolicitud.value = idSolicitud;
     if (txtNombre) txtNombre.textContent = nombreAspirante;
-    
-    // Parseo seguro de fecha y hora
-    if (fecha) {
-        const partes = fecha.split('T');
-        if (inputFecha) inputFecha.value = partes[0] || '';
-        if (inputHora) inputHora.value = partes[1] ? partes[1].substring(0, 5) : '';
-    } else {
-        if (inputFecha) inputFecha.value = '';
-        if (inputHora) inputHora.value = '';
-    }
-    
-    if (inputLugar) inputLugar.value = lugar;
+    if (inputFecha) inputFecha.value = fecha || '';
+    if (inputHora) inputHora.value = hora || '';
+    if (inputLugar) inputLugar.value = lugar || '';
 
-    // Cargar docentes en el select
+    // Cargar la lista de docentes en el select
     await cargarDocentesSelect();
 
+    // Asignación directa e inmediata del docente seleccionado
     if (selectDocente) {
-        const targetVal = (idDocente && idDocente !== 'null' && idDocente !== 'undefined') ? String(idDocente) : '';
-        setTimeout(() => {
-            selectDocente.value = targetVal;
-        }, 0);
+        const targetVal = (idDocente && idDocente !== 'null' && idDocente !== 'undefined')
+            ? String(idDocente)
+            : '';
+        selectDocente.value = targetVal;
     }
 
-    const bsModal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
-    bsModal.show();
+    const modal = bootstrap.Modal.getInstance(modalElement)
+        || new bootstrap.Modal(modalElement);
+
+    modal.show();
 }
 
 // D. Guardar/programar entrevista
 async function guardarEntrevista(event) {
     if (event) event.preventDefault();
 
-    console.log("Intentando guardar entrevista...");
+    const idSolicitud = document.getElementById("modalEntrevistaIdSolicitud").value;
+    const fecha = document.getElementById("modalEntrevistaFecha").value;
+    const hora = document.getElementById("modalEntrevistaHora").value;
+    const lugar = document.getElementById("modalEntrevistaLugar").value;
+    const enlace = "";
+    const idDocente = document.getElementById("selectDocente").value;
 
-    // Captura de datos desde el modal
-    const idSoli = document.getElementById('modalEntrevistaIdSolicitud')?.value;
-    const idUsua = document.getElementById('selectDocente')?.value;
-    const fecha  = document.getElementById('modalEntrevistaFecha')?.value;
-    const hora   = document.getElementById('modalEntrevistaHora')?.value;
-    const lugar  = document.getElementById('modalEntrevistaLugar')?.value || 'Por definir';
-
-    // Validación básica en frontend
-    if (!idSoli || !idUsua || !fecha || !hora) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Campos requeridos',
-            text: 'Por favor selecciona el docente y asigna fecha y hora completas.'
-        });
+    if (!fecha || !hora || !idDocente) {
+        Swal.fire(
+            "Campos incompletos",
+            "Seleccione docente, fecha y hora.",
+            "warning"
+        );
         return;
     }
 
-    const payload = {
-        idSoli: parseInt(idSoli),
-        idUsua: parseInt(idUsua),
-        fecha: fecha,
-        hora: hora,
-        lugar: lugar
-    };
-
     try {
-        // CAMBIA '/api/entrevistas' POR TU RUTA DE BACKEND ACTUAL
-        const response = await fetch('/api/entrevistas', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+        const res = await fetch(`/api/coordinador/solicitud/${idSolicitud}/entrevista`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                fecha,
+                hora,
+                lugar,
+                enlace,
+                idDocente
+            })
         });
 
-        const res = await response.json();
+        const data = await res.json();
 
-        if (response.ok && res.success) {
-            Swal.fire('¡Éxito!', 'La entrevista ha sido agendada correctamente.', 'success');
-            
-            // Cerrar el modal
-            const modalEl = document.getElementById('modalEntrevista');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) modal.hide();
+        if (res.ok) {
+            Swal.fire({
+                icon: "success",
+                title: "Entrevista guardada",
+                text: data.mensaje,
+                timer: 1500,
+                showConfirmButton: false
+            });
 
-            // Recargar o actualizar la vista
-            setTimeout(() => location.reload(), 1500);
+            bootstrap.Modal.getInstance(
+                document.getElementById("modalEntrevista")
+            )?.hide();
+
+            cargarEntrevistas();
+
         } else {
-            Swal.fire('Error', res.message || 'No se pudo guardar la entrevista.', 'error');
+            Swal.fire(
+                "Error",
+                data.mensaje || "No se pudo guardar.",
+                "error"
+            );
         }
-    } catch (error) {
-        console.error("Error de conexión:", error);
-        Swal.fire('Error', 'Ocurrió un error al conectar con el servidor.', 'error');
+
+    } catch (err) {
+        console.error(err);
+        Swal.fire(
+            "Error",
+            "No se pudo conectar al servidor.",
+            "error"
+        );
     }
 }
 

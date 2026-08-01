@@ -211,12 +211,14 @@ getDocentes: async (req,res)=>{
     // ==========================================
 // 6. Obtener Entrevistas
 // ==========================================
-getEntrevistas: async (req,res)=>{
+// ==========================================
+// 6. Obtener Entrevistas
+// ==========================================
+getEntrevistas: async (req, res) => {
 
-    try{
+    try {
 
-        const [rows]=await db.query(`
-
+        const [rows] = await db.query(`
             SELECT
 
                 s.id AS id_solicitud,
@@ -226,6 +228,8 @@ getEntrevistas: async (req,res)=>{
                     a.primerApellido,' ',
                     IFNULL(a.segundoApellido,'')
                 ) AS nombre_completo,
+
+                a.curp,
 
                 c.nombre AS programa,
 
@@ -252,28 +256,29 @@ getEntrevistas: async (req,res)=>{
             FROM solicitud s
 
             INNER JOIN aspirante a
-                ON s.idAspi=a.id
+                ON a.id = s.idAspi
 
             INNER JOIN convocatorias c
-                ON s.idConvocatoria=c.id
+                ON c.id = s.idConvocatoria
 
             LEFT JOIN entrevistas e
-                ON s.id=e.idSolicitud
+                ON e.idSolicitud = s.id
 
             LEFT JOIN docente d
-                ON e.idDocente=d.id
+                ON d.id = e.idDocente
 
             ORDER BY s.id DESC
-
         `);
 
         res.json(rows);
 
-    }catch(error){
+    } catch (error) {
 
-        console.error("Error entrevistas:",error);
+        console.error(error);
 
-        res.status(500).json(error);
+        res.status(500).json({
+            mensaje: "Error al obtener entrevistas."
+        });
 
     }
 
