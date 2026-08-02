@@ -66,7 +66,7 @@ async function abrirWorkflowSolicitud(idSolicitud) {
         }
     } catch (error) {
         console.error("Error al abrir workflow:", error);
-        alert("Ocurrió un error al cargar la acción.");
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al cargar la acción.', confirmButtonColor: '#ef4444' });
     }
 }
 
@@ -88,11 +88,11 @@ async function abrirModalReprogramarExamen(idAspi) {
             moduloProgramacionExamenDocenteRenderer.renderizarProgramacion(solicitudData);
             abrirModalDinamico();
         } else {
-            alert("No se pudo cargar el módulo de programación de examen.");
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar el módulo de programación de examen.', confirmButtonColor: '#ef4444' });
         }
     } catch (error) {
         console.error("Error al abrir reprogramación:", error);
-        alert("Ocurrió un error al abrir el formulario de reprogramación.");
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al abrir el formulario de reprogramación.', confirmButtonColor: '#ef4444' });
     }
 }
 
@@ -601,12 +601,13 @@ function seleccionarAspirante(id) {
             iconColor = '#a16207';
         }
 
+        let statusIconHtml = '';
         if (doc.estado === 'aprobado') {
-            badgeHtml = `<span class="doc-badge-aprobado"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> ${typeof t === 'function' ? t('doc_aprobado') : 'APROBADO'}</span>`;
+            statusIconHtml = `<span class="doc-icon-status"><i class="fa-solid fa-circle-check" style="color: #10b981;"></i></span>`;
         } else if (doc.estado === 'rechazado') {
-            badgeHtml = `<span class="doc-badge-rechazado"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> ${typeof t === 'function' ? t('doc_rechazado') : 'RECHAZADO'}</span>`;
+            statusIconHtml = `<span class="doc-icon-status"><i class="fa-solid fa-circle-xmark" style="color: #ef4444;"></i></span>`;
         } else {
-            badgeHtml = `<span class="doc-badge-pendiente"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> ${typeof t === 'function' ? t('doc_pendiente') : 'PENDIENTE'}</span>`;
+            statusIconHtml = `<span class="doc-icon-status"><i class="fa-solid fa-clock" style="color: #f59e0b;"></i></span>`;
         }
 
         html += `
@@ -614,14 +615,14 @@ function seleccionarAspirante(id) {
                 <div class="doc-card-v2-header">
                     <div class="doc-card-v2-icon" style="background: ${iconBg}; color: ${iconColor};">
                         <i class="fa-solid ${iconClass}"></i>
+                        ${statusIconHtml}
                     </div>
                     <div>
                         <div class="doc-card-v2-title">${doc.nombre || 'Documento'}</div>
-                        <div class="doc-card-v2-date">${doc.estado === 'aprobado' ? (typeof t === 'function' ? t('doc_subido_reciente') : 'Aprobado') : (typeof t === 'function' ? t('docente_btn_evaluar') : 'Evaluar Documento')}</div>
+                        <div class="doc-card-v2-date">${doc.estado === 'aprobado' ? (typeof t === 'function' ? t('doc_subido_reciente') : 'Subido recientemente') : (typeof t === 'function' ? t('docente_btn_evaluar') : 'Evaluar Documento')}</div>
                     </div>
                 </div>
                 <div class="doc-card-v2-footer">
-                    ${badgeHtml}
                     <span class="doc-action-ver">${typeof t === 'function' ? t('doc_ver_doc') : 'Ver Documento'}</span>
                 </div>
             </div>
@@ -1213,7 +1214,18 @@ async function cargarTablaExamenesPorCodigo(codigo) {
 }
 
 async function confirmarAplicacionExamen(idSolicitud) {
-    if(!confirm('¿Estás seguro de confirmar que este examen ya se aplicó? Esto habilitará la captura de resultados.')) return;
+    const confirmacion = await Swal.fire({
+        title: 'Confirmar Aplicación',
+        text: '¿Estás seguro de confirmar que este examen ya se aplicó? Esto habilitará la captura de resultados.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3b82f6',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, confirmar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!confirmacion.isConfirmed) return;
 
     try {
         const res = await fetch(`/api/programacion-examen/confirmar/${idSolicitud}`, {
@@ -1990,7 +2002,7 @@ async function verExpedienteAspirante(id) {
 
     } catch (error) {
         console.error("Error al cargar expediente:", error);
-        alert("No se pudo cargar el expediente del aspirante.");
+        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar el expediente del aspirante.', confirmButtonColor: '#ef4444' });
     } finally {
         ocultarLoader();
     }

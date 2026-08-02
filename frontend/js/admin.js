@@ -45,9 +45,15 @@ function validarSesion() {
     const token = sessionStorage.getItem("token");
 
     if (!usuario || !token) {
-        alert("Sesión inválida o expirada. Por favor, inicie sesión.");
-        sessionStorage.clear();
-        window.location.href = "login.html";
+        Swal.fire({
+            icon: 'warning',
+            title: 'Sesión expirada',
+            text: 'Sesión inválida o expirada. Por favor, inicie sesión.',
+            confirmButtonColor: '#8a1c24'
+        }).then(() => {
+            sessionStorage.clear();
+            window.location.href = "login.html";
+        });
         return;
     }
 }
@@ -276,7 +282,7 @@ async function editarUsuario(id) {
 
     } catch (error) {
         console.error("Error al preparar la edición:", error);
-        alert("No se pudieron cargar los datos del usuario.");
+        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los datos del usuario.', confirmButtonColor: '#ef4444' });
     }
 }
 
@@ -470,7 +476,12 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
         });
 
         if (faltan.length > 0) {
-            alert("Por favor complete los siguientes campos obligatorios del aspirante:\n- " + faltan.join("\n- "));
+            Swal.fire({
+                icon: 'warning',
+                title: 'Campos requeridos',
+                text: 'Por favor complete los siguientes campos obligatorios del aspirante:\n- ' + faltan.join('\n- '),
+                confirmButtonColor: '#f59e0b'
+            });
             const contDetalles = document.getElementById("detallesExtendidos");
             if (contDetalles && contDetalles.style.width === "0px") {
                 toggleDetallesUsuario();
@@ -517,7 +528,13 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
         const resultado = await respuesta.json();
 
         if (respuesta.ok && resultado.success !== false) {
-            alert(resultado.mensaje || "Operación realizada con éxito");
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: resultado.mensaje || 'Operación realizada con éxito',
+                timer: 1500,
+                showConfirmButton: false
+            });
 
             const modalElement = document.getElementById("modalUsuario");
             const modal = bootstrap.Modal.getInstance(modalElement);
@@ -531,19 +548,28 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
 
             cargarUsuarios();
         } else {
-            alert(resultado.mensaje || "Hubo un error al procesar la solicitud.");
+            Swal.fire({ icon: 'error', title: 'Error', text: resultado.mensaje || 'Hubo un error al procesar la solicitud.', confirmButtonColor: '#ef4444' });
         }
 
     } catch (error) {
         console.error("Error al guardar el usuario:", error);
-        alert("Ocurrió un error en la conexión con el servidor.");
+        Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'Ocurrió un error en la conexión con el servidor.', confirmButtonColor: '#ef4444' });
     }
 });
 
 async function eliminarUsuario(id) {
-    if (!confirm(`¿Está seguro de eliminar al usuario con ID: ${id}?`)) {
-        return;
-    }
+    const confirmacion = await Swal.fire({
+        title: 'Eliminar usuario',
+        text: `¿Está seguro de eliminar al usuario con ID: ${id}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!confirmacion.isConfirmed) return;
 
     const token = sessionStorage.getItem("token") || "";
 
@@ -558,18 +584,24 @@ async function eliminarUsuario(id) {
         const resultado = await respuesta.json();
 
         if (respuesta.ok && resultado.success !== false) {
-            alert(resultado.mensaje || "Usuario eliminado con éxito.");
+            Swal.fire({
+                icon: 'success',
+                title: 'Usuario eliminado',
+                text: resultado.mensaje || 'Usuario eliminado con éxito.',
+                timer: 1500,
+                showConfirmButton: false
+            });
             const modalElement = document.getElementById("modalUsuario");
             const modal = bootstrap.Modal.getInstance(modalElement);
             if (modal) modal.hide();
             cargarUsuarios();
         } else {
-            alert(resultado.mensaje || "No se pudo eliminar el usuario.");
+            Swal.fire({ icon: 'error', title: 'Error', text: resultado.mensaje || 'No se pudo eliminar el usuario.', confirmButtonColor: '#ef4444' });
         }
 
     } catch (error) {
         console.error("Error en eliminarUsuario:", error);
-        alert("Ocurrió un error al intentar eliminar el usuario.");
+        Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'Ocurrió un error al intentar eliminar el usuario.', confirmButtonColor: '#ef4444' });
     }
 }
 
@@ -703,9 +735,9 @@ function renderizarChipsOpciones() {
     opcionesSeleccionadas.forEach(op => {
         const cuposVal = op.cupos !== null ? op.cupos : "";
         html += `
-            <div class="badge bg-light text-dark border d-flex align-items-center p-2" id="chip_opc_${op.idOpcionPosgrado}">
-                <span class="me-2">${op.nombre}</span>
-                <input type="number" class="form-control form-control-sm cupo-input border-secondary text-center" style="width: 70px; height: 26px; font-size: 0.8rem;" placeholder="Cupos" value="${cuposVal}" onchange="actualizarCupo(${op.idOpcionPosgrado}, this.value)">
+            <div class="badge border d-flex align-items-center p-2" id="chip_opc_${op.idOpcionPosgrado}" style="background: var(--color-bg); color: var(--color-text); border-color: var(--color-border) !important;">
+                <span class="me-2 fw-semibold">${op.nombre}</span>
+                <input type="number" class="form-control form-control-sm cupo-input text-center" style="width: 70px; height: 26px; font-size: 0.8rem; background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border);" placeholder="Cupos" value="${cuposVal}" onchange="actualizarCupo(${op.idOpcionPosgrado}, this.value)">
                 <button type="button" class="btn-close ms-2" style="font-size: 0.6rem;" onclick="removerOpcion(${op.idOpcionPosgrado})"></button>
             </div>
         `;
@@ -868,6 +900,14 @@ function validarPasoActual() {
     return true;
 }
 
+window.irAlPaso = function (paso) {
+    if (paso === pasoActualConvocatoria) return;
+    if (paso > pasoActualConvocatoria) {
+        if (!validarPasoActual()) return;
+    }
+    actualizarWizard(paso);
+};
+
 window.siguientePaso = function () {
     if (!validarPasoActual()) return;
     if (pasoActualConvocatoria < totalPasosConvocatoria) {
@@ -906,18 +946,19 @@ async function cargarCatalogoRequisitosUI() {
 
         requisitos.forEach(req => {
             const div = document.createElement("div");
-            div.className = "d-flex justify-content-between align-items-center mb-2 p-2 border rounded bg-white";
+            div.className = "d-flex justify-content-between align-items-center mb-2 p-2 border rounded";
+            div.style.cssText = "background: var(--color-card-bg); border-color: var(--color-border) !important; color: var(--color-text);";
 
             div.innerHTML = `
                 <div class="form-check mb-0">
                     <input class="form-check-input req-checkbox" type="checkbox" value="${req.id}" id="req_${req.id}">
-                    <label class="form-check-label text-dark" for="req_${req.id}" style="cursor:pointer;">
+                    <label class="form-check-label" for="req_${req.id}" style="cursor:pointer; color: var(--color-text);">
                         ${req.nombre}
                     </label>
                 </div>
                 <div class="form-check form-switch mb-0" style="margin-left: 10px;">
                     <input class="form-check-input req-obligatorio" type="checkbox" id="obligatorio_${req.id}">
-                    <label class="form-check-label small text-muted" for="obligatorio_${req.id}" style="cursor:pointer;">Obligatorio</label>
+                    <label class="form-check-label small" for="obligatorio_${req.id}" style="cursor:pointer; color: var(--color-text-muted);">Obligatorio</label>
                 </div>
             `;
 
@@ -1004,7 +1045,7 @@ async function editarConvocatoria(id) {
 
     } catch (error) {
         console.error("Error al preparar la edición:", error);
-        alert("No se pudieron cargar los datos de la convocatoria.");
+        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los datos de la convocatoria.', confirmButtonColor: '#ef4444' });
     }
 }
 
@@ -1361,7 +1402,7 @@ async function verExpedienteAspirante(id) {
 
     } catch (error) {
         console.error("Error al cargar expediente:", error);
-        alert("No se pudo cargar el expediente del aspirante.");
+        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar el expediente del aspirante.', confirmButtonColor: '#ef4444' });
     } finally {
         ocultarLoader();
     }
@@ -1402,17 +1443,23 @@ document.getElementById("formAspirante")?.addEventListener("submit", async (e) =
         const resultado = await respuesta.json();
 
         if (respuesta.ok && resultado.success !== false) {
-            alert(resultado.mensaje || "Aspirante actualizado con éxito");
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: resultado.mensaje || 'Aspirante actualizado con éxito',
+                timer: 1500,
+                showConfirmButton: false
+            });
             const modalElement = document.getElementById("modalAspirante");
             const modal = bootstrap.Modal.getInstance(modalElement);
             if (modal) modal.hide();
             cargarAspirantes();
         } else {
-            alert(resultado.mensaje || "Hubo un error al procesar la solicitud.");
+            Swal.fire({ icon: 'error', title: 'Error', text: resultado.mensaje || 'Hubo un error al procesar la solicitud.', confirmButtonColor: '#ef4444' });
         }
     } catch (error) {
         console.error("Error al guardar aspirante:", error);
-        alert("Ocurrió un error en la conexión con el servidor.");
+        Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'Ocurrió un error en la conexión con el servidor.', confirmButtonColor: '#ef4444' });
     }
 });
 
@@ -1759,15 +1806,15 @@ document.getElementById('notif_destino')?.addEventListener('change', async funct
 function abrirDrawerAjustes() {
     const overlay = document.getElementById('settings-drawer-overlay');
     const drawer = document.getElementById('settings-drawer');
-    if (overlay) overlay.classList.add('active');
-    if (drawer) drawer.classList.add('active');
+    if (overlay) overlay.classList.add('show');
+    if (drawer) drawer.classList.add('open');
 }
 
 function cerrarDrawerAjustes() {
     const overlay = document.getElementById('settings-drawer-overlay');
     const drawer = document.getElementById('settings-drawer');
-    if (overlay) overlay.classList.remove('active');
-    if (drawer) drawer.classList.remove('active');
+    if (overlay) overlay.classList.remove('show');
+    if (drawer) drawer.classList.remove('open');
 }
 
 function toggleNotificationMenu(event) {
@@ -1800,57 +1847,46 @@ function abrirModalPerfilAdmin() {
 
     const nombreCompleto = (usuario.nombre || 'Administrador').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
     const correo = usuario.correo || 'admin@umich.mx';
-    const iniciales = nombreCompleto.split(' ').slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase() || 'AD';
+    const iniciales = nombreCompleto.split(' ').filter(Boolean).slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase() || 'AD';
+
+    const cell = (label, value, span = 1) =>
+        `<div style="grid-column: span ${span};">
+            <span style="display: block; font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">${label}</span>
+            <strong style="color: var(--color-text); font-size: 15px; font-weight: 500;">${value || 'No registrado'}</strong>
+        </div>`;
 
     Swal.fire({
         html: `
         <div class="pm-wrapper" style="text-align: left; background: var(--color-card-bg); position: relative; overflow: hidden; border-radius: 12px;">
+            <!-- WATERMARK -->
             <div class="modal-watermark"></div>
 
+            <!-- HEADER CLEAN -->
             <div style="padding: 35px 35px 25px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--color-border); position: relative; z-index: 1;">
-                <div style="width: 75px; height: 75px; border-radius: 50%; background: #d97706; color: white; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; flex-shrink: 0; box-shadow: 0 4px 10px rgba(217, 119, 6, 0.2);"><i class="fa-solid fa-shield-halved"></i></div>
+                <div style="width: 75px; height: 75px; border-radius: 50%; background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; flex-shrink: 0; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);">${iniciales}</div>
                 <div>
                     <h2 style="font-size: 24px; font-weight: 700; margin: 0; color: var(--color-text); letter-spacing: -0.5px;">${nombreCompleto}</h2>
-                    <p style="margin: 6px 0 0; color: var(--color-text-muted); font-size: 15px;"><i class="fa-regular fa-envelope" style="margin-right: 5px;"></i>${correo}</p>
-                    <span style="display: inline-block; margin-top: 12px; padding: 4px 12px; background: rgba(217,119,6,0.08); color: #d97706; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Administrador</span>
+                    <p style="margin: 6px 0 0; color: var(--color-text-muted); font-size: 15px;"><i class="fa-solid fa-envelope" style="margin-right: 5px;"></i>${correo}</p>
+                    <span style="display: inline-block; margin-top: 12px; padding: 4px 12px; background: rgba(59,130,246,0.1); color: var(--color-primary); border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Administrador</span>
                 </div>
             </div>
 
             <div style="padding: 0 35px; position: relative; z-index: 1;">
-                <div style="padding: 30px 0; border-bottom: 1px solid var(--color-border);">
+                <!-- DATOS DE ACCESO / CUENTA -->
+                <div style="padding: 30px 0 35px;">
                     <h5 style="font-size: 13px; font-weight: 800; color: var(--color-text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px;">Acceso al Sistema</h5>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
-                        <div style="grid-column: span 2;">
-                            <span style="display: block; font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Correo Electrónico</span>
-                            <strong style="color: var(--color-text); font-size: 15px; font-weight: 500;">${correo}</strong>
-                        </div>
-                        <div>
-                            <span style="display: block; font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Nivel de Acceso</span>
-                            <strong style="color: var(--color-text); font-size: 15px; font-weight: 500;">Acceso Total</strong>
-                        </div>
-                        <div>
-                            <span style="display: block; font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Rol</span>
-                            <strong style="color: var(--color-text); font-size: 15px; font-weight: 500;">Administrador del Sistema</strong>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="padding: 30px 0 35px;">
-                    <h5 style="font-size: 13px; font-weight: 800; color: var(--color-text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px;">Acciones Rápidas</h5>
-                    <div style="display:flex;gap:12px;">
-                        <button onclick="abrirModalCambiarPassword(); Swal.close();" class="pm-action-btn pm-action-outline">
-                            <i class="fa-solid fa-key"></i> Cambiar Contraseña
-                        </button>
-                        <button onclick="cerrarSesion()" class="pm-action-btn pm-action-danger">
-                            <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
-                        </button>
+                        ${cell('Correo Electrónico', correo, 2)}
+                        ${cell('Nivel de Acceso', 'Acceso Total')}
+                        ${cell('Rol de Usuario', 'Administrador del Sistema')}
+                        ${cell('Estado de Cuenta', 'Activo')}
                     </div>
                 </div>
             </div>
         </div>`,
         showConfirmButton: false,
         showCloseButton: true,
-        width: '600px',
+        width: '750px',
         customClass: {
             popup: 'pm-popup',
             closeButton: 'pm-close-x',

@@ -132,7 +132,7 @@ const moduloCursoDocenteRenderer = {
         const observaciones = document.getElementById('prog-curso-observaciones').value;
 
         if (!fechaInicio || !fechaFin || !aula) {
-            alert("Por favor complete fecha de inicio, fecha de fin y aula.");
+            Swal.fire({ icon: 'warning', title: 'Campos requeridos', text: 'Por favor complete fecha de inicio, fecha de fin y aula.', confirmButtonColor: '#f59e0b' });
             return;
         }
 
@@ -145,7 +145,7 @@ const moduloCursoDocenteRenderer = {
                 fechaInicio, fechaFin, aula, observaciones
             });
 
-            alert("Curso propedéutico programado con éxito.");
+            Swal.fire({ icon: 'success', title: 'Éxito', text: 'Curso propedéutico programado con éxito.', timer: 1500, showConfirmButton: false });
             document.getElementById('modal-docente-dinamico').style.display = 'none';
 
             window.dispatchEvent(new CustomEvent('moduloCompletado', { detail: { accion: 'PROGRAMAR_CURSO' } }));
@@ -154,7 +154,7 @@ const moduloCursoDocenteRenderer = {
                 cargarTablaPropedeuticoPorCodigo('PROPEDEUTICO');
             }
         } catch (error) {
-            alert(error.message);
+            Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Ocurrió un error al programar el curso', confirmButtonColor: '#ef4444' });
         } finally {
             const btn = document.getElementById('btn-guardar-programacion-curso');
             if(btn) {
@@ -170,7 +170,7 @@ const moduloCursoDocenteRenderer = {
         const observaciones = document.getElementById('cap-curso-observaciones').value;
 
         if (aprobadoVal === '') {
-            alert("Por favor seleccione un dictamen final (Aprobado/No Aprobado).");
+            Swal.fire({ icon: 'warning', title: 'Campo requerido', text: 'Por favor seleccione un dictamen final (Aprobado/No Aprobado).', confirmButtonColor: '#f59e0b' });
             return;
         }
 
@@ -186,7 +186,7 @@ const moduloCursoDocenteRenderer = {
                 calificacion, aprobado, observaciones
             });
 
-            alert("Resultado de propedéutico capturado con éxito.");
+            Swal.fire({ icon: 'success', title: 'Éxito', text: 'Resultado de propedéutico capturado con éxito.', timer: 1500, showConfirmButton: false });
             document.getElementById('modal-docente-dinamico').style.display = 'none';
 
             window.dispatchEvent(new CustomEvent('moduloCompletado', { detail: { accion: 'CAPTURAR_RESULTADO_CURSO' } }));
@@ -195,7 +195,7 @@ const moduloCursoDocenteRenderer = {
                 cargarTablaPropedeuticoPorCodigo('PROPEDEUTICO');
             }
         } catch (error) {
-            alert(error.message);
+            Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Ocurrió un error al capturar resultado', confirmButtonColor: '#ef4444' });
         } finally {
             const btn = document.getElementById('btn-guardar-captura-curso');
             if(btn) {

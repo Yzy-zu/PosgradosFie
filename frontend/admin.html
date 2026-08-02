@@ -176,64 +176,42 @@
 
         <!-- SECCIÓN: DASHBOARD -->
         <div id="seccion-dashboard" class="view-section">
-            <div class="stats-grid">
-                <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#usuarios'">
-                    <div class="stat-card-icon" style="background: #eef2ff; color: #6366f1;">
-                        <i class="fa-solid fa-users icon-anim-stat"></i>
+            <div class="profile-summary-premium">
+                <div class="summary-metrics">
+                    <div class="metric-item" style="cursor:pointer;" onclick="window.location.hash = '#usuarios'">
+                        <span class="metric-value metric-highlight" id="totalUsuarios">0</span>
+                        <span class="metric-label">Usuarios</span>
+                        <span class="metric-sub"><i class="fa-solid fa-users me-1"></i> Registrados</span>
                     </div>
-                    <div class="stat-card-info">
-                        <span class="stat-label">Usuarios</span>
-                        <span class="stat-value" id="totalUsuarios">0</span>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item" style="cursor:pointer;" onclick="window.location.hash = '#posgrados'">
+                        <span class="metric-value" id="totalPosgrados">0</span>
+                        <span class="metric-label">Posgrados</span>
+                        <span class="metric-sub"><i class="fa-solid fa-graduation-cap me-1"></i> Programas</span>
                     </div>
-                </div>
-
-                <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#posgrados'">
-                    <div class="stat-card-icon" style="background: #ecfdf5; color: #10b981;">
-                        <i class="fa-solid fa-graduation-cap icon-anim-stat"></i>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item" style="cursor:pointer;" onclick="window.location.hash = '#aspirantes'">
+                        <span class="metric-value" id="totalAspirantes">0</span>
+                        <span class="metric-label">Aspirantes</span>
+                        <span class="metric-sub"><i class="fa-solid fa-address-card me-1"></i> En proceso</span>
                     </div>
-                    <div class="stat-card-info">
-                        <span class="stat-label">Posgrados</span>
-                        <span class="stat-value" id="totalPosgrados">0</span>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item" style="cursor:pointer;" onclick="window.location.hash = '#solicitudes'">
+                        <span class="metric-value" id="totalSolicitudes">0</span>
+                        <span class="metric-label">Solicitudes</span>
+                        <span class="metric-sub"><i class="fa-solid fa-file-contract me-1"></i> Recibidas</span>
                     </div>
-                </div>
-
-                <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#aspirantes'">
-                    <div class="stat-card-icon" style="background: #fffbeb; color: #f59e0b;">
-                        <i class="fa-solid fa-address-card icon-anim-stat"></i>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item" style="cursor:pointer;" onclick="window.location.hash = '#convocatorias'">
+                        <span class="metric-value" id="totalConvocatorias">0</span>
+                        <span class="metric-label">Convocatorias</span>
+                        <span class="metric-sub"><i class="fa-solid fa-bullhorn me-1"></i> Ofertas</span>
                     </div>
-                    <div class="stat-card-info">
-                        <span class="stat-label">Aspirantes</span>
-                        <span class="stat-value" id="totalAspirantes">0</span>
-                    </div>
-                </div>
-
-                <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#solicitudes'">
-                    <div class="stat-card-icon" style="background: #fef2f2; color: #ef4444;">
-                        <i class="fa-solid fa-file-contract icon-anim-stat"></i>
-                    </div>
-                    <div class="stat-card-info">
-                        <span class="stat-label">Solicitudes</span>
-                        <span class="stat-value" id="totalSolicitudes">0</span>
-                    </div>
-                </div>
-
-                <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#convocatorias'">
-                    <div class="stat-card-icon" style="background: #fdf4ff; color: #d946ef;">
-                        <i class="fa-solid fa-bullhorn icon-anim-stat"></i>
-                    </div>
-                    <div class="stat-card-info">
-                        <span class="stat-label">Convocatorias</span>
-                        <span class="stat-value" id="totalConvocatorias">0</span>
-                    </div>
-                </div>
-
-                <div class="stat-card" style="cursor:pointer;" onclick="window.location.hash = '#documentos'">
-                    <div class="stat-card-icon" style="background: #fff7ed; color: #f97316;">
-                        <i class="fa-solid fa-folder-open icon-anim-stat"></i>
-                    </div>
-                    <div class="stat-card-info">
-                        <span class="stat-label">Documentos</span>
-                        <span class="stat-value" id="totalDocumentos">0</span>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item" style="cursor:pointer;" onclick="window.location.hash = '#documentos'">
+                        <span class="metric-value" id="totalDocumentos">0</span>
+                        <span class="metric-label">Documentos</span>
+                        <span class="metric-sub"><i class="fa-solid fa-folder-open me-1"></i> Catálogo</span>
                     </div>
                 </div>
             </div>
@@ -650,31 +628,32 @@
         <!-- Modal Convocatoria -->
         <div class="modal fade" id="modalConvocatoria" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-xl">
-                <div class="modal-content">
-                    <div class="modal-header d-flex justify-content-between align-items-center">
-                        <h5 class="modal-title" id="tituloModalConvocatoria"><i class="fa-solid fa-bullhorn"></i> Nueva
-                            Convocatoria</h5>
+                <div class="modal-content" style="background: var(--color-card-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-lg);">
+                    <div class="modal-header d-flex justify-content-between align-items-center" style="border-bottom: 1px solid var(--color-border); padding: 20px 25px;">
+                        <h5 class="modal-title fw-bold" id="tituloModalConvocatoria" style="color: var(--color-text); font-size: 1.25rem;">
+                            <i class="fa-solid fa-bullhorn text-primary me-2"></i> Nueva Convocatoria
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body pb-0">
+                    <div class="modal-body pb-0" style="padding: 25px 25px 0 25px;">
                         <form id="formConvocatoria">
                             <input type="hidden" id="idConvocatoriaForm">
 
-                            <!-- Stepper UI -->
+                            <!-- Stepper UI Nodos Interactivos -->
                             <div class="wizard-stepper">
-                                <div class="step-indicator active" id="indicator-1">
+                                <div class="step-indicator active" id="indicator-1" onclick="irAlPaso(1)" title="Paso 1: Datos Generales">
                                     <span class="step-label">Datos</span>
                                     1
                                 </div>
-                                <div class="step-indicator" id="indicator-2">
+                                <div class="step-indicator" id="indicator-2" onclick="irAlPaso(2)" title="Paso 2: Calendario">
                                     <span class="step-label">Fechas</span>
                                     2
                                 </div>
-                                <div class="step-indicator" id="indicator-3">
+                                <div class="step-indicator" id="indicator-3" onclick="irAlPaso(3)" title="Paso 3: Evaluación">
                                     <span class="step-label">Evaluación</span>
                                     3
                                 </div>
-                                <div class="step-indicator" id="indicator-4">
+                                <div class="step-indicator" id="indicator-4" onclick="irAlPaso(4)" title="Paso 4: Requisitos">
                                     <span class="step-label">Requisitos</span>
                                     4
                                 </div>
@@ -682,19 +661,17 @@
 
                             <!-- Step 1: Datos Generales -->
                             <div class="step-pane active" id="step-pane-1">
-                                <h6 class="text-primary mb-3"><i class="fa-solid fa-circle-info"></i> Información
-                                    General</h6>
-                                <div class="row mb-2">
+                                <h6 class="fw-bold mb-3" style="color: var(--color-primary); font-size: 1rem;"><i class="fa-solid fa-circle-info me-2"></i> Información General</h6>
+                                <div class="row mb-3">
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold text-muted small">Posgrado</label>
-                                        <select id="convocatoria_posgrado" class="form-select form-select-sm" required>
+                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Posgrado</label>
+                                        <select id="convocatoria_posgrado" class="form-select form-select-sm" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                             <option value="">Seleccione un posgrado...</option>
                                         </select>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold text-muted small">Añadir Especialidad /
-                                            Opción:</label>
-                                        <select id="convocatoria_opciones" class="form-select form-select-sm">
+                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Añadir Especialidad / Opción:</label>
+                                        <select id="convocatoria_opciones" class="form-select form-select-sm" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                             <option value="">Selecciona opciones...</option>
                                         </select>
                                     </div>
@@ -705,20 +682,18 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="mb-2">
-                                    <label class="form-label fw-bold text-muted small">Nombre de la Convocatoria</label>
-                                    <input type="text" id="convocatoria_nombre" class="form-control form-control-sm"
-                                        required>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Nombre de la Convocatoria</label>
+                                    <input type="text" id="convocatoria_nombre" class="form-control form-control-sm" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                 </div>
-                                <div class="mb-2">
-                                    <label class="form-label fw-bold text-muted small">Descripción</label>
-                                    <textarea id="convocatoria_descripcion" class="form-control form-control-sm"
-                                        rows="2"></textarea>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Descripción</label>
+                                    <textarea id="convocatoria_descripcion" class="form-control form-control-sm" rows="2" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;"></textarea>
                                 </div>
-                                <div class="row mb-2">
+                                <div class="row mb-3">
                                     <div class="col-4">
-                                        <label class="form-label fw-bold text-muted small">Estado</label>
-                                        <select id="convocatoria_estado" class="form-select form-select-sm">
+                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Estado</label>
+                                        <select id="convocatoria_estado" class="form-select form-select-sm" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                             <option value="Borrador">Borrador</option>
                                             <option value="Activa">Activa</option>
                                             <option value="Evaluacion">Evaluación</option>
@@ -726,147 +701,124 @@
                                         </select>
                                     </div>
                                     <div class="col-4">
-                                        <label class="form-label fw-bold text-muted small">Modalidad</label>
-                                        <select id="convocatoria_modalidad" class="form-select form-select-sm">
+                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Modalidad</label>
+                                        <select id="convocatoria_modalidad" class="form-select form-select-sm" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                             <option value="Escolarizada">Escolarizada</option>
                                             <option value="En linea">En línea</option>
                                             <option value="Mixta">Mixta</option>
                                         </select>
                                     </div>
                                     <div class="col-4">
-                                        <label class="form-label fw-bold text-muted small">Duración (meses)</label>
-                                        <input type="number" id="convocatoria_duracion"
-                                            class="form-control form-control-sm" required>
+                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Duración (meses)</label>
+                                        <input type="number" id="convocatoria_duracion" class="form-control form-control-sm" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Step 2: Fechas Principales -->
                             <div class="step-pane" id="step-pane-2">
-                                <h6 class="text-primary mb-3"><i class="fa-regular fa-calendar"></i> Calendario
-                                    Principal</h6>
+                                <h6 class="fw-bold mb-3" style="color: var(--color-primary); font-size: 1rem;"><i class="fa-regular fa-calendar me-2"></i> Calendario Principal</h6>
                                 <div class="row mb-3">
                                     <div class="col-6">
-                                        <label class="form-label fw-bold text-muted small">Inicio Convocatoria</label>
-                                        <input type="text" id="convocatoria_fecha_inicio"
-                                            class="form-control form-control-sm date-single" required>
+                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Inicio Convocatoria</label>
+                                        <input type="text" id="convocatoria_fecha_inicio" class="form-control form-control-sm date-single" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                     </div>
                                     <div class="col-6">
-                                        <label class="form-label fw-bold text-muted small">Fin Convocatoria</label>
-                                        <input type="text" id="convocatoria_fecha_fin"
-                                            class="form-control form-control-sm date-single" required>
+                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Fin Convocatoria</label>
+                                        <input type="text" id="convocatoria_fecha_fin" class="form-control form-control-sm date-single" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                     </div>
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col-6">
-                                        <label class="form-label fw-bold text-muted small">Inicio Recepción de
-                                            Docs.</label>
-                                        <input type="text" id="convocatoria_fechaInicioDocumentos"
-                                            class="form-control form-control-sm date-single" required>
+                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Inicio Recepción de Docs.</label>
+                                        <input type="text" id="convocatoria_fechaInicioDocumentos" class="form-control form-control-sm date-single" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                     </div>
                                     <div class="col-6">
-                                        <label class="form-label fw-bold text-muted small">Fin Recepción de
-                                            Docs.</label>
-                                        <input type="text" id="convocatoria_fechaFinDocumentos"
-                                            class="form-control form-control-sm date-single" required>
+                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Fin Recepción de Docs.</label>
+                                        <input type="text" id="convocatoria_fechaFinDocumentos" class="form-control form-control-sm date-single" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                     </div>
                                 </div>
-                                <div class="row mb-2">
+                                <div class="row mb-3">
                                     <div class="col-6">
-                                        <label class="form-label fw-bold text-muted small">Inicio Ciclo Escolar</label>
-                                        <input type="text" id="convocatoria_fechaInicioEscolar"
-                                            class="form-control form-control-sm date-single" required>
+                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Inicio Ciclo Escolar</label>
+                                        <input type="text" id="convocatoria_fechaInicioEscolar" class="form-control form-control-sm date-single" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                     </div>
                                     <div class="col-6">
-                                        <label class="form-label fw-bold text-muted small">Publicación
-                                            Resultados</label>
-                                        <input type="text" id="convocatoria_fechaResultados"
-                                            class="form-control form-control-sm date-single" required>
+                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Publicación Resultados</label>
+                                        <input type="text" id="convocatoria_fechaResultados" class="form-control form-control-sm date-single" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Step 3: Fechas Específicas -->
                             <div class="step-pane" id="step-pane-3">
-                                <h6 class="text-primary mb-3"><i class="fa-solid fa-list-check"></i> Fechas de
-                                    Evaluación Específicas</h6>
+                                <h6 class="fw-bold mb-3" style="color: var(--color-primary); font-size: 1rem;"><i class="fa-solid fa-list-check me-2"></i> Fechas de Evaluación Específicas</h6>
 
-                                <div id="grupo_entrevistas" style="display:none;"
-                                    class="p-3 border rounded bg-light mb-3">
-                                    <h6><i class="fa-solid fa-users text-muted me-2"></i> Periodo de Entrevistas
-                                        (Doctorado)</h6>
+                                <div id="grupo_entrevistas" style="display:none; background: var(--color-bg); border: 1px solid var(--color-border) !important; border-radius: 10px;" class="p-3 mb-3">
+                                    <h6 class="fw-bold" style="color: var(--color-text);"><i class="fa-solid fa-users text-primary me-2"></i> Periodo de Entrevistas (Doctorado)</h6>
                                     <div class="row mt-3">
-                                        <div class="col-6"><label
-                                                class="form-label fw-bold text-muted small">Inicio</label><input
-                                                type="text" id="convocatoria_fechaEntrevistaInicio"
-                                                class="form-control form-control-sm date-single"></div>
-                                        <div class="col-6"><label
-                                                class="form-label fw-bold text-muted small">Fin</label><input
-                                                type="text" id="convocatoria_fechaEntrevistaFin"
-                                                class="form-control form-control-sm date-single"></div>
+                                        <div class="col-6">
+                                            <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Inicio</label>
+                                            <input type="text" id="convocatoria_fechaEntrevistaInicio" class="form-control form-control-sm date-single" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Fin</label>
+                                            <input type="text" id="convocatoria_fechaEntrevistaFin" class="form-control form-control-sm date-single" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div id="grupo_fechas_academicas" style="display:none;"
-                                    class="p-3 border rounded bg-light mb-3">
-                                    <h6><i class="fa-solid fa-graduation-cap text-muted me-2"></i> Académicas (Maestría)
-                                    </h6>
+                                <div id="grupo_fechas_academicas" style="display:none; background: var(--color-bg); border: 1px solid var(--color-border) !important; border-radius: 10px;" class="p-3 mb-3">
+                                    <h6 class="fw-bold" style="color: var(--color-text);"><i class="fa-solid fa-graduation-cap text-primary me-2"></i> Académicas (Maestría)</h6>
                                     <div class="row mt-3 mb-3">
-                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio
-                                                Curso</label><input type="text" id="convocatoria_inicioCurso"
-                                                class="form-control form-control-sm date-single"></div>
-                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Fin Curso
-                                                Propedéutico</label><input type="text" id="convocatoria_finCurso"
-                                                class="form-control form-control-sm date-single"></div>
+                                        <div class="col-6">
+                                            <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Inicio Curso</label>
+                                            <input type="text" id="convocatoria_inicioCurso" class="form-control form-control-sm date-single" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Fin Curso Propedéutico</label>
+                                            <input type="text" id="convocatoria_finCurso" class="form-control form-control-sm date-single" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Inicio
-                                                Examen Admisión</label><input type="text" id="convocatoria_inicioExamen"
-                                                class="form-control form-control-sm date-single"></div>
-                                        <div class="col-6"><label class="form-label fw-bold text-muted small">Fin Examen
-                                                Admisión</label><input type="text" id="convocatoria_finExamen"
-                                                class="form-control form-control-sm date-single"></div>
+                                        <div class="col-6">
+                                            <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Inicio Examen Admisión</label>
+                                            <input type="text" id="convocatoria_inicioExamen" class="form-control form-control-sm date-single" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Fin Examen Admisión</label>
+                                            <input type="text" id="convocatoria_finExamen" class="form-control form-control-sm date-single" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        </div>
                                     </div>
                                 </div>
 
-                                <p class="text-muted small mt-2"><i class="fa-solid fa-circle-info"></i> Estos campos se
-                                    muestran dependiendo si el posgrado seleccionado es Maestría o Doctorado.</p>
+                                <p class="small mt-2" style="color: var(--color-text-muted);"><i class="fa-solid fa-circle-info me-1"></i> Estos campos se muestran dependiendo si el posgrado seleccionado es Maestría o Doctorado.</p>
                             </div>
 
                             <!-- Step 4: Requisitos -->
                             <div class="step-pane" id="step-pane-4">
-                                <h6 class="text-primary mb-3"><i class="fa-solid fa-folder-open"></i> Requisitos
-                                    Solicitados</h6>
-                                <p class="text-muted small mb-3">Seleccione los requisitos que los aspirantes deberán
-                                    cumplir. Marque la casilla de "Obligatorio" si el documento es indispensable.</p>
-                                <div id="contenedorRequisitos" class="p-3 bg-light border rounded"
-                                    style="max-height: 350px; overflow-y: auto;">
-                                    <p class="text-center text-muted"><i class="fa-solid fa-spinner fa-spin"></i>
-                                        Cargando catálogo...</p>
+                                <h6 class="fw-bold mb-3" style="color: var(--color-primary); font-size: 1rem;"><i class="fa-solid fa-folder-open me-2"></i> Requisitos Solicitados</h6>
+                                <p class="small mb-3" style="color: var(--color-text-muted);">Seleccione los requisitos que los aspirantes deberán cumplir. Marque la casilla de "Obligatorio" si el documento es indispensable.</p>
+                                <div id="contenedorRequisitos" class="p-3 border rounded" style="background: var(--color-bg); border: 1px solid var(--color-border) !important; border-radius: 10px; max-height: 350px; overflow-y: auto;">
+                                    <p class="text-center" style="color: var(--color-text-muted);"><i class="fa-solid fa-spinner fa-spin me-2"></i> Cargando catálogo...</p>
                                 </div>
                             </div>
 
-                            <!-- Navigation Footer -->
-                            <div class="d-flex justify-content-between border-top p-3 mt-3 bg-white"
-                                style="margin: 0 -1rem;">
+                            <!-- Navigation Footer (Adaptado al Tema) -->
+                            <div class="d-flex justify-content-between align-items-center mt-4" style="background: var(--color-card-bg); border-top: 1px solid var(--color-border); border-radius: 0 0 16px 16px; margin: 20px -25px 0 -25px; padding: 16px 25px;">
                                 <div>
-                                    <button type="button" class="btn btn-danger btn-sm px-3"
-                                        id="btnEliminarConvocatoria" style="display:none;"
-                                        onclick="eliminarConvocatoria()">
-                                        <i class="fa-solid fa-trash"></i> Eliminar
+                                    <button type="button" class="btn btn-danger btn-sm px-3" id="btnEliminarConvocatoria" style="display:none;" onclick="eliminarConvocatoria()">
+                                        <i class="fa-solid fa-trash me-1"></i> Eliminar
                                     </button>
-                                    <button type="button" class="btn btn-secondary px-4" id="btnPrevStep"
-                                        style="display:none;" onclick="pasoAnterior()">
+                                    <button type="button" class="btn btn-secondary px-4" id="btnPrevStep" style="display:none; border-radius: 8px;" onclick="pasoAnterior()">
                                         <i class="fa-solid fa-chevron-left me-1"></i> Atrás
                                     </button>
                                 </div>
                                 <div>
-                                    <button type="button" class="btn btn-primary px-4" id="btnNextStep"
-                                        onclick="siguientePaso()">
+                                    <button type="button" class="btn btn-primary px-4" id="btnNextStep" style="border-radius: 8px; font-weight: 600;" onclick="siguientePaso()">
                                         Siguiente <i class="fa-solid fa-chevron-right ms-1"></i>
                                     </button>
-                                    <button type="submit" class="btn btn-success px-4" id="btnSaveConvocatoria"
-                                        style="display:none;">
+                                    <button type="submit" class="btn btn-success px-4" id="btnSaveConvocatoria" style="display:none; border-radius: 8px; font-weight: 600;">
                                         <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Convocatoria
                                     </button>
                                 </div>
