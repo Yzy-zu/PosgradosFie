@@ -36,7 +36,7 @@
         <div class="sidebar-header">
             <div class="sidebar-logo" style="background: transparent;">
                 <img src="css/posgradofie.png" alt="Logo"
-                    style="width: 200%; height: 200%; object-fit: contain; cursor: pointer;" onclick="toggleSidebar()">
+                    style="width: 100%; height: 100%; object-fit: contain; cursor: pointer;" onclick="toggleSidebar()">
             </div>
             <div style="display: flex; flex-direction: column; justify-content: center; margin-left: 10px;">
                 <span class="text"
@@ -53,19 +53,19 @@
 
         <ul class="side-menu top">
             <li>
-                <a href="#inicio" onclick="switchView('inicio')" id="nav-inicio" class="active">
+                <a href="#inicio" onclick="switchView('inicio')" id="nav-inicio" class="active" title="Inicio" data-i18n-title="sb_inicio">
                     <i class="fa-solid fa-chalkboard-user"></i>
                     <span class="text" data-i18n="sb_inicio">Inicio</span>
                 </a>
             </li>
             <li>
-                <a href="#expedientes" onclick="switchView('expedientes')" id="nav-expedientes">
+                <a href="#expedientes" onclick="switchView('expedientes')" id="nav-expedientes" title="Expedientes" data-i18n-title="sb_expedientes">
                     <i class="fa-solid fa-folder-open"></i>
                     <span class="text" data-i18n="sb_expedientes">Expedientes</span>
                 </a>
             </li>
             <li>
-                <a href="#aspirantes" onclick="switchView('aspirantes')" id="nav-aspirantes">
+                <a href="#aspirantes" onclick="switchView('aspirantes')" id="nav-aspirantes" title="Aspirantes" data-i18n-title="sb_aspirantes">
                     <i class="fa-solid fa-users"></i>
                     <span class="text" data-i18n="sb_aspirantes">Aspirantes</span>
                 </a>

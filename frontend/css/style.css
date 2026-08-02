@@ -80,6 +80,37 @@ html {
     /* Firefox */
 }
 
+/* Scrollbar elegante y visible para paneles específicos y modales */
+#detallesExtendidos .row::-webkit-scrollbar,
+.custom-scroll::-webkit-scrollbar {
+    display: block !important;
+    width: 6px !important;
+    height: 6px !important;
+}
+
+#detallesExtendidos .row::-webkit-scrollbar-track,
+.custom-scroll::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.08) !important;
+    border-radius: 6px !important;
+}
+
+#detallesExtendidos .row::-webkit-scrollbar-thumb,
+.custom-scroll::-webkit-scrollbar-thumb {
+    background: var(--color-primary, #3b82f6) !important;
+    border-radius: 6px !important;
+}
+
+#detallesExtendidos .row::-webkit-scrollbar-thumb:hover,
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: #2563eb !important;
+}
+
+#detallesExtendidos .row,
+.custom-scroll {
+    scrollbar-width: thin !important;
+    scrollbar-color: var(--color-primary, #3b82f6) rgba(0, 0, 0, 0.08) !important;
+}
+
 /* Contenedor de Login (Centrado) */
 .login-container {
     width: 100vw;
@@ -274,6 +305,64 @@ html {
     margin-left: 0;
     transform: translateX(-15px);
     pointer-events: none;
+}
+
+/* Tooltip flotante al pasar el cursor sobre cada sección con barra lateral colapsada (Admin, Docentes, Aspirantes) */
+.sidebar-logo img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+.sidebar.collapsed {
+    overflow: visible !important;
+}
+
+.sidebar.collapsed .sidebar-header,
+.sidebar.collapsed .sidebar-actions,
+.sidebar.collapsed .nav-label {
+    overflow: hidden !important;
+    max-width: 70px !important;
+    box-sizing: border-box !important;
+}
+
+.sidebar.collapsed a {
+    position: relative;
+}
+
+.sidebar.collapsed a:hover span.text {
+    opacity: 1 !important;
+    max-width: 250px !important;
+    position: absolute !important;
+    left: 60px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin-left: 0 !important;
+    background: var(--color-card-bg, #1e293b) !important;
+    color: var(--color-text, #f8fafc) !important;
+    padding: 7px 14px !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid var(--color-border, rgba(255, 255, 255, 0.15)) !important;
+    z-index: 99999 !important;
+    pointer-events: none !important;
+    display: inline-block !important;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.sidebar.collapsed a:hover span.text::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -5px;
+    transform: translateY(-50%) rotate(45deg);
+    width: 8px;
+    height: 8px;
+    background: var(--color-card-bg, #1e293b);
+    border-left: 1px solid var(--color-border, rgba(255, 255, 255, 0.15));
+    border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.15));
 }
 
 .nav-label {

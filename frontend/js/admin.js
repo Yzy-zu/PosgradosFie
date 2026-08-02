@@ -113,8 +113,6 @@ function activarSeccionPorHash() {
     const enlaces = document.querySelectorAll("#sidebarMenu .nav-link");
     const secciones = document.querySelectorAll(".view-section");
     const tituloSeccion = document.getElementById("seccion-titulo");
-    const descSeccion = document.getElementById("seccion-descripcion");
-    const subtituloSeccion = document.getElementById("topbar-subtitulo");
 
     // Remover estado activo de todos los enlaces en el menú
     enlaces.forEach(link => link.classList.remove("active"));
@@ -135,12 +133,8 @@ function activarSeccionPorHash() {
         if (tituloSeccion) {
             if (hash === "dashboard") {
                 tituloSeccion.textContent = "Panel de Administración";
-                if(descSeccion) descSeccion.textContent = "Bienvenido al sistema de gestión de Posgrados.";
-                if(subtituloSeccion) subtituloSeccion.textContent = "Bienvenido al sistema";
             } else {
-                tituloSeccion.textContent = "Gestión de " + textoEnlace;
-                if(descSeccion) descSeccion.textContent = "Administra la información de " + textoEnlace.toLowerCase() + ".";
-                if(subtituloSeccion) subtituloSeccion.textContent = "Sección Administrador";
+                tituloSeccion.textContent = textoEnlace;
             }
         }
     }
@@ -292,19 +286,22 @@ function renderizarCamposRol(rol, detalles = {}) {
     const contenedorDetalles = document.getElementById("detallesExtendidos");
 
     let html = "";
+    const inputStyle = `style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;"`;
+    const labelStyle = `style="color: var(--color-text-muted); font-weight: 600;"`;
+
     if (rol === "ASPIRANTE") {
         html = `
-            <h6 class="text-primary mb-3"><i class="fa-solid fa-user-graduate"></i> Detalles de Aspirante</h6>
-            <div class="row" style="max-height: 400px; overflow-y: auto; overflow-x: hidden;">
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Nombre <span class="text-danger">*</span></label><input type="text" id="det_nombre" class="form-control form-control-sm" value="${detalles.nombre || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Primer Apellido <span class="text-danger">*</span></label><input type="text" id="det_primerApellido" class="form-control form-control-sm" value="${detalles.primerApellido || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" value="${detalles.segundoApellido || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">CURP <span class="text-danger">*</span></label><input type="text" id="det_curp" class="form-control form-control-sm" value="${detalles.curp || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Teléfono <span class="text-danger">*</span></label><input type="text" id="det_telefono" class="form-control form-control-sm" value="${detalles.telefono || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Fecha Nacimiento <span class="text-danger">*</span></label><input type="date" id="det_fechaNacimiento" class="form-control form-control-sm" value="${detalles.fechaNacimiento ? detalles.fechaNacimiento.split('T')[0] : ''}"></div>
+            <h6 class="fw-bold mb-3" style="color: var(--color-primary);"><i class="fa-solid fa-user-graduate me-2"></i> Detalles de Aspirante</h6>
+            <div class="row custom-scroll" style="max-height: 390px; overflow-y: auto; overflow-x: hidden; padding-right: 8px;">
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Nombre <span class="text-danger">*</span></label><input type="text" id="det_nombre" class="form-control form-control-sm" ${inputStyle} value="${detalles.nombre || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Primer Apellido <span class="text-danger">*</span></label><input type="text" id="det_primerApellido" class="form-control form-control-sm" ${inputStyle} value="${detalles.primerApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" ${inputStyle} value="${detalles.segundoApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>CURP <span class="text-danger">*</span></label><input type="text" id="det_curp" class="form-control form-control-sm" ${inputStyle} value="${detalles.curp || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Teléfono <span class="text-danger">*</span></label><input type="text" id="det_telefono" class="form-control form-control-sm" ${inputStyle} value="${detalles.telefono || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Fecha Nacimiento <span class="text-danger">*</span></label><input type="date" id="det_fechaNacimiento" class="form-control form-control-sm" ${inputStyle} value="${detalles.fechaNacimiento ? detalles.fechaNacimiento.split('T')[0] : ''}"></div>
                 <div class="col-md-4 mb-2">
-                    <label class="form-label small" style="color: #374151; font-weight: 600;">Estado Civil</label>
-                    <select id="det_estadoCivil" class="form-select form-select-sm">
+                    <label class="form-label small" ${labelStyle}>Estado Civil</label>
+                    <select id="det_estadoCivil" class="form-select form-select-sm" ${inputStyle}>
                         <option value="SOLTERO" ${detalles.estadoCivil === 'SOLTERO' ? 'selected' : ''}>Soltero</option>
                         <option value="CASADO" ${detalles.estadoCivil === 'CASADO' ? 'selected' : ''}>Casado</option>
                         <option value="UNION_LIBRE" ${detalles.estadoCivil === 'UNION_LIBRE' ? 'selected' : ''}>Unión Libre</option>
@@ -313,44 +310,44 @@ function renderizarCamposRol(rol, detalles = {}) {
                         <option value="VIUDO" ${detalles.estadoCivil === 'VIUDO' ? 'selected' : ''}>Viudo</option>
                     </select>
                 </div>
-                <div class="col-md-8 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Dirección</label><input type="text" id="det_direccion" class="form-control form-control-sm" value="${detalles.direccion || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Código Postal</label><input type="number" id="det_direccionPostal" class="form-control form-control-sm" value="${detalles.direccionPostal || ''}"></div>
+                <div class="col-md-8 mb-2"><label class="form-label small" ${labelStyle}>Dirección</label><input type="text" id="det_direccion" class="form-control form-control-sm" ${inputStyle} value="${detalles.direccion || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Código Postal</label><input type="number" id="det_direccionPostal" class="form-control form-control-sm" ${inputStyle} value="${detalles.direccionPostal || ''}"></div>
                 
-                <h6 class="text-secondary mt-4 mb-3 w-100 border-bottom pb-2" style="color: #1f2937 !important; font-weight: 600;"><i class="fa-solid fa-graduation-cap"></i> Antecedentes Académicos</h6>
-                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Licenciatura <span class="text-danger">*</span></label><input type="text" id="det_licenciatura" class="form-control form-control-sm" value="${detalles.licenciatura || ''}"></div>
-                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Institución (Licenciatura) <span class="text-danger">*</span></label><input type="text" id="det_institucionLicenciatura" class="form-control form-control-sm" value="${detalles.institucionLicenciatura || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Fecha de Egreso <span class="text-danger">*</span></label><input type="date" id="det_fechaEgreso" class="form-control form-control-sm" value="${detalles.fechaEgreso ? detalles.fechaEgreso.split('T')[0] : ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Fecha de Titulación <span class="text-danger">*</span></label><input type="date" id="det_fechaTitulacion" class="form-control form-control-sm" value="${detalles.fechaTitulacion ? detalles.fechaTitulacion.split('T')[0] : ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Promedio <span class="text-danger">*</span></label><input type="number" step="0.01" id="det_promedio" class="form-control form-control-sm" value="${detalles.promedio || ''}"></div>
-                <div class="col-md-12 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Otros Estudios</label><input type="text" id="det_otrosEstudios" class="form-control form-control-sm" value="${detalles.otrosEstudios || ''}"></div>
+                <h6 class="fw-bold mt-4 mb-3 w-100 border-bottom pb-2" style="color: var(--color-text) !important; border-color: var(--color-border) !important;"><i class="fa-solid fa-graduation-cap me-2"></i> Antecedentes Académicos</h6>
+                <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Licenciatura <span class="text-danger">*</span></label><input type="text" id="det_licenciatura" class="form-control form-control-sm" ${inputStyle} value="${detalles.licenciatura || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Institución (Licenciatura) <span class="text-danger">*</span></label><input type="text" id="det_institucionLicenciatura" class="form-control form-control-sm" ${inputStyle} value="${detalles.institucionLicenciatura || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Fecha de Egreso <span class="text-danger">*</span></label><input type="date" id="det_fechaEgreso" class="form-control form-control-sm" ${inputStyle} value="${detalles.fechaEgreso ? detalles.fechaEgreso.split('T')[0] : ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Fecha de Titulación <span class="text-danger">*</span></label><input type="date" id="det_fechaTitulacion" class="form-control form-control-sm" ${inputStyle} value="${detalles.fechaTitulacion ? detalles.fechaTitulacion.split('T')[0] : ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Promedio <span class="text-danger">*</span></label><input type="number" step="0.01" id="det_promedio" class="form-control form-control-sm" ${inputStyle} value="${detalles.promedio || ''}"></div>
+                <div class="col-md-12 mb-2"><label class="form-label small" ${labelStyle}>Otros Estudios</label><input type="text" id="det_otrosEstudios" class="form-control form-control-sm" ${inputStyle} value="${detalles.otrosEstudios || ''}"></div>
 
-                <h6 class="text-secondary mt-3 mb-2 w-100 border-bottom pb-1"><i class="fa-solid fa-briefcase"></i> Ocupación</h6>
-                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Ocupación Actual</label><input type="text" id="det_ocupacion" class="form-control form-control-sm" value="${detalles.ocupacion || ''}"></div>
-                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Teléfono (Ocupación)</label><input type="text" id="det_telefonoOcupacion" class="form-control form-control-sm" value="${detalles.telefonoOcupacion || ''}"></div>
-                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Ciudad (Ocupación)</label><input type="text" id="det_ciudadOcupacion" class="form-control form-control-sm" value="${detalles.ciudadOcupacion || ''}"></div>
-                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Estado (Ocupación)</label><input type="text" id="det_estadoOcupacion" class="form-control form-control-sm" value="${detalles.estadoOcupacion || ''}"></div>
+                <h6 class="fw-bold mt-3 mb-2 w-100 border-bottom pb-1" style="color: var(--color-text) !important; border-color: var(--color-border) !important;"><i class="fa-solid fa-briefcase me-2"></i> Ocupación</h6>
+                <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Ocupación Actual</label><input type="text" id="det_ocupacion" class="form-control form-control-sm" ${inputStyle} value="${detalles.ocupacion || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Teléfono (Ocupación)</label><input type="text" id="det_telefonoOcupacion" class="form-control form-control-sm" ${inputStyle} value="${detalles.telefonoOcupacion || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Ciudad (Ocupación)</label><input type="text" id="det_ciudadOcupacion" class="form-control form-control-sm" ${inputStyle} value="${detalles.ciudadOcupacion || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Estado (Ocupación)</label><input type="text" id="det_estadoOcupacion" class="form-control form-control-sm" ${inputStyle} value="${detalles.estadoOcupacion || ''}"></div>
             </div>
         `;
         contenedorBtn.style.display = "block";
     } else if (rol === "DOCENTE") {
         html = `
-            <h6 class="text-primary mb-3"><i class="fa-solid fa-chalkboard-user"></i> Detalles de Docente</h6>
+            <h6 class="fw-bold mb-3" style="color: var(--color-primary);"><i class="fa-solid fa-chalkboard-user me-2"></i> Detalles de Docente</h6>
             <div class="row">
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Nombre</label><input type="text" id="det_nombre" class="form-control form-control-sm" value="${detalles.nombre || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Primer Apellido</label><input type="text" id="det_primerApellido" class="form-control form-control-sm" value="${detalles.primerApellido || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" value="${detalles.segundoApellido || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Cargo</label><input type="text" id="det_cargo" class="form-control form-control-sm" value="${detalles.cargo || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Especialidad</label><input type="text" id="det_especialidad" class="form-control form-control-sm" value="${detalles.especialidad || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Cubículo</label><input type="text" id="det_cubiculo" class="form-control form-control-sm" value="${detalles.cubiculo || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Nombre</label><input type="text" id="det_nombre" class="form-control form-control-sm" ${inputStyle} value="${detalles.nombre || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Primer Apellido</label><input type="text" id="det_primerApellido" class="form-control form-control-sm" ${inputStyle} value="${detalles.primerApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" ${inputStyle} value="${detalles.segundoApellido || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Cargo</label><input type="text" id="det_cargo" class="form-control form-control-sm" ${inputStyle} value="${detalles.cargo || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Especialidad</label><input type="text" id="det_especialidad" class="form-control form-control-sm" ${inputStyle} value="${detalles.especialidad || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Cubículo</label><input type="text" id="det_cubiculo" class="form-control form-control-sm" ${inputStyle} value="${detalles.cubiculo || ''}"></div>
             </div>
         `;
         contenedorBtn.style.display = "block";
     } else if (rol === "SECRETARIO") {
         html = `
-            <h6 class="text-primary mb-3"><i class="fa-solid fa-user-tie"></i> Detalles de Secretario</h6>
+            <h6 class="fw-bold mb-3" style="color: var(--color-primary);"><i class="fa-solid fa-user-tie me-2"></i> Detalles de Secretario</h6>
             <div class="row">
-                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Área</label><input type="text" id="det_area" class="form-control form-control-sm" value="${detalles.area || ''}"></div>
-                <div class="col-md-6 mb-2"><label class="form-label small" style="color: #374151; font-weight: 600;">Extensión</label><input type="text" id="det_extension" class="form-control form-control-sm" value="${detalles.extension || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Área</label><input type="text" id="det_area" class="form-control form-control-sm" ${inputStyle} value="${detalles.area || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Extensión</label><input type="text" id="det_extension" class="form-control form-control-sm" ${inputStyle} value="${detalles.extension || ''}"></div>
             </div>
         `;
         contenedorBtn.style.display = "block";
