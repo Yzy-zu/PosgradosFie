@@ -108,11 +108,13 @@ document.addEventListener("DOMContentLoaded", async function () {
                             hidratarUI(soliData);
 
                             // Render initial route
-                            if (!window.location.hash || window.location.hash === '#inicio') {
-                                window.location.hash = (soliData.etapaOrden && soliData.etapaOrden > 1) ? 'documentos' : 'inicio';
-                            } else {
-                                switchView(window.location.hash.replace('#', ''));
+                            const currentHash = window.location.hash.replace('#', '');
+                            let targetHash = currentHash;
+                            if (!currentHash || currentHash === 'inicio') {
+                                targetHash = (soliData.etapaOrden && soliData.etapaOrden > 1) ? 'documentos' : 'inicio';
                             }
+                            window.location.hash = targetHash;
+                            switchView(targetHash);
 
                             // Ocultamos el loader inicial si hubiera
                             ocultarLoader();
@@ -136,12 +138,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     // Render initial route if not handled by hydration return
-    const fallbackHash = window.location.hash.replace('#', '');
-    if (!fallbackHash) {
-        window.location.hash = 'inicio';
-    } else {
-        switchView(fallbackHash);
-    }
+    const fallbackHash = window.location.hash.replace('#', '') || 'inicio';
+    window.location.hash = fallbackHash;
+    switchView(fallbackHash);
 });
 
 
