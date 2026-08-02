@@ -431,7 +431,7 @@ Lugar: ${lugar}
             mensaje: 'Entrevista guardada y notificación enviada al aspirante.'
         });
 
-    } catch(error) {
+        } catch(error) {
 
         console.error(error);
 
@@ -442,7 +442,67 @@ Lugar: ${lugar}
 
     }
 
+},
+
+// ==========================================
+// 8. Obtener Dictámenes
+// ==========================================
+getDictamenes: async (req, res) => {
+
+    try {
+
+        const [dictamenes] = await db.query(`
+            SELECT
+                s.id AS idSolicitud,
+                a.id AS idAspirante,
+
+                CONCAT(
+                    a.nombre,' ',
+                    a.primerApellido,' ',
+                    IFNULL(a.segundoApellido,'')
+                ) AS nombre,
+
+                a.curp,
+
+                c.nombre AS programa,
+
+                s.estado,
+
+                rf.resultado,
+                rf.motivo,
+                rf.publicado,
+                rf.fechaPublicacion
+
+            FROM solicitud s
+
+            INNER JOIN aspirante a
+                ON s.idAspi = a.id
+
+            INNER JOIN convocatorias c
+                ON s.idConvocatoria = c.id
+
+            LEFT JOIN resultado_final rf
+                ON rf.idSolicitud = s.id
+
+            ORDER BY s.id DESC
+        `);
+
+        res.json(dictamenes);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            mensaje: "Error al obtener los dictámenes."
+        });
+
     }
+
+}
+
 };
+
+
 
 module.exports = coordinadorController;
