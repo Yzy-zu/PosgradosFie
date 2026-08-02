@@ -2266,27 +2266,37 @@ function hidratarUI(soliData) {
                 </div>
             </div>
             
-            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 25px; border-radius: 14px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
-                <h4 style="margin: 0 0 15px 0; font-size: 20px; display: flex; align-items: center; gap: 10px; color: white;">
-                    <i class="fa-solid fa-trophy" style="color: #fef08a; font-size: 24px;"></i> ${typeof t === 'function' ? t('exam_felicidades_calif') : 'Felicidades, tu calificacion ha sido registrada!'}
+            <div class="premium-panel" style="margin-bottom: 25px; position: relative; overflow: hidden; border-top: 4px solid #10b981;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <span style="background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-circle-check"></i> ${soliData.resultadoAprobado ? (typeof t === 'function' ? t('exam_aprobado') : 'Aprobado') : (typeof t === 'function' ? t('exam_no_aprobado') : 'No Aprobado')}
+                    </span>
+                </div>
+
+                <h4 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 800; color: var(--color-text); display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-trophy" style="color: #f59e0b;"></i> ${typeof t === 'function' ? t('exam_felicidades_calif') : '¡Felicidades, tu calificación ha sido registrada!'}
                 </h4>
-                <p style="margin-bottom: 20px; opacity: 0.9;">${typeof t === 'function' ? t('exam_evaluado_desc') : 'Tu examen de admisión ha sido evaluado y los resultados ya se integraron a tu proceso.'}</p>
+                <p style="margin-bottom: 20px; color: var(--color-text-muted); font-size: 14px; line-height: 1.5;">${typeof t === 'function' ? t('exam_evaluado_desc') : 'Tu examen de admisión ha sido evaluado y los resultados ya se integraron a tu proceso.'}</p>
                 
-                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                    <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
-                        <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">${typeof t === 'function' ? t('exam_calif_obtenida') : 'Calificación Obtenida'}</span>
-                        <strong style="font-size: 32px; display: block;">${soliData.calificacion}</strong>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 16px 20px; border-radius: 12px; flex: 1; min-width: 160px;">
+                        <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; color: var(--color-text-muted); margin-bottom: 6px;">${typeof t === 'function' ? t('exam_calif_obtenida') : 'Calificación Obtenida'}</span>
+                        <strong style="font-size: 32px; font-weight: 800; color: var(--color-text); line-height: 1;">${soliData.calificacion}</strong>
                     </div>
-                    <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
-                        <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">${typeof t === 'function' ? t('exam_resultado') : 'Resultado'}</span>
-                        <strong style="font-size: 28px; display: block;">${soliData.resultadoAprobado ? (typeof t === 'function' ? t('exam_aprobado') : 'Aprobado') : (typeof t === 'function' ? t('exam_no_aprobado') : 'No Aprobado')}</strong>
+                    <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 16px 20px; border-radius: 12px; flex: 1; min-width: 160px;">
+                        <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; color: var(--color-text-muted); margin-bottom: 6px;">${typeof t === 'function' ? t('exam_resultado') : 'Resultado'}</span>
+                        <div style="font-size: 20px; font-weight: 800; color: ${soliData.resultadoAprobado ? '#10b981' : '#ef4444'}; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid ${soliData.resultadoAprobado ? 'fa-circle-check' : 'fa-circle-xmark'}"></i> ${soliData.resultadoAprobado ? (typeof t === 'function' ? t('exam_aprobado') : 'Aprobado') : (typeof t === 'function' ? t('exam_no_aprobado') : 'No Aprobado')}
+                        </div>
                     </div>
                 </div>
                 
                 ${soliData.resultadoObservaciones ? `
-                <div style="margin-top: 20px; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px;">
-                    <strong style="font-size: 13px; text-transform: uppercase; display: block; margin-bottom: 5px;">${typeof t === 'function' ? t('exam_obs_comite') : 'Observaciones del Comité'}</strong>
-                    <span style="font-size: 14px;">${soliData.resultadoObservaciones}</span>
+                <div style="margin-top: 20px; background: var(--color-bg); border-left: 3px solid #10b981; padding: 14px 18px; border-radius: 8px; border: 1px solid var(--color-border); border-left-width: 3px;">
+                    <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 4px;">
+                        ${typeof t === 'function' ? t('exam_obs_comite') : 'Observaciones del Comité'}
+                    </div>
+                    <div style="font-size: 14px; color: var(--color-text);">${soliData.resultadoObservaciones}</div>
                 </div>
                 ` : ''}
             </div>
