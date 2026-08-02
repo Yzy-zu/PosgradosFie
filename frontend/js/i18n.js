@@ -26,7 +26,7 @@ const translations = {
         "tb_perfil": "Mi Perfil",
         "tb_bandeja": "Bandeja de Mensajes",
         "tb_cargando": "Cargando...",
-        "tb_selecciona_msj": "Selecciona un mensaje<br>para ver la conversación",
+        "tb_selecciona_msj": "<strong>Selecciona un mensaje</strong><br>para ver su contenido aquí",
 
         // Modal & Loader
         "global_cargando": "Cargando información, por favor espera...",
@@ -64,7 +64,7 @@ const translations = {
         "doc_docs_aprobados": "Documentos aprobados",
         "doc_detalles": "Detalles del Documento",
         "doc_comentarios": "Comentarios",
-        "doc_ver_doc": "Ver Documento",
+        "doc_ver_doc": "Abrir",
         "doc_solicitud": "Solicitud",
         "doc_subido_el": "Subido el",
         "doc_subido_reciente": "Subido recientemente",
@@ -412,7 +412,7 @@ const translations = {
         "tb_perfil": "My Profile",
         "tb_bandeja": "Messages Inbox",
         "tb_cargando": "Loading...",
-        "tb_selecciona_msj": "Select a message<br>to view the conversation",
+        "tb_selecciona_msj": "<strong>Select a message</strong><br>to view its content here",
 
         // Modal & Loader
         "global_cargando": "Loading information, please wait...",

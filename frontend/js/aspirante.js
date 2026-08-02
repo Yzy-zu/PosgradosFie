@@ -1311,15 +1311,16 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
 
             const numIntentos = doc.intentos || 1;
 
+            let statusIconHtml = '';
             switch (doc.estadoValidacion) {
                 case 'APROBADO':
-                    badgeHtml = `<span class="doc-badge doc-badge-aprobado"><span class="doc-badge-dot"></span>${typeof t === 'function' ? t('doc_aprobado') : 'Aprobado'}</span>`;
+                    statusIconHtml = `<span class="doc-icon-status"><i class="fa-solid fa-circle-check" style="color: #10b981;"></i></span>`;
                     break;
                 case 'RECHAZADO':
-                    badgeHtml = `<span class="doc-badge doc-badge-rechazado"><span class="doc-badge-dot"></span>${typeof t === 'function' ? t('doc_rechazado') : 'Rechazado'}</span>`;
+                    statusIconHtml = `<span class="doc-icon-status"><i class="fa-solid fa-circle-xmark" style="color: #ef4444;"></i></span>`;
                     break;
                 default:
-                    badgeHtml = `<span class="doc-badge doc-badge-pendiente"><span class="doc-badge-dot"></span>${typeof t === 'function' ? t('doc_pendiente') : 'Pendiente'}</span>`;
+                    statusIconHtml = `<span class="doc-icon-status"><i class="fa-solid fa-clock" style="color: #f59e0b;"></i></span>`;
                     break;
             }
 
@@ -1333,6 +1334,7 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
                     <div class="doc-card-v2-header">
                         <div class="doc-card-v2-icon" style="background: ${iconBg}; color: ${iconColor};">
                             <i class="fa-solid ${iconClass}"></i>
+                            ${statusIconHtml}
                         </div>
                         <div>
                             <div class="doc-card-v2-title">${doc.requisitoNombre ? (typeof t === 'function' ? t(doc.requisitoNombre) : doc.requisitoNombre) : (typeof t === 'function' ? t('doc_doc_adjunto') : 'Documento adjunto')}</div>
@@ -1340,7 +1342,6 @@ function renderizarVistaDinamicaDocumentos(documentos, container) {
                         </div>
                     </div>
                     <div class="doc-card-v2-footer">
-                        ${badgeHtml}
                         <span class="doc-action-ver">${typeof t === 'function' ? t('doc_ver_doc') : 'Ver Documento'}</span>
                     </div>
                 </div>

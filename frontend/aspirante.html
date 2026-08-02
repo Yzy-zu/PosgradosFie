@@ -38,16 +38,15 @@
         <div class="sidebar-header">
             <div class="sidebar-logo" style="background: transparent;">
                 <img src="css/posgradofie.png" alt="Logo"
-                    style="width: 100%; max-width: 45px; height: auto; object-fit: contain; cursor: pointer;"
+                    style="width: 200%; height: 200%; object-fit: contain; cursor: pointer;"
                     onclick="toggleSidebar()">
             </div>
-            <div style="display: flex; flex-direction: column; justify-content: center;">
+            <div style="display: flex; flex-direction: column; justify-content: center; margin-left: 10px;">
                 <span class="text"
-                    style="font-size: 14px; font-weight: 800; color: #f8fafc; margin-left: 10px; line-height: 1.2;">
+                    style="font-size: 22px; font-weight: 800; color: #f8fafc; line-height: 1.1; letter-spacing: 0.5px;">
                     FIE</span>
-                <span class="text" style="font-size: 10px; color: #64748b; margin-left: 10px; font-weight: 400;">
-                    Division de
-                    Posgrados</span>
+                <span class="text" style="font-size: 10px; color: #64748b; font-weight: 400; margin-top: 2px;">
+                    División de Posgrados</span>
             </div>
         </div>
 
@@ -145,10 +144,7 @@
                                 <div class="messages-empty-state">
                                     <img src="css/umsnhLogo.png" alt="UMSNH"
                                         style="width: 140px; height: auto; opacity: 0.5; margin-bottom: 20px;">
-                                    <p data-i18n="tb_selecciona_msj" style="margin-bottom: 8px;"><strong>Selecciona un
-                                            mensaje</strong></p>
-                                    <p>para ver
-                                        su contenido aquí</p>
+                                    <p data-i18n="tb_selecciona_msj"><strong>Selecciona un mensaje</strong><br>para ver su contenido aquí</p>
                                 </div>
                             </div>
                         </div>
@@ -552,7 +548,7 @@
 
 
         <!-- Modal de Revisión de Documento -->
-        <div id="modal-revision-doc" class="modal-overlay-modern" style="display: none;">
+        <div id="modal-revision-doc" class="modal-overlay-modern" style="display: none;" onclick="if (event.target === this) cerrarModalDoc()">
             <div class="modal-content-modern"
                 style="max-width: 600px; width: 92%; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
                 <div

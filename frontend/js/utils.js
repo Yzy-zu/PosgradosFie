@@ -112,26 +112,29 @@ async function abrirModalCambiarPassword() {
     const usuario = JSON.parse(usuarioStr);
 
     const { value: formValues } = await Swal.fire({
-        title: `<i class="fa-solid fa-key" style="color: #8a1c24;"></i> Cambiar Contraseña`,
+        title: `<i class="fa-solid fa-key" style="color: var(--color-primary, #8a1c24);"></i> <span style="color: var(--color-text);">Cambiar Contraseña</span>`,
+        background: 'var(--color-card-bg)',
+        color: 'var(--color-text)',
         html: `
-            <div style="text-align: left; font-size: 14px; color: #334155; margin-top: 10px;">
-                <p style="margin-bottom: 15px; color: #475569;">Por favor, ingresa tu contraseña actual y la nueva contraseña que deseas utilizar.</p>
+            <div style="text-align: left; font-size: 14px; color: var(--color-text); margin-top: 10px;">
+                <p style="margin-bottom: 15px; color: var(--color-text-muted);">Por favor, ingresa tu contraseña actual y la nueva contraseña que deseas utilizar.</p>
                 
-                <label style="font-weight: 600; margin-bottom: 5px; display: block; color: #1e293b;">Contraseña Actual:</label>
-                <input id="swal-pass-actual" type="password" class="swal2-input" placeholder="••••••••" style="margin: 0 0 15px 0; width: 100%; box-sizing: border-box; border-radius: 6px;">
+                <label style="font-weight: 600; margin-bottom: 5px; display: block; color: var(--color-text);">Contraseña Actual:</label>
+                <input id="swal-pass-actual" type="password" class="swal2-input" placeholder="••••••••" style="margin: 0 0 15px 0; width: 100%; box-sizing: border-box; border-radius: 8px; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border);">
                 
-                <label style="font-weight: 600; margin-bottom: 5px; display: block; color: #1e293b;">Nueva Contraseña:</label>
-                <input id="swal-pass-nueva" type="password" class="swal2-input" placeholder="••••••••" style="margin: 0 0 15px 0; width: 100%; box-sizing: border-box; border-radius: 6px;">
+                <label style="font-weight: 600; margin-bottom: 5px; display: block; color: var(--color-text);">Nueva Contraseña:</label>
+                <input id="swal-pass-nueva" type="password" class="swal2-input" placeholder="••••••••" style="margin: 0 0 15px 0; width: 100%; box-sizing: border-box; border-radius: 8px; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border);">
                 
-                <label style="font-weight: 600; margin-bottom: 5px; display: block; color: #1e293b;">Confirmar Nueva Contraseña:</label>
-                <input id="swal-pass-confirm" type="password" class="swal2-input" placeholder="••••••••" style="margin: 0; width: 100%; box-sizing: border-box; border-radius: 6px;">
+                <label style="font-weight: 600; margin-bottom: 5px; display: block; color: var(--color-text);">Confirmar Nueva Contraseña:</label>
+                <input id="swal-pass-confirm" type="password" class="swal2-input" placeholder="••••••••" style="margin: 0; width: 100%; box-sizing: border-box; border-radius: 8px; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border);">
             </div>
         `,
         focusConfirm: false,
         showCancelButton: true,
         confirmButtonText: '<i class="fa-solid fa-floppy-disk"></i> Guardar Cambios',
         cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#8a1c24',
+        confirmButtonColor: 'var(--color-primary, #8a1c24)',
+        cancelButtonColor: '#64748b',
         preConfirm: () => {
             const passActual = document.getElementById('swal-pass-actual').value;
             const passNueva = document.getElementById('swal-pass-nueva').value;
@@ -174,14 +177,18 @@ async function abrirModalCambiarPassword() {
                     title: '¡Actualizada!',
                     text: data.mensaje || 'Tu contraseña ha sido actualizada correctamente.',
                     icon: 'success',
-                    confirmButtonColor: '#8a1c24'
+                    confirmButtonColor: 'var(--color-primary, #8a1c24)',
+                    background: 'var(--color-card-bg)',
+                    color: 'var(--color-text)'
                 });
             } else {
                 Swal.fire({
                     title: 'Error',
                     text: data.mensaje || 'Hubo un problema al cambiar la contraseña.',
                     icon: 'error',
-                    confirmButtonColor: '#ef4444'
+                    confirmButtonColor: 'var(--color-danger, #ef4444)',
+                    background: 'var(--color-card-bg)',
+                    color: 'var(--color-text)'
                 });
             }
         } catch (error) {
@@ -191,7 +198,9 @@ async function abrirModalCambiarPassword() {
                 title: 'Error',
                 text: 'Error de conexión con el servidor.',
                 icon: 'error',
-                confirmButtonColor: '#ef4444'
+                confirmButtonColor: 'var(--color-danger, #ef4444)',
+                background: 'var(--color-card-bg)',
+                color: 'var(--color-text)'
             });
         }
     }
