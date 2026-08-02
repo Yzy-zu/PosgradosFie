@@ -1544,9 +1544,7 @@ function renderCursosCards(dataList) {
         `;
         contenedor.appendChild(card);
     });
-    if (elemProg) elemProg.textContent = contProgramados;
-    if (elemEsp) elemEsp.textContent = contEsperando;
-    if (elemFin) elemFin.textContent = contFinalizados;
+
 }
 
 function filtrarTablaPropedeuticoUI() {
@@ -2048,3 +2046,65 @@ window.filtrarTablaAspirantesUI = function() {
         }
     });
 };
+
+/* ==========================================================================
+   Carousel Logic (Docente Inicio)
+   ========================================================================== */
+let currentSlide = 0;
+let totalSlides = 0;
+let carouselTrack = null;
+let carouselIndicators = [];
+let autoSlideInterval;
+
+function updateCarousel() {
+    if (!carouselTrack) return;
+    carouselTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+    carouselIndicators.forEach((ind, index) => {
+        if (index === currentSlide) ind.classList.add('active');
+        else ind.classList.remove('active');
+    });
+}
+
+function moveCarousel(direction) {
+    if (totalSlides === 0) return;
+    currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
+    updateCarousel();
+    resetAutoSlide();
+}
+
+function goToSlide(index) {
+    currentSlide = index;
+    updateCarousel();
+    resetAutoSlide();
+}
+
+function startAutoSlide() {
+    autoSlideInterval = setInterval(() => {
+        moveCarousel(1);
+    }, 5000);
+}
+
+function resetAutoSlide() {
+    clearInterval(autoSlideInterval);
+    startAutoSlide();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    carouselTrack = document.getElementById('inicio-carousel-track');
+    carouselIndicators = Array.from(document.querySelectorAll('#inicio-carousel-indicators .indicator'));
+    totalSlides = document.querySelectorAll('.carousel-slide').length;
+
+    if (carouselTrack && totalSlides > 0) {
+        const firstImg = document.querySelector('.carousel-slide img');
+        if (firstImg) {
+            if (firstImg.complete) {
+                updateCarousel();
+            } else {
+                firstImg.onload = () => updateCarousel();
+            }
+        } else {
+            updateCarousel();
+        }
+        startAutoSlide();
+    }
+});

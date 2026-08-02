@@ -296,50 +296,70 @@
         </header>
 
         <section id="view-inicio" class="view-section active">
-            <div class="stats-grid" id="inicio-stats" style="margin-bottom: 30px;">
-                <div class="stat-card" onclick="switchView('expedientes')" style="cursor:pointer;">
-                    <div class="stat-card-icon" style="background: #e0f2fe; color: #0284c7;">
-                        <i class="fa-solid fa-users icon-anim-stat"></i>
+            <!-- Resumen de Perfil (Diseño Limpio) adaptado para docente -->
+            <div class="profile-summary-premium" style="margin-bottom: 30px;">
+                <div class="summary-metrics">
+                    <div class="metric-item" onclick="switchView('expedientes')" style="cursor:pointer;">
+                        <span class="metric-value" id="stat-total" style="font-size: 24px;">0</span>
+                        <span class="metric-label" data-i18n="docente_total_aspirantes">Total Aspirantes</span>
+                        <span class="metric-sub" data-i18n="docente_asignados" style="display:block; margin-top:5px; opacity:0.8;">Asignados a tu revisión</span>
                     </div>
-                    <div class="stat-card-info">
-                        <span class="stat-label" data-i18n="docente_total_aspirantes">Total Aspirantes</span>
-                        <span class="stat-value" id="stat-total" style="font-size: 15px; margin-top: 4px;">0</span>
-                        <span class="stat-sub" data-i18n="docente_asignados">Asignados a tu revisión</span>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item" onclick="switchView('expedientes')" style="cursor:pointer;">
+                        <span class="metric-value metric-highlight" id="stat-revisados" style="color: #10b981; font-size: 24px;">0</span>
+                        <span class="metric-label" data-i18n="docente_exp_aprobados">Revisados</span>
+                        <span class="metric-sub" data-i18n="docente_completos" style="display:block; margin-top:5px; opacity:0.8;">Aprobados en su totalidad</span>
+                    </div>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item" onclick="switchView('expedientes')" style="cursor:pointer;">
+                        <span class="metric-value" id="stat-incompletos" style="color: #ef4444; font-size: 24px;">0</span>
+                        <span class="metric-label" data-i18n="docente_exp_rechazados">Incompletos</span>
+                        <span class="metric-sub" data-i18n="docente_con_docs_rech" style="display:block; margin-top:5px; opacity:0.8;">Con documentos rechazados</span>
+                    </div>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item" onclick="switchView('expedientes')" style="cursor:pointer;">
+                        <span class="metric-value" id="stat-pendientes" style="color: #f59e0b; font-size: 24px;">0</span>
+                        <span class="metric-label" data-i18n="docente_exp_pendientes">Pendientes</span>
+                        <span class="metric-sub" data-i18n="docente_en_espera" style="display:block; margin-top:5px; opacity:0.8;">Aspirantes por evaluar</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Avisos y Comunicados -->
+            <div data-i18n="dash_avisos"
+                style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;">
+                Avisos y Comunicados</div>
+            <div class="carousel-container" id="inicio-carousel"
+                style="border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); background: linear-gradient(135deg, #1e3a34, #111827); border: none; margin-bottom: 30px;">
+                <div class="carousel-track" id="inicio-carousel-track">
+                    <!-- Banner Principal -->
+                    <div class="carousel-slide">
+                        <img src="/files/FIE-Banner-Principal-1.jpg" alt="Aviso 1"
+                            style="object-fit: cover; width: 100%; height: 100%;">
+                    </div>
+                    <!-- Flyer Nuevo Ingreso -->
+                    <div class="carousel-slide">
+                        <img src="/files/flyer-nuevo-ingreso-26.jpeg" alt="Aviso 2"
+                            style="object-fit: cover; width: 100%; height: 100%;">
+                    </div>
+                    <!-- Flyer Reingreso -->
+                    <div class="carousel-slide">
+                        <img src="/files/flyer-reingreso-2026.jpeg" alt="Aviso 3"
+                            style="object-fit: cover; width: 100%; height: 100%;">
                     </div>
                 </div>
 
-                <div class="stat-card" onclick="switchView('expedientes')" style="cursor:pointer;">
-                    <div class="stat-card-icon" style="background: #ecfdf5; color: #10b981;">
-                        <i class="fa-solid fa-circle-check icon-anim-stat"></i>
-                    </div>
-                    <div class="stat-card-info">
-                        <span class="stat-label" data-i18n="docente_exp_aprobados">Revisados</span>
-                        <span class="stat-value" id="stat-revisados" style="font-size: 15px; margin-top: 4px;">0</span>
-                        <span class="stat-sub" data-i18n="docente_completos">Aprobados en su totalidad</span>
-                    </div>
-                </div>
+                <!-- Controls -->
+                <button class="carousel-btn prev-btn" onclick="moveCarousel(-1)"><i
+                        class="fa-solid fa-chevron-left"></i></button>
+                <button class="carousel-btn next-btn" onclick="moveCarousel(1)"><i
+                        class="fa-solid fa-chevron-right"></i></button>
 
-                <div class="stat-card" onclick="switchView('expedientes')" style="cursor:pointer;">
-                    <div class="stat-card-icon" style="background: #fef2f2; color: #ef4444;">
-                        <i class="fa-solid fa-circle-exclamation icon-anim-stat"></i>
-                    </div>
-                    <div class="stat-card-info">
-                        <span class="stat-label" data-i18n="docente_exp_rechazados">Incompletos</span>
-                        <span class="stat-value" id="stat-incompletos"
-                            style="font-size: 15px; margin-top: 4px;">0</span>
-                        <span class="stat-sub" data-i18n="docente_con_docs_rech">Con documentos rechazados</span>
-                    </div>
-                </div>
-
-                <div class="stat-card" onclick="switchView('expedientes')" style="cursor:pointer;">
-                    <div class="stat-card-icon" style="background: #fffbeb; color: #f59e0b;">
-                        <i class="fa-solid fa-clock icon-anim-stat"></i>
-                    </div>
-                    <div class="stat-card-info">
-                        <span class="stat-label" data-i18n="docente_exp_pendientes">Pendientes</span>
-                        <span class="stat-value" id="stat-pendientes" style="font-size: 15px; margin-top: 4px;">0</span>
-                        <span class="stat-sub" data-i18n="docente_en_espera">Aspirantes por evaluar</span>
-                    </div>
+                <!-- Indicators -->
+                <div class="carousel-indicators" id="inicio-carousel-indicators">
+                    <span class="indicator active" onclick="goToSlide(0)"></span>
+                    <span class="indicator" onclick="goToSlide(1)"></span>
+                    <span class="indicator" onclick="goToSlide(2)"></span>
                 </div>
             </div>
 

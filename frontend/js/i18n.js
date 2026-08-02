@@ -99,7 +99,7 @@ const translations = {
         "mod_examen_conocimientos": "Examen de Conocimientos",
 
         // Main Dashboard
-                "dash_docs": "Documentos",
+        "dash_docs": "Documentos",
         "docente_filtro_todos_prog": "Todos (Programa)",
         "docente_filtro_todos_est": "Todos (Estado)",
         "docente_programar_examen": "Programar Examen",
@@ -313,7 +313,7 @@ const translations = {
         "dash_ninguna_sel": "Ninguna seleccionada",
         "dash_maestria_fie": "Maestría FIE",
         "dash_doctorado_fie": "Doctorado FIE",
-        "dash_ruta_admision": "Tu Ruta de Admisión",
+        "dash_ruta_admision": "Etapas del Proceso",
         "dash_cargando_ruta": "Cargando tu ruta...",
         "dash_sin_ruta": "Aún no hay ruta",
         "dash_sin_ruta_desc": "Selecciona una convocatoria e inicia tu proceso para ver tu mapa.",
@@ -484,7 +484,7 @@ const translations = {
         "mod_examen_conocimientos": "Knowledge Exam",
 
         // Main Dashboard
-                "dash_docs": "Documents",
+        "dash_docs": "Documents",
         "docente_filtro_todos_prog": "All (Program)",
         "docente_filtro_todos_est": "All (Status)",
         "docente_programar_examen": "Schedule Exam",
