@@ -236,29 +236,30 @@ async function cargarAspirantes() {
             const trPrincipal = document.createElement('tr');
             const trDetalle = document.createElement('tr');
 
-            trPrincipal.innerHTML = `
-                <td class="py-3">
-                    <div class="fw-bold text-dark">${asp.nombre_completo || 'Sin Nombre'}</div>
-                    <small class="text-muted font-monospace">${asp.folio || 'Sin CURP'}</small>
-                </td>
-                <td>
-                    <span class="fw-medium text-secondary">${asp.programa || asp.convocatoria_nombre || 'Sin asignación'}</span>
-                </td>
-                <td>
-                    ${getBadgeDictamen(asp.dictamen || asp.estado)}
-                </td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary fw-medium" 
-                            type="button" 
-                            data-bs-toggle="collapse" 
-                            data-bs-target="#${collapseId}" 
-                            aria-expanded="false" 
-                            aria-controls="${collapseId}">
-                        <i class="fa-solid fa-chevron-down me-1"></i> Detalles
-                    </button>
-                </td>
-            `;
-
+        trPrincipal.innerHTML = `
+    <td class="py-3">
+        <div class="fw-bold text-dark">${asp.nombre_completo || 'Sin Nombre'}</div>
+       <small class="text-muted font-monospace">${asp.curp || 'Sin CURP'}</small>
+    </td>
+    <td>
+        <span class="fw-medium text-secondary">
+            ${asp.programa || asp.convocatoria_nombre || 'Sin asignación'}
+        </span>
+    </td>
+    <td>
+        ${getBadgeDictamen(asp.dictamen || asp.estado)}
+    </td>
+    <td class="text-end">
+        <button class="btn btn-sm btn-outline-primary fw-medium"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#${collapseId}"
+                aria-expanded="false"
+                aria-controls="${collapseId}">
+            <i class="fa-solid fa-chevron-down me-1"></i> Detalles
+        </button>
+    </td>
+`;
             trDetalle.innerHTML = `
                 <td colspan="4" class="p-0 border-0">
                     <div class="collapse" id="${collapseId}">

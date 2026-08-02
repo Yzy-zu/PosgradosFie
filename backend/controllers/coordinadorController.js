@@ -208,9 +208,7 @@ getDocentes: async (req,res)=>{
 
 },
 
-    // ==========================================
-// 6. Obtener Entrevistas
-// ==========================================
+
 // ==========================================
 // 6. Obtener Entrevistas
 // ==========================================
@@ -283,126 +281,168 @@ getEntrevistas: async (req, res) => {
     }
 
 },
-    // ==========================================
-// 7. Guardar Entrevista
+
+
+// ==========================================
+// 7. Guardar Entrevista + Notificar Aspirante
 // ==========================================
 guardarEntrevista: async (req,res)=>{
 
-    const { id }=req.params;
+    const { id } = req.params;
 
-    const{
-
+    const {
         fecha,
         hora,
         lugar,
         enlace,
         idDocente
+    } = req.body;
 
-    }=req.body;
+    try {
 
-    try{
-
-        const[existe]=await db.query(
-
+        // Verificar si ya existe entrevista para la solicitud
+        const [existe] = await db.query(
             "SELECT id FROM entrevistas WHERE idSolicitud=?",
-
             [id]
-
         );
 
-        if(existe.length){
+        if (existe.length) {
 
+            // Actualizar entrevista existente
             await db.query(`
-
                 UPDATE entrevistas
-
                 SET
-
                     fecha=?,
-
                     hora=?,
-
                     lugar=?,
-
                     enlace=?,
-
                     idDocente=?,
-
                     estatus='PROGRAMADA'
-
                 WHERE idSolicitud=?
-
             `,[
-
                 fecha,
                 hora,
                 lugar,
                 enlace,
                 idDocente,
                 id
-
             ]);
 
-        }else{
+        } else {
 
+            // Crear nueva entrevista
             await db.query(`
-
                 INSERT INTO entrevistas(
-
                     idSolicitud,
-
                     idDocente,
-
                     fecha,
-
                     hora,
-
                     lugar,
-
                     enlace,
-
                     estatus
-
                 )
-
                 VALUES(?,?,?,?,?,?,'PROGRAMADA')
-
             `,[
-
                 id,
-
                 idDocente,
-
                 fecha,
-
                 hora,
-
                 lugar,
-
                 enlace
-
             ]);
 
         }
 
+        // ==========================================
+        // Buscar el usuario del aspirante
+        // ==========================================
+        const [[aspirante]] = await db.query(`
+            SELECT
+                a.idUsuario,
+                CONCAT(
+                    a.nombre,' ',
+                    a.primerApellido,' ',
+                    IFNULL(a.segundoApellido,'')
+                ) AS nombreAspirante
+            FROM solicitud s
+            INNER JOIN aspirante a
+                ON s.idAspi = a.id
+            WHERE s.id = ?
+        `,[id]);
+
+        // ==========================================
+        // Obtener nombre del docente
+        // ==========================================
+        const [[docente]] = await db.query(`
+            SELECT
+                CONCAT(
+                    nombre,' ',
+                    primerApellido,' ',
+                    IFNULL(segundoApellido,'')
+                ) AS nombreDocente
+            FROM docente
+            WHERE id = ?
+        `,[idDocente]);
+
+        // ==========================================
+        // Crear mensaje de notificación
+        // ==========================================
+        const mensaje = `
+Tu entrevista ha sido programada.
+
+Fecha: ${fecha}
+Hora: ${hora}
+Docente: ${docente?.nombreDocente || 'Docente asignado'}
+Lugar: ${lugar}
+        `.trim();
+
+        // ==========================================
+        // Insertar notificación para el aspirante
+        // ==========================================
+        if (aspirante?.idUsuario) {
+
+            await db.query(`
+                INSERT INTO notificaciones
+                (
+                    nombre,
+                    mensaje,
+                    destino,
+                    activa,
+                    rolRemitente,
+                    nombreRemitente,
+                    idDestino
+                )
+                VALUES (?,?,?,?,?,?,?)
+            `,[
+                'Entrevista Programada',
+                mensaje,
+                'individual',
+                1,
+                'COORDINADOR',
+                'Coordinación Posgrados',
+                aspirante.idUsuario
+            ]);
+
+        }
+
+        // Respuesta final
         res.json({
-
-            ok:true,
-
-            mensaje:"Entrevista guardada."
-
+            ok: true,
+            mensaje: 'Entrevista guardada y notificación enviada al aspirante.'
         });
 
-    }catch(error){
+    } catch(error) {
 
         console.error(error);
 
-        res.status(500).json(error);
+        res.status(500).json({
+            ok: false,
+            mensaje: 'Error al guardar la entrevista.'
+        });
 
     }
 
-}
-
+    }
 };
 
 module.exports = coordinadorController;
