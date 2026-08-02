@@ -1299,7 +1299,7 @@ function renderExamenesCards(dataList) {
             uiEstadoId = 'esperando';
             contEsperando++;
             borderColor = 'var(--color-primary)';
-            estadoLabel = 'Esperando captura de resultado';
+            estadoLabel = t('docente_esperando_captura');
             disableCapturar = '';
             accionCapturar = `abrirWorkflowSolicitud(${item.idAspi})`;
             if (tieneProgramacion) {
@@ -1310,21 +1310,18 @@ function renderExamenesCards(dataList) {
             uiEstadoId = 'finalizado';
             contFinalizados++;
             borderColor = '#22c55e';
-            estadoLabel = 'Resultado registrado';
+            estadoLabel = t('docente_resultado_registrado');
             // Todo deshabilitado
         }
 
         const botonHTML = `
             <div style="display: flex; gap: 8px; margin-top: 4px;">
                 <button class="${disableProgramar ? '' : 'btn-primary'}" onclick="abrirWorkflowSolicitud(${item.idAspi})" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableProgramar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'border: none; cursor: pointer;'}" ${disableProgramar}>
-                    <i class="fa-solid fa-calendar-plus" style="margin-right: 4px;"></i> Programar
-                </button>
+                    <i class="fa-solid fa-calendar-plus" style="margin-right: 4px;"></i> ${t('docente_btn_programar')}</button>
                 <button class="${disableEditar ? '' : 'btn-secondary'}" onclick="abrirModalReprogramarExamen(${item.idAspi})" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableEditar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'cursor: pointer;'}" ${disableEditar}>
-                    <i class="fa-solid fa-pen" style="margin-right: 4px;"></i> Reprogramar
-                </button>
+                    <i class="fa-solid fa-pen" style="margin-right: 4px;"></i> ${t('docente_btn_reprogramar')}</button>
                 <button class="${disableCapturar ? '' : 'btn-primary'}" onclick="${accionCapturar}" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableCapturar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'border: none; cursor: pointer; background: var(--color-primary); color: white;'}" ${disableCapturar}>
-                    <i class="fa-solid fa-graduation-cap" style="margin-right: 4px;"></i> Capturar
-                </button>
+                    <i class="fa-solid fa-graduation-cap" style="margin-right: 4px;"></i> ${t('docente_btn_capturar')}</button>
             </div>
         `;
 
@@ -1355,7 +1352,7 @@ function renderExamenesCards(dataList) {
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
                     <h4 style="margin: 0; font-size: 16px; color: var(--color-text); font-weight: bold;">${item.aspiranteNombre}</h4>
-                    <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--color-text-muted);">${programBadge} ${item.opcionNombre || 'Sin especialidad'}</p>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--color-text-muted);">${programBadge} ${item.opcionNombre || t('docente_sin_especialidad')}</p>
                 </div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px; color: var(--color-text);">
@@ -1488,20 +1485,17 @@ function renderCursosCards(dataList) {
             uiEstadoId = 'finalizado';
             contFinalizados++;
             borderColor = '#22c55e';
-            estadoLabel = 'Resultado registrado';
+            estadoLabel = t('docente_resultado_registrado');
         }
 
         const botonHTML = `
             <div style="display: flex; gap: 8px; margin-top: 4px;">
                 <button class="${disableProgramar ? '' : 'btn-primary'}" onclick="abrirProgramacionCurso(${item.idSolicitud}, '${(item.aspiranteNombre || '').replace(/'/g, "\\'")}')" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableProgramar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'border: none; cursor: pointer;'}" ${disableProgramar}>
-                    <i class="fa-solid fa-calendar-plus" style="margin-right: 4px;"></i> Programar
-                </button>
+                    <i class="fa-solid fa-calendar-plus" style="margin-right: 4px;"></i> ${t('docente_btn_programar')}</button>
                 <button class="${disableEditar ? '' : 'btn-secondary'}" onclick="abrirReprogramacionCurso(${item.idSolicitud}, '${(item.aspiranteNombre || '').replace(/'/g, "\\'")}')" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableEditar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'cursor: pointer;'}" ${disableEditar}>
-                    <i class="fa-solid fa-pen" style="margin-right: 4px;"></i> Reprogramar
-                </button>
+                    <i class="fa-solid fa-pen" style="margin-right: 4px;"></i> ${t('docente_btn_reprogramar')}</button>
                 <button class="${disableCapturar ? '' : 'btn-primary'}" onclick="abrirCapturaCurso(${item.idSolicitud}, '${(item.aspiranteNombre || '').replace(/'/g, "\\'")}')" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableCapturar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'border: none; cursor: pointer; background: var(--color-primary); color: white;'}" ${disableCapturar}>
-                    <i class="fa-solid fa-graduation-cap" style="margin-right: 4px;"></i> Capturar
-                </button>
+                    <i class="fa-solid fa-graduation-cap" style="margin-right: 4px;"></i> ${t('docente_btn_capturar')}</button>
             </div>
         `;
 
@@ -1528,17 +1522,17 @@ function renderCursosCards(dataList) {
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
                     <h4 style="margin: 0; font-size: 16px; color: var(--color-text); font-weight: bold;">${item.aspiranteNombre}</h4>
-                    <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--color-text-muted);">${programBadge} ${item.opcionNombre || 'Sin especialidad'}</p>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--color-text-muted);">${programBadge} ${item.opcionNombre || t('docente_sin_especialidad')}</p>
                 </div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 8px; font-size: 13px; color: var(--color-text);">
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-book-open-reader" style="color: var(--color-text-muted);"></i>
-                    <span>Modalidad: ${item.modalidadNombre || 'Curso Propedéutico'}</span>
+                    <span>${t('docente_modalidad')}: ${item.modalidadNombre || 'Curso Propedéutico'}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-layer-group" style="color: var(--color-text-muted);"></i>
-                    <span>Etapa: ${item.etapaNombre || 'Propedéutico'}</span>
+                    <span>${t('docente_etapa')}: ${item.etapaNombre || 'Propedéutico'}</span>
                 </div>
             </div>
             <div style="padding-top: 12px; border-top: 1px solid var(--color-border); margin-top: auto;">
@@ -1661,7 +1655,7 @@ function renderPromediosCards(dataList) {
         const estado = item.estadoSolicitud || 'PENDIENTE';
         let uiEstadoId = 'pendiente';
         let borderColor = 'var(--color-border)';
-        let estadoLabel = '● En revisión de promedio';
+        let estadoLabel = t('docente_rev_promedio');
         let badgeHTML = '';
         let disableAuditar = true;
 
@@ -1669,31 +1663,31 @@ function renderPromediosCards(dataList) {
             uiEstadoId = 'aprobado';
             contAprobados++;
             borderColor = '#22c55e';
-            estadoLabel = '✓ Promedio Válido';
-            badgeHTML = `<span style="background: #f0fdf4; color: #16a34a; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #bbf7d0; margin-left: 8px;">APROBADO</span>`;
+            estadoLabel = t('docente_promedio_valido');
+            badgeHTML = `<span style="background: #f0fdf4; color: #16a34a; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #bbf7d0; margin-left: 8px;">${t('docente_estado_aprobado')}</span>`;
             disableAuditar = true;
         } else if (estado === 'RECHAZADO') {
             uiEstadoId = 'rechazado';
             contRechazados++;
             borderColor = '#ef4444';
-            estadoLabel = '✕ Promedio Rechazado';
-            badgeHTML = `<span style="background: #fef2f2; color: #dc2626; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #fecaca; margin-left: 8px;">RECHAZADO</span>`;
+            estadoLabel = t('docente_promedio_rechazado');
+            badgeHTML = `<span style="background: #fef2f2; color: #dc2626; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #fecaca; margin-left: 8px;">${t('docente_estado_rechazado')}</span>`;
             disableAuditar = true;
         } else if (!tieneAccionValidar) {
             // Aspirante aún está en Etapa 1 (Documentación) o etapa previa
             uiEstadoId = 'pendiente';
             contPendientes++;
             borderColor = '#f97316';
-            estadoLabel = '● En revisión de documentos';
-            badgeHTML = `<span style="background: #fff7ed; color: #ea580c; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #fed7aa; margin-left: 8px;">DOCUMENTACIÓN</span>`;
+            estadoLabel = t('docente_rev_doc');
+            badgeHTML = `<span style="background: #fff7ed; color: #ea580c; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #fed7aa; margin-left: 8px;">${t('docente_estado_documentacion')}</span>`;
             disableAuditar = true;
         } else {
             // Etapa de Validación de Promedio activa (Etapa 5)
             uiEstadoId = 'pendiente';
             contPendientes++;
             borderColor = '#f97316';
-            estadoLabel = '● Listo para dictamen de promedio';
-            badgeHTML = `<span style="background: #fff7ed; color: #ea580c; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #fed7aa; margin-left: 8px;">PENDIENTE</span>`;
+            estadoLabel = t('docente_listo_dictamen');
+            badgeHTML = `<span style="background: #fff7ed; color: #ea580c; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #fed7aa; margin-left: 8px;">${t('docente_estado_pendiente')}</span>`;
             disableAuditar = false;
         }
 
@@ -1707,12 +1701,12 @@ function renderPromediosCards(dataList) {
         }
 
         const botonHTML = disableAuditar ? `
-            <button disabled style="width: 100%; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px; border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text-muted); cursor: not-allowed;" title="El aspirante aún no tiene aprobada su documentación para auditar el promedio">
-                <i class="fa-solid fa-lock me-1"></i> Esperando validación documental
+            <button disabled style="width: 100%; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px; border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text-muted); cursor: not-allowed;" title="${t('docente_tooltip_doc')}">
+                <i class="fa-solid fa-lock me-1"></i> ${t('docente_esp_val_doc')}
             </button>
         ` : `
             <button class="btn-primary" onclick="moduloPromedio.auditarPromedio(${item.idSolicitud}, () => cargarTablaPromedioPorCodigo('PROMEDIO'))" style="width: 100%; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px; border: none; cursor: pointer; background: var(--color-primary); color: white;">
-                <i class="fa-solid fa-file-signature me-1"></i> Auditar / Validar Promedio
+                <i class="fa-solid fa-file-signature me-1"></i> ${t('docente_btn_auditar')}
             </button>
         `;
 
@@ -1730,17 +1724,17 @@ function renderPromediosCards(dataList) {
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
                     <h4 style="margin: 0; font-size: 16px; color: var(--color-text); font-weight: bold;">${item.aspiranteNombre}</h4>
-                    <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--color-text-muted);">${programBadge} ${item.opcionNombre || 'Sin especialidad'}</p>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--color-text-muted);">${programBadge} ${item.opcionNombre || t('docente_sin_especialidad')}</p>
                 </div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 8px; font-size: 13px; color: var(--color-text);">
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-calculator" style="color: var(--color-text-muted);"></i>
-                    <span>Modalidad: ${item.modalidadNombre || 'Promedio FIE'}</span>
+                    <span>${t('docente_modalidad')}: ${item.modalidadNombre || t('docente_promedio_fie')}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-layer-group" style="color: var(--color-text-muted);"></i>
-                    <span>Etapa: ${item.etapaNombre || 'Validación de Promedio'}</span>
+                    <span>${t('docente_etapa')}: ${item.etapaNombre || t('docente_val_promedio')}</span>
                 </div>
             </div>
             <div style="padding-top: 12px; border-top: 1px solid var(--color-border); margin-top: auto;">

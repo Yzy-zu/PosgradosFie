@@ -110,8 +110,8 @@
                             <select id="filtro-programa" class="form-select" onchange="filtrarYMostrarAspirantes()"
                                 style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
                                 <option value="" data-i18n="docente_filtro_todos_prog">Todos (Prog)</option>
-                                <option value="Maestría">Maestría</option>
-                                <option value="Doctorado">Doctorado</option>
+                                <option value="Maestría" data-i18n="sb_maestria">Maestría</option>
+                                <option value="Doctorado" data-i18n="sb_doctorado">Doctorado</option>
                             </select>
                         </div>
                         <div style="width: 150px; flex-shrink: 0;">
@@ -139,8 +139,8 @@
                             <select id="filtro-aspirantes-programa" onchange="filtrarTablaAspirantesUI()"
                                 style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
                                 <option value="" data-i18n="docente_filtro_todos_prog">Programas</option>
-                                <option value="Maestría">Maestría</option>
-                                <option value="Doctorado">Doctorado</option>
+                                <option value="Maestría" data-i18n="sb_maestria">Maestría</option>
+                                <option value="Doctorado" data-i18n="sb_doctorado">Doctorado</option>
                             </select>
                         </div>
                     </div>
@@ -156,22 +156,20 @@
                                 style="padding-left: 35px; width: 100%; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
                         </div>
                         <div style="width: 150px; flex-shrink: 0;">
-                            <select id="filtro-examen-estado" onchange="filtrarTablaExamenesUI()"
-                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
-                                <option value="">Todos</option>
-                                <option value="sin_programar">Sin programar</option>
-                                <option value="programado">Programado</option>
-                                <option value="esperando">Esperando res.</option>
-                                <option value="finalizado">Finalizados</option>
-                            </select>
+                            <select id="filtro-examen-estado" onchange="filtrarTablaExamenesUI()" style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                        <option value="" data-i18n="docente_filtro_todos_est">Estados (Todos)</option>
+                        <option value="sin_programar" data-i18n="docente_filtro_sin_prog">Sin programar</option>
+                        <option value="programado" data-i18n="docente_filtro_prog">Programado</option>
+                        <option value="esperando" data-i18n="docente_filtro_esperando">Esperando res.</option>
+                        <option value="finalizado" data-i18n="docente_filtro_finalizados">Finalizados</option>
+                    </select>
                         </div>
                         <div style="width: 150px; flex-shrink: 0;">
-                            <select id="filtro-examen-programa" onchange="filtrarTablaExamenesUI()"
-                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
-                                <option value="">Programas</option>
-                                <option value="Maestría">Maestría</option>
-                                <option value="Doctorado">Doctorado</option>
-                            </select>
+                            <select id="filtro-examen-programa" onchange="filtrarTablaExamenesUI()" style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                        <option value="" data-i18n="docente_filtro_todos_prog">Programas (Todos)</option>
+                        <option value="Maestría" data-i18n="sb_maestria">Maestría</option>
+                        <option value="Doctorado" data-i18n="sb_doctorado">Doctorado</option>
+                    </select>
                         </div>
                     </div>
 
@@ -186,22 +184,20 @@
                                 style="padding-left: 35px; width: 100%; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
                         </div>
                         <div style="width: 150px; flex-shrink: 0;">
-                            <select id="filtro-curso-estado" onchange="filtrarTablaPropedeuticoUI()"
-                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
-                                <option value="">Estados (Todos)</option>
-                                <option value="sin_programar">Sin programar</option>
-                                <option value="programado">Programado</option>
-                                <option value="esperando">Esperando res.</option>
-                                <option value="finalizado">Finalizados</option>
-                            </select>
+                            <select id="filtro-curso-estado" onchange="filtrarTablaPropedeuticoUI()" style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                        <option value="" data-i18n="docente_filtro_todos_est">Estados (Todos)</option>
+                        <option value="sin_programar" data-i18n="docente_filtro_sin_prog">Sin programar</option>
+                        <option value="programado" data-i18n="docente_filtro_prog">Programado</option>
+                        <option value="esperando" data-i18n="docente_filtro_esperando">Esperando res.</option>
+                        <option value="finalizado" data-i18n="docente_filtro_finalizados">Finalizados</option>
+                    </select>
                         </div>
                         <div style="width: 150px; flex-shrink: 0;">
-                            <select id="filtro-curso-programa" onchange="filtrarTablaPropedeuticoUI()"
-                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
-                                <option value="">Programas (Todos)</option>
-                                <option value="Maestría">Maestría</option>
-                                <option value="Doctorado">Doctorado</option>
-                            </select>
+                            <select id="filtro-curso-programa" onchange="filtrarTablaPropedeuticoUI()" style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                        <option value="" data-i18n="docente_filtro_todos_prog">Programas (Todos)</option>
+                        <option value="Maestría" data-i18n="sb_maestria">Maestría</option>
+                        <option value="Doctorado" data-i18n="sb_doctorado">Doctorado</option>
+                    </select>
                         </div>
                     </div>
 
@@ -216,21 +212,19 @@
                                 style="padding-left: 35px; width: 100%; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
                         </div>
                         <div style="width: 150px; flex-shrink: 0;">
-                            <select id="filtro-promedio-estado" onchange="filtrarTablaPromedioUI()"
-                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
-                                <option value="">Estados</option>
-                                <option value="pendiente">Pendientes</option>
-                                <option value="aprobado">Aprobados</option>
-                                <option value="rechazado">Rechazados</option>
-                            </select>
+                            <select id="filtro-promedio-estado" onchange="filtrarTablaPromedioUI()" style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                        <option value="" data-i18n="docente_filtro_todos_est">Estados (Todos)</option>
+                        <option value="pendiente" data-i18n="docente_estado_pendientes">Pendientes</option>
+                        <option value="aprobado" data-i18n="docente_filtro_aprobados">Aprobados</option>
+                        <option value="rechazado" data-i18n="docente_estado_incompletos">Rechazados</option>
+                    </select>
                         </div>
                         <div style="width: 150px; flex-shrink: 0;">
-                            <select id="filtro-promedio-programa" onchange="filtrarTablaPromedioUI()"
-                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
-                                <option value="">Programas</option>
-                                <option value="Maestría">Maestría</option>
-                                <option value="Doctorado">Doctorado</option>
-                            </select>
+                            <select id="filtro-promedio-programa" onchange="filtrarTablaPromedioUI()" style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                        <option value="" data-i18n="docente_filtro_todos_prog">Programas (Todos)</option>
+                        <option value="Maestría" data-i18n="sb_maestria">Maestría</option>
+                        <option value="Doctorado" data-i18n="sb_doctorado">Doctorado</option>
+                    </select>
                         </div>
                     </div>
                 </div>
