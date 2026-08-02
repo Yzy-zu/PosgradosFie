@@ -186,12 +186,13 @@ document.addEventListener("DOMContentLoaded", async function () {
                         <li>
                             <a href="#${reg.vistaId}" onclick="switchView('${reg.vistaId}')" id="${navId}">
                                 <i class="fa-solid ${mod.icono}"></i>
-                                <span class="text">${mod.nombre}</span>
+                                <span class="text" data-i18n="mod_${mod.codigo.toLowerCase()}">${typeof t === 'function' && t('mod_' + mod.codigo.toLowerCase()) !== 'mod_' + mod.codigo.toLowerCase() ? t('mod_' + mod.codigo.toLowerCase()) : mod.nombre}</span>
                             </a>
                         </li>
                     `;
                 }
             });
+            if (typeof aplicarIdioma === "function") aplicarIdioma();
         } catch (e) {
             console.error("Error al cargar menú dinámico:", e);
         }
@@ -288,12 +289,23 @@ function switchView(viewId) {
     });
 
     // Mostrar sección de destino con fade-in
+
     const targetSection = document.getElementById(`view-${viewId}`);
     if (targetSection) {
         targetSection.style.display = 'block';
         void targetSection.offsetWidth; // Trigger reflow
         targetSection.classList.add('fade-in');
     }
+
+    // Gestionar filtros en la topbar
+    const allFilters = document.querySelectorAll('.topbar-filtros');
+    allFilters.forEach(f => f.style.display = 'none');
+    
+    const activeFilters = document.getElementById(`filtros-vista-${viewId}`);
+    if (activeFilters) {
+        activeFilters.style.display = 'flex';
+    }
+
 
     // Actualizar estado activo en la barra lateral
     document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
@@ -1370,11 +1382,7 @@ function renderExamenesCards(dataList) {
         contenedor.appendChild(card);
     });
 
-    // Actualizar KPIs solo si no estamos filtrando
-    document.getElementById('stat-exam-pendientes').textContent = contPendientes;
-    document.getElementById('stat-exam-hoy').textContent = contHoy;
-    document.getElementById('stat-exam-esperando').textContent = contEsperando;
-    document.getElementById('stat-exam-finalizados').textContent = contFinalizados;
+
 }
 
 function filtrarTablaExamenesUI() {
@@ -1542,13 +1550,6 @@ function renderCursosCards(dataList) {
         `;
         contenedor.appendChild(card);
     });
-
-    const elemPend = document.getElementById('stat-curso-pendientes');
-    const elemProg = document.getElementById('stat-curso-programados');
-    const elemEsp = document.getElementById('stat-curso-esperando');
-    const elemFin = document.getElementById('stat-curso-finalizados');
-
-    if (elemPend) elemPend.textContent = contPendientes;
     if (elemProg) elemProg.textContent = contProgramados;
     if (elemEsp) elemEsp.textContent = contEsperando;
     if (elemFin) elemFin.textContent = contFinalizados;
@@ -1651,14 +1652,6 @@ function renderPromediosCards(dataList) {
 
     if (!dataList || dataList.length === 0) {
         contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">No hay aspirantes registrados por promedio FIE.</div>`;
-        
-        const elemPend = document.getElementById('stat-promedio-pendientes');
-        const elemAprob = document.getElementById('stat-promedio-aprobados');
-        const elemRech = document.getElementById('stat-promedio-rechazados');
-
-        if (elemPend) elemPend.textContent = '0';
-        if (elemAprob) elemAprob.textContent = '0';
-        if (elemRech) elemRech.textContent = '0';
         return;
     }
 
@@ -1759,14 +1752,6 @@ function renderPromediosCards(dataList) {
         `;
         contenedor.appendChild(card);
     });
-
-    const elemPend = document.getElementById('stat-promedio-pendientes');
-    const elemAprob = document.getElementById('stat-promedio-aprobados');
-    const elemRech = document.getElementById('stat-promedio-rechazados');
-
-    if (elemPend) elemPend.textContent = contPendientes;
-    if (elemAprob) elemAprob.textContent = contAprobados;
-    if (elemRech) elemRech.textContent = contRechazados;
 }
 
 function filtrarTablaPromedioUI() {
@@ -1824,7 +1809,8 @@ async function cargarAspirantes() {
                     const respuesta1 = await fetch(`/api/usuario/${idUsuario}`);
                     const usuario1 = await respuesta1.json();
                     return usuario1.correo;
-                } catch (e) {
+                    if (typeof aplicarIdioma === "function") aplicarIdioma();
+        } catch (e) {
                     return null;
                 }
             }
@@ -1839,7 +1825,8 @@ async function cargarAspirantes() {
                         const sol = exp.solicitudes[0];
                         return sol.convocatoriaNombre || sol.opcionNombre || null;
                     }
-                } catch (e) {
+                    if (typeof aplicarIdioma === "function") aplicarIdioma();
+        } catch (e) {
                     return null;
                 }
                 return null;

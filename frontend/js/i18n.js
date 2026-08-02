@@ -81,13 +81,27 @@ const translations = {
         "toast_rev_badge": "EN REVISIÓN",
 
         // Modalities
+
+        "mod_examen": "Examen de Admisión",
+        "mod_propedeutico": "Curso Propedéutico",
+        "mod_promedio": "Promedio FIE",
+        "mod_ceneval": "Promedio Externo",
+        "mod_extranjero": "Extranjero",
+
+        "mod_examen": "Examen",
+        "mod_propedeutico": "Curso Prop",
+        "mod_promedio": "Promedio FIE",
+        "mod_ceneval": "Promedio Externo",
+        "mod_extranjero": "Extranjero",
         "mod_examen_admision": "Examen de Admisión",
         "mod_curso_propedeutico": "Curso Propedéutico",
         "mod_promedio": "Promedio",
         "mod_examen_conocimientos": "Examen de Conocimientos",
 
         // Main Dashboard
-        "dash_docs": "Documentos",
+                "dash_docs": "Documentos",
+        "docente_filtro_todos_prog": "Todos (Programa)",
+        "docente_filtro_todos_est": "Todos (Estado)",
         "dash_esperando_datos": "Esperando datos...",
         "dash_expediente": "Expediente",
         "dash_convocatoria": "Convocatoria",
@@ -417,13 +431,27 @@ const translations = {
         "toast_rev_badge": "UNDER REVIEW",
 
         // Modalities
+
+        "mod_examen": "Admission Exam",
+        "mod_propedeutico": "Prep Course",
+        "mod_promedio": "FIE GPA",
+        "mod_ceneval": "External GPA",
+        "mod_extranjero": "Foreign",
+
+        "mod_examen": "Admission Exam",
+        "mod_propedeutico": "Prep Course",
+        "mod_promedio": "FIE GPA",
+        "mod_ceneval": "External GPA",
+        "mod_extranjero": "Foreign",
         "mod_examen_admision": "Admission Exam",
         "mod_curso_propedeutico": "Preparatory Course",
         "mod_promedio": "GPA",
         "mod_examen_conocimientos": "Knowledge Exam",
 
         // Main Dashboard
-        "dash_docs": "Documents",
+                "dash_docs": "Documents",
+        "docente_filtro_todos_prog": "All (Program)",
+        "docente_filtro_todos_est": "All (Status)",
         "dash_esperando_datos": "Waiting for data...",
         "dash_expediente": "File",
         "dash_convocatoria": "Admission",

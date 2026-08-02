@@ -86,72 +86,199 @@
     </nav>
 
     <main class="main-content" style="position: relative;">
-        <header class="topbar-modern">
-            <div class="topbar-greeting">
-                <span id="topbar-nombre-usuario" data-i18n="docente_revisor">Docente</span>
-            </div>
+        <header class="topbar-modern" style="padding: 0 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 20px;">
+                <!-- Izquierda: Título -->
+                <div class="topbar-greeting" style="display: flex; align-items: center; min-width: 180px;">
+                    <span id="topbar-nombre-usuario" data-i18n="docente_revisor"
+                        style="font-weight: 600; font-size: 1.25rem;">Docente</span>
+                </div>
 
-            <!-- Acciones Superiores Derechas -->
-            <div style="display: flex; align-items: center; gap: 20px; margin-left: auto;">
-                <!-- Menú de Mensajes (Solo la campana con el punto) -->
-                <div class="notification-container" onclick="toggleNotificationMenu(event)" style="position: relative;">
-                    <div class="notification-trigger"
-                        style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; color: var(--color-text); background: var(--color-card-bg);">
-                        <i class="fa-regular fa-bell icon-anim-bell"></i>
-                        <span id="notification-badge" class="notification-badge" style="display: none;"></span>
-                    </div>
-                    <!-- Mega Dropdown Messages -->
-                    <div id="notification-dropdown" class="messages-mega-dropdown" onclick="event.stopPropagation();">
-                        <div class="messages-mega-header">
-                            <span data-i18n="tb_bandeja">Bandeja de Mensajes</span>
-                            <i class="fa-solid fa-check-double" style="cursor: pointer; color: white;"
-                                title="Marcar todos como leídos" data-i18n-title="tb_marcar_leidos"
-                                onclick="alert('En desarrollo')"></i>
+                <!-- Centro: Filtros Dinámicos -->
+                <div style="flex: 1; display: flex; justify-content: center; max-width: 700px;">
+                    <!-- Filtros Expedientes -->
+                    <div id="filtros-vista-expedientes" class="topbar-filtros"
+                        style="display: none; flex: 1; gap: 12px; width: 100%;">
+                        <div style="flex: 1; position: relative;">
+                            <i class="fa-solid fa-magnifying-glass"
+                                style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
+                            <input type="text" id="filtro-nombre" class="form-control" placeholder="Buscar..."
+                                data-i18n-placeholder="docente_busqueda_ph" oninput="filtrarYMostrarAspirantes()"
+                                style="padding-left: 35px; width: 100%; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
                         </div>
-                        <div class="messages-mega-body">
-                            <!-- Lista de chats (Izquierda) -->
-                            <div class="messages-mega-list" id="notification-list">
-                                <div class="messages-empty-state">
-                                    <i class="fa-solid fa-spinner fa-spin mb-2"></i> Cargando...
-                                </div>
-                            </div>
-                            <!-- Vista de lectura de chat (Derecha) -->
-                            <div class="messages-mega-read" id="messages-read-pane" style="display: none;">
-                                <div class="messages-mega-read-header">
-                                    <i class="fa-solid fa-user me-2"></i> <span id="messages-read-title">Gestión
-                                        Posgrados</span>
-                                </div>
-                                <div class="messages-mega-read-body" id="messages-read-body">
-                                    <!-- Burbuja de mensaje inyectada por JS -->
-                                </div>
-                            </div>
-                            <!-- Vista vacía de lectura (Derecha) -->
-                            <div class="messages-mega-read" id="messages-empty-pane">
-                                <div class="messages-empty-state">
-                                    <img src="css/umsnhLogo.png" alt="UMSNH"
-                                        style="width: 140px; height: auto; opacity: 0.5; margin-bottom: 20px;">
-                                    <p data-i18n="tb_selecciona_msj">Selecciona un mensaje<br>para ver la conversación
-                                    </p>
-                                </div>
-                            </div>
+                        <div style="width: 150px; flex-shrink: 0;">
+                            <select id="filtro-programa" class="form-select" onchange="filtrarYMostrarAspirantes()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                                <option value="" data-i18n="docente_filtro_todos_prog">Todos (Prog)</option>
+                                <option value="Maestría">Maestría</option>
+                                <option value="Doctorado">Doctorado</option>
+                            </select>
+                        </div>
+                        <div style="width: 150px; flex-shrink: 0;">
+                            <select id="filtro-estado" class="form-select" onchange="filtrarYMostrarAspirantes()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                                <option value="" data-i18n="docente_filtro_todos_est">Todos (Estado)</option>
+                                <option value="pendiente" data-i18n="docente_estado_pendientes">Pendientes</option>
+                                <option value="revisado" data-i18n="docente_estado_completos">Revisados</option>
+                                <option value="incompleto" data-i18n="docente_estado_incompletos">Rechazados</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Filtros Exámenes -->
+                    <div id="filtros-vista-examenes" class="topbar-filtros"
+                        style="display: none; flex: 1; gap: 12px; width: 100%;">
+                        <div style="flex: 1; position: relative;">
+                            <i class="fa-solid fa-magnifying-glass"
+                                style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
+                            <input type="text" id="filtro-examen-texto" placeholder="Buscar..."
+                                oninput="filtrarTablaExamenesUI()"
+                                style="padding-left: 35px; width: 100%; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                        </div>
+                        <div style="width: 150px; flex-shrink: 0;">
+                            <select id="filtro-examen-estado" onchange="filtrarTablaExamenesUI()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                                <option value="">Todos</option>
+                                <option value="sin_programar">Sin programar</option>
+                                <option value="programado">Programado</option>
+                                <option value="esperando">Esperando res.</option>
+                                <option value="finalizado">Finalizados</option>
+                            </select>
+                        </div>
+                        <div style="width: 150px; flex-shrink: 0;">
+                            <select id="filtro-examen-programa" onchange="filtrarTablaExamenesUI()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                                <option value="">Programas</option>
+                                <option value="Maestría">Maestría</option>
+                                <option value="Doctorado">Doctorado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Filtros Curso Propedéutico -->
+                    <div id="filtros-vista-curso-propedeutico" class="topbar-filtros"
+                        style="display: none; flex: 1; gap: 12px; width: 100%;">
+                        <div style="flex: 1; position: relative;">
+                            <i class="fa-solid fa-magnifying-glass"
+                                style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
+                            <input type="text" id="filtro-curso-texto" placeholder="Buscar..."
+                                oninput="filtrarTablaPropedeuticoUI()"
+                                style="padding-left: 35px; width: 100%; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                        </div>
+                        <div style="width: 150px; flex-shrink: 0;">
+                            <select id="filtro-curso-estado" onchange="filtrarTablaPropedeuticoUI()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                                <option value="">Estados (Todos)</option>
+                                <option value="sin_programar">Sin programar</option>
+                                <option value="programado">Programado</option>
+                                <option value="esperando">Esperando res.</option>
+                                <option value="finalizado">Finalizados</option>
+                            </select>
+                        </div>
+                        <div style="width: 150px; flex-shrink: 0;">
+                            <select id="filtro-curso-programa" onchange="filtrarTablaPropedeuticoUI()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                                <option value="">Programas (Todos)</option>
+                                <option value="Maestría">Maestría</option>
+                                <option value="Doctorado">Doctorado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Filtros Promedio -->
+                    <div id="filtros-vista-promedio" class="topbar-filtros"
+                        style="display: none; flex: 1; gap: 12px; width: 100%;">
+                        <div style="flex: 1; position: relative;">
+                            <i class="fa-solid fa-magnifying-glass"
+                                style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
+                            <input type="text" id="filtro-promedio-texto" placeholder="Buscar..."
+                                oninput="filtrarTablaPromedioUI()"
+                                style="padding-left: 35px; width: 100%; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                        </div>
+                        <div style="width: 150px; flex-shrink: 0;">
+                            <select id="filtro-promedio-estado" onchange="filtrarTablaPromedioUI()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                                <option value="">Estados</option>
+                                <option value="pendiente">Pendientes</option>
+                                <option value="aprobado">Aprobados</option>
+                                <option value="rechazado">Rechazados</option>
+                            </select>
+                        </div>
+                        <div style="width: 150px; flex-shrink: 0;">
+                            <select id="filtro-promedio-programa" onchange="filtrarTablaPromedioUI()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                                <option value="">Programas</option>
+                                <option value="Maestría">Maestría</option>
+                                <option value="Doctorado">Doctorado</option>
+                            </select>
                         </div>
                     </div>
                 </div>
-                <!-- Botón Mi Perfil Dropdown -->
-                <div class="profile-container" style="position: relative;">
-                    <div class="profile-trigger"
-                        style="display: flex; align-items: center; gap: 10px; cursor: pointer; background: transparent; border: none; padding: 4px;"
-                        onclick="abrirModalPerfilDocente()">
-                        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;"
-                            id="topbar-iniciales">
-                            --
+
+                <!-- Derecha: Acciones Superiores -->
+                <div
+                    style="display: flex; align-items: center; gap: 20px; min-width: 180px; justify-content: flex-end;">
+                    <!-- Menú de Mensajes -->
+                    <div class="notification-container" onclick="toggleNotificationMenu(event)"
+                        style="position: relative;">
+                        <div class="notification-trigger"
+                            style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; color: var(--color-text); background: var(--color-card-bg);">
+                            <i class="fa-regular fa-bell icon-anim-bell"></i>
+                            <span id="notification-badge" class="notification-badge" style="display: none;"></span>
                         </div>
-                        <span id="topbar-first-name" data-i18n="docente_perfil"
-                            style="font-size: 14px; font-weight: 500; color: var(--color-text);">Perfil</span>
-                        <i class="fa-solid fa-chevron-down"
-                            style="font-size: 12px; color: var(--color-text-muted);"></i>
+                        <!-- Mega Dropdown Messages -->
+                        <div id="notification-dropdown" class="messages-mega-dropdown"
+                            onclick="event.stopPropagation();">
+                            <div class="messages-mega-header">
+                                <span data-i18n="tb_bandeja">Bandeja de Mensajes</span>
+                                <i class="fa-solid fa-check-double" style="cursor: pointer; color: white;"
+                                    title="Marcar todos como leídos" data-i18n-title="tb_marcar_leidos"
+                                    onclick="alert('En desarrollo')"></i>
+                            </div>
+                            <div class="messages-mega-body">
+                                <!-- Lista de chats -->
+                                <div class="messages-mega-list" id="notification-list">
+                                    <div class="messages-empty-state">
+                                        <i class="fa-solid fa-spinner fa-spin mb-2"></i> Cargando...
+                                    </div>
+                                </div>
+                                <!-- Vista de lectura -->
+                                <div class="messages-mega-read" id="messages-read-pane" style="display: none;">
+                                    <div class="messages-mega-read-header">
+                                        <i class="fa-solid fa-user me-2"></i> <span id="messages-read-title">Gestión
+                                            Posgrados</span>
+                                    </div>
+                                    <div class="messages-mega-read-body" id="messages-read-body">
+                                    </div>
+                                </div>
+                                <!-- Vista vacía -->
+                                <div class="messages-mega-read" id="messages-empty-pane">
+                                    <div class="messages-empty-state">
+                                        <img src="css/umsnhLogo.png" alt="UMSNH"
+                                            style="width: 140px; height: auto; opacity: 0.5; margin-bottom: 20px;">
+                                        <p data-i18n="tb_selecciona_msj">Selecciona un mensaje<br>para ver la
+                                            conversación</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div> <!-- Flex container end -->
+
+                    <!-- Botón Mi Perfil Dropdown -->
+                    <div class="profile-container" style="position: relative;">
+                        <div class="profile-trigger"
+                            style="display: flex; align-items: center; gap: 10px; cursor: pointer; background: transparent; border: none; padding: 4px;"
+                            onclick="abrirModalPerfilDocente()">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;"
+                                id="topbar-iniciales">--</div>
+                            <span id="topbar-first-name" data-i18n="docente_perfil"
+                                style="font-size: 14px; font-weight: 500; color: var(--color-text);">Perfil</span>
+                            <i class="fa-solid fa-chevron-down"
+                                style="font-size: 12px; color: var(--color-text-muted);"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <section id="view-inicio" class="view-section active">
@@ -231,33 +358,12 @@
         </section>
 
         <section id="view-expedientes" class="view-section">
+
+            </div>
+
             <div class="aspirantes-layout">
                 <div class="aspirantes-sidebar"
                     style="background: var(--color-card-bg); border-color: var(--color-border);">
-                    <div class="sidebar-filters" style="border-color: var(--color-border); background: transparent;">
-                        <div style="position: relative; width: 100%;">
-                            <i class="fa-solid fa-magnifying-glass"
-                                style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
-                            <input type="text" id="filtro-nombre" class="form-control"
-                                placeholder="Buscar por nombre..." data-i18n-placeholder="docente_busqueda_ph"
-                                oninput="filtrarYMostrarAspirantes()"
-                                style="padding-left: 35px; width: 100%; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
-                        </div>
-                        <select id="filtro-programa" class="form-select" onchange="filtrarYMostrarAspirantes()"
-                            style="margin-top: 10px;">
-                            <option value="" data-i18n="docente_estado_todos">Todos los programas</option>
-                            <option value="Maestría">Maestría</option>
-                            <option value="Doctorado">Doctorado</option>
-                        </select>
-                        <select id="filtro-estado" class="form-select" onchange="filtrarYMostrarAspirantes()"
-                            style="margin-top: 10px;">
-                            <option value="" data-i18n="docente_estado_todos">Todos los estados</option>
-                            <option value="pendiente" data-i18n="docente_estado_pendientes">Pendientes</option>
-                            <option value="revisado" data-i18n="docente_estado_completos">Revisados (Completos)</option>
-                            <option value="incompleto" data-i18n="docente_estado_incompletos">Rechazados
-                            </option>
-                        </select>
-                    </div>
                     <div class="aspirantes-list" id="contenedor-aspirantes" style="background: transparent;">
                     </div>
                 </div>
@@ -346,7 +452,7 @@
 
             <!-- VISTA DE PERFIL (Expediente Clínico / Académico) -->
             <div id="vistaPerfilAspirante" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 24px;">
                     <button class="btn-secondary shadow-sm" onclick="cerrarExpedienteAspirante()"
                         style="border-radius: 8px; font-weight: 600; padding: 8px 16px; border: 1px solid var(--color-border); background: var(--color-card-bg); color: var(--color-text); cursor: pointer;">
                         <i class="fa-solid fa-arrow-left me-2"></i> Volver a la lista
@@ -474,155 +580,39 @@
 
         <!-- SECCIÓN: EXÁMENES -->
         <section id="view-examenes" class="view-section">
-            
-            <!-- TOOLBAR: Filtros y KPIs compactos -->
-            <div class="card" style="padding: 16px; margin-bottom: 24px; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
-                
-                <!-- Buscador y Filtros (Mitad Izquierda) -->
-                <div style="display: flex; gap: 12px; flex: 1; max-width: 60%;">
-                    <div style="flex: 1; position: relative; min-width: 200px;">
-                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
-                        <input type="text" id="filtro-examen-texto" placeholder="Buscar aspirante..." oninput="filtrarTablaExamenesUI()" style="width: 100%; padding: 8px 12px 8px 35px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
-                    </div>
-                    <div style="width: 160px; flex-shrink: 0;">
-                        <select id="filtro-examen-estado" onchange="filtrarTablaExamenesUI()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
-                            <option value="">Estados (Todos)</option>
-                            <option value="sin_programar">Sin programar</option>
-                            <option value="programado">Programado</option>
-                            <option value="esperando">Esperando resultado</option>
-                            <option value="finalizado">Finalizados</option>
-                        </select>
-                    </div>
-                    <div style="width: 160px; flex-shrink: 0;">
-                        <select id="filtro-examen-programa" onchange="filtrarTablaExamenesUI()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
-                            <option value="">Programas (Todos)</option>
-                            <option value="Maestría">Maestría</option>
-                            <option value="Doctorado">Doctorado</option>
-                        </select>
-                    </div>
-                </div>
 
-                <!-- KPIs compactos (Mitad Derecha) -->
-                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                    <div title="Pendientes" style="display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #64748b; border: 1px solid #e2e8f0;">
-                        <i class="fa-solid fa-calendar-plus"></i> <span id="stat-exam-pendientes">0</span>
-                    </div>
-                    <div title="Programados hoy" style="display: flex; align-items: center; gap: 8px; background: #eff6ff; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #3b82f6; border: 1px solid #bfdbfe;">
-                        <i class="fa-solid fa-calendar-check"></i> <span id="stat-exam-hoy">0</span>
-                    </div>
-                    <div title="Esperando resultado" style="display: flex; align-items: center; gap: 8px; background: #fff7ed; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #f97316; border: 1px solid #fed7aa;">
-                        <i class="fa-solid fa-clock-rotate-left"></i> <span id="stat-exam-esperando">0</span>
-                    </div>
-                    <div title="Finalizados" style="display: flex; align-items: center; gap: 8px; background: #f0fdf4; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #22c55e; border: 1px solid #bbf7d0;">
-                        <i class="fa-solid fa-check-double"></i> <span id="stat-exam-finalizados">0</span>
-                    </div>
-                </div>
+
             </div>
 
             <!-- CONTENEDOR DE TARJETAS -->
-            <div id="contenedor-examenes-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+            <div id="contenedor-examenes-cards"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
                 <!-- Tarjetas inyectadas por JS -->
             </div>
         </section>
 
         <!-- SECCIÓN: CURSO PROPEDÉUTICO -->
         <section id="view-curso-propedeutico" class="view-section">
-            
-            <!-- TOOLBAR: Filtros y KPIs compactos -->
-            <div class="card" style="padding: 16px; margin-bottom: 24px; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
-                
-                <!-- Buscador y Filtros (Mitad Izquierda) -->
-                <div style="display: flex; gap: 12px; flex: 1; max-width: 60%;">
-                    <div style="flex: 1; position: relative; min-width: 200px;">
-                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
-                        <input type="text" id="filtro-curso-texto" placeholder="Buscar aspirante..." oninput="filtrarTablaPropedeuticoUI()" style="width: 100%; padding: 8px 12px 8px 35px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
-                    </div>
-                    <div style="width: 160px; flex-shrink: 0;">
-                        <select id="filtro-curso-estado" onchange="filtrarTablaPropedeuticoUI()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
-                            <option value="">Estados (Todos)</option>
-                            <option value="sin_programar">Sin programar</option>
-                            <option value="programado">Programado</option>
-                            <option value="esperando">Esperando resultado</option>
-                            <option value="finalizado">Finalizados</option>
-                        </select>
-                    </div>
-                    <div style="width: 160px; flex-shrink: 0;">
-                        <select id="filtro-curso-programa" onchange="filtrarTablaPropedeuticoUI()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
-                            <option value="">Programas (Todos)</option>
-                            <option value="Maestría">Maestría</option>
-                            <option value="Doctorado">Doctorado</option>
-                        </select>
-                    </div>
-                </div>
 
-                <!-- KPIs compactos (Mitad Derecha) -->
-                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                    <div title="Pendientes" style="display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #64748b; border: 1px solid #e2e8f0;">
-                        <i class="fa-solid fa-calendar-plus"></i> <span id="stat-curso-pendientes">0</span>
-                    </div>
-                    <div title="Programados" style="display: flex; align-items: center; gap: 8px; background: #eff6ff; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #3b82f6; border: 1px solid #bfdbfe;">
-                        <i class="fa-solid fa-book-open"></i> <span id="stat-curso-programados">0</span>
-                    </div>
-                    <div title="Esperando resultado" style="display: flex; align-items: center; gap: 8px; background: #fff7ed; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #f97316; border: 1px solid #fed7aa;">
-                        <i class="fa-solid fa-clock-rotate-left"></i> <span id="stat-curso-esperando">0</span>
-                    </div>
-                    <div title="Finalizados" style="display: flex; align-items: center; gap: 8px; background: #f0fdf4; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #22c55e; border: 1px solid #bbf7d0;">
-                        <i class="fa-solid fa-check-double"></i> <span id="stat-curso-finalizados">0</span>
-                    </div>
-                </div>
+
             </div>
 
             <!-- CONTENEDOR DE TARJETAS -->
-            <div id="contenedor-curso-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+            <div id="contenedor-curso-cards"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
                 <!-- Tarjetas inyectadas por JS -->
             </div>
         </section>
 
         <!-- SECCIÓN: PROMEDIO -->
         <section id="view-promedio" class="view-section">
-            
-            <!-- TOOLBAR: Filtros y KPIs compactos -->
-            <div class="card" style="padding: 16px; margin-bottom: 24px; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
-                
-                <!-- Buscador y Filtros (Mitad Izquierda) -->
-                <div style="display: flex; gap: 12px; flex: 1; max-width: 60%;">
-                    <div style="flex: 1; position: relative; min-width: 200px;">
-                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
-                        <input type="text" id="filtro-promedio-texto" placeholder="Buscar aspirante..." oninput="filtrarTablaPromedioUI()" style="width: 100%; padding: 8px 12px 8px 35px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
-                    </div>
-                    <div style="width: 160px; flex-shrink: 0;">
-                        <select id="filtro-promedio-estado" onchange="filtrarTablaPromedioUI()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
-                            <option value="">Estados (Todos)</option>
-                            <option value="pendiente">Pendientes de dictamen</option>
-                            <option value="aprobado">Promedio Válido</option>
-                            <option value="rechazado">Promedio Rechazado</option>
-                        </select>
-                    </div>
-                    <div style="width: 160px; flex-shrink: 0;">
-                        <select id="filtro-promedio-programa" onchange="filtrarTablaPromedioUI()" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text);">
-                            <option value="">Programas (Todos)</option>
-                            <option value="Maestría">Maestría</option>
-                            <option value="Doctorado">Doctorado</option>
-                        </select>
-                    </div>
-                </div>
 
-                <!-- KPIs compactos (Mitad Derecha) -->
-                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                    <div title="Pendientes" style="display: flex; align-items: center; gap: 8px; background: #fff7ed; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #f97316; border: 1px solid #fed7aa;">
-                        <i class="fa-solid fa-clock-rotate-left"></i> <span id="stat-promedio-pendientes">0</span>
-                    </div>
-                    <div title="Promedios Aprobados" style="display: flex; align-items: center; gap: 8px; background: #f0fdf4; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #22c55e; border: 1px solid #bbf7d0;">
-                        <i class="fa-solid fa-circle-check"></i> <span id="stat-promedio-aprobados">0</span>
-                    </div>
-                    <div title="Promedios Rechazados" style="display: flex; align-items: center; gap: 8px; background: #fef2f2; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #ef4444; border: 1px solid #fecaca;">
-                        <i class="fa-solid fa-circle-xmark"></i> <span id="stat-promedio-rechazados">0</span>
-                    </div>
-                </div>
+
             </div>
 
             <!-- CONTENEDOR DE TARJETAS -->
-            <div id="contenedor-promedio-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+            <div id="contenedor-promedio-cards"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
                 <!-- Tarjetas inyectadas por JS -->
             </div>
         </section>
@@ -707,11 +697,19 @@
     </main>
 
     <!-- Modal Genérico Dinámico para Módulos (Examen, Curso, etc.) -->
-    <div class="modal-overlay" id="modal-docente-dinamico" style="display: none; align-items: center; justify-content: center; z-index: 1050; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
-        <div class="modal-card" style="width: 600px; max-width: 90%; max-height: 90vh; display: flex; flex-direction: column; background: var(--color-card-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 25px; border-bottom: 1px solid var(--color-border);">
-                <h3 id="modal-dinamico-titulo" style="margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 10px;">Acción Solicitada</h3>
-                <button class="btn-close" onclick="document.getElementById('modal-docente-dinamico').style.display='none'" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--color-text-muted); transition: color 0.2s;"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-overlay" id="modal-docente-dinamico"
+        style="display: none; align-items: center; justify-content: center; z-index: 1050; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+        <div class="modal-card"
+            style="width: 600px; max-width: 90%; max-height: 90vh; display: flex; flex-direction: column; background: var(--color-card-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div class="modal-header"
+                style="display: flex; justify-content: flex-end; align-items: center; padding: 20px 25px; border-bottom: 1px solid var(--color-border);">
+                <h3 id="modal-dinamico-titulo"
+                    style="margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 10px;">Acción
+                    Solicitada</h3>
+                <button class="btn-close"
+                    onclick="document.getElementById('modal-docente-dinamico').style.display='none'"
+                    style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--color-text-muted); transition: color 0.2s;"><i
+                        class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body" id="modal-dinamico-body" style="overflow-y: auto; padding: 25px;">
                 <!-- Los módulos inyectarán sus formularios y HTML aquí -->
@@ -724,7 +722,7 @@
         <div class="modal-card"
             style="width: 85%; max-width: 1200px; height: 90vh; display: flex; flex-direction: column; background: var(--color-card-bg); color: var(--color-text); border-color: var(--color-border);">
             <div class="modal-header"
-                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--color-border); padding-bottom: 10px;">
+                style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--color-border); padding-bottom: 10px;">
                 <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
                     <h3 style="margin: 0;"><i class="fa-solid fa-file-contract"
                             style="color: var(--color-primary);"></i>
@@ -799,16 +797,16 @@
     <script src="js/modulos/programacionExamen/api.js"></script>
     <script src="js/modulos/programacionExamen/docenteRenderer.js"></script>
     <script src="js/modulos/programacionExamen/index.js"></script>
-    
+
     <script src="js/modulos/curso/api.js"></script>
     <script src="js/modulos/curso/docenteRenderer.js"></script>
     <script src="js/modulos/curso/renderer.js"></script>
     <script src="js/modulos/curso/index.js"></script>
-    
+
     <script src="js/modulos/promedio/api.js"></script>
     <script src="js/modulos/promedio/renderer.js"></script>
     <script src="js/modulos/promedio/index.js"></script>
-    
+
     <script src="js/docente.js"></script>
 </body>
 
