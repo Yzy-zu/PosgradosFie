@@ -125,6 +125,26 @@
                         </div>
                     </div>
 
+                    <!-- Filtros Aspirantes -->
+                    <div id="filtros-vista-aspirantes" class="topbar-filtros"
+                        style="display: none; flex: 1; gap: 12px; width: 100%;">
+                        <div style="flex: 1; position: relative;">
+                            <i class="fa-solid fa-magnifying-glass"
+                                style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
+                            <input type="text" id="filtro-aspirantes-texto" placeholder="Buscar..."
+                                data-i18n-placeholder="docente_busqueda_ph" oninput="filtrarTablaAspirantesUI()"
+                                style="padding-left: 35px; width: 100%; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                        </div>
+                        <div style="width: 150px; flex-shrink: 0;">
+                            <select id="filtro-aspirantes-programa" onchange="filtrarTablaAspirantesUI()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                                <option value="" data-i18n="docente_filtro_todos_prog">Programas</option>
+                                <option value="Maestría">Maestría</option>
+                                <option value="Doctorado">Doctorado</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <!-- Filtros Exámenes -->
                     <div id="filtros-vista-examenes" class="topbar-filtros"
                         style="display: none; flex: 1; gap: 12px; width: 100%;">

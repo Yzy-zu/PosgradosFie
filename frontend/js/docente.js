@@ -2022,3 +2022,35 @@ function toggleSolicitudDocs(containerId, chevronId) {
         if (chevron) chevron.style.transform = "rotate(0deg)";
     }
 }
+
+// Funciones de Filtrado UI para Aspirantes
+window.filtrarTablaAspirantesUI = function() {
+    const texto = (document.getElementById('filtro-aspirantes-texto')?.value || '').toLowerCase();
+    const programa = (document.getElementById('filtro-aspirantes-programa')?.value || '').toLowerCase();
+
+    const tbody = document.getElementById("tablaAspirantes");
+    if (!tbody) return;
+
+    const filas = tbody.querySelectorAll('tr');
+    filas.forEach(fila => {
+        // Ignorar fila de "no hay registros"
+        if (fila.querySelector('td[colspan]')) return;
+
+        const tdNombre = fila.children[0];
+        const tdPrograma = fila.children[1];
+
+        if (!tdNombre || !tdPrograma) return;
+
+        const textoFila = tdNombre.innerText.toLowerCase();
+        const textoPrograma = tdPrograma.innerText.toLowerCase();
+
+        const matchTexto = !texto || textoFila.includes(texto);
+        const matchPrograma = !programa || textoPrograma.includes(programa);
+
+        if (matchTexto && matchPrograma) {
+            fila.style.display = '';
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+};
