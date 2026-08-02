@@ -133,7 +133,7 @@ const moduloProgramacionExamenDocenteRenderer = {
         const observaciones = document.getElementById('prog-examen-observaciones').value;
 
         if (!fecha || !hora || !lugar) {
-            alert("Por favor complete fecha, hora y lugar.");
+            Swal.fire({ icon: 'warning', title: 'Campos requeridos', text: 'Por favor complete fecha, hora y lugar.', confirmButtonColor: '#f59e0b' });
             return;
         }
 
@@ -146,7 +146,7 @@ const moduloProgramacionExamenDocenteRenderer = {
                 fecha, hora, lugar, observaciones
             });
 
-            alert("Examen programado con éxito.");
+            Swal.fire({ icon: 'success', title: 'Éxito', text: 'Examen programado con éxito.', timer: 1500, showConfirmButton: false });
             document.getElementById('modal-docente-dinamico').style.display = 'none';
 
             window.dispatchEvent(new CustomEvent('moduloCompletado', { detail: { accion: 'PROGRAMAR_EXAMEN' } }));
@@ -155,7 +155,7 @@ const moduloProgramacionExamenDocenteRenderer = {
                 cargarTablaExamenesPorCodigo('EXAMEN');
             }
         } catch (error) {
-            alert(error.message);
+            Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Ocurrió un error al programar el examen', confirmButtonColor: '#ef4444' });
         } finally {
             const btn = document.getElementById('btn-guardar-programacion');
             if(btn) {
@@ -171,7 +171,7 @@ const moduloProgramacionExamenDocenteRenderer = {
         const observaciones = document.getElementById('cap-examen-observaciones').value;
 
         if (aprobadoVal === '') {
-            alert("Por favor seleccione un dictamen final (Aprobado/No Aprobado).");
+            Swal.fire({ icon: 'warning', title: 'Campo requerido', text: 'Por favor seleccione un dictamen final (Aprobado/No Aprobado).', confirmButtonColor: '#f59e0b' });
             return;
         }
 
@@ -187,7 +187,7 @@ const moduloProgramacionExamenDocenteRenderer = {
                 calificacion, aprobado, observaciones
             });
 
-            alert("Resultado capturado con éxito.");
+            Swal.fire({ icon: 'success', title: 'Éxito', text: 'Resultado capturado con éxito.', timer: 1500, showConfirmButton: false });
             document.getElementById('modal-docente-dinamico').style.display = 'none';
 
             window.dispatchEvent(new CustomEvent('moduloCompletado', { detail: { accion: 'CAPTURAR_RESULTADO_EXAMEN' } }));
@@ -196,7 +196,7 @@ const moduloProgramacionExamenDocenteRenderer = {
                 cargarTablaExamenesPorCodigo('EXAMEN');
             }
         } catch (error) {
-            alert(error.message);
+            Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Ocurrió un error al capturar resultado', confirmButtonColor: '#ef4444' });
         } finally {
             const btn = document.getElementById('btn-guardar-captura');
             if(btn) {

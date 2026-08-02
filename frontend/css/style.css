@@ -80,6 +80,37 @@ html {
     /* Firefox */
 }
 
+/* Scrollbar elegante y visible para paneles específicos y modales */
+#detallesExtendidos .row::-webkit-scrollbar,
+.custom-scroll::-webkit-scrollbar {
+    display: block !important;
+    width: 6px !important;
+    height: 6px !important;
+}
+
+#detallesExtendidos .row::-webkit-scrollbar-track,
+.custom-scroll::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.08) !important;
+    border-radius: 6px !important;
+}
+
+#detallesExtendidos .row::-webkit-scrollbar-thumb,
+.custom-scroll::-webkit-scrollbar-thumb {
+    background: var(--color-primary, #3b82f6) !important;
+    border-radius: 6px !important;
+}
+
+#detallesExtendidos .row::-webkit-scrollbar-thumb:hover,
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: #2563eb !important;
+}
+
+#detallesExtendidos .row,
+.custom-scroll {
+    scrollbar-width: thin !important;
+    scrollbar-color: var(--color-primary, #3b82f6) rgba(0, 0, 0, 0.08) !important;
+}
+
 /* Contenedor de Login (Centrado) */
 .login-container {
     width: 100vw;
@@ -274,6 +305,64 @@ html {
     margin-left: 0;
     transform: translateX(-15px);
     pointer-events: none;
+}
+
+/* Tooltip flotante al pasar el cursor sobre cada sección con barra lateral colapsada (Admin, Docentes, Aspirantes) */
+.sidebar-logo img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+.sidebar.collapsed {
+    overflow: visible !important;
+}
+
+.sidebar.collapsed .sidebar-header,
+.sidebar.collapsed .sidebar-actions,
+.sidebar.collapsed .nav-label {
+    overflow: hidden !important;
+    max-width: 70px !important;
+    box-sizing: border-box !important;
+}
+
+.sidebar.collapsed a {
+    position: relative;
+}
+
+.sidebar.collapsed a:hover span.text {
+    opacity: 1 !important;
+    max-width: 250px !important;
+    position: absolute !important;
+    left: 60px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin-left: 0 !important;
+    background: var(--color-card-bg, #1e293b) !important;
+    color: var(--color-text, #f8fafc) !important;
+    padding: 7px 14px !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid var(--color-border, rgba(255, 255, 255, 0.15)) !important;
+    z-index: 99999 !important;
+    pointer-events: none !important;
+    display: inline-block !important;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.sidebar.collapsed a:hover span.text::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -5px;
+    transform: translateY(-50%) rotate(45deg);
+    width: 8px;
+    height: 8px;
+    background: var(--color-card-bg, #1e293b);
+    border-left: 1px solid var(--color-border, rgba(255, 255, 255, 0.15));
+    border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.15));
 }
 
 .nav-label {
@@ -3053,7 +3142,7 @@ body.dark-mode .table-avatar-info {
     justify-content: space-between;
     align-items: center;
     position: relative;
-    margin-bottom: 30px;
+    margin-bottom: 40px;
     padding: 0 20px;
 }
 
@@ -3064,7 +3153,7 @@ body.dark-mode .table-avatar-info {
     left: 40px;
     right: 40px;
     height: 3px;
-    background-color: #e2e8f0;
+    background-color: var(--color-border, #e2e8f0);
     z-index: 1;
     transform: translateY(-50%);
 }
@@ -3072,24 +3161,32 @@ body.dark-mode .table-avatar-info {
 .step-indicator {
     position: relative;
     z-index: 2;
-    background-color: #e2e8f0;
-    color: #64748b;
-    width: 36px;
-    height: 36px;
+    background-color: var(--color-bg, #e2e8f0);
+    color: var(--color-text-muted, #64748b);
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
     font-weight: bold;
+    font-size: 14px;
     transition: all 0.3s ease;
-    border: 3px solid #fff;
-    box-shadow: 0 0 0 2px #e2e8f0;
+    border: 3px solid var(--color-card-bg, #fff);
+    box-shadow: 0 0 0 2px var(--color-border, #e2e8f0);
+    cursor: pointer;
+    user-select: none;
+}
+
+.step-indicator:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 3px var(--color-primary, #3b82f6);
 }
 
 .step-indicator.active {
-    background-color: #3b82f6;
+    background-color: var(--color-primary, #3b82f6);
     color: white;
-    box-shadow: 0 0 0 2px #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3), 0 0 0 2px var(--color-primary, #3b82f6);
 }
 
 .step-indicator.completed {
@@ -3104,14 +3201,19 @@ body.dark-mode .table-avatar-info {
     left: 50%;
     transform: translateX(-50%);
     font-size: 0.75rem;
-    color: #475569;
+    color: var(--color-text-muted, #475569);
     white-space: nowrap;
-    font-weight: 500;
+    font-weight: 600;
+    transition: color 0.3s ease;
 }
 
 .step-indicator.active .step-label {
-    color: #3b82f6;
+    color: var(--color-primary, #3b82f6);
     font-weight: 700;
+}
+
+.step-indicator.completed .step-label {
+    color: #10b981;
 }
 
 .step-pane {

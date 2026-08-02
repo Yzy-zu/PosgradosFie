@@ -38,7 +38,19 @@ const obtenerConvocatoria = async (req, res) => {
             return res.status(404).json({ success: false, mensaje: 'Convocatoria no encontrada' });
         }
 
-        return res.json(resultados[0]);
+        // Fetch options for this convocatoria
+        const [opciones] = await db.query(`
+            SELECT co.id as idConvocatoriaOpcion, co.convocatoria_id, co.cupos, co.activo as opcionConvocatoriaActiva,
+                   op.id as idOpcionPosgrado, op.nombre, op.descripcion, op.activo as opcionPosgradoActiva
+            FROM convocatoria_opcion co
+            JOIN opcion_posgrado op ON co.opcion_posgrado_id = op.id
+            WHERE co.convocatoria_id = ?
+        `, [id]);
+
+        return res.json({
+            ...resultados[0],
+            opciones
+        });
     } catch (error) {
         console.error('Error en obtenerConvocatoria:', error);
         return res.status(500).json({ success: false, mensaje: 'Error al obtener convocatoria' });

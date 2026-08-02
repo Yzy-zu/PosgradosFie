@@ -38,7 +38,7 @@
         <div class="sidebar-header">
             <div class="sidebar-logo" style="background: transparent;">
                 <img src="css/posgradofie.png" alt="Logo"
-                    style="width: 200%; height: 200%; object-fit: contain; cursor: pointer;"
+                    style="width: 100%; height: 100%; object-fit: contain; cursor: pointer;"
                     onclick="toggleSidebar()">
             </div>
             <div style="display: flex; flex-direction: column; justify-content: center; margin-left: 10px;">
@@ -54,31 +54,31 @@
 
         <ul class="side-menu top">
             <li>
-                <a href="#inicio" onclick="switchView('inicio', this)" id="nav-inicio">
+                <a href="#inicio" onclick="switchView('inicio', this)" id="nav-inicio" title="Inicio" data-i18n-title="sb_inicio">
                     <i class="fa-solid fa-house"></i>
                     <span class="text" data-i18n="sb_inicio">Inicio</span>
                 </a>
             </li>
             <li>
-                <a href="#proceso" onclick="switchView('proceso', this)" id="nav-proceso">
+                <a href="#proceso" onclick="switchView('proceso', this)" id="nav-proceso" title="Proceso" data-i18n-title="sb_proceso">
                     <i class="fa-solid fa-chart-pie"></i>
                     <span class="text" data-i18n="sb_proceso">Proceso</span>
                 </a>
             </li>
             <li>
-                <a href="#convocatorias" onclick="switchView('convocatorias', this)" id="nav-convocatorias">
+                <a href="#convocatorias" onclick="switchView('convocatorias', this)" id="nav-convocatorias" title="Convocatorias" data-i18n-title="sb_convocatorias">
                     <i class="fa-solid fa-graduation-cap"></i>
                     <span class="text" data-i18n="sb_convocatorias">Convocatorias</span>
                 </a>
             </li>
             <li id="li-nav-documentos" style="display: none;">
-                <a href="#documentos" onclick="switchView('documentos', this)" id="nav-documentos">
+                <a href="#documentos" onclick="switchView('documentos', this)" id="nav-documentos" title="Documentos" data-i18n-title="sb_documentos">
                     <i class="fa-solid fa-folder-open"></i>
                     <span class="text" data-i18n="sb_documentos">Documentos</span>
                 </a>
             </li>
             <li id="li-nav-admision" style="display: none;">
-                <a href="#admision" onclick="switchView('admision', this)" id="nav-admision">
+                <a href="#admision" onclick="switchView('admision', this)" id="nav-admision" title="Admisión" data-i18n-title="sb_admision">
                     <i class="fa-solid fa-clipboard-user"></i>
                     <span class="text" data-i18n="sb_admision">Admisión</span>
                 </a>
