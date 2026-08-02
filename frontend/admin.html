@@ -651,22 +651,18 @@
                             <div class="step-pane active" id="step-pane-1">
                                 <h6 class="fw-bold mb-3" style="color: var(--color-primary); font-size: 1rem;"><i class="fa-solid fa-circle-info me-2"></i> Información General</h6>
                                 <div class="row mb-3">
-                                    <div class="col-md-6">
+                                    <div class="col-md-12">
                                         <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Posgrado</label>
                                         <select id="convocatoria_posgrado" class="form-select form-select-sm" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                             <option value="">Seleccione un posgrado...</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Añadir Especialidad / Opción:</label>
-                                        <select id="convocatoria_opciones" class="form-select form-select-sm" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
-                                            <option value="">Selecciona opciones...</option>
-                                        </select>
-                                    </div>
                                 </div>
-                                <div class="row mb-2">
+                                <div class="row mb-3">
                                     <div class="col-12">
-                                        <div id="contenedorChipsOpciones" class="d-flex flex-wrap gap-2 mt-1 mb-2">
+                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);"><i class="fa-solid fa-layer-group text-primary me-1"></i> Especialidades / Líneas de Investigación Asignadas:</label>
+                                        <div id="contenedorOpcionesPosgrado" class="p-3 border rounded" style="background: var(--color-bg); border-color: var(--color-border) !important; border-radius: 8px;">
+                                            <p class="text-muted small mb-0"><i class="fa-solid fa-circle-info me-1"></i> Selecciona un posgrado para ver y gestionar sus especialidades.</p>
                                         </div>
                                     </div>
                                 </div>

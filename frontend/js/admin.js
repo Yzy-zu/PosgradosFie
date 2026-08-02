@@ -712,55 +712,12 @@ function inicializarFlatpickr() {
     flatpickr(".date-single", configSingle);
 }
 
-let opcionesSeleccionadas = [];
-
-document.getElementById("convocatoria_opciones")?.addEventListener("change", (e) => {
-    const id = parseInt(e.target.value);
-    if (!id) return;
-    const opc = todasLasOpcionesPosgrado.find(o => o.id === id);
-    if (opc && !opcionesSeleccionadas.find(s => s.idOpcionPosgrado === id)) {
-        opcionesSeleccionadas.push({ idOpcionPosgrado: id, cupos: null, nombre: opc.nombre });
-        renderizarChipsOpciones();
-    }
-    e.target.value = ""; // reset
-});
-
-function renderizarChipsOpciones() {
-    const container = document.getElementById("contenedorChipsOpciones");
+function renderizarOpcionesPorPosgrado(posgradoId, opcionesSeleccionadasPrevias = [], esEdicion = false) {
+    const container = document.getElementById("contenedorOpcionesPosgrado");
     if (!container) return;
-    let html = "";
-    opcionesSeleccionadas.forEach(op => {
-        const cuposVal = op.cupos !== null ? op.cupos : "";
-        html += `
-            <div class="badge border d-flex align-items-center p-2" id="chip_opc_${op.idOpcionPosgrado}" style="background: var(--color-bg); color: var(--color-text); border-color: var(--color-border) !important;">
-                <span class="me-2 fw-semibold">${op.nombre}</span>
-                <input type="number" class="form-control form-control-sm cupo-input text-center" style="width: 70px; height: 26px; font-size: 0.8rem; background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border);" placeholder="Cupos" value="${cuposVal}" onchange="actualizarCupo(${op.idOpcionPosgrado}, this.value)">
-                <button type="button" class="btn-close ms-2" style="font-size: 0.6rem;" onclick="removerOpcion(${op.idOpcionPosgrado})"></button>
-            </div>
-        `;
-    });
-    container.innerHTML = html;
-}
-
-window.actualizarCupo = function (id, val) {
-    const op = opcionesSeleccionadas.find(o => o.idOpcionPosgrado === id);
-    if (op) op.cupos = val ? parseInt(val) : null;
-};
-
-window.removerOpcion = function (id) {
-    opcionesSeleccionadas = opcionesSeleccionadas.filter(o => o.idOpcionPosgrado !== id);
-    renderizarChipsOpciones();
-};
-
-function renderizarOpcionesPorPosgrado(posgradoId, opcionesSeleccionadasPrevias = []) {
-    const selectOpciones = document.getElementById("convocatoria_opciones");
-    if (!selectOpciones) return;
-
-    selectOpciones.innerHTML = '<option value="">Selecciona opciones...</option>';
-    opcionesSeleccionadas = [];
 
     if (!posgradoId) {
-        renderizarChipsOpciones();
+        container.innerHTML = '<p class="text-muted small mb-0"><i class="fa-solid fa-circle-info me-1"></i> Selecciona un posgrado para ver y gestionar sus especialidades.</p>';
         return;
     }
 
@@ -772,23 +729,39 @@ function renderizarOpcionesPorPosgrado(posgradoId, opcionesSeleccionadasPrevias 
 
     const opcionesPosgrado = todasLasOpcionesPosgrado.filter(op => op.posgrado_id == posgradoId);
 
+    if (opcionesPosgrado.length === 0) {
+        container.innerHTML = '<p class="text-muted small mb-0">Este posgrado no tiene especialidades o líneas de investigación registradas.</p>';
+        return;
+    }
+
+    let html = '<div class="d-flex flex-column gap-2">';
     opcionesPosgrado.forEach(op => {
-        const option = document.createElement("option");
-        option.value = op.id;
-        option.textContent = op.nombre;
-        selectOpciones.appendChild(option);
+        const prev = opcionesSeleccionadasPrevias.find(s => s.idOpcionPosgrado == op.id || s.opcion_posgrado_id == op.id);
+        const estaChecked = esEdicion ? !!prev : true;
+        const cuposVal = prev && prev.cupos !== undefined && prev.cupos !== null ? prev.cupos : '';
 
-        const sel = opcionesSeleccionadasPrevias.find(s => s.idOpcionPosgrado == op.id || s.opcion_posgrado_id == op.id);
-        if (sel) {
-            opcionesSeleccionadas.push({ idOpcionPosgrado: op.id, cupos: sel.cupos, nombre: op.nombre });
-        }
+        html += `
+            <div class="d-flex justify-content-between align-items-center p-2 rounded border" style="background: var(--color-card-bg); border-color: var(--color-border) !important;">
+                <div class="form-check mb-0">
+                    <input class="form-check-input opc-checkbox" type="checkbox" value="${op.id}" id="opc_${op.id}" ${estaChecked ? 'checked' : ''}>
+                    <label class="form-check-label fw-semibold text-wrap" for="opc_${op.id}" style="cursor:pointer; color: var(--color-text); font-size: 0.9rem;">
+                        ${op.nombre}
+                    </label>
+                </div>
+                <div class="d-flex align-items-center gap-2" style="width: 140px;">
+                    <span class="small text-muted" style="font-size: 0.75rem;">Cupos:</span>
+                    <input type="number" min="0" class="form-control form-control-sm cupo-input text-center" id="cupos_opc_${op.id}" placeholder="Ilimitado" value="${cuposVal}" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border);">
+                </div>
+            </div>
+        `;
     });
+    html += '</div>';
 
-    renderizarChipsOpciones();
+    container.innerHTML = html;
 }
 
 document.getElementById("convocatoria_posgrado")?.addEventListener("change", (e) => {
-    renderizarOpcionesPorPosgrado(e.target.value);
+    renderizarOpcionesPorPosgrado(e.target.value, [], false);
 });
 
 function toggleCamposPorTipo(tipo) {
@@ -827,6 +800,11 @@ function limpiarFormularioConvocatoria() {
     document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-bullhorn"></i> Nueva Convocatoria';
     document.getElementById("btnEliminarConvocatoria").style.display = "none";
     toggleCamposPorTipo();
+
+    const container = document.getElementById("contenedorOpcionesPosgrado");
+    if (container) {
+        container.innerHTML = '<p class="text-muted small mb-0"><i class="fa-solid fa-circle-info me-1"></i> Selecciona un posgrado para ver y gestionar sus especialidades.</p>';
+    }
 
     // Desmarcar todos los checkboxes del catálogo
     const checkboxes = document.querySelectorAll("#contenedorRequisitos .req-checkbox");
@@ -1006,7 +984,7 @@ async function editarConvocatoria(id) {
         setSingle("convocatoria_fechaResultados", conv.fechaResultados);
 
         // Renderizar opciones guardadas
-        renderizarOpcionesPorPosgrado(conv.posgrado_id, conv.opciones || []);
+        renderizarOpcionesPorPosgrado(conv.posgrado_id, conv.opciones || [], true);
 
         // Cargar requisitos desde tabla pivote
         try {
@@ -1085,11 +1063,18 @@ document.getElementById("formConvocatoria")?.addEventListener("submit", async (e
         });
     });
 
-    // Enviar las opciones con sus cupos recopiladas
-    const opciones = opcionesSeleccionadas.map(o => ({
-        idOpcionPosgrado: o.idOpcionPosgrado,
-        cupos: o.cupos
-    }));
+    // Enviar las opciones con sus cupos recopiladas desde los checkboxes marcados
+    const opciones = [];
+    const checkboxesOpciones = document.querySelectorAll("#contenedorOpcionesPosgrado .opc-checkbox:checked");
+    checkboxesOpciones.forEach(cb => {
+        const idOpc = parseInt(cb.value);
+        const inputCupos = document.getElementById(`cupos_opc_${idOpc}`);
+        const cuposVal = inputCupos && inputCupos.value ? parseInt(inputCupos.value) : null;
+        opciones.push({
+            idOpcionPosgrado: idOpc,
+            cupos: cuposVal
+        });
+    });
 
     const datosConvocatoria = { nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, tipo, modalidad, duracion, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, inicioCurso, finCurso, inicioExamen, finExamen, requisitos, opciones };
     const token = sessionStorage.getItem("token") || "";
