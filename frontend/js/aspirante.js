@@ -256,13 +256,13 @@ async function cargarStatsInicio() {
                 if (statExpStatus) {
                     if (soliData.estado === 'RECHAZADO') {
                         statExpStatus.innerText = typeof t === 'function' ? t('dash_exp_rechazado') : 'Expediente Rechazado';
-                        statExpStatus.style.color = '';
+                        statExpStatus.style.color = 'var(--color-danger)';
                     } else if (soliData.estado === 'APROBADO') {
                         statExpStatus.innerText = typeof t === 'function' ? t('dash_exp_aprobado') : 'Expediente Aprobado';
-                        statExpStatus.style.color = '';
+                        statExpStatus.style.color = 'var(--color-success)';
                     } else {
                         statExpStatus.innerText = typeof t === 'function' ? t('dash_exp_activo') : 'Expediente Activo';
-                        statExpStatus.style.color = '#10b981';
+                        statExpStatus.style.color = 'var(--color-success)';
                     }
                 }
                 if (statExpSub) {

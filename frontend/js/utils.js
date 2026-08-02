@@ -112,29 +112,44 @@ async function abrirModalCambiarPassword() {
     const usuario = JSON.parse(usuarioStr);
 
     const { value: formValues } = await Swal.fire({
-        title: `<i class="fa-solid fa-key" style="color: var(--color-primary, #8a1c24);"></i> <span style="color: var(--color-text);">Cambiar Contraseña</span>`,
-        background: 'var(--color-card-bg)',
-        color: 'var(--color-text)',
+        title: 'Cambiar contraseña',
+        showCloseButton: true,
+        customClass: {
+            popup: 'fb-style-modal'
+        },
         html: `
-            <div style="text-align: left; font-size: 14px; color: var(--color-text); margin-top: 10px;">
-                <p style="margin-bottom: 15px; color: var(--color-text-muted);">Por favor, ingresa tu contraseña actual y la nueva contraseña que deseas utilizar.</p>
+            <div style="text-align: left; font-size: 14px; margin-top: 14px;">
+                <p style="margin-bottom: 20px; color: var(--color-text-muted); font-size: 13px; line-height: 1.4;">
+                    Ingresa tu contraseña actual y define una nueva contraseña para mantener tu cuenta segura.
+                </p>
                 
-                <label style="font-weight: 600; margin-bottom: 5px; display: block; color: var(--color-text);">Contraseña Actual:</label>
-                <input id="swal-pass-actual" type="password" class="swal2-input" placeholder="••••••••" style="margin: 0 0 15px 0; width: 100%; box-sizing: border-box; border-radius: 8px; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border);">
+                <div style="margin-bottom: 16px;">
+                    <label style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block; color: var(--color-text);">Contraseña Actual</label>
+                    <input id="swal-pass-actual" type="password" placeholder="••••••••" 
+                        style="width: 100%; height: 42px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text); font-size: 14px; outline: none; box-sizing: border-box; transition: border-color 0.2s;"
+                        onfocus="this.style.borderColor='var(--color-primary, #8a1c24)'" onblur="this.style.borderColor='var(--color-border)'">
+                </div>
                 
-                <label style="font-weight: 600; margin-bottom: 5px; display: block; color: var(--color-text);">Nueva Contraseña:</label>
-                <input id="swal-pass-nueva" type="password" class="swal2-input" placeholder="••••••••" style="margin: 0 0 15px 0; width: 100%; box-sizing: border-box; border-radius: 8px; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border);">
+                <div style="margin-bottom: 16px;">
+                    <label style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block; color: var(--color-text);">Nueva Contraseña</label>
+                    <input id="swal-pass-nueva" type="password" placeholder="••••••••" 
+                        style="width: 100%; height: 42px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text); font-size: 14px; outline: none; box-sizing: border-box; transition: border-color 0.2s;"
+                        onfocus="this.style.borderColor='var(--color-primary, #8a1c24)'" onblur="this.style.borderColor='var(--color-border)'">
+                </div>
                 
-                <label style="font-weight: 600; margin-bottom: 5px; display: block; color: var(--color-text);">Confirmar Nueva Contraseña:</label>
-                <input id="swal-pass-confirm" type="password" class="swal2-input" placeholder="••••••••" style="margin: 0; width: 100%; box-sizing: border-box; border-radius: 8px; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border);">
+                <div style="margin-bottom: 5px;">
+                    <label style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block; color: var(--color-text);">Confirmar Nueva Contraseña</label>
+                    <input id="swal-pass-confirm" type="password" placeholder="••••••••" 
+                        style="width: 100%; height: 42px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text); font-size: 14px; outline: none; box-sizing: border-box; transition: border-color 0.2s;"
+                        onfocus="this.style.borderColor='var(--color-primary, #8a1c24)'" onblur="this.style.borderColor='var(--color-border)'">
+                </div>
             </div>
         `,
         focusConfirm: false,
         showCancelButton: true,
-        confirmButtonText: '<i class="fa-solid fa-floppy-disk"></i> Guardar Cambios',
+        confirmButtonText: 'Guardar cambios',
         cancelButtonText: 'Cancelar',
-        confirmButtonColor: 'var(--color-primary, #8a1c24)',
-        cancelButtonColor: '#64748b',
+        confirmButtonColor: 'var(--color-guinda, #8a1c24)',
         preConfirm: () => {
             const passActual = document.getElementById('swal-pass-actual').value;
             const passNueva = document.getElementById('swal-pass-nueva').value;

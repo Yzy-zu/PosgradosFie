@@ -4468,6 +4468,83 @@ body.dark-mode .doc-card-v2:hover {
 /* ==== MODAL DOCS DARK MODE OVERRIDES ==== */
 body.dark-mode .modal-doc-info-box,
 body.dark-mode .modal-doc-comments-box {
+    background: var(--color-bg);
+}
+
+/* ==== MODAL ESTILO FACEBOOK / META (MODERNO & ELEGANTE) ==== */
+.fb-style-modal.swal2-popup {
+    border-radius: 16px !important;
+    padding: 24px !important;
+    max-width: 480px !important;
+    background: var(--color-card-bg) !important;
+    color: var(--color-text) !important;
+    border: 1px solid var(--color-border) !important;
+    box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.3) !important;
+}
+
+.fb-style-modal .swal2-title {
+    padding: 0 0 14px 0 !important;
+    margin: 0 !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: var(--color-text) !important;
+    text-align: left !important;
+    border-bottom: 1px solid var(--color-border) !important;
+    width: 100% !important;
+}
+
+.fb-style-modal .swal2-html-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+}
+
+.fb-style-modal .swal2-actions {
+    margin-top: 24px !important;
+    padding-top: 16px !important;
+    border-top: 1px solid var(--color-border) !important;
+    width: 100% !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+}
+
+.fb-style-modal .swal2-confirm {
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    padding: 10px 20px !important;
+    box-shadow: none !important;
+}
+
+.fb-style-modal .swal2-cancel {
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    padding: 10px 20px !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    color: var(--color-text-muted) !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+.fb-style-modal .swal2-cancel:hover {
+    background: var(--color-bg) !important;
+    color: var(--color-text) !important;
+}
+
+.fb-style-modal .swal2-close {
+    color: var(--color-text-muted) !important;
+    font-size: 24px !important;
+    top: 18px !important;
+    right: 18px !important;
+}
+
+.fb-style-modal .swal2-close:hover {
+    color: var(--color-text) !important;
+}
+
+body.dark-mode .modal-doc-info-box,
+body.dark-mode .modal-doc-comments-box {
     background: var(--color-input-bg);
     border: 1px solid var(--color-border);
 }

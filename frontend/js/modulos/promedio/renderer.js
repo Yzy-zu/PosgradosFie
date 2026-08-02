@@ -69,12 +69,6 @@ const moduloPromedioRenderer = {
         } else if (esRechazado) {
             // 2. ESTADO RECHAZADO
             const promedioMostrar = (dictamen && dictamen.promedio !== null && dictamen.promedio !== undefined) ? dictamen.promedio : (soliData.promedioCapturado || soliData.promedio || 'N/A');
-            const obsHtml = (dictamen && dictamen.observaciones) ? `
-                <div style="margin-top: 20px; background: rgba(0,0,0,0.15); padding: 15px; border-radius: 8px;">
-                    <strong style="font-size: 13px; text-transform: uppercase; display: block; margin-bottom: 5px;">${typeof t === 'function' ? t('exam_obs_comite') : 'Motivo del Dictamen / Observaciones'}</strong>
-                    <span style="font-size: 14px;">${dictamen.observaciones}</span>
-                </div>
-            ` : '';
 
             container.innerHTML = `
                 <div class="status-banner status-rechazado" style="margin-bottom: 20px;">
@@ -88,23 +82,38 @@ const moduloPromedioRenderer = {
                     <div><span class="status-banner-badge" style="background: #ef4444; color: white;">${typeof t === 'function' ? t('doc_rechazado') : 'RECHAZADO'}</span></div>
                 </div>
 
-                <div style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white; padding: 25px; border-radius: 14px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);">
-                    <h4 style="margin: 0 0 15px 0; font-size: 20px; display: flex; align-items: center; gap: 10px; color: white;">
-                        <i class="fa-solid fa-circle-xmark" style="color: #fca5a5; font-size: 24px;"></i> ${typeof t === 'function' ? t('prom_no_valido_titulo') : 'Dictamen de Promedio No Válido'}
+                <div class="premium-panel" style="margin-bottom: 25px; position: relative; overflow: hidden; border-top: 4px solid #ef4444;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <span style="background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.25); padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-circle-xmark"></i> ${typeof t === 'function' ? t('doc_rechazado') : 'Dictamen No Válido'}
+                        </span>
+                    </div>
+
+                    <h4 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 800; color: var(--color-text); display: flex; align-items: center; gap: 10px;">
+                        <i class="fa-solid fa-circle-xmark" style="color: #ef4444;"></i> ${typeof t === 'function' ? t('prom_no_valido_titulo') : 'Dictamen de Promedio No Válido'}
                     </h4>
-                    <p style="margin-bottom: 20px; opacity: 0.9;">${typeof t === 'function' ? t('prom_no_valido_desc') : 'El comité académico ha auditado tu expediente y determinado que el promedio acreditado no cumple con el requisito estipulado para este programa.'}</p>
+                    <p style="margin-bottom: 20px; color: var(--color-text-muted); font-size: 14px; line-height: 1.5;">${typeof t === 'function' ? t('prom_no_valido_desc') : 'El comité académico ha auditado tu expediente y determinado que el promedio acreditado no cumple con el requisito estipulado para este programa.'}</p>
                     
-                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                        <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
-                            <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">${typeof t === 'function' ? t('prom_auditado') : 'Promedio Auditado'}</span>
-                            <strong style="font-size: 32px; display: block;">${promedioMostrar}</strong>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 16px 20px; border-radius: 12px; flex: 1; min-width: 160px;">
+                            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; color: var(--color-text-muted); margin-bottom: 6px;">${typeof t === 'function' ? t('prom_auditado') : 'Promedio Auditado'}</span>
+                            <strong style="font-size: 32px; font-weight: 800; color: var(--color-text); line-height: 1;">${promedioMostrar}</strong>
                         </div>
-                        <div style="background: rgba(255,255,255,0.2); padding: 15px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
-                            <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; opacity: 0.9; margin-bottom: 5px;">${typeof t === 'function' ? t('prom_dictamen') : 'Dictamen'}</span>
-                            <strong style="font-size: 28px; display: block;">${typeof t === 'function' ? t('prom_no_valido') : 'No Válido'}</strong>
+                        <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 16px 20px; border-radius: 12px; flex: 1; min-width: 160px;">
+                            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; color: var(--color-text-muted); margin-bottom: 6px;">${typeof t === 'function' ? t('prom_dictamen') : 'Dictamen'}</span>
+                            <div style="font-size: 20px; font-weight: 800; color: #ef4444; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-circle-xmark"></i> ${typeof t === 'function' ? t('prom_no_valido') : 'No Válido'}
+                            </div>
                         </div>
                     </div>
-                    ${obsHtml}
+                    ${dictamen && dictamen.observaciones ? `
+                    <div style="margin-top: 20px; background: var(--color-bg); border-left: 3px solid #ef4444; padding: 14px 18px; border-radius: 8px; border: 1px solid var(--color-border); border-left-width: 3px;">
+                        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 4px;">
+                            ${typeof t === 'function' ? t('exam_obs_comite') : 'Motivo del Dictamen / Observaciones'}
+                        </div>
+                        <div style="font-size: 14px; color: var(--color-text);">${dictamen.observaciones}</div>
+                    </div>
+                    ` : ''}
                 </div>
             `;
         } else {
