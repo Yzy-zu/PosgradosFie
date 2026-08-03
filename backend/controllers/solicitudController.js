@@ -453,7 +453,6 @@ const getSolicitudesActivas = async (req, res) => {
             LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
             LEFT JOIN programacion_examen pe ON pe.idSolicitud = s.id
             WHERE s.estado != 'CANCELADO'
-            GROUP BY s.id
             ORDER BY s.creadoEn DESC
         `;
         const [resultados] = await db.query(query);

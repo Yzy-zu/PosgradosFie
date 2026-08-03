@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Aspirantes — Posgrados FIE</title>
+    <title>Portal Aspirantes FIE</title>
     <meta name="description"
         content="Portal oficial de aspirantes para los posgrados de la Facultad de Ingeniería Eléctrica.">
     <link rel="shortcut icon" href="css/favico.png">
@@ -38,8 +38,7 @@
         <div class="sidebar-header">
             <div class="sidebar-logo" style="background: transparent;">
                 <img src="css/posgradofie.png" alt="Logo"
-                    style="width: 100%; height: 100%; object-fit: contain; cursor: pointer;"
-                    onclick="toggleSidebar()">
+                    style="width: 100%; height: 100%; object-fit: contain; cursor: pointer;" onclick="toggleSidebar()">
             </div>
             <div style="display: flex; flex-direction: column; justify-content: center; margin-left: 10px;">
                 <span class="text"
@@ -54,31 +53,36 @@
 
         <ul class="side-menu top">
             <li>
-                <a href="#inicio" onclick="switchView('inicio', this)" id="nav-inicio" title="Inicio" data-i18n-title="sb_inicio">
+                <a href="#inicio" onclick="switchView('inicio', this)" id="nav-inicio" title="Inicio"
+                    data-i18n-title="sb_inicio">
                     <i class="fa-solid fa-house"></i>
                     <span class="text" data-i18n="sb_inicio">Inicio</span>
                 </a>
             </li>
             <li>
-                <a href="#proceso" onclick="switchView('proceso', this)" id="nav-proceso" title="Proceso" data-i18n-title="sb_proceso">
+                <a href="#proceso" onclick="switchView('proceso', this)" id="nav-proceso" title="Proceso"
+                    data-i18n-title="sb_proceso">
                     <i class="fa-solid fa-chart-pie"></i>
                     <span class="text" data-i18n="sb_proceso">Proceso</span>
                 </a>
             </li>
             <li>
-                <a href="#convocatorias" onclick="switchView('convocatorias', this)" id="nav-convocatorias" title="Convocatorias" data-i18n-title="sb_convocatorias">
+                <a href="#convocatorias" onclick="switchView('convocatorias', this)" id="nav-convocatorias"
+                    title="Convocatorias" data-i18n-title="sb_convocatorias">
                     <i class="fa-solid fa-graduation-cap"></i>
                     <span class="text" data-i18n="sb_convocatorias">Convocatorias</span>
                 </a>
             </li>
             <li id="li-nav-documentos" style="display: none;">
-                <a href="#documentos" onclick="switchView('documentos', this)" id="nav-documentos" title="Documentos" data-i18n-title="sb_documentos">
+                <a href="#documentos" onclick="switchView('documentos', this)" id="nav-documentos" title="Documentos"
+                    data-i18n-title="sb_documentos">
                     <i class="fa-solid fa-folder-open"></i>
                     <span class="text" data-i18n="sb_documentos">Documentos</span>
                 </a>
             </li>
             <li id="li-nav-admision" style="display: none;">
-                <a href="#admision" onclick="switchView('admision', this)" id="nav-admision" title="Admisión" data-i18n-title="sb_admision">
+                <a href="#admision" onclick="switchView('admision', this)" id="nav-admision" title="Admisión"
+                    data-i18n-title="sb_admision">
                     <i class="fa-solid fa-clipboard-user"></i>
                     <span class="text" data-i18n="sb_admision">Admisión</span>
                 </a>
@@ -102,7 +106,8 @@
 
     <main class="main-content" style="position: relative;">
         <header class="topbar-modern">
-            <button class="btn-mobile-toggle" id="btn-mobile-sidebar-toggle" onclick="toggleSidebarMobile()" aria-label="Abrir menú">
+            <button class="btn-mobile-toggle" id="btn-mobile-sidebar-toggle" onclick="toggleSidebarMobile()"
+                aria-label="Abrir menú">
                 <i class="fa-solid fa-bars"></i>
             </button>
             <div class="topbar-greeting">
@@ -150,7 +155,8 @@
                                 <div class="messages-empty-state">
                                     <img src="css/umsnhLogo.png" alt="UMSNH"
                                         style="width: 140px; height: auto; opacity: 0.5; margin-bottom: 20px;">
-                                    <p data-i18n="tb_selecciona_msj"><strong>Selecciona un mensaje</strong><br>para ver su contenido aquí</p>
+                                    <p data-i18n="tb_selecciona_msj"><strong>Selecciona un mensaje</strong><br>para ver
+                                        su contenido aquí</p>
                                 </div>
                             </div>
                         </div>
@@ -355,11 +361,13 @@
             <div style="display: flex; gap: 25px; flex-wrap: wrap;">
                 <div class="premium-panel"
                     style="flex: 1; min-width: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
-                    <h3 data-i18n="dash_ruta_admision" style="margin-bottom: 25px; font-weight: 800; font-size: 24px;">Tu Ruta de Admisión</h3>
+                    <h3 data-i18n="dash_ruta_admision" style="margin-bottom: 25px; font-weight: 800; font-size: 24px;">
+                        Tu Ruta de Admisión</h3>
                     <div id="mapa-proceso-container" class="mapa-fondo">
                         <div
                             style="text-align: center; padding: 40px; color: white; font-size: 18px; font-weight: bold;">
-                            <i class="fa-solid fa-spinner fa-spin"></i> <span data-i18n="dash_cargando_ruta">Cargando tu ruta...</span>
+                            <i class="fa-solid fa-spinner fa-spin"></i> <span data-i18n="dash_cargando_ruta">Cargando tu
+                                ruta...</span>
                         </div>
                     </div>
                 </div>
@@ -554,7 +562,8 @@
 
 
         <!-- Modal de Revisión de Documento -->
-        <div id="modal-revision-doc" class="modal-overlay-modern" style="display: none;" onclick="if (event.target === this) cerrarModalDoc()">
+        <div id="modal-revision-doc" class="modal-overlay-modern" style="display: none;"
+            onclick="if (event.target === this) cerrarModalDoc()">
             <div class="modal-content-modern"
                 style="max-width: 600px; width: 92%; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
                 <div

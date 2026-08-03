@@ -1,6 +1,4 @@
-const URL_TUNEL_ADMIN = " https://open-zoos-kneel.loca.lt";
 const formulario = document.getElementById("loginForm");
-console.log(formulario);
 
 formulario.addEventListener("submit", async (e) => {
     e.preventDefault();

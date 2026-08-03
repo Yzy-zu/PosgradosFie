@@ -29,13 +29,18 @@ const obtenerDocente = async (req, res) => {
 };
 
 // Crear docente
+// Columnas reales de la tabla: idUsua, nombre, primerApellido, segundoApellido, cargo, especialidad, cubiculo
 const crearDocente = async (req, res) => {
     try {
-        const { nombre, correo, telefono, especialidad } = req.body;
+        const { idUsua, nombre, primerApellido, segundoApellido, cargo, especialidad, cubiculo } = req.body;
+
+        if (!idUsua || !nombre || !primerApellido) {
+            return res.status(400).json({ success: false, mensaje: 'idUsua, nombre y primerApellido son obligatorios.' });
+        }
 
         await db.query(
-            'INSERT INTO docente (nombre, correo, telefono, especialidad) VALUES (?, ?, ?, ?)',
-            [nombre, correo, telefono, especialidad]
+            'INSERT INTO docente (idUsua, nombre, primerApellido, segundoApellido, cargo, especialidad, cubiculo) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [idUsua, nombre, primerApellido, segundoApellido || '', cargo || '', especialidad || '', cubiculo || null]
         );
 
         return res.json({ success: true, mensaje: 'Docente creado correctamente' });
@@ -46,14 +51,15 @@ const crearDocente = async (req, res) => {
 };
 
 // Actualizar docente
+// :id en la ruta corresponde a idUsua (ID del usuario vinculado al docente)
 const actualizarDocente = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { nombre, correo, telefono, especialidad } = req.body;
+        const { id } = req.params; // idUsua
+        const { nombre, primerApellido, segundoApellido, cargo, especialidad, cubiculo } = req.body;
 
         await db.query(
-            'UPDATE docente SET nombre = ?, correo = ?, telefono = ?, especialidad = ? WHERE idDocente = ?',
-            [nombre, correo, telefono, especialidad, id]
+            'UPDATE docente SET nombre = ?, primerApellido = ?, segundoApellido = ?, cargo = ?, especialidad = ?, cubiculo = ? WHERE idUsua = ?',
+            [nombre, primerApellido, segundoApellido || '', cargo || '', especialidad || '', cubiculo || null, id]
         );
 
         return res.json({ success: true, mensaje: 'Docente actualizado correctamente' });
@@ -64,10 +70,11 @@ const actualizarDocente = async (req, res) => {
 };
 
 // Eliminar docente
+// :id en la ruta corresponde a idUsua
 const eliminarDocente = async (req, res) => {
     try {
-        const { id } = req.params;
-        await db.query('DELETE FROM docente WHERE idDocente = ?', [id]);
+        const { id } = req.params; // idUsua
+        await db.query('DELETE FROM docente WHERE idUsua = ?', [id]);
         return res.json({ success: true, mensaje: 'Docente eliminado correctamente' });
     } catch (error) {
         console.error('Error en eliminarDocente:', error);

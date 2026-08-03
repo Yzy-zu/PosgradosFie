@@ -159,13 +159,17 @@ getExpediente: async (req, res) => {
 
         `,[id]);
 
+        if (!expediente) {
+            return res.status(404).json({ ok: false, mensaje: 'Aspirante no encontrado o no tiene solicitudes registradas.' });
+        }
+
         res.json(expediente);
 
     } catch(error){
 
         console.error(error);
 
-        res.status(500).json(error);
+        res.status(500).json({ ok: false, mensaje: 'Error al obtener el expediente.' });
 
     }
 
