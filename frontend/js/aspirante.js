@@ -96,7 +96,8 @@ document.addEventListener("DOMContentLoaded", async function () {
                 cargarModalidadesAdmision();
 
                 // Cargar notificaciones al iniciar sesión
-                cargarNotificaciones();
+               cargarNotificaciones();
+               cargarDictamen();
 
                 // --- RESTAURAR SESION DE SOLICITUD (HIDRATACIÓN) ---
                 try {
@@ -2533,6 +2534,48 @@ document.addEventListener('DOMContentLoaded', () => {
         startAutoSlide();
     }
 });
+
+
+async function cargarDictamen() {
+
+    try {
+
+        const token = sessionStorage.getItem("token");
+
+        const res = await fetch("/api/aspirante/dictamen", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (!res.ok) return;
+
+        const dictamen = await res.json();
+
+        if (!dictamen) return;
+
+        // Si tienes un elemento donde mostrarlo
+        const estado = document.getElementById("estadoDictamen");
+        const observacion = document.getElementById("observacionDictamen");
+
+        if (estado) {
+            estado.textContent = dictamen.resultado || "Pendiente";
+        }
+
+        if (observacion) {
+            observacion.textContent =
+                dictamen.observacion || "Sin observaciones.";
+        }
+
+    } catch (error) {
+
+        console.error("Error al cargar dictamen:", error);
+
+    }
+
+}
+
+
 
 // ==========================================
 // FUNCIONES DEL PANEL LATERAL DE AJUSTES

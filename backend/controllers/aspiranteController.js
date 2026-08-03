@@ -319,11 +319,71 @@ const obtenerTodosLosExpedientes = async (req, res) => {
     }
 };
 
+// ==========================================
+// Obtener Dictamen del Aspirante
+// ==========================================
+const obtenerDictamen = async (req, res) => {
+
+    try {
+
+        const idUsuario = req.usuario.id;
+
+        const [[dictamen]] = await db.query(`
+            SELECT
+
+                rf.resultado,
+                rf.motivo,
+                rf.fechaPublicacion,
+
+                c.nombre AS programa
+
+            FROM aspirante a
+
+            INNER JOIN solicitud s
+                ON s.idAspi = a.id
+
+            INNER JOIN convocatorias c
+                ON c.id = s.idConvocatoria
+
+            LEFT JOIN resultado_final rf
+                ON rf.idSolicitud = s.id
+
+            WHERE a.idUsuario = ?
+
+            ORDER BY s.id DESC
+
+            LIMIT 1
+        `,[idUsuario]);
+
+        if(!dictamen){
+
+            return res.json({
+                resultado: null,
+                motivo: null
+            });
+
+        }
+
+        res.json(dictamen);
+
+    }catch(error){
+
+        console.error(error);
+
+        res.status(500).json({
+            mensaje:"Error al obtener el dictamen."
+        });
+
+    }
+
+};
+
 module.exports = {
     registrarAspirante,
     getAspiranteMe,
     obtenerAspirantes,
     obtenerAspirantePorId,
     obtenerExpediente,
-    obtenerTodosLosExpedientes
+    obtenerTodosLosExpedientes,
+    obtenerDictamen
 };

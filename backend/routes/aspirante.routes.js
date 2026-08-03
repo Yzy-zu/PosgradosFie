@@ -12,7 +12,8 @@ const {
     obtenerAspirantes,
     obtenerAspirantePorId,
     obtenerExpediente,
-    obtenerTodosLosExpedientes
+    obtenerTodosLosExpedientes,
+    obtenerDictamen
 } = require('../controllers/aspiranteController');
 
 // ==========================================
@@ -24,6 +25,9 @@ router.post('/registro', registrarAspirante);
 
 // Ruta autenticada: el aspirante obtiene sus propios datos usando el JWT (Bug 1 - Fix)
 router.get('/me', verificarToken, getAspiranteMe);
+
+// Obtener el dictamen del aspirante autenticado
+router.get('/dictamen', verificarToken, obtenerDictamen);
 
 // Rutas protegidas: requieren token para acceder
 router.get('/expedientes/todos', verificarToken, validarRol('ADMIN', 'DOCENTE', 'COORDINADOR', 'SECRETARIO'), obtenerTodosLosExpedientes);

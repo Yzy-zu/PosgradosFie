@@ -287,6 +287,7 @@ getEntrevistas: async (req, res) => {
 },
 
 
+
 // ==========================================
 // 7. Guardar Entrevista + Notificar Aspirante
 // ==========================================
@@ -446,7 +447,257 @@ Lugar: ${lugar}
 
     }
 
+},
+
+// ==========================================
+// 8. Obtener Dictámenes
+// ==========================================
+getDictamenes: async (req, res) => {
+
+    try {
+
+        const [dictamenes] = await db.query(`
+            SELECT
+                s.id AS idSolicitud,
+                a.id AS idAspirante,
+
+                CONCAT(
+                    a.nombre,' ',
+                    a.primerApellido,' ',
+                    IFNULL(a.segundoApellido,'')
+                ) AS nombre,
+
+                a.curp,
+
+                c.nombre AS programa,
+
+                s.estado,
+
+                rf.resultado,
+                rf.motivo,
+                rf.publicado,
+                rf.fechaPublicacion
+
+            FROM solicitud s
+
+            INNER JOIN aspirante a
+                ON s.idAspi = a.id
+
+            INNER JOIN convocatorias c
+                ON s.idConvocatoria = c.id
+
+            LEFT JOIN resultado_final rf
+                ON rf.idSolicitud = s.id
+
+            ORDER BY s.id DESC
+        `);
+
+        res.json(dictamenes);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            mensaje: "Error al obtener los dictámenes."
+        });
+
     }
+
+},
+
+
+// ==========================================
+// 9. Emitir Dictamen Final + Notificar
+// ==========================================
+emitirDictamen: async (req, res) => {
+
+    const { id } = req.params;
+    const { resultado, motivo } = req.body;
+
+    const resultadosPermitidos = [
+        'ACEPTADO',
+        'RECHAZADO',
+        'LISTA_ESPERA'
+    ];
+
+    if (!resultado || !resultadosPermitidos.includes(resultado)) {
+        return res.status(400).json({
+            ok: false,
+            mensaje: 'El resultado del dictamen no es válido.'
+        });
+    }
+
+    if (!motivo || !motivo.trim()) {
+        return res.status(400).json({
+            ok: false,
+            mensaje: 'Debe escribir una observación para el aspirante.'
+        });
+    }
+
+    let connection;
+
+    try {
+
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        // Obtener solicitud y usuario destinatario
+        const [solicitudes] = await connection.query(`
+            SELECT
+                s.id,
+                s.idAspi,
+                a.idUsuario,
+
+                CONCAT(
+                    a.nombre, ' ',
+                    a.primerApellido, ' ',
+                    IFNULL(a.segundoApellido, '')
+                ) AS nombreAspirante
+
+            FROM solicitud s
+
+            INNER JOIN aspirante a
+                ON s.idAspi = a.id
+
+            WHERE s.id = ?
+        `, [id]);
+
+        if (solicitudes.length === 0) {
+            await connection.rollback();
+
+            return res.status(404).json({
+                ok: false,
+                mensaje: 'Solicitud no encontrada.'
+            });
+        }
+
+        const aspirante = solicitudes[0];
+
+        if (!aspirante.idUsuario) {
+            await connection.rollback();
+
+            return res.status(400).json({
+                ok: false,
+                mensaje: 'El aspirante no tiene un usuario asociado.'
+            });
+        }
+
+        // Verificar si ya existe un resultado final
+        const [dictamenExistente] = await connection.query(`
+            SELECT id
+            FROM resultado_final
+            WHERE idSolicitud = ?
+        `, [id]);
+
+        if (dictamenExistente.length > 0) {
+
+            await connection.query(`
+                UPDATE resultado_final
+                SET
+                    resultado = ?,
+                    motivo = ?,
+                    publicado = 1,
+                    fechaPublicacion = NOW()
+                WHERE idSolicitud = ?
+            `, [
+                resultado,
+                motivo.trim(),
+                id
+            ]);
+
+        } else {
+
+            await connection.query(`
+                INSERT INTO resultado_final
+                (
+                    idSolicitud,
+                    resultado,
+                    motivo,
+                    publicado,
+                    fechaPublicacion
+                )
+                VALUES (?, ?, ?, 1, NOW())
+            `, [
+                id,
+                resultado,
+                motivo.trim()
+            ]);
+
+        }
+
+        const mensajeNotificacion = `
+Tu dictamen final ha sido publicado.
+
+Resultado: ${resultado.replace('_', ' ')}
+
+Observaciones:
+${motivo.trim()}
+        `.trim();
+
+        // Evitar duplicar notificaciones idénticas si se vuelve a editar
+        await connection.query(`
+            DELETE FROM notificaciones
+            WHERE nombre = 'Resultado de Admisión'
+              AND destino = 'individual'
+              AND idDestino = ?
+        `, [aspirante.idUsuario]);
+
+        await connection.query(`
+            INSERT INTO notificaciones
+            (
+                nombre,
+                mensaje,
+                destino,
+                activa,
+                rolRemitente,
+                nombreRemitente,
+                idDestino
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, [
+            'Resultado de Admisión',
+            mensajeNotificacion,
+            'individual',
+            1,
+            'COORDINADOR',
+            'Coordinación Posgrados',
+            aspirante.idUsuario
+        ]);
+
+        await connection.commit();
+
+        return res.json({
+            ok: true,
+            mensaje: 'Dictamen guardado y notificación enviada al aspirante.'
+        });
+
+    } catch (error) {
+
+        if (connection) {
+            await connection.rollback();
+        }
+
+        console.error('Error al emitir el dictamen:', error);
+
+        return res.status(500).json({
+            ok: false,
+            mensaje: 'Error al emitir el dictamen.',
+            error: error.message
+        });
+
+    } finally {
+
+        if (connection) {
+            connection.release();
+        }
+
+    }
+
+}
+
 };
+
+
 
 module.exports = coordinadorController;
