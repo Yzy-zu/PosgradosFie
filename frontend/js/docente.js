@@ -401,41 +401,10 @@ function actualizarEstadisticas() {
     });
 
     // Inyectar contadores numéricos en el dashboard
-    document.getElementById('stat-total').innerText = totalAspirantes;
-    document.getElementById('stat-revisados').innerText = revisadosCompleto;
-    document.getElementById('stat-incompletos').innerText = incompletos;
-    document.getElementById('stat-pendientes').innerText = pendientes;
-
-    // Actualizar leyenda de gráfica de documentos
-    document.getElementById('lbl-aprobados').innerText = docsAprobados;
-    document.getElementById('lbl-rechazados').innerText = docsRechazados;
-    document.getElementById('lbl-pendientes').innerText = docsPendientes;
-
-    // Calcular porcentajes para la gráfica circular (Pie Chart Conic-Gradient)
-    if (totalDocs > 0) {
-        let porcAprobado = (docsAprobados / totalDocs) * 100;
-        let porcRechazado = (docsRechazados / totalDocs) * 100;
-
-        let finAprobados = porcAprobado;
-        let finRechazados = finAprobados + porcRechazado;
-
-        const grafica = document.getElementById('grafica-pastel');
-        if (grafica) {
-            grafica.style.background = `conic-gradient(
-                #27ae60 0% ${finAprobados}%, 
-                #c0392b ${finAprobados}% ${finRechazados}%, 
-                #7f8c8d ${finRechazados}% 100%
-            )`;
-        }
-
-        const txtPorcentaje = document.getElementById('txt-porcentaje');
-        if (txtPorcentaje) {
-            txtPorcentaje.innerText = `${Math.round(porcAprobado)}%`;
-        }
-    } else {
-        const txtPorcentaje = document.getElementById('txt-porcentaje');
-        if (txtPorcentaje) txtPorcentaje.innerText = "0%";
-    }
+    if (document.getElementById('stat-total')) document.getElementById('stat-total').innerText = totalAspirantes;
+    if (document.getElementById('stat-revisados')) document.getElementById('stat-revisados').innerText = revisadosCompleto;
+    if (document.getElementById('stat-incompletos')) document.getElementById('stat-incompletos').innerText = incompletos;
+    if (document.getElementById('stat-pendientes')) document.getElementById('stat-pendientes').innerText = pendientes;
 }
 
 /**
@@ -1162,13 +1131,11 @@ function abrirModalPerfilDocente() {
                 </div>
             </div>
         </div>`,
-        showConfirmButton: true,
-        confirmButtonText: typeof t === 'function' ? t('docente_modal_cerrar') : 'Cerrar',
-        buttonsStyling: false,
+        showConfirmButton: false,
+        showCloseButton: true,
         width: '720px',
         customClass: {
             popup: 'pm-popup',
-            confirmButton: 'pm-btn-close',
             htmlContainer: 'pm-html-container'
         }
     });
