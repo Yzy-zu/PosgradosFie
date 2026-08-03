@@ -502,168 +502,195 @@ getDictamenes: async (req, res) => {
 
 },
 
+
 // ==========================================
-// 9. Emitir Dictamen Final
+// 9. Emitir Dictamen Final + Notificar
 // ==========================================
 emitirDictamen: async (req, res) => {
 
     const { id } = req.params;
+    const { resultado, motivo } = req.body;
 
-    const {
-        resultado,
-        motivo
-    } = req.body;
+    const resultadosPermitidos = [
+        'ACEPTADO',
+        'RECHAZADO',
+        'LISTA_ESPERA'
+    ];
+
+    if (!resultado || !resultadosPermitidos.includes(resultado)) {
+        return res.status(400).json({
+            ok: false,
+            mensaje: 'El resultado del dictamen no es válido.'
+        });
+    }
+
+    if (!motivo || !motivo.trim()) {
+        return res.status(400).json({
+            ok: false,
+            mensaje: 'Debe escribir una observación para el aspirante.'
+        });
+    }
+
+    let connection;
 
     try {
 
-        // Obtener datos del aspirante
-        const [solicitud] = await db.query(`
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        // Obtener solicitud y usuario destinatario
+        const [solicitudes] = await connection.query(`
             SELECT
                 s.id,
                 s.idAspi,
+                a.idUsuario,
+
                 CONCAT(
-                    a.nombre,' ',
-                    a.primerApellido,' ',
-                    IFNULL(a.segundoApellido,'')
-                ) AS nombre
+                    a.nombre, ' ',
+                    a.primerApellido, ' ',
+                    IFNULL(a.segundoApellido, '')
+                ) AS nombreAspirante
+
             FROM solicitud s
+
             INNER JOIN aspirante a
                 ON s.idAspi = a.id
-            WHERE s.id = ?
-        `,[id]);
 
-        if(solicitud.length===0){
+            WHERE s.id = ?
+        `, [id]);
+
+        if (solicitudes.length === 0) {
+            await connection.rollback();
 
             return res.status(404).json({
-                mensaje:"Solicitud no encontrada."
+                ok: false,
+                mensaje: 'Solicitud no encontrada.'
             });
-
         }
 
-        const aspirante=solicitud[0];
+        const aspirante = solicitudes[0];
 
-        // Verificar si ya existe un dictamen
-        const [existe]=await db.query(
+        if (!aspirante.idUsuario) {
+            await connection.rollback();
 
-            "SELECT id FROM resultado_final WHERE idSolicitud=?",
+            return res.status(400).json({
+                ok: false,
+                mensaje: 'El aspirante no tiene un usuario asociado.'
+            });
+        }
 
-            [id]
+        // Verificar si ya existe un resultado final
+        const [dictamenExistente] = await connection.query(`
+            SELECT id
+            FROM resultado_final
+            WHERE idSolicitud = ?
+        `, [id]);
 
-        );
+        if (dictamenExistente.length > 0) {
 
-        if(existe.length){
-
-            await db.query(`
+            await connection.query(`
                 UPDATE resultado_final
                 SET
-                    resultado=?,
-                    motivo=?,
-                    publicado=1,
-                    fechaPublicacion=NOW()
-                WHERE idSolicitud=?
-            `,[
+                    resultado = ?,
+                    motivo = ?,
+                    publicado = 1,
+                    fechaPublicacion = NOW()
+                WHERE idSolicitud = ?
+            `, [
                 resultado,
-                motivo,
+                motivo.trim(),
                 id
             ]);
 
-        }else{
+        } else {
 
-            await db.query(`
-                INSERT INTO resultado_final(
+            await connection.query(`
+                INSERT INTO resultado_final
+                (
                     idSolicitud,
                     resultado,
                     motivo,
                     publicado,
                     fechaPublicacion
                 )
-                VALUES(?,?,?,1,NOW())
-            `,[
+                VALUES (?, ?, ?, 1, NOW())
+            `, [
                 id,
                 resultado,
-                motivo
+                motivo.trim()
             ]);
 
         }
 
-        // Actualizar estado de la solicitud
-        await db.query(
-            "UPDATE solicitud SET estado=? WHERE id=?",
-            [resultado,id]
-        );
+        const mensajeNotificacion = `
+Tu dictamen final ha sido publicado.
 
-        // Crear notificación
-        await db.query(`
-            INSERT INTO notificaciones(
+Resultado: ${resultado.replace('_', ' ')}
 
+Observaciones:
+${motivo.trim()}
+        `.trim();
+
+        // Evitar duplicar notificaciones idénticas si se vuelve a editar
+        await connection.query(`
+            DELETE FROM notificaciones
+            WHERE nombre = 'Resultado de Admisión'
+              AND destino = 'individual'
+              AND idDestino = ?
+        `, [aspirante.idUsuario]);
+
+        await connection.query(`
+            INSERT INTO notificaciones
+            (
                 nombre,
-
                 mensaje,
-
                 destino,
-
                 activa,
-
                 rolRemitente,
-
                 nombreRemitente,
-
-                idDestino,
-
-                creado_en
-
+                idDestino
             )
-
-            VALUES(
-
-                ?,
-
-                ?,
-
-                'aspirante',
-
-                1,
-
-                'COORDINADOR',
-
-                'Coordinación',
-
-                ?,
-
-                NOW()
-
-            )
-        `,[
-
-            "Resultado de Admisión",
-
-            `Tu dictamen final ha sido publicado.\n\nResultado: ${resultado}`,
-
-            aspirante.idAspi
-
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, [
+            'Resultado de Admisión',
+            mensajeNotificacion,
+            'individual',
+            1,
+            'COORDINADOR',
+            'Coordinación Posgrados',
+            aspirante.idUsuario
         ]);
 
-        res.json({
+        await connection.commit();
 
-            ok:true,
-
-            mensaje:"Dictamen emitido correctamente."
-
+        return res.json({
+            ok: true,
+            mensaje: 'Dictamen guardado y notificación enviada al aspirante.'
         });
 
-    }catch(error){
+    } catch (error) {
 
-        console.error(error);
+        if (connection) {
+            await connection.rollback();
+        }
 
-        res.status(500).json({
+        console.error('Error al emitir el dictamen:', error);
 
-            mensaje:"Error al emitir el dictamen."
-
+        return res.status(500).json({
+            ok: false,
+            mensaje: 'Error al emitir el dictamen.',
+            error: error.message
         });
+
+    } finally {
+
+        if (connection) {
+            connection.release();
+        }
 
     }
 
-},
+}
 
 };
 
