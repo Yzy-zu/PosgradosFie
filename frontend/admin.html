@@ -327,71 +327,81 @@
 
                             <div class="text-start px-2" style="overflow-x: hidden; word-wrap: break-word;">
                                 <!-- Datos Personales -->
-                                <h6 class="text-muted small fw-bold mb-3 border-bottom pb-1"
-                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">
-                                    Datos Personales</h6>
-                                <div class="mb-3">
-                                    <div class="profile-label-premium">CURP</div>
-                                    <div class="profile-value-premium" id="perfil_curp">-</div>
+                                <div class="profile-section-title" style="margin-top: 0;">
+                                    <i class="fa-solid fa-user"></i> Datos Personales
                                 </div>
-                                <div class="mb-3">
-                                    <div class="profile-label-premium">TELÉFONO</div>
-                                    <div class="profile-value-premium" id="perfil_telefono">-</div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="profile-label-premium">NACIMIENTO</div>
-                                    <div class="profile-value-premium" id="perfil_nacimiento">-</div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="profile-label-premium">ESTADO CIVIL</div>
-                                    <div class="profile-value-premium" id="perfil_estadoCivil">-</div>
-                                </div>
-                                <div class="mb-4">
-                                    <div class="profile-label-premium">DIRECCIÓN</div>
-                                    <div class="profile-value-premium" id="perfil_direccion" style="line-height: 1.4;">-
+                                
+                                <div style="display: flex; gap: 10px;">
+                                    <div class="profile-info-card" style="flex: 1;">
+                                        <div class="profile-label-premium"><i class="fa-solid fa-id-card"></i> CURP</div>
+                                        <div class="profile-value-premium" id="perfil_curp" style="font-family: monospace;">-</div>
+                                    </div>
+                                    <div class="profile-info-card" style="flex: 1;">
+                                        <div class="profile-label-premium"><i class="fa-solid fa-phone"></i> Teléfono</div>
+                                        <div class="profile-value-premium" id="perfil_telefono">-</div>
                                     </div>
                                 </div>
 
-                                <!-- Datos Académicos -->
-                                <h6 class="text-muted small fw-bold mb-3 border-bottom pb-1"
-                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">
-                                    Antecedentes Académicos</h6>
-                                <div class="mb-3">
-                                    <div class="profile-label-premium">LICENCIATURA</div>
+                                <div style="display: flex; gap: 10px;">
+                                    <div class="profile-info-card" style="flex: 1;">
+                                        <div class="profile-label-premium"><i class="fa-regular fa-calendar-days"></i> Nacimiento</div>
+                                        <div class="profile-value-premium" id="perfil_nacimiento">-</div>
+                                    </div>
+                                    <div class="profile-info-card" style="flex: 1;">
+                                        <div class="profile-label-premium"><i class="fa-solid fa-ring"></i> Estado Civil</div>
+                                        <div class="profile-value-premium" id="perfil_estadoCivil">-</div>
+                                    </div>
+                                </div>
+
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium"><i class="fa-solid fa-location-dot"></i> Dirección</div>
+                                    <div class="profile-value-premium" id="perfil_direccion">-</div>
+                                </div>
+
+                                <!-- Antecedentes Académicos -->
+                                <div class="profile-section-title">
+                                    <i class="fa-solid fa-graduation-cap"></i> Antecedentes Académicos
+                                </div>
+
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium"><i class="fa-solid fa-user-graduate"></i> Licenciatura</div>
                                     <div class="profile-value-premium" id="perfil_licenciatura">-</div>
                                 </div>
-                                <div class="mb-3">
-                                    <div class="profile-label-premium">INSTITUCIÓN</div>
-                                    <div class="profile-value-premium" id="perfil_institucionLicenciatura"
-                                        style="line-height: 1.4;">-</div>
+
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium"><i class="fa-solid fa-building-columns"></i> Institución</div>
+                                    <div class="profile-value-premium" id="perfil_institucionLicenciatura">-</div>
                                 </div>
-                                <div class="row">
-                                    <div class="col-6 mb-3">
-                                        <div class="profile-label-premium">EGRESO</div>
+
+                                <div style="display: flex; gap: 10px;">
+                                    <div class="profile-info-card" style="flex: 1;">
+                                        <div class="profile-label-premium"><i class="fa-regular fa-calendar-check"></i> Egreso</div>
                                         <div class="profile-value-premium" id="perfil_fechaEgreso">-</div>
                                     </div>
-                                    <div class="col-6 mb-3">
-                                        <div class="profile-label-premium">TITULACIÓN</div>
+                                    <div class="profile-info-card" style="flex: 1;">
+                                        <div class="profile-label-premium"><i class="fa-solid fa-certificate"></i> Titulación</div>
                                         <div class="profile-value-premium" id="perfil_fechaTitulacion">-</div>
                                     </div>
                                 </div>
-                                <div class="mb-4">
-                                    <div class="profile-label-premium">PROMEDIO</div>
+
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium"><i class="fa-solid fa-award"></i> Promedio</div>
                                     <div class="profile-value-premium" id="perfil_promedio">-</div>
                                 </div>
 
-                                <!-- Otros Datos -->
-                                <h6 class="text-muted small fw-bold mb-3 border-bottom pb-1"
-                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">
-                                    Ocupación / Otros</h6>
-                                <div class="mb-3">
-                                    <div class="profile-label-premium">OCUPACIÓN</div>
+                                <!-- Ocupación / Otros -->
+                                <div class="profile-section-title">
+                                    <i class="fa-solid fa-briefcase"></i> Ocupación y Otros
+                                </div>
+
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium"><i class="fa-solid fa-user-tie"></i> Ocupación</div>
                                     <div class="profile-value-premium" id="perfil_ocupacion">-</div>
                                 </div>
-                                <div class="mb-1">
-                                    <div class="profile-label-premium">OTROS ESTUDIOS</div>
-                                    <div class="profile-value-premium" id="perfil_otrosEstudios"
-                                        style="line-height: 1.4;">-</div>
+
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium"><i class="fa-solid fa-book-open"></i> Otros Estudios</div>
+                                    <div class="profile-value-premium" id="perfil_otrosEstudios">-</div>
                                 </div>
                             </div>
                         </div>

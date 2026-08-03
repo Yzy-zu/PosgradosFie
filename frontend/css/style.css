@@ -182,6 +182,177 @@ html {
     box-shadow: 0 2px 8px rgba(138, 28, 36, 0.25);
 }
 
+/* Botones de Evaluación de Documentos */
+.btn-eval-aprobar {
+    padding: 10px 24px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.btn-eval-aprobar:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+}
+
+.btn-eval-aprobar.btn-confirming {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45) !important;
+    animation: pulseConfirm 0.8s infinite alternate ease-in-out;
+}
+
+@keyframes pulseConfirm {
+    from {
+        transform: scale(1);
+    }
+    to {
+        transform: scale(1.05);
+    }
+}
+
+.btn-eval-rechazar {
+    padding: 10px 24px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.btn-eval-rechazar:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+}
+
+/* Botones de acción en tarjetas de Exámenes, Cursos y Promedio */
+.card-action-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 36px;
+    padding: 0 6px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    outline: none;
+    text-decoration: none;
+}
+
+.card-action-btn.disabled,
+.card-action-btn:disabled {
+    background: var(--color-bg) !important;
+    color: var(--color-text-muted) !important;
+    border: 1px solid var(--color-border) !important;
+    opacity: 0.55 !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.card-action-btn-primary {
+    background: var(--color-primary);
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-action-btn-primary:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-action-btn-secondary {
+    background: var(--color-card-bg);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+}
+
+.card-action-btn-secondary:hover:not(:disabled) {
+    background: var(--color-bg);
+    border-color: var(--color-text-muted);
+}
+
+/* Botones para Modales Dinámicos */
+.modal-btn-primary {
+    padding: 10px 22px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.modal-btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.modal-btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.modal-btn-secondary {
+    padding: 10px 22px;
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.modal-btn-secondary:hover {
+    background: var(--color-bg);
+    color: var(--color-text);
+    border-color: var(--color-text-muted);
+}
+
 /* Estructura del Dashboard con Barra Lateral */
 .sidebar {
     width: 220px;
@@ -2928,6 +3099,59 @@ body.dark-mode .avatar-initials {
     color: var(--color-text);
     font-weight: 600;
     margin-bottom: 15px;
+}
+
+/* Tarjetas individuales para la información de perfil */
+.profile-section-title {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--color-primary);
+    margin: 22px 0 10px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-info-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    text-align: left;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.profile-info-card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.profile-info-card .profile-label-premium {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.profile-info-card .profile-value-premium {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 0;
+    line-height: 1.35;
+    word-break: break-word;
 }
 
 .doc-row-premium {

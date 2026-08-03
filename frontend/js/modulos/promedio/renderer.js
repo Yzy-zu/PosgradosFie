@@ -276,10 +276,10 @@ const moduloPromedioRenderer = {
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" onclick="cerrarModalDinamico()" class="btn-secondary" style="padding: 8px 16px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-card-bg); color: var(--color-text); font-weight: 600; cursor: pointer;">
+                    <button type="button" onclick="cerrarModalDinamico()" class="modal-btn-secondary">
                         Cancelar
                     </button>
-                    <button type="submit" class="btn-primary" style="padding: 8px 18px; border-radius: 8px; background: var(--color-primary); color: white; border: none; font-weight: 600; cursor: pointer;">
+                    <button type="submit" class="modal-btn-primary">
                         <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Dictamen
                     </button>
                 </div>
