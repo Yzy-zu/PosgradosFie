@@ -23,8 +23,22 @@ socket.on('actualizacionGlobal', () => {
                 .catch(e => console.error("Error validando estado de solicitud:", e));
         }
     } else if (currentHash === '#convocatorias') {
-        // BUG-01 Fix: cargarConvocatorias ahora existe como función real
-        cargarConvocatorias();
+        // Antes de renderizar la lista, verificar si ya hay solicitud activa.
+        // Si la hay, mantener la tarjeta de solicitud activa en lugar de sobreescribirla.
+        if (aspiranteData && aspiranteData.id) {
+            fetch(`/api/solicitud/activa/${aspiranteData.id}`)
+                .then(res => res.json())
+                .then(soliData => {
+                    if (soliData && soliData.existe) {
+                        hidratarUI(soliData); // Conservar la tarjeta de solicitud activa
+                    } else {
+                        cargarConvocatorias(); // Solo mostrar lista si no hay solicitud
+                    }
+                })
+                .catch(() => cargarConvocatorias()); // Fallback seguro
+        } else {
+            cargarConvocatorias();
+        }
     }
 });
 
@@ -2205,7 +2219,9 @@ const MODULOS_REGISTRY = {
             if (typeof moduloCurso !== 'undefined') moduloCurso.ejecutar(soliData, accion);
         }
     },
-    'VALIDAR_PROMEDIO': (soliData, accion) => typeof moduloPromedio !== 'undefined' && moduloPromedio.ejecutar(soliData, accion)
+    'VALIDAR_PROMEDIO': (soliData, accion) => typeof moduloPromedio !== 'undefined' && moduloPromedio.ejecutar(soliData, accion),
+    'SUBIR_COMPROBANTE_PAGO': (soliData, accion) => typeof moduloPago !== 'undefined' && moduloPago.ejecutar(soliData, accion),
+    'VERIFICAR_PAGO':         (soliData, accion) => typeof moduloPago !== 'undefined' && moduloPago.ejecutar(soliData, accion),
 };
 
 /**

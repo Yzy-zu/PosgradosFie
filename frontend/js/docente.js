@@ -10,7 +10,9 @@ const DOCENTE_MODULOS_REGISTRY = {
     'PROGRAMAR_CURSO': typeof moduloCurso !== 'undefined' ? moduloCurso : null,
     'CAPTURAR_RESULTADO_CURSO': typeof moduloCurso !== 'undefined' ? moduloCurso : null,
     'CAPTURAR_RESULTADO_PROPEDEUTICO': typeof moduloCurso !== 'undefined' ? moduloCurso : null,
-    'VALIDAR_PROMEDIO': typeof moduloPromedio !== 'undefined' ? moduloPromedio : null
+    'VALIDAR_PROMEDIO': typeof moduloPromedio !== 'undefined' ? moduloPromedio : null,
+    'SUBIR_COMPROBANTE_PAGO': typeof moduloPago !== 'undefined' ? moduloPago : null,
+    'VERIFICAR_PAGO': typeof moduloPago !== 'undefined' ? moduloPago : null
 };
 
 function abrirModalDinamico() {
@@ -251,6 +253,7 @@ async function cargarAspirantesAPI() {
 
                 return {
                     id: asp.id,
+                    idSolicitud: sol ? (sol.idSolicitud || sol.id) : null,
                     nombre: `${asp.nombre || ''} ${asp.primerApellido || ''} ${asp.segundoApellido || ''}`.trim() || (typeof t === 'function' ? t('docente_sin_nombre') : "Sin nombre"),
                     programa: sol ? sol.convocatoriaNombre : (typeof t === 'function' ? t('docente_sin_solicitud') : "Sin Solicitud"),
                     correo: asp.correo || (typeof t === 'function' ? t('docente_sin_correo') : "Sin correo"),
@@ -484,7 +487,7 @@ function renderizarListaAspirantes(lista) {
 /**
  * Abre el expediente del aspirante seleccionado en el panel de detalle derecho
  */
-function seleccionarAspirante(id) {
+async function seleccionarAspirante(id) {
     idAspiranteActivo = id;
 
     // Volver a renderizar la lista para actualizar el resaltado ".active"
@@ -522,15 +525,11 @@ function seleccionarAspirante(id) {
         badgeEstado.innerText = typeof t === 'function' ? t('docente_completos') : "Expediente Completo";
     }
 
-    // Ocultar previsualización de documentos previos
-    // cerrarVistaPrevia(); (No lo necesitamos ejecutar aquí porque ahora es modal y ya debería estar cerrado)
-
     // Rellenar cuadrícula de documentos
     const container = document.getElementById('docs-dinamicos-container');
     let html = '';
 
     asp.documentos.forEach(doc => {
-        let badgeHtml = '';
         let iconClass = 'fa-file-lines';
         let iconBg = '#e0e7ff';
         let iconColor = '#4338ca';
@@ -598,7 +597,172 @@ function seleccionarAspirante(id) {
         `;
     });
 
+    // Consultar si hay comprobante de pago subido
+    if (asp.idSolicitud) {
+        try {
+            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+            const resPago = await fetch(`/api/pagos/${asp.idSolicitud}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (resPago.ok) {
+                const pagoData = await resPago.json();
+                if (pagoData && pagoData.existe) {
+                    const est = pagoData.estado || 'PENDIENTE';
+                    let pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-clock" style="color: #f59e0b;"></i></span>`;
+                    if (est === 'APROBADO') {
+                        pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-circle-check" style="color: #10b981;"></i></span>`;
+                    } else if (est === 'RECHAZADO') {
+                        pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-circle-xmark" style="color: #ef4444;"></i></span>`;
+                    }
+
+                    html += `
+                        <div class="doc-card-v2" onclick="abrirModalEvaluacionPago(${asp.idSolicitud})" style="cursor: pointer; border-left: 4px solid #f59e0b;">
+                            <div class="doc-card-v2-header">
+                                <div class="doc-card-v2-icon" style="background: rgba(245,158,11,0.15); color: #f59e0b;">
+                                    <i class="fa-solid fa-receipt"></i>
+                                    ${pagoStatusIcon}
+                                </div>
+                                <div>
+                                    <div class="doc-card-v2-title">Comprobante de Pago</div>
+                                    <div class="doc-card-v2-date">${est === 'APROBADO' ? 'Pago Aprobado' : (est === 'RECHAZADO' ? 'Pago Rechazado' : 'Revisar Pago')}</div>
+                                </div>
+                            </div>
+                            <div class="doc-card-v2-footer">
+                                <span class="doc-action-ver">Ver Comprobante</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        } catch (e) {
+            console.error("Error cargando pago en seleccionarAspirante:", e);
+        }
+    }
+
     container.innerHTML = html;
+}
+
+async function abrirModalEvaluacionPago(idSolicitud) {
+    mostrarLoader();
+    try {
+        const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+        const res = await fetch(`/api/pagos/${idSolicitud}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        ocultarLoader();
+
+        if (!res.ok) {
+            Swal.fire('Error', 'No se pudieron obtener los datos del pago.', 'error');
+            return;
+        }
+
+        const pagoData = await res.json();
+        if (!pagoData || !pagoData.existe) {
+            Swal.fire('Información', 'El aspirante aún no ha subido comprobante de pago.', 'info');
+            return;
+        }
+
+        const urlCompleta = `/api/files/${pagoData.comprobante}?token=${token}`;
+        const est = pagoData.estado || 'PENDIENTE';
+        const estadoColor = { PENDIENTE: '#f59e0b', APROBADO: '#10b981', RECHAZADO: '#ef4444' };
+
+        const ext = (pagoData.comprobante || '').split('.').pop().toLowerCase();
+        let previewHtml = '';
+        if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+            previewHtml = `<img src="${urlCompleta}" style="max-width:100%;max-height:350px;display:block;margin:0 auto;border-radius:8px;object-fit:contain;">`;
+        } else {
+            previewHtml = `<iframe src="${urlCompleta}" width="100%" height="320px" style="border:none;border-radius:8px;"></iframe>`;
+        }
+
+        const modalHtml = `
+            <div style="text-align:left;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+                    <span style="background:${estadoColor[est]}20;color:${estadoColor[est]};font-weight:bold;padding:4px 12px;border-radius:12px;font-size:12px;text-transform:uppercase;">
+                        Estado: ${est}
+                    </span>
+                    ${pagoData.monto ? `<span style="font-weight:bold;color:var(--color-text);">Monto: $${pagoData.monto}</span>` : ''}
+                </div>
+                ${pagoData.referencia ? `<div style="font-size:13px;color:var(--color-text-muted);margin-bottom:10px;">Referencia: <strong>${pagoData.referencia}</strong></div>` : ''}
+                ${previewHtml}
+                ${pagoData.observaciones ? `<div style="margin-top:12px;padding:10px;background:rgba(239,68,68,0.1);border-left:3px solid #ef4444;font-size:13px;color:#ef4444;"><strong>Observaciones:</strong> ${pagoData.observaciones}</div>` : ''}
+            </div>
+        `;
+
+        Swal.fire({
+            title: 'Comprobante de Pago',
+            html: modalHtml,
+            width: '600px',
+            showCancelButton: true,
+            showDenyButton: est === 'PENDIENTE',
+            showConfirmButton: est === 'PENDIENTE',
+            confirmButtonText: '<i class="fa-solid fa-check"></i> Aprobar Pago',
+            confirmButtonColor: '#10b981',
+            denyButtonText: '<i class="fa-solid fa-xmark"></i> Rechazar Pago',
+            denyButtonColor: '#ef4444',
+            cancelButtonText: 'Cerrar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                verificarPagoDocente(idSolicitud, 'APROBADO');
+            } else if (result.isDenied) {
+                verificarPagoDocente(idSolicitud, 'RECHAZADO');
+            }
+        });
+    } catch (e) {
+        ocultarLoader();
+        console.error("Error en abrirModalEvaluacionPago:", e);
+    }
+}
+
+async function verificarPagoDocente(idSolicitud, estado) {
+    let observaciones = '';
+    if (estado === 'RECHAZADO') {
+        const { value: text, isConfirmed } = await Swal.fire({
+            title: 'Rechazar Comprobante de Pago',
+            input: 'textarea',
+            inputLabel: 'Motivo del rechazo',
+            inputPlaceholder: 'Indica por qué se rechaza el comprobante...',
+            showCancelButton: true,
+            confirmButtonText: 'Confirmar Rechazo',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#ef4444'
+        });
+        if (!isConfirmed) return;
+        observaciones = text || 'Comprobante no válido.';
+    }
+
+    mostrarLoader();
+    try {
+        const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+        const res = await fetch(`/api/pagos/verificar/${idSolicitud}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ decision: estado, estado, observaciones })
+        });
+        const data = await res.json();
+        ocultarLoader();
+
+        if (res.ok && data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Actualizado!',
+                text: data.mensaje || `El pago ha sido ${estado.toLowerCase()}.`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+            if (idAspiranteActivo) {
+                seleccionarAspirante(idAspiranteActivo);
+            }
+        } else {
+            Swal.fire('Error', data.mensaje || 'No se pudo actualizar el estado del pago.', 'error');
+        }
+    } catch (e) {
+        ocultarLoader();
+        console.error("Error en verificarPagoDocente:", e);
+        Swal.fire('Error', 'Ocurrió un error de conexión.', 'error');
+    }
 }
 
 // Variables globales para la evaluación en modal

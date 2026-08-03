@@ -1833,6 +1833,66 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
             document.getElementById("btnDescargarDocsSolicitud").style.display = "none";
         }
 
+        // ---- SECCIÓN COMPROBANTE DE PAGO ----
+        const contPago = document.getElementById("contenedorComprobantePago");
+        if (contPago) {
+            const resPago = await fetch(`/api/pagos/${idSolicitud}`, {
+                headers: { 'Authorization': `Bearer ${sessionStorage.getItem('token')}` }
+            });
+            if (resPago.ok) {
+                const pagoData = await resPago.json();
+                if (pagoData && pagoData.existe) {
+                    const estadoColor = { PENDIENTE: 'warning', APROBADO: 'success', RECHAZADO: 'danger' };
+                    const estadoIcono = { PENDIENTE: 'fa-clock', APROBADO: 'fa-circle-check', RECHAZADO: 'fa-circle-xmark' };
+                    const est = pagoData.estado || 'PENDIENTE';
+                    const token = sessionStorage.getItem('token');
+                    const urlComp = `/api/files/${pagoData.comprobante}?token=${token}`;
+
+                    const botonesAccion = est === 'PENDIENTE' ? `
+                        <div style="display:flex;gap:8px;margin-top:14px;">
+                            <button onclick="verificarPagoAdmin(${idSolicitud}, 'APROBADO')" class="btn btn-sm btn-outline-success" style="flex:1;padding:8px;">
+                                <i class="fa-solid fa-check me-1"></i> Aprobar pago
+                            </button>
+                            <button onclick="verificarPagoAdmin(${idSolicitud}, 'RECHAZADO')" class="btn btn-sm btn-outline-danger" style="flex:1;padding:8px;">
+                                <i class="fa-solid fa-xmark me-1"></i> Rechazar pago
+                            </button>
+                        </div>` : '';
+
+                    contPago.innerHTML = `
+                        <h6 style="font-size:0.85rem;font-weight:bold;color:var(--color-text-muted);margin:1.25rem 0 0.75rem;letter-spacing:0.5px;text-transform:uppercase;">
+                            Comprobante de Pago
+                        </h6>
+                        <div style="border:1px solid var(--color-border);border-radius:8px;overflow:hidden;">
+                            <div class="list-group-item d-flex justify-content-between align-items-center" style="background:transparent;border:none;padding:15px 20px;">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div style="width:40px;height:40px;border-radius:8px;background:rgba(245,158,11,0.1);color:#f59e0b;display:flex;justify-content:center;align-items:center;font-size:1.2rem;">
+                                        <i class="fa-solid fa-receipt"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold" style="color:var(--color-text);font-size:0.95rem;">Comprobante de pago</h6>
+                                        ${pagoData.referencia ? `<small class="text-muted">Ref: ${pagoData.referencia}</small>` : ''}
+                                        ${pagoData.monto ? `<small class="text-muted"> · $${pagoData.monto}</small>` : ''}
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-${estadoColor[est]} rounded-pill px-3 py-2 fw-semibold shadow-sm d-flex align-items-center gap-1 me-1">
+                                        <i class="fa-solid ${estadoIcono[est]}"></i> ${est}
+                                    </span>
+                                    <a href="${urlComp}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;" title="Ver comprobante">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            ${pagoData.observaciones ? `<div style="padding:0 20px 14px;font-size:13px;color:#ef4444;"><i class="fa-solid fa-triangle-exclamation me-1"></i>${pagoData.observaciones}</div>` : ''}
+                        </div>
+                        ${botonesAccion}`;
+                } else {
+                    contPago.innerHTML = '';
+                }
+            }
+        }
+        // ---- FIN SECCIÓN COMPROBANTE ----
+
     } catch (error) {
         console.error("Error al abrir detalle de solicitud:", error);
         Swal.fire('Error', 'No se pudieron cargar los detalles de la solicitud.', 'error');
@@ -1844,6 +1904,70 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
 function cerrarDetalleSolicitud() {
     document.getElementById("vistaDetalleSolicitud").style.display = "none";
     document.getElementById("vistaTablaSolicitudes").style.display = "block";
+}
+
+async function verificarPagoAdmin(idSolicitud, estado) {
+    let observaciones = '';
+    if (estado === 'RECHAZADO') {
+        const { value: text, isConfirmed } = await Swal.fire({
+            title: 'Rechazar Comprobante de Pago',
+            input: 'textarea',
+            inputLabel: 'Motivo del rechazo',
+            inputPlaceholder: 'Indica por qué se rechaza el comprobante...',
+            showCancelButton: true,
+            confirmButtonText: 'Confirmar Rechazo',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#ef4444'
+        });
+        if (!isConfirmed) return;
+        observaciones = text || 'Comprobante no válido.';
+    } else {
+        const result = await Swal.fire({
+            title: '¿Aprobar Comprobante de Pago?',
+            text: 'El aspirante podrá avanzar a la siguiente etapa de su proceso.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, Aprobar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#10b981'
+        });
+        if (!result.isConfirmed) return;
+    }
+
+    mostrarLoader();
+    try {
+        const res = await fetch(`/api/pagos/verificar/${idSolicitud}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ decision: estado, estado, observaciones })
+        });
+        const data = await res.json();
+        ocultarLoader();
+
+        if (res.ok && data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Actualizado!',
+                text: data.mensaje || `El pago ha sido ${estado.toLowerCase()}.`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+            // Recargar vista si conocemos idAspi o re-ejecutar abrirDetalleSolicitudAdmin
+            const sol = solicitudesGlobalesAdmin.find(s => s.idSolicitud === idSolicitud);
+            if (sol) {
+                abrirDetalleSolicitudAdmin(idSolicitud, sol.idAspi);
+            }
+        } else {
+            Swal.fire('Error', data.mensaje || 'No se pudo actualizar el estado del pago.', 'error');
+        }
+    } catch (e) {
+        ocultarLoader();
+        console.error("Error en verificarPagoAdmin:", e);
+        Swal.fire('Error', 'Ocurrió un error en la conexión.', 'error');
+    }
 }
 
 async function descargarDocumentosZipAdmin(nombreAspirante, documentos) {
