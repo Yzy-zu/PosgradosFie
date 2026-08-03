@@ -8,8 +8,11 @@ const validarRol = require('../middlewares/validarRol');
 const {
     subirDocumento,
     evaluarDocumento,
-    reemplazarDocumento
+    reemplazarDocumento,
+    getExploradorDocumentos
 } = require('../controllers/documentoController');
+
+router.get('/explorador', auth, validarRol('ADMIN', 'COORDINADOR', 'SECRETARIO'), getExploradorDocumentos);
 
 router.post('/', upload.single('archivo'), subirDocumento);
 

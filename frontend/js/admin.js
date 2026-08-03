@@ -13,6 +13,8 @@ socket.on('actualizacionGlobal', () => {
         if (typeof cargarAspirantes === 'function') cargarAspirantes();
     } else if (currentHash === 'solicitudes') {
         if (typeof cargarSolicitudesAdmin === 'function') cargarSolicitudesAdmin();
+    } else if (currentHash === 'documentos') {
+        if (typeof cargarExploradorDocumentos === 'function') cargarExploradorDocumentos();
     }
 });
 
@@ -31,6 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarSolicitudesAdmin(); // Inicializar panel de solicitudes
     cargarNotificacionesAdmin(); // Inicializar panel de notificaciones
     cargarCatalogoRequisitosUI(); // Inicializar catálogo de requisitos
+    cargarExploradorDocumentos(); // Inicializar explorador de documentos
     inicializarFlatpickr();
 
     // Router inicial: si no hay hash, lo ponemos en dashboard
@@ -1807,7 +1810,16 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
             });
             docsHtml += `</div>`;
             contDocs.innerHTML = docsHtml;
-            document.getElementById("btnDescargarDocsSolicitud").style.display = "block";
+
+            const docsDescargables = dataSolActiva.documentosSubidos.filter(d => d.estadoValidacion === 'APROBADO' || d.estadoValidacion === 'PENDIENTE');
+            const btnDescargar = document.getElementById("btnDescargarDocsSolicitud");
+
+            if (docsDescargables.length > 0) {
+                btnDescargar.style.display = "block";
+                btnDescargar.onclick = () => descargarDocumentosZipAdmin(sol.aspiranteNombre, docsDescargables);
+            } else {
+                btnDescargar.style.display = "none";
+            }
         } else {
             contDocs.innerHTML = `
                 <div class="text-center py-5">
@@ -1832,6 +1844,68 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
 function cerrarDetalleSolicitud() {
     document.getElementById("vistaDetalleSolicitud").style.display = "none";
     document.getElementById("vistaTablaSolicitudes").style.display = "block";
+}
+
+async function descargarDocumentosZipAdmin(nombreAspirante, documentos) {
+    if (typeof JSZip === "undefined") {
+        Swal.fire("Error", "La librería JSZip no se ha cargado correctamente.", "error");
+        return;
+    }
+
+    try {
+        mostrarLoader();
+        const zip = new JSZip();
+        const folder = zip.folder(`Expediente_${nombreAspirante.replace(/[^a-zA-Z0-9_-]/g, "_")}`);
+
+        let descargasExitosas = 0;
+
+        for (const doc of documentos) {
+            try {
+                const urlCompleta = doc.rutaArchivo.startsWith('http') ? doc.rutaArchivo : `/api/files/${doc.rutaArchivo.split('/').pop()}?token=${sessionStorage.getItem('token')}`;
+                const resp = await fetch(urlCompleta);
+                if (!resp.ok) continue;
+
+                const blob = await resp.blob();
+                
+                const ext = doc.rutaArchivo.includes('.') ? doc.rutaArchivo.split('.').pop() : 'pdf';
+                const nombreLimpio = (doc.requisitoNombre || 'documento').replace(/[^a-zA-Z0-9_-]/g, "_");
+                const nombreArchivo = `${nombreLimpio}_Intento${doc.intentos || 1}.${ext}`;
+
+                folder.file(nombreArchivo, blob);
+                descargasExitosas++;
+            } catch (err) {
+                console.error(`Error descargando ${doc.requisitoNombre}:`, err);
+            }
+        }
+
+        if (descargasExitosas === 0) {
+            Swal.fire("Atención", "No se pudieron obtener los archivos para comprimir.", "warning");
+            return;
+        }
+
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(zipBlob);
+        a.download = `Expediente_${nombreAspirante.replace(/[^a-zA-Z0-9_-]/g, "_")}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+
+        Swal.fire({
+            icon: 'success',
+            title: 'ZIP Generado',
+            text: `Se descargaron ${descargasExitosas} documento(s) comprimidos en un paquete ZIP.`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+
+    } catch (error) {
+        console.error("Error al generar ZIP:", error);
+        Swal.fire("Error", "No se pudo generar el archivo comprimido.", "error");
+    } finally {
+        ocultarLoader();
+    }
 }
 
 async function evaluarDocumentoAdmin(idDocumento, estadoValidacion, idSolicitud, idAspi) {
@@ -2782,3 +2856,158 @@ async function cambiarEstadoOpcion(opcion) {
         Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error en la conexión.' });
     }
 }
+
+/* =========================================================
+   MÓDULO DE DOCUMENTOS (EXPLORADOR)
+========================================================= */
+
+let exploradorDatos = [];
+let exploradorCurrentPath = [];
+
+async function cargarExploradorDocumentos() {
+    const grid = document.getElementById('exploradorGrid');
+    if (!grid) return;
+    
+    try {
+        mostrarLoader();
+        const token = sessionStorage.getItem("token") || "";
+        const respuesta = await fetch('/api/documentos/explorador', {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        
+        if (respuesta.status === 404 || respuesta.status === 401 || respuesta.status === 403) {
+            console.error("Error de permisos o endpoint no encontrado");
+            return;
+        }
+
+        const data = await respuesta.json();
+        if (data.success) {
+            exploradorDatos = data.documentos;
+            exploradorIrRaiz();
+        } else {
+            console.error(data.mensaje);
+        }
+    } catch(err) {
+        console.error("Error al cargar explorador de documentos:", err);
+    } finally {
+        ocultarLoader();
+    }
+}
+
+window.cargarExploradorDocumentos = cargarExploradorDocumentos;
+
+function exploradorIrRaiz() {
+    exploradorCurrentPath = [];
+    renderExplorador();
+}
+window.exploradorIrRaiz = exploradorIrRaiz;
+
+function exploradorEntrarDirectorio(tipo, valor, nombreAMostrar) {
+    exploradorCurrentPath.push({ tipo, valor, nombreAMostrar });
+    renderExplorador();
+}
+window.exploradorEntrarDirectorio = exploradorEntrarDirectorio;
+
+function exploradorIrNivel(index) {
+    if (index === -1) {
+        exploradorIrRaiz();
+    } else {
+        exploradorCurrentPath = exploradorCurrentPath.slice(0, index + 1);
+        renderExplorador();
+    }
+}
+window.exploradorIrNivel = exploradorIrNivel;
+
+function renderExplorador() {
+    const grid = document.getElementById('exploradorGrid');
+    const breadcrumbs = document.getElementById('docBreadcrumbs');
+    if(!grid || !breadcrumbs) return;
+
+    // 1. Render Breadcrumbs
+    let breadcrumbsHTML = `<span class="breadcrumb-item" style="cursor: pointer; color: var(--color-primary);" onclick="exploradorIrNivel(-1)"><i class="fa-solid fa-house me-2"></i>Inicio</span>`;
+    
+    exploradorCurrentPath.forEach((p, idx) => {
+        const isLast = idx === exploradorCurrentPath.length - 1;
+        breadcrumbsHTML += `<span class="breadcrumb-item ${isLast ? 'active fw-bold' : ''}" style="color: ${isLast ? 'var(--color-text)' : 'var(--color-primary)'}; ${!isLast ? 'cursor: pointer;' : ''}" ${!isLast ? `onclick="exploradorIrNivel(${idx})"` : ''}>${p.nombreAMostrar}</span>`;
+    });
+    breadcrumbs.innerHTML = breadcrumbsHTML;
+
+    // 2. Filtrar datos
+    let itemsHTML = '';
+
+    if (exploradorCurrentPath.length === 0) {
+        // Nivel 0: Agrupar por Programa
+        const programas = [...new Set(exploradorDatos.map(d => d.programa))];
+        if(programas.length === 0) {
+            itemsHTML = `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay documentos disponibles en el sistema.</p></div>`;
+        }
+        programas.forEach(prog => {
+            itemsHTML += `
+                <div class="explorer-folder" onclick="exploradorEntrarDirectorio('programa', '${prog}', '${prog}')">
+                    <i class="fa-solid fa-folder explorer-icon"></i>
+                    <span class="explorer-name">${prog}</span>
+                </div>
+            `;
+        });
+    } else if (exploradorCurrentPath.length === 1) {
+        // Nivel 1: Agrupar por Aspirante dentro del programa
+        const programaSeleccionado = exploradorCurrentPath[0].valor;
+        const docsPrograma = exploradorDatos.filter(d => d.programa === programaSeleccionado);
+        
+        const aspirantesMap = new Map();
+        docsPrograma.forEach(d => {
+            if(!aspirantesMap.has(d.aspiranteId)) {
+                aspirantesMap.set(d.aspiranteId, { id: d.aspiranteId, nombre: d.aspiranteNombreCompleto });
+            }
+        });
+
+        if(aspirantesMap.size === 0) {
+            itemsHTML = `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay aspirantes en este programa.</p></div>`;
+        }
+
+        aspirantesMap.forEach(aspi => {
+            itemsHTML += `
+                <div class="explorer-folder" onclick="exploradorEntrarDirectorio('aspirante', ${aspi.id}, '${aspi.nombre}')">
+                    <i class="fa-solid fa-user-graduate explorer-icon" style="color: #4cc9f0;"></i>
+                    <span class="explorer-name">${aspi.nombre}</span>
+                </div>
+            `;
+        });
+    } else if (exploradorCurrentPath.length === 2) {
+        // Nivel 2: Mostrar Documentos del aspirante
+        const programaSeleccionado = exploradorCurrentPath[0].valor;
+        const aspiranteSeleccionado = exploradorCurrentPath[1].valor;
+        const documentos = exploradorDatos.filter(d => d.programa === programaSeleccionado && d.aspiranteId === aspiranteSeleccionado);
+
+        if(documentos.length === 0) {
+            itemsHTML = `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay documentos para este aspirante.</p></div>`;
+        }
+
+        documentos.forEach(doc => {
+            let badgeHtml = '';
+            let bgClass = 'bg-secondary';
+            if(doc.estadoValidacion === 'PENDIENTE') bgClass = 'bg-warning text-dark';
+            else if(doc.estadoValidacion === 'APROBADO') bgClass = 'bg-success';
+            else if(doc.estadoValidacion === 'RECHAZADO') bgClass = 'bg-danger';
+
+            badgeHtml = `<span class="badge ${bgClass} mt-2" style="font-size:0.7rem">${doc.estadoValidacion}</span>`;
+
+            itemsHTML += `
+                <div class="explorer-file" onclick="verDocumentoExplorer('${doc.rutaArchivo}')">
+                    <i class="fa-solid fa-file-pdf explorer-icon"></i>
+                    <span class="explorer-name" title="${doc.requisitoNombre}">${doc.requisitoNombre}</span>
+                    ${badgeHtml}
+                </div>
+            `;
+        });
+    }
+
+    grid.innerHTML = itemsHTML;
+}
+
+window.verDocumentoExplorer = function(ruta) {
+    const url = `/uploads/${ruta}`;
+    window.open(url, '_blank');
+};
