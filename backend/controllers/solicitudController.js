@@ -141,6 +141,28 @@ const cancelarSolicitud = async (req, res) => {
     }
 };
 
+// Actualizar el estado de la solicitud (Aprobar/Rechazar)
+const actualizarEstadoSolicitud = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { estado } = req.body;
+        
+        if (!['APROBADO', 'RECHAZADO', 'EN_REVISION', 'PENDIENTE', 'CANCELADO'].includes(estado)) {
+            return res.status(400).json({ mensaje: 'Estado inválido.' });
+        }
+
+        await db.query("UPDATE solicitud SET estado = ? WHERE id = ?", [estado, id]);
+        
+        // Emitir evento global de actualización
+        req.app.get('io').emit('actualizacionGlobal');
+        
+        return res.status(200).json({ success: true, mensaje: `Solicitud marcada como ${estado} exitosamente.` });
+    } catch (error) {
+        console.error('Error en actualizarEstadoSolicitud:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
+    }
+};
+
 // Actualizar la modalidad seleccionada
 const actualizarModalidad = async (req, res) => {
     try {
@@ -520,6 +542,7 @@ module.exports = {
     getSolicitudesPorModalidad,
     getSolicitudesPorModalidadCodigo,
     getSolicitudesActivas,
-    getMapaProceso
+    getMapaProceso,
+    actualizarEstadoSolicitud
 };
 

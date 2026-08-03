@@ -11,6 +11,8 @@ socket.on('actualizacionGlobal', () => {
         if (typeof cargarConvocatorias === 'function') cargarConvocatorias();
     } else if (currentHash === 'aspirantes') {
         if (typeof cargarAspirantes === 'function') cargarAspirantes();
+    } else if (currentHash === 'solicitudes') {
+        if (typeof cargarSolicitudesAdmin === 'function') cargarSolicitudesAdmin();
     }
 });
 
@@ -22,9 +24,11 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarDashboard();
     cargarUsuarios();
     cargarConvocatorias(); // Inicializar panel de convocatorias
+    cargarPosgradosAdmin(); // Inicializar tarjetas de posgrado
     cargarPosgradosEnSelect();
     cargarOpcionesPosgradoGlobal();
     cargarAspirantes();
+    cargarSolicitudesAdmin(); // Inicializar panel de solicitudes
     cargarNotificacionesAdmin(); // Inicializar panel de notificaciones
     cargarCatalogoRequisitosUI(); // Inicializar catálogo de requisitos
     inicializarFlatpickr();
@@ -1586,6 +1590,302 @@ window.filtrarTablaAspirantesUI = function () {
 };
 
 // ==========================================
+// MÓDULO SOLICITUDES
+// ==========================================
+
+let solicitudesGlobalesAdmin = [];
+
+async function cargarSolicitudesAdmin() {
+    const totalSolicitudes = document.getElementById("totalSolicitudes");
+    const tbody = document.getElementById("tablaSolicitudes");
+    if (!tbody) return;
+
+    mostrarLoader();
+    try {
+        const respuesta = await fetch("/api/solicitud/activas");
+
+        if (!respuesta.ok) throw new Error("Endpoint no disponible");
+
+        solicitudesGlobalesAdmin = await respuesta.json();
+        
+        if (totalSolicitudes) {
+            totalSolicitudes.textContent = solicitudesGlobalesAdmin.length || 0;
+        }
+
+        renderizarTablaSolicitudes();
+    } catch (error) {
+        console.error("Error al cargar solicitudes:", error);
+        tbody.innerHTML = "<tr><td colspan='5' style='text-align: center; color: var(--color-text-muted); padding: 25px;'>No se pudieron cargar las solicitudes.</td></tr>";
+    } finally {
+        ocultarLoader();
+    }
+}
+
+function renderizarTablaSolicitudes() {
+    const tbody = document.getElementById("tablaSolicitudes");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    const filtroTexto = (document.getElementById("filtro-solicitudes-texto")?.value || "").toLowerCase();
+    const filtroEstado = (document.getElementById("filtro-solicitudes-estado")?.value || "");
+    const filtroPrograma = (document.getElementById("filtro-solicitudes-programa")?.value || "");
+
+    const filtradas = (solicitudesGlobalesAdmin || []).filter(sol => {
+        const nombre = (sol.aspiranteNombre || "").toLowerCase();
+        const correo = (sol.correo || "").toLowerCase();
+        const programa = (sol.programa || "").toLowerCase();
+        const estado = sol.estadoSolicitud || "";
+
+        let matchTexto = true;
+        if (filtroTexto) {
+            matchTexto = nombre.includes(filtroTexto) || correo.includes(filtroTexto) || programa.includes(filtroTexto);
+        }
+
+        let matchEstado = true;
+        if (filtroEstado) {
+            matchEstado = estado === filtroEstado;
+        }
+
+        let matchPrograma = true;
+        if (filtroPrograma) {
+            matchPrograma = programa.includes(filtroPrograma.toLowerCase());
+        }
+
+        return matchTexto && matchEstado && matchPrograma;
+    });
+
+    if (filtradas.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='5' style='text-align: center; color: var(--color-text-muted); padding: 25px;'>No hay solicitudes que coincidan con los filtros.</td></tr>";
+        return;
+    }
+
+    filtradas.forEach(sol => {
+        const tr = document.createElement("tr");
+        tr.style.borderBottom = "1px solid var(--color-border)";
+        tr.style.transition = "background 0.2s";
+        tr.onmouseover = function () { this.style.background = 'var(--color-bg)'; };
+        tr.onmouseout = function () { this.style.background = 'transparent'; };
+
+        let colorEstado = "secondary";
+        let iconoEstado = "fa-circle-question";
+        if (sol.estadoSolicitud === "APROBADO") { colorEstado = "success"; iconoEstado = "fa-check-circle"; }
+        else if (sol.estadoSolicitud === "RECHAZADO") { colorEstado = "danger"; iconoEstado = "fa-times-circle"; }
+        else if (sol.estadoSolicitud === "EN_REVISION") { colorEstado = "warning"; iconoEstado = "fa-magnifying-glass"; }
+        else if (sol.estadoSolicitud === "PENDIENTE") { colorEstado = "info"; iconoEstado = "fa-clock"; }
+
+        tr.style.cursor = "pointer";
+        tr.onclick = () => abrirDetalleSolicitudAdmin(sol.idSolicitud, sol.idAspi);
+
+        tr.innerHTML = `
+            <td style="padding: 14px 15px; vertical-align: middle;">
+                <strong style="color: var(--color-text); font-size: 0.95rem; display: block;">${sol.aspiranteNombre}</strong>
+                <small style="font-size: 0.8rem; color: var(--color-text-muted); display: block; margin-top: 3px;">
+                    <i class="fa-regular fa-envelope me-1" style="color: var(--color-primary);"></i>${sol.correo}
+                </small>
+            </td>
+            <td style="padding: 14px 15px; vertical-align: middle;">
+                <div style="font-size: 0.88rem; font-weight: 600; color: var(--color-text);">
+                    ${sol.programa}
+                </div>
+                ${sol.opcionNombre ? `<div style="font-size: 0.78rem; color: var(--color-text-muted); margin-top: 2px;">${sol.opcionNombre}</div>` : ''}
+            </td>
+            <td style="padding: 14px 15px; vertical-align: middle;">
+                <div style="font-size: 0.85rem; font-weight: 600; color: var(--color-text);">
+                    ${sol.modalidadNombre || 'Sin Modalidad'}
+                </div>
+                <div style="font-size: 0.78rem; color: var(--color-text-muted); margin-top: 2px;">
+                    ${sol.etapaNombre || 'Sin Etapa'}
+                </div>
+            </td>
+            <td style="padding: 14px 15px; vertical-align: middle;">
+                <span class="soft-badge soft-badge-${colorEstado}" style="padding: 6px 12px; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid ${iconoEstado}"></i> ${sol.estadoSolicitud}
+                </span>
+            </td>
+            <td style="padding: 14px 15px; text-align: center; vertical-align: middle;">
+                <button onclick="event.stopPropagation(); abrirDetalleSolicitudAdmin(${sol.idSolicitud}, ${sol.idAspi});" title="Ver detalles" style="background: transparent; border: none; color: var(--color-primary); font-size: 1.25rem; cursor: pointer; padding: 6px 10px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.15)'" onmouseout="this.style.background='transparent'">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+window.filtrarTablaSolicitudesUI = function () {
+    renderizarTablaSolicitudes();
+};
+
+async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
+    mostrarLoader();
+    try {
+        const sol = solicitudesGlobalesAdmin.find(s => s.idSolicitud === idSolicitud);
+        if(!sol) throw new Error("Solicitud no encontrada en memoria.");
+
+        // Ocultar tabla, mostrar detalle
+        document.getElementById("vistaTablaSolicitudes").style.display = "none";
+        document.getElementById("vistaDetalleSolicitud").style.display = "block";
+
+        // Llenar datos básicos
+        const iniciales = (sol.aspiranteNombre || "A").substring(0, 2).toUpperCase();
+        document.getElementById("solDet_avatar").textContent = iniciales;
+        document.getElementById("solDet_nombreCompleto").textContent = sol.aspiranteNombre;
+        document.getElementById("solDet_correo").textContent = sol.correo;
+
+        let colorEstado = "secondary";
+        if (sol.estadoSolicitud === "APROBADO") colorEstado = "success";
+        else if (sol.estadoSolicitud === "RECHAZADO") colorEstado = "danger";
+        else if (sol.estadoSolicitud === "EN_REVISION") colorEstado = "warning";
+        else if (sol.estadoSolicitud === "PENDIENTE") colorEstado = "info";
+
+        const badgeEstado = document.getElementById("solDet_estado");
+        badgeEstado.className = `soft-badge soft-badge-${colorEstado} mb-4 d-inline-block`;
+        badgeEstado.textContent = sol.estadoSolicitud;
+
+        document.getElementById("solDet_programa").textContent = sol.programa || '-';
+        document.getElementById("solDet_opcion").textContent = sol.opcionNombre || '-';
+        document.getElementById("solDet_modalidad").textContent = sol.modalidadNombre || '-';
+        document.getElementById("solDet_etapa").textContent = sol.etapaNombre || 'Sin Etapa';
+
+        // Obtener documentos de la solicitud
+        const respDocs = await fetch(`/api/solicitud/activa/${idAspi}`, {
+            headers: {
+                'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+            }
+        });
+        
+        const contDocs = document.getElementById("contenedorDocumentosSolicitud");
+
+        if (!respDocs.ok) {
+            contDocs.innerHTML = `<div class="alert alert-warning"><i class="fa-solid fa-triangle-exclamation me-2"></i>No se pudieron cargar los documentos.</div>`;
+            return;
+        }
+
+        const dataSolActiva = await respDocs.json();
+        
+        if (dataSolActiva && dataSolActiva.existe && dataSolActiva.documentosSubidos && dataSolActiva.documentosSubidos.length > 0) {
+            let docsHtml = `<div class="list-group list-group-flush mt-3" style="border-radius: 8px; border: 1px solid var(--color-border); overflow: hidden;">`;
+            
+            dataSolActiva.documentosSubidos.forEach(doc => {
+                let badgeClass = "secondary";
+                let textStatus = "Pendiente";
+                let iconStatus = "fa-clock";
+
+                if (doc.estadoValidacion === "APROBADO") { badgeClass = "success"; textStatus = "Aprobado"; iconStatus = "fa-check-circle"; }
+                else if (doc.estadoValidacion === "RECHAZADO") { badgeClass = "danger"; textStatus = "Rechazado"; iconStatus = "fa-times-circle"; }
+                
+                const urlCompleta = doc.rutaArchivo.startsWith('http') ? doc.rutaArchivo : `/api/files/${doc.rutaArchivo.split('/').pop()}?token=${sessionStorage.getItem('token')}`;
+
+                docsHtml += `
+                    <div class="list-group-item d-flex justify-content-between align-items-center" style="background: transparent; border-color: var(--color-border); padding: 15px 20px;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(59,130,246,0.1); color: var(--color-primary); display: flex; justify-content: center; align-items: center; font-size: 1.2rem;">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold" style="color: var(--color-text); font-size: 0.95rem;">${doc.requisitoNombre || 'Documento'}</h6>
+                                <small class="text-muted" style="font-size: 0.8rem;">Intento #${doc.intentos}</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-${badgeClass} rounded-pill px-3 py-2 fw-semibold shadow-sm d-flex align-items-center gap-1 me-1">
+                                <i class="fa-solid ${iconStatus}"></i> ${textStatus}
+                            </span>
+                            <button onclick="evaluarDocumentoAdmin(${doc.idDocumento || doc.id}, 'APROBADO', ${idSolicitud}, ${idAspi})" class="btn btn-sm btn-outline-success rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Aprobar Documento">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                            <button onclick="evaluarDocumentoAdmin(${doc.idDocumento || doc.id}, 'RECHAZADO', ${idSolicitud}, ${idAspi})" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Rechazar Documento">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                            <a href="${urlCompleta}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Ver Documento">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+            docsHtml += `</div>`;
+            contDocs.innerHTML = docsHtml;
+            document.getElementById("btnDescargarDocsSolicitud").style.display = "block";
+        } else {
+            contDocs.innerHTML = `
+                <div class="text-center py-5">
+                    <div style="font-size: 3rem; color: var(--color-border); margin-bottom: 15px;">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <h5 style="color: var(--color-text-muted); font-weight: 600;">Sin Documentos</h5>
+                    <p style="color: var(--color-text-muted); font-size: 0.9rem;">El aspirante aún no ha subido documentos para esta solicitud.</p>
+                </div>
+            `;
+            document.getElementById("btnDescargarDocsSolicitud").style.display = "none";
+        }
+
+    } catch (error) {
+        console.error("Error al abrir detalle de solicitud:", error);
+        Swal.fire('Error', 'No se pudieron cargar los detalles de la solicitud.', 'error');
+    } finally {
+        ocultarLoader();
+    }
+}
+
+function cerrarDetalleSolicitud() {
+    document.getElementById("vistaDetalleSolicitud").style.display = "none";
+    document.getElementById("vistaTablaSolicitudes").style.display = "block";
+}
+
+async function evaluarDocumentoAdmin(idDocumento, estadoValidacion, idSolicitud, idAspi) {
+    const accion = estadoValidacion === 'APROBADO' ? 'aprobar' : 'rechazar';
+    const colorBtn = estadoValidacion === 'APROBADO' ? '#10b981' : '#ef4444';
+
+    const confirmacion = await Swal.fire({
+        title: `¿${accion.charAt(0).toUpperCase() + accion.slice(1)} documento?`,
+        text: `¿Estás seguro que deseas ${accion} este documento?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: colorBtn,
+        cancelButtonColor: '#64748b',
+        confirmButtonText: `Sí, ${accion}`,
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!confirmacion.isConfirmed) return;
+
+    try {
+        mostrarLoader();
+        const response = await fetch(`/api/documentos/evaluar/${idDocumento}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ estadoValidacion })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success !== false) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: data.mensaje || `Documento ${estadoValidacion.toLowerCase()} correctamente`,
+                timer: 1500,
+                showConfirmButton: false
+            });
+            await cargarSolicitudesAdmin();
+            await abrirDetalleSolicitudAdmin(idSolicitud, idAspi);
+        } else {
+            throw new Error(data.mensaje || 'Error al evaluar el documento.');
+        }
+    } catch (error) {
+        console.error('Error al evaluar documento:', error);
+        Swal.fire('Error', error.message || 'No se pudo evaluar el documento.', 'error');
+    } finally {
+        ocultarLoader();
+    }
+}
+
+// ==========================================
 // MÓDULO NOTIFICACIONES Y AVISOS
 // ==========================================
 
@@ -2203,4 +2503,282 @@ function abrirModalPerfilAdmin() {
             htmlContainer: 'pm-html-container'
         }
     });
+}
+
+// ==========================================
+// MÓDULO POSGRADOS (Admin)
+// ==========================================
+
+let posgradoSeleccionadoId = null;
+
+async function cargarPosgradosAdmin() {
+    const contenedor = document.getElementById("contenedorPosgrados");
+    if (!contenedor) return;
+
+    try {
+        const respuesta = await fetch("/api/posgrado");
+        if (!respuesta.ok) throw new Error("Error al obtener posgrados");
+        const posgrados = await respuesta.json();
+
+        contenedor.innerHTML = "";
+
+        if (posgrados.length === 0) {
+            contenedor.innerHTML = "<p class='text-muted text-center py-4 w-100' style='grid-column: 1 / -1;'>No hay posgrados registrados.</p>";
+            return;
+        }
+
+        posgrados.forEach(posgrado => {
+            const card = document.createElement("div");
+            card.className = "card p-4 shadow-sm text-center d-flex flex-column align-items-center justify-content-center";
+            card.style.cursor = "pointer";
+            card.style.transition = "transform 0.2s, box-shadow 0.2s";
+            card.style.minHeight = "180px";
+            card.style.backgroundColor = "var(--color-card-bg)";
+            card.style.border = "1px solid var(--color-border)";
+            
+            // Hover effect can be done via CSS, but we'll inline a simple transform here for safety
+            card.onmouseover = () => { card.style.transform = "translateY(-5px)"; card.style.boxShadow = "var(--shadow-lg)"; };
+            card.onmouseout = () => { card.style.transform = "none"; card.style.boxShadow = "var(--shadow-sm)"; };
+            
+            card.onclick = () => abrirDetallePosgrado(posgrado.id, posgrado.nombre);
+
+            let icono = "fa-graduation-cap";
+            let colorIcono = "#3b82f6"; // Azul por defecto
+            
+            if (posgrado.tipo === "MAESTRIA") {
+                icono = "fa-book-open-reader";
+                colorIcono = "#8b5cf6"; // Morado
+            } else if (posgrado.tipo === "DOCTORADO") {
+                icono = "fa-microscope";
+                colorIcono = "#10b981"; // Verde
+            }
+
+            const estadoBadge = posgrado.estadoPosgrado 
+                ? `<span class="badge bg-success bg-opacity-10 text-success mt-2">Activo</span>`
+                : `<span class="badge bg-danger bg-opacity-10 text-danger mt-2">Inactivo</span>`;
+
+            card.innerHTML = `
+                <div class="mb-3" style="font-size: 3rem; color: ${colorIcono};">
+                    <i class="fa-solid ${icono}"></i>
+                </div>
+                <h5 class="mb-1 fw-bold" style="color: var(--color-text);">${posgrado.nombre}</h5>
+                <p class="text-muted small mb-0">${posgrado.tipo}</p>
+                ${estadoBadge}
+            `;
+
+            contenedor.appendChild(card);
+        });
+
+    } catch (error) {
+        console.error("Error al cargar posgrados:", error);
+        contenedor.innerHTML = "<p class='text-danger text-center py-4 w-100' style='grid-column: 1 / -1;'><i class='fa-solid fa-triangle-exclamation me-2'></i>Error al cargar los programas de posgrado.</p>";
+    }
+}
+
+async function abrirDetallePosgrado(id, nombre) {
+    posgradoSeleccionadoId = id;
+    
+    document.getElementById("tituloDetallePosgrado").textContent = nombre;
+    
+    document.getElementById("vistaTarjetasPosgrados").style.display = "none";
+    document.getElementById("vistaDetallePosgrado").style.display = "block";
+    
+    await cargarOpcionesDelPosgrado(id);
+}
+
+function cerrarDetallePosgrado() {
+    posgradoSeleccionadoId = null;
+    document.getElementById("vistaDetallePosgrado").style.display = "none";
+    document.getElementById("vistaTarjetasPosgrados").style.display = "block";
+}
+
+async function cargarOpcionesDelPosgrado(posgrado_id) {
+    const tbody = document.getElementById("tablaOpcionesPosgrado");
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i> Cargando especialidades...</td></tr>`;
+
+    try {
+        const respuesta = await fetch(`/api/posgrado/opciones/todas/${posgrado_id}`);
+        if (!respuesta.ok) throw new Error("Error en la respuesta del servidor");
+        const opciones = await respuesta.json();
+
+        tbody.innerHTML = "";
+
+        if (opciones.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted"><i class="fa-solid fa-folder-open me-2"></i> No hay especialidades registradas para este posgrado.</td></tr>`;
+            return;
+        }
+
+        opciones.forEach(opc => {
+            const fila = document.createElement("tr");
+            fila.style.cursor = "pointer";
+            fila.onclick = () => abrirModalEditarOpcion(opc);
+            
+            const badgeEstado = opc.activo 
+                ? `<span class="soft-badge soft-badge-success"><i class="fa-solid fa-check-circle me-1"></i> Disponible</span>`
+                : `<span class="soft-badge soft-badge-danger"><i class="fa-solid fa-xmark-circle me-1"></i> No Disponible</span>`;
+
+            fila.innerHTML = `
+                <td class="fw-bold" style="color: var(--color-text);">${opc.nombre}</td>
+                <td style="color: var(--color-text-muted); font-size: 0.9rem; max-width: 250px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                    ${opc.descripcion || '<span class="text-muted fst-italic">Sin descripción</span>'}
+                </td>
+                <td>
+                    <div style="cursor: pointer;" onclick='event.stopPropagation(); cambiarEstadoOpcion(${JSON.stringify(opc).replace(/'/g, "&#39;")})' title="Haz clic para cambiar estado">
+                        ${badgeEstado}
+                    </div>
+                </td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0;" onclick='event.stopPropagation(); abrirModalEditarOpcion(${JSON.stringify(opc).replace(/'/g, "&#39;")})' title="Editar especialidad">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(fila);
+        });
+
+    } catch (error) {
+        console.error("Error al cargar opciones del posgrado:", error);
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i> Error al cargar los datos.</td></tr>`;
+    }
+}
+
+function abrirModalNuevaOpcion() {
+    document.getElementById("formOpcionPosgrado").reset();
+    document.getElementById("opcion_id").value = "";
+    document.getElementById("tituloModalOpcionPosgrado").textContent = "Nueva Especialidad";
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalOpcionPosgrado'));
+    modal.show();
+}
+
+function abrirModalEditarOpcion(opcion) {
+    document.getElementById("formOpcionPosgrado").reset();
+    document.getElementById("opcion_id").value = opcion.id;
+    document.getElementById("opcion_nombre").value = opcion.nombre;
+    document.getElementById("opcion_descripcion").value = opcion.descripcion || "";
+    document.getElementById("opcion_activo").checked = opcion.activo === 1;
+    
+    document.getElementById("tituloModalOpcionPosgrado").textContent = "Editar Especialidad";
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalOpcionPosgrado'));
+    modal.show();
+}
+
+document.getElementById("formOpcionPosgrado")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    if (!posgradoSeleccionadoId) {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'No hay un posgrado seleccionado.' });
+        return;
+    }
+
+    const id = document.getElementById("opcion_id").value;
+    const nombre = document.getElementById("opcion_nombre").value;
+    const descripcion = document.getElementById("opcion_descripcion").value;
+    const activo = document.getElementById("opcion_activo").checked ? 1 : 0;
+
+    const payload = {
+        posgrado_id: posgradoSeleccionadoId,
+        nombre,
+        descripcion,
+        activo
+    };
+
+    try {
+        let url = "/api/posgrado/opciones";
+        let method = "POST";
+
+        if (id) {
+            url = `/api/posgrado/opciones/${id}`;
+            method = "PUT";
+        }
+
+        const respuesta = await fetch(url, {
+            method: method,
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const resultado = await respuesta.json();
+
+        if (respuesta.ok && resultado.success !== false) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: resultado.mensaje || 'Especialidad guardada correctamente.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+            
+            const modalElement = document.getElementById("modalOpcionPosgrado");
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+            
+            cargarOpcionesDelPosgrado(posgradoSeleccionadoId);
+            
+            // Si hay una función global que actualiza selectores (ej. en convocatorias)
+            if (typeof cargarOpcionesPosgradoGlobal === "function") {
+                cargarOpcionesPosgradoGlobal();
+            }
+        } else {
+            Swal.fire({ icon: 'error', title: 'Error', text: resultado.mensaje || 'No se pudo guardar la especialidad.' });
+        }
+    } catch (error) {
+        console.error("Error al guardar opción:", error);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error en la conexión.' });
+    }
+});
+
+async function cambiarEstadoOpcion(opcion) {
+    const nuevoEstado = opcion.activo === 1 ? 0 : 1;
+    const accionTexto = nuevoEstado === 1 ? 'activar' : 'desactivar';
+
+    const confirmacion = await Swal.fire({
+        title: `¿${accionTexto.charAt(0).toUpperCase() + accionTexto.slice(1)} especialidad?`,
+        text: `La especialidad pasará a estar ${nuevoEstado === 1 ? 'disponible' : 'no disponible'} para selección.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3b82f6',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, cambiar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!confirmacion.isConfirmed) return;
+
+    try {
+        const payload = {
+            nombre: opcion.nombre,
+            descripcion: opcion.descripcion || "",
+            activo: nuevoEstado
+        };
+
+        const respuesta = await fetch(`/api/posgrado/opciones/${opcion.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const resultado = await respuesta.json();
+
+        if (respuesta.ok && resultado.success !== false) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Estado actualizado',
+                text: 'El estado de la especialidad ha sido cambiado.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+            cargarOpcionesDelPosgrado(posgradoSeleccionadoId);
+        } else {
+            Swal.fire({ icon: 'error', title: 'Error', text: resultado.mensaje || 'No se pudo cambiar el estado.' });
+        }
+    } catch (error) {
+        console.error("Error al cambiar estado:", error);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error en la conexión.' });
+    }
 }

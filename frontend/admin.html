@@ -255,8 +255,91 @@
 
         <!-- OTRAS SECCIONES (Cascarones) -->
         <div id="seccion-posgrados" class="view-section">
-            <div class="card mt-2 shadow-sm" style="flex:auto;">
-                <p class="text-muted mb-0"><i class="fa-solid fa-circle-info text-info me-2"></i> Módulo en desarrollo</p>
+            <div class="card mt-2 shadow-sm" style="flex:auto; padding: 20px; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
+                <!-- Vista de Tarjetas de Posgrados -->
+                <div id="vistaTarjetasPosgrados">
+                    <h5 class="fw-bold mb-3" style="color: var(--color-text);">Programas de Posgrado</h5>
+                    <div id="contenedorPosgrados" class="dashboard-grid mt-3">
+                        <!-- Las tarjetas se inyectarán con JS -->
+                        <div class="text-center py-4 w-100" style="grid-column: 1 / -1;">
+                            <i class="fa-solid fa-spinner fa-spin me-2"></i> Cargando programas...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vista de Detalle (Especialidades) -->
+                <div id="vistaDetallePosgrado" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom" style="border-color: var(--color-border) !important;">
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-bold mb-2 shadow-sm" onclick="cerrarDetallePosgrado()">
+                                <i class="fa-solid fa-arrow-left me-1"></i> Volver
+                            </button>
+                            <h4 class="fw-bold mb-0" id="tituloDetallePosgrado" style="color: var(--color-primary);">Posgrado</h4>
+                        </div>
+                        <button class="btn btn-sm btn-primary rounded-pill px-3 py-1 fw-bold shadow-sm" style="width: auto;" onclick="abrirModalNuevaOpcion()">
+                            <i class="fa-solid fa-plus me-1"></i> Nueva Especialidad
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Especialidad</th>
+                                    <th>Descripción</th>
+                                    <th>Estado</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaOpcionesPosgrado">
+                                <!-- Las filas se inyectarán con JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Nueva/Editar Especialidad -->
+        <div class="modal fade" id="modalOpcionPosgrado" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
+                <div class="modal-content" style="background: var(--color-card-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 16px; box-shadow: var(--shadow-lg);">
+                    <div class="modal-header border-bottom" style="border-color: var(--color-border) !important; padding: 20px 25px;">
+                        <h5 class="modal-title fw-bold" id="tituloModalOpcionPosgrado" style="color: var(--color-text);">Especialidad</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="formOpcionPosgrado">
+                        <div class="modal-body" style="padding: 25px;">
+                            <input type="hidden" id="opcion_id">
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-muted">Nombre de la Especialidad <span class="text-danger">*</span></label>
+                                <input type="text" id="opcion_nombre" class="form-control" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;" placeholder="Ej. Sistemas Embebidos">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-muted">Descripción</label>
+                                <textarea id="opcion_descripcion" class="form-control" rows="3" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px; resize: vertical;" placeholder="Descripción de la especialidad..."></textarea>
+                            </div>
+                            
+                            <div class="mb-3 p-3 rounded" style="background: var(--color-bg); border: 1px solid var(--color-border);">
+                                <div class="form-check form-switch d-flex align-items-center gap-2 m-0 p-0">
+                                    <input class="form-check-input m-0" type="checkbox" id="opcion_activo" checked style="cursor: pointer; width: 2.5rem; height: 1.25rem;">
+                                    <label class="form-check-label fw-bold small ms-2" for="opcion_activo" style="cursor: pointer; color: var(--color-text); margin-top: 2px;">
+                                        Disponible para registro
+                                    </label>
+                                </div>
+                                <p class="text-muted small mb-0 mt-2"><i class="fa-solid fa-circle-info me-1"></i> Si se desactiva, los aspirantes no podrán seleccionarla en su registro.</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-top d-flex gap-2" style="border-color: var(--color-border) !important; padding: 15px 25px;">
+                            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                                <i class="fa-solid fa-floppy-disk me-1"></i> Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -473,8 +556,118 @@
         </div>
 
         <div id="seccion-solicitudes" class="view-section">
-            <div class="card mt-2 shadow-sm" style="flex:auto;">
-                <p class="text-muted mb-0"><i class="fa-solid fa-circle-info text-info me-2"></i> Módulo en desarrollo</p>
+            <!-- VISTA DE TABLA -->
+            <div id="vistaTablaSolicitudes">
+                <div class="card mt-2 shadow-sm" style="flex:auto; padding: 20px; overflow-x: auto; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
+                    <!-- Filtros Solicitudes -->
+                    <div class="d-flex gap-3 mb-3 flex-wrap align-items-center">
+                        <div class="flex-grow-1 position-relative">
+                            <i class="fa-solid fa-magnifying-glass position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
+                            <input type="text" id="filtro-solicitudes-texto" placeholder="Buscar por aspirante, correo o programa..." oninput="filtrarTablaSolicitudesUI()"
+                                style="padding-left: 35px; width: 100%; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                        </div>
+                        <div style="width: 180px; flex-shrink: 0;">
+                            <select id="filtro-solicitudes-estado" onchange="filtrarTablaSolicitudesUI()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                                <option value="">Estado (Todos)</option>
+                                <option value="PENDIENTE">Pendientes</option>
+                                <option value="EN_REVISION">En Revisión</option>
+                                <option value="APROBADO">Aprobadas</option>
+                                <option value="RECHAZADO">Rechazadas</option>
+                            </select>
+                        </div>
+                        <div style="width: 180px; flex-shrink: 0;">
+                            <select id="filtro-solicitudes-programa" onchange="filtrarTablaSolicitudesUI()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                                <option value="">Programa (Todos)</option>
+                                <option value="Maestría">Maestría</option>
+                                <option value="Doctorado">Doctorado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--color-border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted);">
+                                <th style="padding: 12px 15px;">Aspirante / Contacto</th>
+                                <th style="padding: 12px 15px;">Programa Solicitado</th>
+                                <th style="padding: 12px 15px;">Modalidad / Etapa</th>
+                                <th style="padding: 12px 15px;">Estado</th>
+                                <th style="padding: 12px 15px; text-align: center;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaSolicitudes"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VISTA DE DETALLE (Documentos y Estado) -->
+            <div id="vistaDetalleSolicitud" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <button class="btn-secondary shadow-sm" onclick="cerrarDetalleSolicitud()"
+                        style="border-radius: 8px; font-weight: 600; padding: 8px 16px; border: 1px solid var(--color-border); background: var(--color-card-bg); color: var(--color-text); cursor: pointer;">
+                        <i class="fa-solid fa-arrow-left me-2"></i> Volver a la lista
+                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn-primary shadow-sm" id="btnDescargarDocsSolicitud" style="display: none; border-radius: 8px; font-weight: 600; padding: 8px 16px; background: var(--color-primary); color: white; border: none; cursor: pointer;">
+                            <i class="fa-solid fa-download me-2"></i> Descargar Todo
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Resumen del Aspirante -->
+                    <div class="col-lg-4 col-md-12">
+                        <div class="profile-card-premium h-100">
+                            <div id="solDet_avatar" class="avatar-initials mb-3">--</div>
+                            <h4 class="mb-1 fw-bold" style="color: var(--color-text);" id="solDet_nombreCompleto">Cargando...</h4>
+                            <p class="text-muted mb-3" style="font-size: 0.9rem;" id="solDet_correo">correo@ejemplo.com</p>
+
+                            <span class="soft-badge mb-4 d-inline-block" id="solDet_estado">Estado</span>
+
+                            <hr style="border-color: var(--color-border); margin: 20px 0;">
+
+                            <div class="text-start px-2">
+                                <div class="profile-section-title" style="margin-top: 0;">
+                                    <i class="fa-solid fa-book-bookmark"></i> Detalles de la Solicitud
+                                </div>
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium">Programa</div>
+                                    <div class="profile-value-premium" id="solDet_programa">-</div>
+                                </div>
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium">Opciones</div>
+                                    <div class="profile-value-premium" id="solDet_opcion">-</div>
+                                </div>
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium">Modalidad</div>
+                                    <div class="profile-value-premium" id="solDet_modalidad">-</div>
+                                </div>
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium">Etapa Actual</div>
+                                    <div class="profile-value-premium fw-bold text-primary" id="solDet_etapa">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expediente y Acciones -->
+                    <div class="col-lg-8 col-md-12">
+                        <div class="card shadow-sm h-100" style="border-radius: 16px; background: var(--color-card-bg); border: 1px solid var(--color-border);">
+                            <div style="padding: 24px 24px 12px 24px; border-bottom: 1px solid var(--color-border);">
+                                <h5 style="margin: 0; font-weight: bold; color: var(--color-text); font-size: 18px; letter-spacing: -0.5px;">Documentos Entregados</h5>
+                            </div>
+                            <div style="padding: 24px;">
+                                <div id="contenedorDocumentosSolicitud">
+                                    <div style="text-align: center; padding: 40px 0;">
+                                        <i class="fa-solid fa-spinner fa-spin text-primary" style="font-size: 24px;"></i>
+                                        <p style="color: var(--color-text-muted); margin-top: 10px;">Cargando documentos...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
