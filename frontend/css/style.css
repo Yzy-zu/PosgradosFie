@@ -930,7 +930,6 @@ html {
 }
 
 .stat-card:hover {
-    transform: translateY(-4px) scale(1.01);
     box-shadow:
         0 20px 50px rgba(0, 0, 0, 0.10),
         0 6px 16px rgba(0, 0, 0, 0.06),
@@ -1184,7 +1183,6 @@ body.dark-mode .stat-card.stat-success {
 }
 
 .card:hover {
-    transform: translateY(-3px);
     box-shadow:
         0 20px 50px rgba(0, 0, 0, 0.09),
         0 6px 16px rgba(0, 0, 0, 0.05),
@@ -1264,7 +1262,6 @@ body.dark-mode .stat-card.stat-success {
 }
 
 .box-programa:hover {
-    transform: translateY(-10px) scale(1.02);
     background: rgba(138, 28, 36, 0.92);
     border-color: transparent;
     color: #ffffff;
@@ -1460,7 +1457,6 @@ body.dark-mode .stat-card.stat-success {
 }
 
 .radio-card:hover {
-    transform: translateY(-4px);
     border-color: rgba(138, 28, 36, 0.4);
     box-shadow: 0 12px 32px rgba(138, 28, 36, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
@@ -1512,7 +1508,6 @@ body.dark-mode .stat-card.stat-success {
 }
 
 .admission-card:hover {
-    transform: translateY(-3px);
     border-color: rgba(138, 28, 36, 0.5);
     box-shadow: 0 8px 20px rgba(138, 28, 36, 0.1);
 }
@@ -1594,14 +1589,13 @@ body.dark-mode .admission-card:hover {
 }
 
 .file-box:hover {
-    transform: translateY(-4px);
     border-style: solid;
     border-color: rgba(138, 28, 36, 0.55);
     box-shadow: 0 12px 30px rgba(138, 28, 36, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .file-box:hover .file-box-icon {
-    transform: scale(1.15) translateY(-3px);
+    transform: scale(1.15);
 }
 
 .file-box-icon {
@@ -2946,7 +2940,6 @@ body.dark-mode .admission-card:hover {
 }
 
 .doc-card-modern:hover {
-    transform: translateY(-5px) scale(1.02);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
     border-color: rgba(138, 28, 36, 0.2);
     /* Guinda sutil al hover */
@@ -3465,6 +3458,34 @@ body.dark-mode .table-avatar-info {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Notification Center Modern Styles */
+.notif-filter-pill {
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+}
+
+.notif-feed-item {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    background: var(--color-card-bg);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.notif-feed-item:hover {
+    background: var(--color-bg);
+    border-color: var(--color-primary);
+}
+
+.notif-feed-item.active {
+    background: var(--color-bg);
+    border-left: 4px solid var(--color-primary) !important;
+    box-shadow: var(--shadow-sm);
 }
 
 /* Chat Layout (WhatsApp / dark-mode aware) */
@@ -4132,12 +4153,11 @@ body.dark-mode .chat-body [style*="background: #e2e8f0"] {
     text-align: center;
     gap: 12px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: box-shadow 0.2s;
     cursor: pointer;
 }
 
 .doc-card-v2:hover {
-    transform: translateY(-2px);
     box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.05);
 }
 
@@ -6246,5 +6266,39 @@ body.dark-mode .status-banner.status-aprobado .status-banner-badge {
         justify-content: center !important;
     }
 }
+
+/* Eliminación de efecto de levitación/elevación en tarjetas al pasar el cursor */
+.card,
+.stat-card,
+.box-programa,
+.radio-card,
+.admission-card,
+.convocatoria-card,
+.doc-card-modern,
+.card-modern,
+.profile-card-premium,
+.profile-info-card,
+.notif-feed-item,
+.dashboard-card,
+.file-box {
+    transform: none !important;
+}
+
+.card:hover,
+.stat-card:hover,
+.box-programa:hover,
+.radio-card:hover,
+.admission-card:hover,
+.convocatoria-card:hover,
+.doc-card-modern:hover,
+.card-modern:hover,
+.profile-card-premium:hover,
+.profile-info-card:hover,
+.notif-feed-item:hover,
+.dashboard-card:hover,
+.file-box:hover {
+    transform: none !important;
+}
+
 
 

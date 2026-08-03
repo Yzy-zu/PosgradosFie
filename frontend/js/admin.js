@@ -65,11 +65,11 @@ function mostrarAdministrador() {
     const nombreMostrado = usuario.nombre || usuario.correo.split('@')[0];
     const topbarFirstName = document.getElementById("topbar-first-name");
     const topbarIniciales = document.getElementById("topbar-iniciales");
-    
+
     if (topbarFirstName) {
         topbarFirstName.textContent = nombreMostrado.split(' ')[0];
     }
-    
+
     if (topbarIniciales) {
         topbarIniciales.textContent = nombreMostrado.substring(0, 2).toUpperCase();
     }
@@ -95,7 +95,7 @@ function configurarBotones() {
             document.getElementById("formUsuario").reset();
             const idInput = document.getElementById("idUsuarioForm");
             if (idInput) idInput.value = "";
-            document.querySelector("#modalUsuario .modal-title").innerHTML = '<i class="fa-solid fa-user-plus"></i> Nuevo Usuario';
+            document.querySelector("#modalUsuario .modal-title").textContent = 'Nuevo Usuario';
             const btnEliminar = document.getElementById("btnEliminarUsuario");
             if (btnEliminar) btnEliminar.style.display = "none";
         });
@@ -181,50 +181,74 @@ function cargarDashboard() {
     if (totalDocumentos) totalDocumentos.textContent = "0";
 }
 
+let usuariosGlobalesAdmin = [];
+
 async function cargarUsuarios() {
     mostrarLoader();
     try {
         const respuesta = await fetch("/api/usuario");
-        const usuarios = await respuesta.json();
+        usuariosGlobalesAdmin = await respuesta.json();
+
         // Actualizar contador del dashboard
         const totalUsuarios = document.getElementById("totalUsuarios");
-        if (totalUsuarios) totalUsuarios.textContent = usuarios.length || 0;
-        const tbody = document.getElementById("tablaUsuarios");
-        if (!tbody) return;
-        tbody.innerHTML = "";
+        if (totalUsuarios) totalUsuarios.textContent = (usuariosGlobalesAdmin || []).length || 0;
 
-        usuarios.forEach(usuario => {
-            const fila = document.createElement("tr");
-
-            fila.style.cursor = "pointer";
-            fila.onclick = () => editarUsuario(usuario.id);
-
-            const ini = (usuario.correo || 'U').charAt(0).toUpperCase();
-
-            fila.innerHTML = `
-                <td><span class="fw-bold opacity-75">#${usuario.id}</span></td>
-                <td>
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="table-avatar">${ini}</div>
-                        <span class="fw-bold">${usuario.correo}</span>
-                    </div>
-                </td>
-                <td><span class="soft-badge soft-badge-primary">${usuario.rol || 'Usuario'}</span></td>
-                <td><span class="soft-badge ${usuario.activo ? 'soft-badge-success' : 'soft-badge-danger'}">${usuario.activo ? 'Activo' : 'Inactivo'}</span></td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px; padding: 0;">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(fila);
-        });
+        renderizarTablaUsuarios();
     } catch (error) {
         console.error("Error en cargarUsuarios:", error);
     } finally {
         ocultarLoader();
     }
 }
+
+function renderizarTablaUsuarios() {
+    const tbody = document.getElementById("tablaUsuarios");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    const filtroRol = (document.getElementById("filtro-usuarios-rol")?.value || "").toUpperCase();
+
+    const filtrados = (usuariosGlobalesAdmin || []).filter(u => {
+        if (!filtroRol) return true;
+        const uRol = (u.rol || "").toUpperCase();
+        return uRol === filtroRol;
+    });
+
+    if (filtrados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-4"><i class="fa-solid fa-inbox me-2"></i> No hay usuarios registrados con el rol seleccionado.</td></tr>`;
+        return;
+    }
+
+    filtrados.forEach(usuario => {
+        const fila = document.createElement("tr");
+
+        fila.style.cursor = "pointer";
+        fila.onclick = () => editarUsuario(usuario.id);
+
+        const ini = (usuario.correo || 'U').charAt(0).toUpperCase();
+
+        fila.innerHTML = `
+            <td>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="table-avatar">${ini}</div>
+                    <span class="fw-bold" style="color: var(--color-text);">${usuario.correo}</span>
+                </div>
+            </td>
+            <td><span class="soft-badge soft-badge-primary">${usuario.rol || 'Usuario'}</span></td>
+            <td><span class="soft-badge ${usuario.activo ? 'soft-badge-success' : 'soft-badge-danger'}">${usuario.activo ? 'Activo' : 'Inactivo'}</span></td>
+            <td class="text-end">
+                <button class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px; padding: 0;">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(fila);
+    });
+}
+
+window.filtrarUsuariosUI = function () {
+    renderizarTablaUsuarios();
+};
 
 async function editarUsuario(id) {
     try {
@@ -251,7 +275,7 @@ async function editarUsuario(id) {
         const inputEstado = document.getElementById("activo");
         if (inputEstado) inputEstado.value = `${usuario.activo ? '1' : '0'}`;
 
-        document.querySelector("#modalUsuario .modal-title").innerHTML = '<i class="fa-solid fa-user-pen"></i> Editar Usuario';
+        document.querySelector("#modalUsuario .modal-title").textContent = 'Editar Usuario';
 
         const btnEliminar = document.getElementById("btnEliminarUsuario");
         if (btnEliminar) btnEliminar.style.display = "inline-block";
@@ -291,13 +315,13 @@ function renderizarCamposRol(rol, detalles = {}) {
 
     if (rol === "ASPIRANTE") {
         html = `
-            <h6 class="fw-bold mb-3" style="color: var(--color-primary);"><i class="fa-solid fa-user-graduate me-2"></i> Detalles de Aspirante</h6>
+            <h6 class="fw-bold mb-3" style="color: var(--color-primary);"><i class="fa-solid me-2"></i> Detalles de Aspirante</h6>
             <div class="row custom-scroll" style="max-height: 390px; overflow-y: auto; overflow-x: hidden; padding-right: 8px;">
-                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Nombre <span class="text-danger">*</span></label><input type="text" id="det_nombre" class="form-control form-control-sm" ${inputStyle} value="${detalles.nombre || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Primer Apellido <span class="text-danger">*</span></label><input type="text" id="det_primerApellido" class="form-control form-control-sm" ${inputStyle} value="${detalles.primerApellido || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" ${inputStyle} value="${detalles.segundoApellido || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>CURP <span class="text-danger">*</span></label><input type="text" id="det_curp" class="form-control form-control-sm" ${inputStyle} value="${detalles.curp || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Teléfono <span class="text-danger">*</span></label><input type="text" id="det_telefono" class="form-control form-control-sm" ${inputStyle} value="${detalles.telefono || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Nombre <span class="text-danger">*</span></label><input type="text" id="det_nombre" class="form-control form-control-sm" ${inputStyle} value="${detalles.nombre || ''}" placeholder="Solo letras" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]/g, '')"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Primer Apellido <span class="text-danger">*</span></label><input type="text" id="det_primerApellido" class="form-control form-control-sm" ${inputStyle} value="${detalles.primerApellido || ''}" placeholder="Solo letras" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]/g, '')"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" ${inputStyle} value="${detalles.segundoApellido || ''}" placeholder="Solo letras" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]/g, '')"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>CURP <span class="text-danger">*</span></label><input type="text" id="det_curp" class="form-control form-control-sm" ${inputStyle} value="${detalles.curp || ''}" maxlength="18" placeholder="18 caracteres" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Teléfono <span class="text-danger">*</span></label><input type="text" id="det_telefono" class="form-control form-control-sm" ${inputStyle} value="${detalles.telefono || ''}" maxlength="10" placeholder="10 dígitos" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Fecha Nacimiento <span class="text-danger">*</span></label><input type="date" id="det_fechaNacimiento" class="form-control form-control-sm" ${inputStyle} value="${detalles.fechaNacimiento ? detalles.fechaNacimiento.split('T')[0] : ''}"></div>
                 <div class="col-md-4 mb-2">
                     <label class="form-label small" ${labelStyle}>Estado Civil</label>
@@ -311,21 +335,21 @@ function renderizarCamposRol(rol, detalles = {}) {
                     </select>
                 </div>
                 <div class="col-md-8 mb-2"><label class="form-label small" ${labelStyle}>Dirección</label><input type="text" id="det_direccion" class="form-control form-control-sm" ${inputStyle} value="${detalles.direccion || ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Código Postal</label><input type="number" id="det_direccionPostal" class="form-control form-control-sm" ${inputStyle} value="${detalles.direccionPostal || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Código Postal</label><input type="text" id="det_direccionPostal" class="form-control form-control-sm" ${inputStyle} value="${detalles.direccionPostal || ''}" maxlength="5" placeholder="5 dígitos" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
                 
                 <h6 class="fw-bold mt-4 mb-3 w-100 border-bottom pb-2" style="color: var(--color-text) !important; border-color: var(--color-border) !important;"><i class="fa-solid fa-graduation-cap me-2"></i> Antecedentes Académicos</h6>
                 <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Licenciatura <span class="text-danger">*</span></label><input type="text" id="det_licenciatura" class="form-control form-control-sm" ${inputStyle} value="${detalles.licenciatura || ''}"></div>
                 <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Institución (Licenciatura) <span class="text-danger">*</span></label><input type="text" id="det_institucionLicenciatura" class="form-control form-control-sm" ${inputStyle} value="${detalles.institucionLicenciatura || ''}"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Fecha de Egreso <span class="text-danger">*</span></label><input type="date" id="det_fechaEgreso" class="form-control form-control-sm" ${inputStyle} value="${detalles.fechaEgreso ? detalles.fechaEgreso.split('T')[0] : ''}"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Fecha de Titulación <span class="text-danger">*</span></label><input type="date" id="det_fechaTitulacion" class="form-control form-control-sm" ${inputStyle} value="${detalles.fechaTitulacion ? detalles.fechaTitulacion.split('T')[0] : ''}"></div>
-                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Promedio <span class="text-danger">*</span></label><input type="number" step="0.01" id="det_promedio" class="form-control form-control-sm" ${inputStyle} value="${detalles.promedio || ''}"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Promedio <span class="text-danger">*</span></label><input type="number" step="0.01" min="0" max="10" id="det_promedio" class="form-control form-control-sm" ${inputStyle} value="${detalles.promedio || ''}" placeholder="0.0 - 10.0"></div>
                 <div class="col-md-12 mb-2"><label class="form-label small" ${labelStyle}>Otros Estudios</label><input type="text" id="det_otrosEstudios" class="form-control form-control-sm" ${inputStyle} value="${detalles.otrosEstudios || ''}"></div>
 
                 <h6 class="fw-bold mt-3 mb-2 w-100 border-bottom pb-1" style="color: var(--color-text) !important; border-color: var(--color-border) !important;"><i class="fa-solid fa-briefcase me-2"></i> Ocupación</h6>
                 <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Ocupación Actual</label><input type="text" id="det_ocupacion" class="form-control form-control-sm" ${inputStyle} value="${detalles.ocupacion || ''}"></div>
-                <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Teléfono (Ocupación)</label><input type="text" id="det_telefonoOcupacion" class="form-control form-control-sm" ${inputStyle} value="${detalles.telefonoOcupacion || ''}"></div>
-                <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Ciudad (Ocupación)</label><input type="text" id="det_ciudadOcupacion" class="form-control form-control-sm" ${inputStyle} value="${detalles.ciudadOcupacion || ''}"></div>
-                <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Estado (Ocupación)</label><input type="text" id="det_estadoOcupacion" class="form-control form-control-sm" ${inputStyle} value="${detalles.estadoOcupacion || ''}"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Teléfono (Ocupación)</label><input type="text" id="det_telefonoOcupacion" class="form-control form-control-sm" ${inputStyle} value="${detalles.telefonoOcupacion || ''}" maxlength="10" placeholder="10 dígitos" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Ciudad (Ocupación)</label><input type="text" id="det_ciudadOcupacion" class="form-control form-control-sm" ${inputStyle} value="${detalles.ciudadOcupacion || ''}" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\\s.]/g, '')"></div>
+                <div class="col-md-6 mb-2"><label class="form-label small" ${labelStyle}>Estado (Ocupación)</label><input type="text" id="det_estadoOcupacion" class="form-control form-control-sm" ${inputStyle} value="${detalles.estadoOcupacion || ''}" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\\s.]/g, '')"></div>
             </div>
         `;
         contenedorBtn.style.display = "block";
@@ -402,7 +426,7 @@ document.getElementById("modalUsuario")?.addEventListener('show.bs.modal', funct
     if (!isEdit && !event.relatedTarget?.closest('.btn-sm')) {
         document.getElementById("formUsuario").reset();
         document.getElementById("idUsuarioForm").value = "";
-        document.querySelector("#modalUsuario .modal-title").innerHTML = '<i class="fa-solid fa-user-plus"></i> Nuevo Usuario';
+        document.querySelector("#modalUsuario .modal-title").textContent = 'Nuevo Usuario';
         const btnElim = document.getElementById("btnEliminarUsuario");
         if (btnElim) btnElim.style.display = "none";
         renderizarCamposRol(document.getElementById("rol").value);
@@ -469,7 +493,7 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
 
         let faltan = [];
         requiredAspirante.forEach(campo => {
-            if (!detalles[campo.id]) faltan.push(campo.label);
+            if (!detalles[campo.id] || detalles[campo.id].trim() === '') faltan.push(campo.label);
         });
 
         if (faltan.length > 0) {
@@ -477,6 +501,55 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
                 icon: 'warning',
                 title: 'Campos requeridos',
                 text: 'Por favor complete los siguientes campos obligatorios del aspirante:\n- ' + faltan.join('\n- '),
+                confirmButtonColor: '#f59e0b'
+            });
+            const contDetalles = document.getElementById("detallesExtendidos");
+            if (contDetalles && contDetalles.style.width === "0px") {
+                toggleDetallesUsuario();
+            }
+            return;
+        }
+
+        // Validación con Expresiones Regulares (Regex) para Aspirantes
+        const regexLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        const regexCurp = /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z\d]\d$/;
+        const regexTelefono = /^\d{10}$/;
+        const regexCP = /^\d{5}$/;
+
+        let erroresRegex = [];
+
+        if (detalles.nombre && !regexLetras.test(detalles.nombre)) {
+            erroresRegex.push('Nombre: Solo debe contener letras y espacios (sin números).');
+        }
+        if (detalles.primerApellido && !regexLetras.test(detalles.primerApellido)) {
+            erroresRegex.push('Primer Apellido: Solo debe contener letras y espacios (sin números).');
+        }
+        if (detalles.segundoApellido && detalles.segundoApellido.trim() !== '' && !regexLetras.test(detalles.segundoApellido)) {
+            erroresRegex.push('Segundo Apellido: Solo debe contener letras y espacios.');
+        }
+        if (detalles.curp && !regexCurp.test(detalles.curp.toUpperCase())) {
+            erroresRegex.push('CURP: Formato inválido. Debe contener 18 caracteres (ej. ABCD123456HDFXXX01).');
+        }
+        if (detalles.telefono && !regexTelefono.test(detalles.telefono)) {
+            erroresRegex.push('Teléfono: Debe contener exactamente 10 dígitos numéricos.');
+        }
+        if (detalles.telefonoOcupacion && detalles.telefonoOcupacion.trim() !== '' && !regexTelefono.test(detalles.telefonoOcupacion)) {
+            erroresRegex.push('Teléfono (Ocupación): Debe contener 10 dígitos numéricos.');
+        }
+        if (detalles.direccionPostal && detalles.direccionPostal.trim() !== '' && !regexCP.test(detalles.direccionPostal)) {
+            erroresRegex.push('Código Postal: Debe contener 5 dígitos numéricos.');
+        }
+
+        const promVal = parseFloat(detalles.promedio);
+        if (isNaN(promVal) || promVal < 0 || promVal > 10) {
+            erroresRegex.push('Promedio: Debe ser un valor numérico entre 0.0 y 10.0.');
+        }
+
+        if (erroresRegex.length > 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Formato de datos inválido',
+                html: '<div class="text-start"><b>Por favor corrige lo siguiente:</b><br><ul class="mt-2 mb-0"><li>' + erroresRegex.join('</li><li>') + '</li></ul></div>',
                 confirmButtonColor: '#f59e0b'
             });
             const contDetalles = document.getElementById("detallesExtendidos");
@@ -539,7 +612,7 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
 
             document.getElementById("formUsuario").reset();
             if (idInput) idInput.value = "";
-            document.querySelector("#modalUsuario .modal-title").innerHTML = '<i class="fa-solid fa-user-plus"></i> Nuevo Usuario';
+            document.querySelector("#modalUsuario .modal-title").textContent = 'Nuevo Usuario';
             const btnElim = document.getElementById("btnEliminarUsuario");
             if (btnElim) btnElim.style.display = "none";
 
@@ -606,6 +679,8 @@ async function eliminarUsuario(id) {
 // MÓDULO CONVOCATORIAS
 // ==========================================
 
+let convocatoriasGlobalesAdmin = [];
+
 async function cargarConvocatorias() {
     const contenedor = document.getElementById("contenedorConvocatorias");
     const totalConvocatorias = document.getElementById("totalConvocatorias");
@@ -619,47 +694,13 @@ async function cargarConvocatorias() {
         // Si el endpoint no existe o falla, detenemos el renderizado
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
 
-        const convocatorias = await respuesta.json();
+        convocatoriasGlobalesAdmin = await respuesta.json();
 
         if (totalConvocatorias) {
-            totalConvocatorias.textContent = convocatorias.length || 0;
+            totalConvocatorias.textContent = (convocatoriasGlobalesAdmin || []).length || 0;
         }
 
-        contenedor.innerHTML = "";
-
-        if (!convocatorias || convocatorias.length === 0) {
-            contenedor.innerHTML = "<p class='text-muted' style='grid-column: 1 / -1;'>No hay convocatorias registradas.</p>";
-            return;
-        }
-
-        convocatorias.forEach(conv => {
-            let colorEstado = "#6c757d"; // Borrador / Cerrada
-            if (conv.estado === "Activa") colorEstado = "#2ecc71";
-            if (conv.estado === "Evaluacion") colorEstado = "#f1c40f";
-
-            const card = document.createElement("div");
-            card.className = "card p-3 shadow-sm text-center";
-            card.style.cursor = "pointer";
-            card.style.transition = "transform 0.2s, box-shadow 0.2s";
-            card.onmouseover = () => { card.style.transform = "scale(1.02)"; };
-            card.onmouseout = () => { card.style.transform = "scale(1)"; };
-            const fechaInicioFormateada = new Date(conv.fecha_inicio).toLocaleDateString('es-MX');
-            const fechaFinFormateada = new Date(conv.fecha_fin).toLocaleDateString('es-MX');
-            card.onclick = () => editarConvocatoria(conv.id);
-
-            card.innerHTML = `
-                <div class="mb-2" style="font-size: 2.5rem; color: #9b59b6;">
-                    <i class="fa-solid fa-file-invoice"></i>
-                </div>
-                <h5 class="mb-1 fw-semibold">${conv.nombre}</h5>
-                <p class="mb-2 text-muted" style="font-size:0.9rem;">${fechaInicioFormateada} a ${fechaFinFormateada}</p>
-                <div>
-                    <span class="badge" style="background-color: ${colorEstado}; font-size:0.8rem;">${conv.estado}</span>
-                </div>
-            `;
-
-            contenedor.appendChild(card);
-        });
+        renderizarGridConvocatorias();
     } catch (error) {
         console.error("Error en cargarConvocatorias:", error);
         contenedor.innerHTML = "<p class='text-muted' style='grid-column: 1 / -1;'>Esperando API de convocatorias...</p>";
@@ -667,6 +708,73 @@ async function cargarConvocatorias() {
         ocultarLoader();
     }
 }
+
+function renderizarGridConvocatorias() {
+    const contenedor = document.getElementById("contenedorConvocatorias");
+    if (!contenedor) return;
+
+    contenedor.innerHTML = "";
+
+    const filtroEstado = (document.getElementById("filtro-convocatoria-estado")?.value || "").toLowerCase();
+    const filtroPrograma = (document.getElementById("filtro-convocatoria-programa")?.value || "").toLowerCase();
+
+    const filtradas = (convocatoriasGlobalesAdmin || []).filter(conv => {
+        const estado = (conv.estado || "").toLowerCase();
+        const nombre = (conv.nombre || "").toLowerCase();
+
+        let matchEstado = true;
+        if (filtroEstado) {
+            if (filtroEstado === 'borrador') {
+                matchEstado = estado.includes('borrador') || estado.includes('inactiv') || (estado !== 'activa' && estado !== 'evaluacion');
+            } else {
+                matchEstado = estado.includes(filtroEstado);
+            }
+        }
+
+        let matchPrograma = true;
+        if (filtroPrograma) {
+            matchPrograma = nombre.includes(filtroPrograma);
+        }
+
+        return matchEstado && matchPrograma;
+    });
+
+    if (filtradas.length === 0) {
+        contenedor.innerHTML = "<p class='text-muted text-center py-4' style='grid-column: 1 / -1;'><i class='fa-solid fa-inbox me-2'></i> No hay convocatorias que coincidan con los filtros seleccionados.</p>";
+        return;
+    }
+
+    filtradas.forEach(conv => {
+        let colorEstado = "#6c757d"; // Borrador / Cerrada
+        if (conv.estado === "Activa") colorEstado = "#2ecc71";
+        if (conv.estado === "Evaluacion") colorEstado = "#f1c40f";
+
+        const card = document.createElement("div");
+        card.className = "card p-3 shadow-sm text-center";
+        card.style.cursor = "pointer";
+        card.style.transition = "box-shadow 0.2s";
+        const fechaInicioFormateada = new Date(conv.fecha_inicio).toLocaleDateString('es-MX');
+        const fechaFinFormateada = new Date(conv.fecha_fin).toLocaleDateString('es-MX');
+        card.onclick = () => editarConvocatoria(conv.id);
+
+        card.innerHTML = `
+            <div class="mb-2" style="font-size: 2.5rem; color: #9b59b6;">
+                <i class="fa-solid fa-file-invoice"></i>
+            </div>
+            <h5 class="mb-1 fw-semibold" style="color: var(--color-text);">${conv.nombre}</h5>
+            <p class="mb-2 text-muted" style="font-size:0.9rem;">${fechaInicioFormateada} a ${fechaFinFormateada}</p>
+            <div>
+                <span class="badge" style="background-color: ${colorEstado}; font-size:0.8rem;">${conv.estado}</span>
+            </div>
+        `;
+
+        contenedor.appendChild(card);
+    });
+}
+
+window.filtrarConvocatoriasUI = function () {
+    renderizarGridConvocatorias();
+};
 
 let todosLosPosgrados = [];
 async function cargarPosgradosEnSelect() {
@@ -1186,12 +1294,17 @@ async function cargarAspirantes() {
         tbody.innerHTML = "";
 
         if (!aspirantes || aspirantes.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='4' class='text-center text-muted'>No hay aspirantes registrados.</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='5' style='text-align: center; color: var(--color-text-muted); padding: 25px;'>No hay aspirantes registrados.</td></tr>";
             return;
         }
 
         for (const aspirante of aspirantes) {
             const tr = document.createElement("tr");
+            tr.style.borderBottom = "1px solid var(--color-border)";
+            tr.style.transition = "background 0.2s";
+            tr.onmouseover = function () { this.style.background = 'var(--color-bg)'; };
+            tr.onmouseout = function () { this.style.background = 'transparent'; };
+
             // Formatear nombre completo
             const nombreCompleto = `${aspirante.nombre || ''} ${aspirante.primerApellido || ''} ${aspirante.segundoApellido || ''}`.trim();
 
@@ -1224,25 +1337,50 @@ async function cargarAspirantes() {
 
             const correoReal = (await correoAspirante(aspirante.idUsuario)) || aspirante.correo || 'Sin correo';
             const posgradoNombreReal = await posgradoAspirante(aspirante);
-            const ini = (aspirante.nombre ? aspirante.nombre.charAt(0) : (correoReal ? correoReal.charAt(0) : 'A')).toUpperCase();
 
             const posgradoTxt = posgradoNombreReal || 'Sin posgrado seleccionado';
             const badgeClass = posgradoNombreReal ? 'soft-badge-primary' : 'soft-badge-secondary';
 
+            const curpStr = aspirante.curp || 'Sin CURP';
+            const telefonoStr = aspirante.telefono || 'Sin teléfono';
+            const licenciaturaStr = aspirante.licenciatura || 'Licenciatura no especificada';
+            const institucionStr = aspirante.institucionLicenciatura || 'Institución no especificada';
+            const promedioStr = (aspirante.promedio !== null && aspirante.promedio !== undefined) ? aspirante.promedio : null;
+
+            const iniNombre = (aspirante.nombre || '').charAt(0).toUpperCase();
+            const iniApellido = (aspirante.primerApellido || '').charAt(0).toUpperCase();
+            const iniciales = (iniNombre + iniApellido) || 'A';
+
             tr.style.cursor = "pointer";
             tr.onclick = () => verExpedienteAspirante(aspirante.id);
             tr.innerHTML = `
-                <td>
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="table-avatar table-avatar-info">${ini}</div>
-                        <span class="fw-bold">${nombreCompleto || 'Sin nombre'}</span>
+                <td style="padding: 14px 15px; vertical-align: middle;">
+                    <strong style="color: var(--color-text); font-size: 0.95rem; display: block;">${nombreCompleto || 'Sin nombre'}</strong>
+                    <small style="font-size: 0.8rem; color: var(--color-text-muted); display: block; margin-top: 3px;">
+                        <i class="fa-regular fa-envelope me-1" style="color: var(--color-primary);"></i>${correoReal}
+                    </small>
+                </td>
+                <td style="padding: 14px 15px; vertical-align: middle;">
+                    <div style="font-size: 0.85rem; font-weight: 600; color: var(--color-text); font-family: monospace;">
+                        <i class="fa-solid me-1" style="color: var(--color-text-muted);"></i>${curpStr}
                     </div>
                 </td>
-                <td style="color: var(--color-text-muted);">${correoReal}</td>
-                <td><span class="soft-badge ${badgeClass}"><i class="fa-solid fa-graduation-cap me-1"></i> ${posgradoTxt}</span></td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 text-nowrap" style="font-size: 0.8rem;">
-                        <i class="fa-solid fa-folder-open me-1"></i> Ver expediente
+                <td style="padding: 14px 15px; vertical-align: middle;">
+                    <div style="font-size: 0.88rem; font-weight: 600; color: var(--color-text);">
+                        <i class="fa-solid me-1" style="color: var(--color-primary);"></i>${licenciaturaStr}
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--color-text-muted); margin-top: 2px;">
+                        ${institucionStr} ${promedioStr ? `<span style="background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.25); padding: 1px 6px; border-radius: 10px; font-weight: 700; font-size: 10px; margin-left: 6px;">Prom: ${promedioStr}</span>` : ''}
+                    </div>
+                </td>
+                <td style="padding: 14px 15px; vertical-align: middle;">
+                    <span class="soft-badge ${badgeClass}" style="padding: 6px 12px; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-book-bookmark"></i> ${posgradoTxt}
+                    </span>
+                </td>
+                <td style="padding: 14px 15px; text-align: center; vertical-align: middle;">
+                    <button onclick="event.stopPropagation(); verExpedienteAspirante(${aspirante.id});" title="Ver expediente" style="background: transparent; border: none; color: var(--color-primary); font-size: 1.25rem; cursor: pointer; padding: 6px 10px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.15)'" onmouseout="this.style.background='transparent'">
+                        <i class="fa-solid fa-folder-open"></i>
                     </button>
                 </td>
             `;
@@ -1250,7 +1388,7 @@ async function cargarAspirantes() {
         }
     } catch (error) {
         console.error("Error al cargar aspirantes:", error);
-        tbody.innerHTML = "<tr><td colspan='4' class='text-center text-muted'>Esperando API de aspirantes...</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='5' style='text-align: center; color: var(--color-text-muted); padding: 25px;'>Esperando API de aspirantes...</td></tr>";
     } finally {
         ocultarLoader();
     }
@@ -1263,7 +1401,7 @@ async function verExpedienteAspirante(id) {
         if (!respuesta.ok) throw new Error("Aspirante no encontrado");
 
         const expediente = await respuesta.json();
-        const perfil = expediente.perfil;
+        const perfil = expediente.perfil || {};
         const solicitudes = expediente.solicitudes || [];
 
         // Llenar el perfil resumido
@@ -1325,17 +1463,19 @@ async function verExpedienteAspirante(id) {
                 </div>
             `;
         } else {
-            solicitudes.forEach(sol => {
+            solicitudes.forEach((sol, index) => {
                 let badgeSolicitud = "soft-badge-warning";
                 if (sol.estado === "APROBADO") badgeSolicitud = "soft-badge-success";
                 else if (sol.estado === "RECHAZADO") badgeSolicitud = "soft-badge-danger";
 
                 const d = new Date(sol.creadoEn).toLocaleDateString();
+                const containerId = `sol-docs-${sol.id || index}`;
+                const chevronId = `chevron-${sol.id || index}`;
 
                 // Armar la lista de documentos
                 let htmlDocs = "";
                 if (sol.documentos && sol.documentos.length > 0) {
-                    htmlDocs = `<div class="mt-4"><h6 class="small fw-bold text-muted mb-3" style="letter-spacing: 0.5px; text-transform: uppercase;">Documentos Adjuntos</h6><div class="border rounded" style="border-color: var(--color-border) !important; overflow: hidden;">`;
+                    htmlDocs = `<div style="margin-top: 1rem;"><h6 style="font-size: 0.85rem; font-weight: bold; color: var(--color-text-muted); margin-bottom: 0.75rem; letter-spacing: 0.5px; text-transform: uppercase;">Documentos Adjuntos</h6><div style="border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">`;
                     sol.documentos.forEach(doc => {
                         let classBadge = "soft-badge-warning";
                         if (doc.estadoValidacion === "APROBADO") { classBadge = "soft-badge-success"; }
@@ -1343,12 +1483,12 @@ async function verExpedienteAspirante(id) {
 
                         htmlDocs += `
                             <div class="doc-row-premium" onclick="window.open('/api/files/${doc.rutaArchivo}?token=' + (sessionStorage.getItem('token') || localStorage.getItem('token')), '_blank')">
-                                <div class="d-flex align-items-center">
+                                <div style="display: flex; align-items: center;">
                                     <i class="fa-solid fa-file-pdf doc-icon"></i>
                                     <span style="font-weight: 500; color: var(--color-text);">${doc.requisitoNombre}</span>
                                 </div>
-                                <div class="d-flex align-items-center">
-                                    <span class="soft-badge ${classBadge} me-3">${doc.estadoValidacion}</span>
+                                <div style="display: flex; align-items: center;">
+                                    <span class="soft-badge ${classBadge}" style="margin-right: 1rem;">${doc.estadoValidacion}</span>
                                     <i class="fa-solid fa-chevron-right chevron-icon"></i>
                                 </div>
                             </div>
@@ -1356,31 +1496,35 @@ async function verExpedienteAspirante(id) {
                     });
                     htmlDocs += `</div></div>`;
                 } else {
-                    htmlDocs = `<div class="mt-4 p-4 text-center rounded" style="background: var(--color-bg);"><p class="text-muted small mb-0"><i class="fa-solid fa-folder-minus me-2"></i> No se han adjuntado documentos aún.</p></div>`;
+                    htmlDocs = `<div style="margin-top: 1rem; padding: 1.25rem; text-align: center; border-radius: 8px; background: var(--color-bg);"><p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 0;"><i class="fa-solid fa-folder-minus" style="margin-right: 0.5rem;"></i> No se han adjuntado documentos aún.</p></div>`;
                 }
 
                 contSolicitudes.innerHTML += `
-                    <div class="mb-5 pb-2" style="border-bottom: 1px dashed var(--color-border);">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div style="margin-bottom: 1.25rem; padding: 16px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-card-bg); transition: all 0.2s;">
+                        <div onclick="toggleSolicitudDocs('${containerId}', '${chevronId}')" style="cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; user-select: none;">
                             <div>
-                                <h5 class="fw-bold mb-1" style="color: var(--color-text);">${sol.convocatoriaNombre}</h5>
-                                ${sol.opcionNombre ? `<div class="mb-1"><span class="soft-badge soft-badge-secondary"><i class="fa-solid fa-layer-group me-1"></i> Opción: ${sol.opcionNombre}</span></div>` : ''}
-                                <div class="text-muted small mt-1" style="font-weight: 500;">
+                                <h5 style="font-weight: bold; margin-bottom: 0.35rem; color: var(--color-text); font-size: 1.15rem; display: flex; align-items: center; gap: 10px;">
+                                    <span>${sol.convocatoriaNombre}</span>
+                                    <i id="${chevronId}" class="fa-solid fa-chevron-down" style="font-size: 0.85rem; color: var(--color-primary); transition: transform 0.3s ease;"></i>
+                                </h5>
+                                ${sol.opcionNombre ? `<div style="margin-bottom: 0.35rem;"><span class="soft-badge soft-badge-secondary"><i class="fa-solid fa-layer-group me-1"></i> Opción: ${sol.opcionNombre}</span></div>` : ''}
+                                <div style="color: var(--color-text-muted); font-size: 0.85rem; font-weight: 500;">
                                     <span>Iniciado el: ${d}</span> &nbsp;&bull;&nbsp; <span>${sol.modalidadNombre || 'Sin modalidad'}</span>
-
                                 </div>
                             </div>
-                            <span class="soft-badge ${badgeSolicitud} mt-1">${sol.estado}</span>
+                            <span class="soft-badge ${badgeSolicitud}">${sol.estado}</span>
                         </div>
-                        ${htmlDocs}
+                        <div id="${containerId}" style="display: none; margin-top: 0.75rem; border-top: 1px dashed var(--color-border); padding-top: 0.75rem;">
+                            ${htmlDocs}
+                        </div>
                     </div>
                 `;
             });
         }
 
         // Intercambiar vistas
-        document.getElementById("vistaTablaAspirantes").classList.add("d-none");
-        document.getElementById("vistaPerfilAspirante").classList.remove("d-none");
+        document.getElementById("vistaTablaAspirantes").style.display = "none";
+        document.getElementById("vistaPerfilAspirante").style.display = "block";
 
     } catch (error) {
         console.error("Error al cargar expediente:", error);
@@ -1391,67 +1535,63 @@ async function verExpedienteAspirante(id) {
 }
 
 function cerrarExpedienteAspirante() {
-    document.getElementById("vistaPerfilAspirante").classList.add("d-none");
-    document.getElementById("vistaTablaAspirantes").classList.remove("d-none");
+    document.getElementById("vistaPerfilAspirante").style.display = "none";
+    document.getElementById("vistaTablaAspirantes").style.display = "block";
 }
 
-document.getElementById("formAspirante")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const id = document.getElementById("detalleAspId").value;
+function toggleSolicitudDocs(containerId, chevronId) {
+    const container = document.getElementById(containerId);
+    const chevron = document.getElementById(chevronId);
+    if (!container) return;
 
-    const datos = {
-        nombre: document.getElementById("detalleAspNombre").value,
-        primerApellido: document.getElementById("detalleAspPrimerApellido").value,
-        segundoApellido: document.getElementById("detalleAspSegundoApellido").value,
-        curp: document.getElementById("detalleAspCurp").value,
-        correo: document.getElementById("detalleAspCorreo").value,
-        telefono: document.getElementById("detalleAspTelefono").value,
-        fechaNacimiento: document.getElementById("detalleAspFechaNac").value,
-        direccion: document.getElementById("detalleAspDireccion").value
-    };
-
-    const token = sessionStorage.getItem("token") || "";
-
-    try {
-        const respuesta = await fetch(`/api/aspirante/${id}`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify(datos)
-        });
-
-        const resultado = await respuesta.json();
-
-        if (respuesta.ok && resultado.success !== false) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Éxito',
-                text: resultado.mensaje || 'Aspirante actualizado con éxito',
-                timer: 1500,
-                showConfirmButton: false
-            });
-            const modalElement = document.getElementById("modalAspirante");
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            if (modal) modal.hide();
-            cargarAspirantes();
-        } else {
-            Swal.fire({ icon: 'error', title: 'Error', text: resultado.mensaje || 'Hubo un error al procesar la solicitud.', confirmButtonColor: '#ef4444' });
-        }
-    } catch (error) {
-        console.error("Error al guardar aspirante:", error);
-        Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'Ocurrió un error en la conexión con el servidor.', confirmButtonColor: '#ef4444' });
+    if (container.style.display === "none" || container.style.display === "") {
+        container.style.display = "block";
+        if (chevron) chevron.style.transform = "rotate(180deg)";
+    } else {
+        container.style.display = "none";
+        if (chevron) chevron.style.transform = "rotate(0deg)";
     }
-});
+}
+
+// Funciones de Filtrado UI para Aspirantes
+window.filtrarTablaAspirantesUI = function () {
+    const texto = (document.getElementById('filtro-aspirantes-texto')?.value || '').toLowerCase();
+    const programa = (document.getElementById('filtro-aspirantes-programa')?.value || '').toLowerCase();
+
+    const tbody = document.getElementById("tablaAspirantes");
+    if (!tbody) return;
+
+    const filas = tbody.querySelectorAll('tr');
+    filas.forEach(fila => {
+        // Ignorar fila de "no hay registros"
+        if (fila.querySelector('td[colspan]')) return;
+
+        const tdNombre = fila.children[0];
+        const tdPrograma = fila.children[3];
+
+        if (!tdNombre || !tdPrograma) return;
+
+        const textoFila = tdNombre.innerText.toLowerCase();
+        const textoPrograma = tdPrograma.innerText.toLowerCase();
+
+        const matchTexto = !texto || textoFila.includes(texto);
+        const matchPrograma = !programa || textoPrograma.includes(programa);
+
+        if (matchTexto && matchPrograma) {
+            fila.style.display = '';
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+};
 
 // ==========================================
-// MÓDULO NOTIFICACIONES
+// MÓDULO NOTIFICACIONES Y AVISOS
 // ==========================================
 
-// --- NOTIFICATIONS CHAT STATE ---
 let notificacionActivaId = null;
 let notificacionesGlobales = [];
+let filtroAudienciaActual = 'todos';
 
 async function cargarNotificacionesAdmin() {
     const contenedor = document.getElementById("listaNotificacionesChat");
@@ -1463,61 +1603,140 @@ async function cargarNotificacionesAdmin() {
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
 
         notificacionesGlobales = await respuesta.json();
-        contenedor.innerHTML = "";
-
-        if (!notificacionesGlobales || notificacionesGlobales.length === 0) {
-            contenedor.innerHTML = `<div class="p-4 text-center text-muted small">
-                <i class="fa-solid fa-inbox fs-3 mb-2 opacity-50"></i><br>No hay mensajes.
-            </div>`;
-            return;
-        }
-
-        notificacionesGlobales.forEach(notif => {
-            const item = document.createElement("div");
-            item.className = "chat-item";
-            if (notificacionActivaId === notif.id) item.classList.add("active");
-
-            let destinoIcon = 'fa-users';
-            let destinoText = notif.destino || 'todos';
-            let bgClass = 'bg-primary';
-
-            if (destinoText === 'aspirantes') { destinoIcon = 'fa-graduation-cap'; bgClass = 'bg-info'; }
-            if (destinoText === 'docentes') { destinoIcon = 'fa-chalkboard-user'; bgClass = 'bg-warning'; }
-            if (destinoText === 'secretario') { destinoIcon = 'fa-file-signature'; bgClass = 'bg-success'; }
-
-            let estadoIcon = notif.activa == 1 || notif.activa === 'true' || notif.activa === true ? '<i class="fa-solid fa-eye text-success"></i>' : '<i class="fa-solid fa-eye-slash text-danger"></i>';
-
-            const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
-            const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-
-            item.onclick = () => mostrarLecturaNotificacion(notif.id);
-
-            item.innerHTML = `
-                <div class="chat-avatar ${bgClass}"><i class="fa-solid ${destinoIcon}"></i></div>
-                <div class="chat-details">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <div class="chat-title">${notif.nombre}</div>
-                        <div class="chat-meta" style="font-size: 11px;">${timeStr}</div>
-                    </div>
-                    <div class="chat-preview">${estadoIcon} ${notif.mensaje}</div>
-                </div>
-            `;
-            contenedor.appendChild(item);
-        });
+        renderizarFeedNotificaciones();
     } catch (error) {
         console.warn("Error al cargar notificaciones:", error);
-        contenedor.innerHTML = `<div class="p-4 text-center text-danger small"><i class="fa-solid fa-plug-circle-exclamation mb-2"></i><br>Error al cargar.</div>`;
+        contenedor.innerHTML = `<div class="p-4 text-center text-danger small"><i class="fa-solid fa-triangle-exclamation mb-2 fs-4"></i><br>Error al cargar las notificaciones.</div>`;
     } finally {
         ocultarLoader();
     }
 }
 
+function renderizarFeedNotificaciones() {
+    const contenedor = document.getElementById("listaNotificacionesChat");
+    if (!contenedor) return;
+
+    contenedor.innerHTML = "";
+
+    const terminoTexto = (document.getElementById('filtro-notif-texto')?.value || '').toLowerCase();
+
+    // Filtrar lista
+    const notifsFiltradas = (notificacionesGlobales || []).filter(n => {
+        const dest = (n.destino || 'todos').toLowerCase();
+        const matchAudiencia = filtroAudienciaActual === 'todos' || dest === filtroAudienciaActual;
+
+        const titulo = (n.nombre || '').toLowerCase();
+        const msg = (n.mensaje || '').toLowerCase();
+        const matchTexto = !terminoTexto || titulo.includes(terminoTexto) || msg.includes(terminoTexto);
+
+        return matchAudiencia && matchTexto;
+    });
+
+    if (notifsFiltradas.length === 0) {
+        contenedor.innerHTML = `
+            <div class="p-4 text-center text-muted small">
+                <i class="fa-solid fa-inbox fs-3 mb-2 opacity-50"></i><br>No se encontraron avisos con este filtro.
+            </div>
+        `;
+        return;
+    }
+
+    notifsFiltradas.forEach(notif => {
+        const item = document.createElement("div");
+        item.className = "notif-feed-item";
+        if (notificacionActivaId === notif.id) item.classList.add("active");
+
+        let destinoIcon = 'fa-bullhorn';
+        let badgeClass = 'soft-badge-primary';
+        let destinoLabel = 'Todos';
+
+        switch (notif.destino) {
+            case 'aspirantes':
+                destinoIcon = 'fa-graduation-cap';
+                badgeClass = 'soft-badge-info';
+                destinoLabel = 'Aspirantes';
+                break;
+            case 'docentes':
+                destinoIcon = 'fa-chalkboard-user';
+                badgeClass = 'soft-badge-warning';
+                destinoLabel = 'Docentes';
+                break;
+            case 'secretario':
+                destinoIcon = 'fa-file-signature';
+                badgeClass = 'soft-badge-success';
+                destinoLabel = 'Secretaría';
+                break;
+            case 'coordinador':
+                destinoIcon = 'fa-user-tie';
+                badgeClass = 'soft-badge-primary';
+                destinoLabel = 'Coordinador';
+                break;
+            case 'individual':
+                destinoIcon = 'fa-user';
+                badgeClass = 'soft-badge-secondary';
+                destinoLabel = 'Individual';
+                break;
+        }
+
+        const esActiva = notif.activa == 1 || notif.activa === 'true' || notif.activa === true;
+        const estadoBadge = esActiva
+            ? `<span class="soft-badge soft-badge-success" style="font-size: 10px; padding: 2px 6px;"><i class="fa-solid fa-eye me-1"></i>Visible</span>`
+            : `<span class="soft-badge soft-badge-danger" style="font-size: 10px; padding: 2px 6px;"><i class="fa-solid fa-eye-slash me-1"></i>Oculta</span>`;
+
+        const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
+        const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+        item.onclick = () => mostrarLecturaNotificacion(notif.id);
+
+        item.innerHTML = `
+            <div class="d-flex align-items-center gap-3">
+                <div class="avatar-initials bg-primary text-white flex-shrink-0" style="width: 38px; height: 38px; font-size: 1rem; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid ${destinoIcon}"></i>
+                </div>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-truncate" style="color: var(--color-text); font-size: 0.9rem;">${notif.nombre || 'Sin título'}</span>
+                        <small class="text-muted flex-shrink-0 ms-2" style="font-size: 11px;">${timeStr}</small>
+                    </div>
+                    <div class="text-truncate text-muted small mb-2" style="font-size: 0.82rem;">${notif.mensaje || ''}</div>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="soft-badge ${badgeClass}" style="font-size: 10px; padding: 2px 8px;">${destinoLabel}</span>
+                        ${estadoBadge}
+                    </div>
+                </div>
+            </div>
+        `;
+        contenedor.appendChild(item);
+    });
+}
+
+function filtrarNotifAudiencia(audiencia, btnEl) {
+    filtroAudienciaActual = audiencia;
+    const pills = document.querySelectorAll('#filtro-notif-audiencia .notif-filter-pill');
+    pills.forEach(p => {
+        p.classList.remove('btn-primary', 'active');
+        p.classList.add('btn-outline-secondary');
+    });
+
+    if (btnEl) {
+        btnEl.classList.remove('btn-outline-secondary');
+        btnEl.classList.add('btn-primary', 'active');
+    }
+
+    renderizarFeedNotificaciones();
+}
+
+window.filtrarNotificacionesUI = function () {
+    renderizarFeedNotificaciones();
+};
+
 function mostrarRedaccionNotificacion() {
     limpiarFormularioNotificacion();
+    document.getElementById("notifComposeTitle").innerHTML = '<i class="fa-solid fa-paper-plane"></i> Emitir Nueva Notificación';
     document.getElementById("chatReadMode").style.display = "none";
     document.getElementById("chatComposeMode").style.display = "flex";
 
-    document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.notif-feed-item').forEach(el => el.classList.remove('active'));
     notificacionActivaId = null;
 }
 
@@ -1531,17 +1750,20 @@ function cerrarRedaccionNotificacion() {
 }
 
 function limpiarLecturaNotificacion() {
-    document.getElementById("chatReadTitle").innerText = "Selecciona un mensaje";
-    document.getElementById("chatReadDestino").innerText = "Para leer los detalles";
-    document.getElementById("btnEliminarNotifChat").style.display = "none";
+    document.getElementById("chatReadTitle").innerText = "Selecciona una notificación";
+    document.getElementById("chatReadDestino").innerText = "Haz clic en un aviso de la lista para inspeccionarlo";
+
+    const btnEdit = document.getElementById("btnEditarNotifChat");
+    const btnDel = document.getElementById("btnEliminarNotifChat");
+    if (btnEdit) btnEdit.style.display = "none";
+    if (btnDel) btnDel.style.display = "none";
 
     const body = document.getElementById("chatReadBody");
     body.innerHTML = `
-        <div class="d-flex justify-content-center align-items-center h-100 text-muted">
-            <div class="text-center">
-                <i class="fa-regular fa-comments fa-3x mb-3 opacity-50"></i>
-                <p>Selecciona una notificación de la lista <br>para ver el mensaje completo.</p>
-            </div>
+        <div class="d-flex flex-column justify-content-center align-items-center h-100 text-muted py-5">
+            <img src="css/umsnhLogo.png" alt="Logo Posgrados" style="width: 120px; opacity: 0.3;" class="mb-3">
+            <h6 class="fw-semibold text-muted">Ningún aviso seleccionado</h6>
+            <p class="small text-muted text-center max-w-sm">Selecciona una notificación del panel izquierdo para ver los detalles del envío o crear una nueva para tu audiencia.</p>
         </div>
     `;
 }
@@ -1551,53 +1773,158 @@ function mostrarLecturaNotificacion(id) {
     document.getElementById("chatComposeMode").style.display = "none";
     document.getElementById("chatReadMode").style.display = "flex";
 
-    document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
-    // Refrescar clases active re-renderizando listado rápido
-    cargarNotificacionesAdmin();
+    document.querySelectorAll('.notif-feed-item').forEach(el => el.classList.remove('active'));
+    renderizarFeedNotificaciones();
 
     const notif = notificacionesGlobales.find(n => n.id === id);
     if (!notif) return;
 
-    let destinoText = notif.destino || 'todos';
-    let estadoText = notif.activa == 1 || notif.activa === 'true' || notif.activa === true ? '<span class="text-success fw-bold"><i class="fa-solid fa-eye"></i> Visible</span>' : '<span class="text-danger fw-bold"><i class="fa-solid fa-eye-slash"></i> Oculta</span>';
+    let destinoText = 'Todos los Usuarios';
+    let destinoBadge = 'soft-badge-primary';
+    let destinoIcon = 'fa-users';
 
-    document.getElementById("chatReadTitle").innerText = notif.nombre;
-    document.getElementById("chatReadDestino").innerText = `Enviado a: ${destinoText}`;
-    document.getElementById("btnEliminarNotifChat").style.display = "inline-block";
+    switch (notif.destino) {
+        case 'aspirantes':
+            destinoText = 'Aspirantes';
+            destinoBadge = 'soft-badge-info';
+            destinoIcon = 'fa-graduation-cap';
+            break;
+        case 'docentes':
+            destinoText = 'Docentes';
+            destinoBadge = 'soft-badge-warning';
+            destinoIcon = 'fa-chalkboard-user';
+            break;
+        case 'secretario':
+            destinoText = 'Secretaría';
+            destinoBadge = 'soft-badge-success';
+            destinoIcon = 'fa-file-signature';
+            break;
+        case 'coordinador':
+            destinoText = 'Coordinador';
+            destinoBadge = 'soft-badge-primary';
+            destinoIcon = 'fa-user-tie';
+            break;
+        case 'individual':
+            destinoText = `Aspirante Individual ${notif.idDestino ? `(ID: ${notif.idDestino})` : ''}`;
+            destinoBadge = 'soft-badge-secondary';
+            destinoIcon = 'fa-user';
+            break;
+    }
+
+    const esActiva = notif.activa == 1 || notif.activa === 'true' || notif.activa === true;
+    const estadoText = esActiva
+        ? '<span class="soft-badge soft-badge-success"><i class="fa-solid fa-eye me-1"></i> Publicada (Visible)</span>'
+        : '<span class="soft-badge soft-badge-danger"><i class="fa-solid fa-eye-slash me-1"></i> Oculta</span>';
+
+    document.getElementById("chatReadTitle").innerText = notif.nombre || 'Sin título';
+    document.getElementById("chatReadDestino").innerText = `Audiencia: ${destinoText}`;
+
+    const btnEdit = document.getElementById("btnEditarNotifChat");
+    const btnDel = document.getElementById("btnEliminarNotifChat");
+    if (btnEdit) btnEdit.style.display = "inline-block";
+    if (btnDel) btnDel.style.display = "inline-block";
 
     const dateObj = notif.creado_en ? new Date(notif.creado_en) : new Date();
     const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-    const dateStr = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+    const dateStr = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
 
     let editadoHtml = '';
     if (notif.editado_en && notif.creado_en && notif.editado_en !== notif.creado_en) {
         const editDate = new Date(notif.editado_en);
-        // Si hay una diferencia significativa de más de 5 segundos, se considera editado
         if (Math.abs(editDate - dateObj) > 5000) {
-            editadoHtml = `<span class="ms-2 text-muted fst-italic" style="font-size: 10px;">(Editado)</span>`;
+            editadoHtml = `<span class="ms-2 text-muted fst-italic" style="font-size: 11px;">(Editado el ${editDate.toLocaleDateString()})</span>`;
         }
     }
 
     const body = document.getElementById("chatReadBody");
     body.innerHTML = `
-        <div style="text-align: center; margin-bottom: 15px;">
-            <span style="background: var(--color-border); padding: 2px 8px; border-radius: 12px; font-size: 11px; color: var(--color-text-muted); font-weight: bold;">${dateStr}</span>
-        </div>
-        <div class="chat-bubble">
-            <div class="chat-bubble-title">${notif.nombre}</div>
-            <div class="chat-bubble-text">${notif.mensaje}</div>
-            <div class="chat-bubble-footer d-flex justify-content-between">
-                <span><i class="fa-solid fa-user me-1"></i> Destino: ${destinoText} ${notif.destino === 'individual' ? `(ID: ${notif.idDestino})` : ''}</span>
-                <span>${timeStr} ${editadoHtml}</span>
+        <div class="h-100 d-flex flex-column justify-content-between">
+            <div>
+                <!-- Metadata Header Card -->
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 pb-3 border-bottom" style="border-color: var(--color-border) !important;">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="soft-badge ${destinoBadge} px-3 py-1 fw-bold" style="font-size: 0.85rem;">
+                            <i class="fa-solid ${destinoIcon} me-1"></i> ${destinoText}
+                        </span>
+                        ${estadoText}
+                    </div>
+                    <div class="text-muted small font-monospace">
+                        <i class="fa-regular fa-clock me-1"></i> ${dateStr} - ${timeStr} ${editadoHtml}
+                    </div>
+                </div>
+
+                <!-- Announcement Title & Message Body -->
+                <h4 class="fw-bold mb-3" style="color: var(--color-text);">${notif.nombre || ''}</h4>
+
+                <div class="p-4 mb-4 rounded-3 shadow-sm" style="background: var(--color-bg); border: 1px solid var(--color-border); min-height: 180px;">
+                    <p style="color: var(--color-text); white-space: pre-wrap; font-size: 0.98rem; line-height: 1.6; margin-bottom: 0;">
+                        ${notif.mensaje || ''}
+                    </p>
+                </div>
             </div>
-            <div class="mt-2 text-end">${estadoText}</div>
-        </div>
-        <div class="text-center mt-4">
-            <button class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm" onclick="editarNotificacion(${notif.id})">
-                <i class="fa-solid fa-pen-to-square"></i> Editar este mensaje
-            </button>
+
+            <!-- Footer Action Controls -->
+            <div class="pt-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2" style="border-color: var(--color-border) !important;">
+                <button class="btn btn-sm ${esActiva ? 'btn-outline-warning' : 'btn-outline-success'} rounded-pill px-3 fw-bold" onclick="toggleVisibilidadNotificacion(${notif.id})">
+                    <i class="fa-solid ${esActiva ? 'fa-eye-slash' : 'fa-eye'} me-1"></i> ${esActiva ? 'Ocultar aviso' : 'Hacer visible'}
+                </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" onclick="editarNotificacion(${notif.id})">
+                        <i class="fa-solid fa-pen-to-square me-1"></i> Editar
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" onclick="eliminarNotificacionActiva()">
+                        <i class="fa-solid fa-trash me-1"></i> Eliminar
+                    </button>
+                </div>
+            </div>
         </div>
     `;
+}
+
+function editarNotificacionActiva() {
+    if (notificacionActivaId) {
+        editarNotificacion(notificacionActivaId);
+    }
+}
+
+async function toggleVisibilidadNotificacion(id) {
+    try {
+        const notif = notificacionesGlobales.find(n => n.id === id);
+        if (!notif) return;
+
+        const nuevoEstado = (notif.activa == 1 || notif.activa === 'true' || notif.activa === true) ? 0 : 1;
+        const token = sessionStorage.getItem("token") || "";
+
+        const respuesta = await fetch(`/api/notificaciones/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                nombre: notif.nombre,
+                mensaje: notif.mensaje,
+                destino: notif.destino,
+                activa: nuevoEstado,
+                idDestino: notif.idDestino
+            })
+        });
+
+        if (respuesta.ok) {
+            Swal.fire({
+                icon: 'success',
+                title: nuevoEstado ? 'Notificación visible' : 'Notificación oculta',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            await cargarNotificacionesAdmin();
+            mostrarLecturaNotificacion(id);
+        }
+    } catch (e) {
+        console.warn("Error al cambiar visibilidad:", e);
+    }
 }
 
 function limpiarFormularioNotificacion() {
@@ -1617,6 +1944,8 @@ async function editarNotificacion(id) {
 
         mostrarRedaccionNotificacion();
         notificacionActivaId = id;
+
+        document.getElementById("notifComposeTitle").innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Editar Notificación Existente';
 
         document.getElementById("idNotificacionForm").value = notif.id;
         document.getElementById("notif_titulo").value = notif.nombre || "";
@@ -1680,8 +2009,8 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
 
         if (respuesta.ok && resultado.success !== false) {
             Swal.fire({
-                title: '¡Enviado!',
-                text: resultado.mensaje || 'Notificación procesada con éxito.',
+                title: '¡Procesado!',
+                text: resultado.mensaje || 'Notificación guardada con éxito.',
                 icon: 'success',
                 timer: 2000,
                 showConfirmButton: false
@@ -1689,9 +2018,8 @@ document.getElementById("formNotificacion")?.addEventListener("submit", async (e
 
             limpiarFormularioNotificacion();
             cerrarRedaccionNotificacion();
-            cargarNotificacionesAdmin();
+            await cargarNotificacionesAdmin();
 
-            // Si es edición, volver a leer el mensaje (luego de recargar la lista el id sigue siendo el mismo)
             if (idInput) {
                 mostrarLecturaNotificacion(parseInt(idInput, 10));
             }
@@ -1708,8 +2036,8 @@ async function eliminarNotificacionActiva() {
     if (!notificacionActivaId) return;
 
     const confirmacion = await Swal.fire({
-        title: '¿Eliminar Mensaje?',
-        text: "Este mensaje será eliminado. ¡No se puede deshacer!",
+        title: '¿Eliminar Notificación?',
+        text: "Esta acción eliminará el aviso para todos los destinatarios.",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
@@ -1733,7 +2061,7 @@ async function eliminarNotificacionActiva() {
         const resultado = await respuesta.json();
 
         if (respuesta.ok && resultado.success !== false) {
-            Swal.fire('¡Eliminado!', 'El mensaje ha sido eliminado.', 'success');
+            Swal.fire('¡Eliminado!', 'El aviso ha sido eliminado.', 'success');
 
             notificacionActivaId = null;
             limpiarLecturaNotificacion();
@@ -1800,7 +2128,7 @@ function cerrarDrawerAjustes() {
 }
 
 function toggleNotificationMenu(event) {
-    if(event) event.stopPropagation();
+    if (event) event.stopPropagation();
     const menu = document.getElementById('notification-dropdown');
     if (menu) {
         menu.classList.toggle('show');
@@ -1813,7 +2141,7 @@ document.addEventListener('click', function (event) {
     if (notificationMenu && notificationMenu.classList.contains('show') && !event.target.closest('.notification-container')) {
         notificationMenu.classList.remove('show');
     }
-    
+
     // profileDropdown ya puede estar manejado en utils.js, pero lo agregamos por seguridad
     const profileDropdown = document.getElementById('profile-dropdown');
     if (profileDropdown && profileDropdown.classList.contains('show') && !event.target.closest('.profile-container')) {
