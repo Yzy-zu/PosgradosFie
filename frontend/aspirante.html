@@ -97,8 +97,14 @@
         </div>
     </nav>
 
+    <!-- Overlay móvil para cerrar la barra lateral -->
+    <div id="sidebar-mobile-overlay" class="sidebar-overlay" onclick="toggleSidebarMobile()"></div>
+
     <main class="main-content" style="position: relative;">
         <header class="topbar-modern">
+            <button class="btn-mobile-toggle" id="btn-mobile-sidebar-toggle" onclick="toggleSidebarMobile()" aria-label="Abrir menú">
+                <i class="fa-solid fa-bars"></i>
+            </button>
             <div class="topbar-greeting">
                 <span id="topbar-nombre-usuario"
                     style="font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; color: var(--color-text);">Cargando...</span>

@@ -149,6 +149,10 @@ document.addEventListener("DOMContentLoaded", async function () {
  * Control del cambio de paneles (Navegación lateral con Hash Router)
  */
 function switchView(viewId) {
+    if (typeof cerrarSidebarMobile === 'function') {
+        cerrarSidebarMobile();
+    }
+
     if ((viewId === 'documentos' || viewId === 'proceso') && !currentSolicitudId) {
         // Redirigir a inicio o convocatorias si intenta forzar la URL sin tener una solicitud activa
         Swal.fire('Acceso Denegado', 'Debes seleccionar una convocatoria primero.', 'warning');
