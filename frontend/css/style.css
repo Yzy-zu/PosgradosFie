@@ -5704,3 +5704,308 @@ body.dark-mode .status-banner.status-aprobado .status-banner-badge {
 .fw-bold { font-weight: bold !important; }
 .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important; }
 
+/* ── BOTÓN MÓVIL Y OVERLAY SIDEBAR ────────────────────────────── */
+.btn-mobile-toggle {
+    display: none;
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1040;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ── REGLAS RESPONSIVAS EN MÓVILES (SMARTPHONES Y TABLETS < 768px) ── */
+@media (max-width: 768px) {
+    /* 1. Botón hamburguesa visible */
+    .btn-mobile-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        border: 1px solid var(--color-border, rgba(255, 255, 255, 0.15));
+        background: var(--color-card-bg, #1e293b);
+        color: var(--color-text, #f8fafc);
+        font-size: 18px;
+        cursor: pointer;
+        flex-shrink: 0;
+        margin-right: 10px;
+        transition: background 0.2s, transform 0.15s;
+    }
+
+    .btn-mobile-toggle:active {
+        transform: scale(0.95);
+    }
+
+    /* 2. Sidebar Cajón Flotante (Off-Canvas) */
+    .sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        height: 100vh !important;
+        width: 270px !important;
+        z-index: 1050 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s ease !important;
+        box-shadow: none !important;
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0) !important;
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    /* Anular reglas colapsadas de escritorio en móvil */
+    .sidebar.collapsed {
+        width: 270px !important;
+    }
+
+    .sidebar.collapsed .sidebar-header span.text,
+    .sidebar.collapsed a span.text {
+        opacity: 1 !important;
+        max-width: 150px !important;
+        margin-left: 10px !important;
+        transform: none !important;
+        pointer-events: auto !important;
+        position: static !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    .sidebar.collapsed .sidebar-actions {
+        flex-direction: row !important;
+        padding-right: 20px !important;
+    }
+
+    /* 3. Contenido Principal Ajustado */
+    .main-content,
+    .main-content.expanded {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 15px 12px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 4. Topbar Moderno Adaptado */
+    .topbar-modern {
+        margin: -15px -12px 15px -12px !important;
+        padding: 0 15px !important;
+        height: 65px !important;
+        gap: 8px !important;
+        border-radius: 0 !important;
+    }
+
+    .topbar-greeting {
+        overflow: hidden !important;
+        max-width: calc(100vw - 170px) !important;
+    }
+
+    .topbar-greeting span {
+        font-size: 16px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    /* 5. Bandeja Mega Dropdown Notificaciones */
+    .messages-mega-dropdown {
+        position: fixed !important;
+        top: 65px !important;
+        left: 10px !important;
+        right: 10px !important;
+        width: calc(100vw - 20px) !important;
+        max-width: none !important;
+        max-height: 80vh !important;
+        flex-direction: column !important;
+        overflow-y: auto !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+        z-index: 1090 !important;
+    }
+
+    .messages-mega-body {
+        flex-direction: column !important;
+        min-height: auto !important;
+    }
+
+    .messages-mega-list,
+    .messages-mega-read {
+        width: 100% !important;
+        border-right: none !important;
+    }
+
+    /* 6. Métricas de Perfil Premium a 1 Columna */
+    .profile-summary-premium {
+        padding: 18px 14px !important;
+        margin-bottom: 18px !important;
+        border-radius: 14px !important;
+    }
+
+    .profile-summary-premium .summary-metrics {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        text-align: center !important;
+    }
+
+    .profile-summary-premium .metric-item {
+        width: 100% !important;
+        padding: 12px 10px !important;
+        background: rgba(255, 255, 255, 0.03) !important;
+        border-radius: 10px !important;
+        border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08)) !important;
+        box-sizing: border-box !important;
+    }
+
+    .profile-summary-premium .metric-divider {
+        display: none !important;
+    }
+
+    .profile-summary-premium .metric-value {
+        font-size: 1.5rem !important;
+    }
+
+    /* 7. Carrusel de Avisos */
+    .carousel-container {
+        border-radius: 14px !important;
+        min-height: 180px !important;
+        max-height: 240px !important;
+    }
+
+    /* 8. Tarjetas de Selección de Convocatorias */
+    .programas-container {
+        flex-direction: column !important;
+        gap: 20px !important;
+        padding: 25px 10px !important;
+        min-height: auto !important;
+    }
+
+    .box-programa {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 35px 20px 30px !important;
+        font-size: 18px !important;
+        border-radius: 20px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 9. Stepper de Estaciones y Grilla de Archivos */
+    .stepper-wrapper {
+        margin-top: 45px !important;
+        margin-bottom: 35px !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 4px !important;
+        padding: 0 5px !important;
+    }
+
+    .step-node {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+    }
+
+    .step-node .step-label {
+        font-size: 9px !important;
+        bottom: -28px !important;
+        white-space: normal !important;
+        max-width: 65px !important;
+        text-align: center !important;
+        line-height: 1.1 !important;
+    }
+
+    #fox-runner {
+        width: 32px !important;
+        top: -30px !important;
+    }
+
+    .file-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    /* 10. Botones de Acción Táctiles */
+    #form-estacion-0 > div,
+    #form-estacion-1 > div,
+    #form-estacion-2 > div,
+    #botones-estacion-3 {
+        flex-direction: column-reverse !important;
+        width: 100% !important;
+        gap: 10px !important;
+        align-items: stretch !important;
+    }
+
+    #form-estacion-0 button,
+    #form-estacion-1 button,
+    #form-estacion-2 button,
+    #botones-estacion-3 button {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 13px 20px !important;
+        font-size: 14px !important;
+        text-align: center !important;
+    }
+
+    /* 11. Mapa de Admisión Responsivo */
+    .mapa-fondo {
+        padding: 20px 10px !important;
+        min-height: 380px !important;
+        overflow-x: auto !important;
+    }
+
+    .mapa-nivel-final {
+        width: 70px !important;
+        height: 70px !important;
+    }
+
+    .mapa-zorro {
+        width: 60px !important;
+    }
+
+    /* 12. Drawer de Ajustes y Modales */
+    .settings-drawer {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 0 !important;
+    }
+
+    .modal-content-modern {
+        width: 96% !important;
+        max-width: 100% !important;
+        margin: 10px auto !important;
+        border-radius: 14px !important;
+    }
+
+    .modal-doc-info-box {
+        flex-direction: column !important;
+        gap: 12px !important;
+        align-items: stretch !important;
+        text-align: center !important;
+    }
+
+    #modal-doc-enlace {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+}
+
+
