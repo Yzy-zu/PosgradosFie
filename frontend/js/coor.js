@@ -703,6 +703,216 @@ async function guardarEntrevista(event) {
     }
 }
 
+// ==========================================
+// Cargar Dictámenes
+// ==========================================
+async function cargarDictamenes() {
+
+    const tbody = document.getElementById("tablaDictamenesBody");
+
+    if (!tbody) return;
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="6" class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                Cargando dictámenes...
+            </td>
+        </tr>
+    `;
+
+    try {
+
+        const res = await fetch("/api/coordinador/dictamenes");
+
+        const datos = await res.json();
+
+        tbody.innerHTML = "";
+
+        if (!datos.length) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center">
+                        No existen registros.
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
+
+        datos.forEach(d => {
+
+            let badge = `
+                <span class="badge bg-secondary">
+                    Pendiente
+                </span>
+            `;
+
+            if (d.resultado === "ACEPTADO") {
+
+                badge = `
+                    <span class="badge bg-success">
+                        ACEPTADO
+                    </span>
+                `;
+
+            }
+
+            if (d.resultado === "RECHAZADO") {
+
+                badge = `
+                    <span class="badge bg-danger">
+                        RECHAZADO
+                    </span>
+                `;
+
+            }
+
+            tbody.innerHTML += `
+
+                <tr>
+
+                    <td>${d.nombre}</td>
+
+                    <td>${d.curp}</td>
+
+                    <td>${d.programa}</td>
+
+                    <td>${badge}</td>
+
+                    <td>
+
+                        ${d.publicado ? "Sí" : "No"}
+
+                    </td>
+
+                    <td class="text-end">
+
+                        <button
+                            class="btn btn-danger btn-sm"
+                            onclick="abrirModalDictamen(${d.idSolicitud})">
+
+                            Emitir
+
+                        </button>
+
+                    </td>
+
+                </tr>
+
+            `;
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
+}
+
+// ==========================================
+// Abrir Modal Dictamen
+// ==========================================
+function abrirModalDictamen(idSolicitud){
+
+    document.getElementById("dictamenSolicitud").value = idSolicitud;
+
+    document.getElementById("dictamenResultado").value = "ACEPTADO";
+
+    document.getElementById("dictamenMotivo").value = "";
+
+    new bootstrap.Modal(
+        document.getElementById("modalDictamen")
+    ).show();
+
+}
+
+// ==========================================
+// Guardar Dictamen
+// ==========================================
+async function guardarDictamen(){
+
+    const id = document.getElementById("dictamenSolicitud").value;
+
+    const resultado = document.getElementById("dictamenResultado").value;
+
+    const motivo = document.getElementById("dictamenMotivo").value;
+
+    try{
+
+        const res = await fetch(`/api/coordinador/dictamen/${id}`,{
+
+            method:"POST",
+
+            headers:{
+
+                "Content-Type":"application/json"
+
+            },
+
+            body:JSON.stringify({
+
+                resultado,
+
+                motivo
+
+            })
+
+        });
+
+        const data = await res.json();
+
+        if(res.ok){
+
+            Swal.fire({
+
+                icon:"success",
+
+                title:"Correcto",
+
+                text:data.mensaje,
+
+                timer:1500,
+
+                showConfirmButton:false
+
+            });
+
+            bootstrap.Modal.getInstance(
+
+                document.getElementById("modalDictamen")
+
+            ).hide();
+
+            cargarDictamenes();
+
+        }else{
+
+            Swal.fire(
+
+                "Error",
+
+                data.mensaje,
+
+                "error"
+
+            );
+
+        }
+
+    }catch(error){
+
+        console.error(error);
+
+    }
+
+}
+
 /* ==========================================================
    6. NOTIFICACIONES (Header Dropdown)
 ========================================================== */
@@ -794,207 +1004,6 @@ async function cargarNotificaciones() {
                 <i class="fa-solid fa-plug-circle-exclamation me-1"></i> No se pudo conectar con el servidor.
             </div>`;
     }
-}
-
-// ==========================================
-// Cargar Dictámenes
-// ==========================================
-async function cargarDictamenes() {
-
-    console.log("Vista Dictámenes activa");
-
-    const tbody = document.getElementById("tablaDictamenesBody");
-
-    if (!tbody) return;
-
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="6" class="text-center py-5">
-                <div class="spinner-border text-danger"></div>
-                <p class="mt-3 text-muted">Cargando dictámenes...</p>
-            </td>
-        </tr>
-    `;
-
-    try {
-
-        const res = await fetch("/api/coordinador/dictamenes");
-
-        if (!res.ok)
-            throw new Error(`HTTP ${res.status}`);
-
-        const datos = await res.json();
-
-        tbody.innerHTML = "";
-
-        if (datos.length === 0) {
-
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="text-center py-5 text-muted">
-                        <i class="fa-solid fa-circle-info fa-2x mb-3"></i>
-                        <br>
-                        No existen dictámenes registrados.
-                    </td>
-                </tr>
-            `;
-
-            return;
-
-        }
-
-        datos.forEach(d => {
-
-            const estado = d.estado || "PENDIENTE";
-            const resultado = d.resultado || "SIN EMITIR";
-
-            let badgeEstado = "";
-            let badgeResultado = "";
-
-            switch (estado) {
-
-                case "APROBADO":
-                    badgeEstado = `<span class="badge bg-success">Aprobado</span>`;
-                    break;
-
-                case "RECHAZADO":
-                    badgeEstado = `<span class="badge bg-danger">Rechazado</span>`;
-                    break;
-
-                case "EN_REVISION":
-                    badgeEstado = `<span class="badge bg-warning text-dark">En revisión</span>`;
-                    break;
-
-                default:
-                    badgeEstado = `<span class="badge bg-secondary">Pendiente</span>`;
-            }
-
-            switch (resultado) {
-
-                case "ACEPTADO":
-                    badgeResultado = `<span class="badge bg-success">Aceptado</span>`;
-                    break;
-
-                case "RECHAZADO":
-                    badgeResultado = `<span class="badge bg-danger">Rechazado</span>`;
-                    break;
-
-                case "LISTA_ESPERA":
-                    badgeResultado = `<span class="badge bg-warning text-dark">Lista de espera</span>`;
-                    break;
-
-                default:
-                    badgeResultado = `<span class="badge bg-light text-dark border">Sin emitir</span>`;
-            }
-
-            tbody.innerHTML += `
-                <tr>
-
-                    <td>
-                        <div class="fw-bold">
-                            ${d.nombre}
-                        </div>
-                    </td>
-
-                    <td>
-                        <small class="font-monospace">
-                            ${d.curp}
-                        </small>
-                    </td>
-
-                    <td>
-                        ${d.programa}
-                    </td>
-
-                    <td>
-                        ${badgeEstado}
-                    </td>
-
-                    <td>
-                        ${badgeResultado}
-                    </td>
-
-                    <td class="text-center">
-
-                        <button
-                            class="btn btn-sm btn-outline-danger"
-                            onclick="abrirModalDictamen(
-                            ${d.idSolicitud},
-                            '${d.nombre.replace(/'/g,"\\'")}',
-                            '${d.resultado || ""}',
-                            '${d.motivo || ""}',
-                            ${d.publicado ? 1 : 0}
-                        )"
-
-                            <i class="fa-solid fa-gavel me-1"></i>
-                            Emitir
-
-                        </button>
-
-                    </td>
-
-                </tr>
-            `;
-
-        });
-
-    }
-    catch(err){
-
-        console.error(err);
-
-        tbody.innerHTML=`
-            <tr>
-                <td colspan="6" class="text-center text-danger py-5">
-
-                    <i class="fa-solid fa-circle-xmark fa-2x mb-3"></i>
-
-                    <br>
-
-                    Error al cargar los dictámenes.
-
-                </td>
-            </tr>
-        `;
-
-    }
-
-}
-
-// ==========================================
-// Abrir Modal Dictamen
-// ==========================================
-function abrirModalDictamen(
-    idSolicitud,
-    nombre,
-    resultado = "",
-    motivo = "",
-    publicado = 0
-) {
-
-    document.getElementById("dictamenIdSolicitud").value = idSolicitud;
-
-    document.getElementById("dictamenNombre").textContent = nombre;
-
-    document.getElementById("dictamenResultado").value =
-        resultado || "ACEPTADO";
-
-    document.getElementById("dictamenMotivo").value =
-        motivo || "";
-
-    document.getElementById("dictamenPublicado").value =
-        publicado ? "1" : "0";
-
-    if (!modalDictamen) {
-
-        modalDictamen = new bootstrap.Modal(
-            document.getElementById("modalDictamen")
-        );
-
-    }
-
-    modalDictamen.show();
-
 }
 
 // Ejecutar automáticamente al cargar el documento

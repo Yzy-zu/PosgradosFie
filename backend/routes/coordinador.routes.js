@@ -21,6 +21,16 @@ router.get('/aspirante/:id/expediente', coordinadorController.getExpediente);
 router.put('/solicitud/:id/dictamen', coordinadorController.actualizarDictamen);
 
 // ==========================================
+// NUEVAS RUTAS DE DICTÁMENES
+// ==========================================
+
+// GET /api/coordinador/dictamenes
+router.get('/dictamenes', coordinadorController.getDictamenes);
+
+// POST /api/coordinador/dictamen/:id
+router.post('/dictamen/:id', coordinadorController.emitirDictamen);
+
+// ==========================================
 // 3. Catálogos y Entrevistas
 // ==========================================
 // GET /api/coordinador/docentes

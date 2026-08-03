@@ -283,6 +283,7 @@ getEntrevistas: async (req, res) => {
 },
 
 
+
 // ==========================================
 // 7. Guardar Entrevista + Notificar Aspirante
 // ==========================================
@@ -431,7 +432,7 @@ Lugar: ${lugar}
             mensaje: 'Entrevista guardada y notificación enviada al aspirante.'
         });
 
-        } catch(error) {
+    } catch(error) {
 
         console.error(error);
 
@@ -499,7 +500,170 @@ getDictamenes: async (req, res) => {
 
     }
 
-}
+},
+
+// ==========================================
+// 9. Emitir Dictamen Final
+// ==========================================
+emitirDictamen: async (req, res) => {
+
+    const { id } = req.params;
+
+    const {
+        resultado,
+        motivo
+    } = req.body;
+
+    try {
+
+        // Obtener datos del aspirante
+        const [solicitud] = await db.query(`
+            SELECT
+                s.id,
+                s.idAspi,
+                CONCAT(
+                    a.nombre,' ',
+                    a.primerApellido,' ',
+                    IFNULL(a.segundoApellido,'')
+                ) AS nombre
+            FROM solicitud s
+            INNER JOIN aspirante a
+                ON s.idAspi = a.id
+            WHERE s.id = ?
+        `,[id]);
+
+        if(solicitud.length===0){
+
+            return res.status(404).json({
+                mensaje:"Solicitud no encontrada."
+            });
+
+        }
+
+        const aspirante=solicitud[0];
+
+        // Verificar si ya existe un dictamen
+        const [existe]=await db.query(
+
+            "SELECT id FROM resultado_final WHERE idSolicitud=?",
+
+            [id]
+
+        );
+
+        if(existe.length){
+
+            await db.query(`
+                UPDATE resultado_final
+                SET
+                    resultado=?,
+                    motivo=?,
+                    publicado=1,
+                    fechaPublicacion=NOW()
+                WHERE idSolicitud=?
+            `,[
+                resultado,
+                motivo,
+                id
+            ]);
+
+        }else{
+
+            await db.query(`
+                INSERT INTO resultado_final(
+                    idSolicitud,
+                    resultado,
+                    motivo,
+                    publicado,
+                    fechaPublicacion
+                )
+                VALUES(?,?,?,1,NOW())
+            `,[
+                id,
+                resultado,
+                motivo
+            ]);
+
+        }
+
+        // Actualizar estado de la solicitud
+        await db.query(
+            "UPDATE solicitud SET estado=? WHERE id=?",
+            [resultado,id]
+        );
+
+        // Crear notificación
+        await db.query(`
+            INSERT INTO notificaciones(
+
+                nombre,
+
+                mensaje,
+
+                destino,
+
+                activa,
+
+                rolRemitente,
+
+                nombreRemitente,
+
+                idDestino,
+
+                creado_en
+
+            )
+
+            VALUES(
+
+                ?,
+
+                ?,
+
+                'aspirante',
+
+                1,
+
+                'COORDINADOR',
+
+                'Coordinación',
+
+                ?,
+
+                NOW()
+
+            )
+        `,[
+
+            "Resultado de Admisión",
+
+            `Tu dictamen final ha sido publicado.\n\nResultado: ${resultado}`,
+
+            aspirante.idAspi
+
+        ]);
+
+        res.json({
+
+            ok:true,
+
+            mensaje:"Dictamen emitido correctamente."
+
+        });
+
+    }catch(error){
+
+        console.error(error);
+
+        res.status(500).json({
+
+            mensaje:"Error al emitir el dictamen."
+
+        });
+
+    }
+
+},
 
 };
 
