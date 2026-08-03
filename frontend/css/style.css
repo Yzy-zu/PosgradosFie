@@ -1191,7 +1191,13 @@ body.dark-mode .stat-card.stat-success {
         inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-.card h3 {
+.card h1,
+.card h2,
+.card h3,
+.card h4,
+.card h5,
+.card h6,
+.card .card-title {
     margin-bottom: 10px;
     color: var(--color-text);
     font-weight: 700;
@@ -4707,6 +4713,15 @@ body.dark-mode .form-control {
 body.dark-mode .text-muted,
 body.dark-mode p {
     color: var(--color-text-muted);
+}
+
+body.dark-mode .text-dark,
+body.dark-mode .text-body {
+    color: var(--color-text) !important;
+}
+
+body.dark-mode .text-secondary {
+    color: var(--color-text-muted) !important;
 }
 
 body.dark-mode h1,

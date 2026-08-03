@@ -651,7 +651,7 @@ async function cargarConvocatorias() {
                 <div class="mb-2" style="font-size: 2.5rem; color: #9b59b6;">
                     <i class="fa-solid fa-file-invoice"></i>
                 </div>
-                <h5 class="mb-1" style="font-weight:600; color:#2c3e50;">${conv.nombre}</h5>
+                <h5 class="mb-1 fw-semibold">${conv.nombre}</h5>
                 <p class="mb-2 text-muted" style="font-size:0.9rem;">${fechaInicioFormateada} a ${fechaFinFormateada}</p>
                 <div>
                     <span class="badge" style="background-color: ${colorEstado}; font-size:0.8rem;">${conv.estado}</span>
