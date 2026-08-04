@@ -251,6 +251,20 @@ async function cargarAspirantesAPI() {
                     }));
                 }
 
+                if (sol && sol.pago && sol.pago.comprobante) {
+                    docList.push({
+                        id: `pago_${sol.idSolicitud}`,
+                        nombre: 'Comprobante de Pago',
+                        url: `/api/files/${sol.pago.comprobante}?token=${sessionStorage.getItem('token') || localStorage.getItem('token')}`,
+                        estado: sol.pago.estado.toLowerCase(),
+                        note: sol.pago.observaciones || "",
+                        esPago: true,
+                        idSolicitud: sol.idSolicitud,
+                        monto: sol.pago.monto,
+                        referencia: sol.pago.referencia
+                    });
+                }
+
                 return {
                     id: asp.id,
                     idSolicitud: sol ? (sol.idSolicitud || sol.id) : null,
@@ -530,6 +544,34 @@ async function seleccionarAspirante(id) {
     let html = '';
 
     asp.documentos.forEach(doc => {
+        if (doc.esPago) {
+            let pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-clock" style="color: #f59e0b;"></i></span>`;
+            if (doc.estado === 'aprobado') {
+                pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-circle-check" style="color: #10b981;"></i></span>`;
+            } else if (doc.estado === 'rechazado') {
+                pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-circle-xmark" style="color: #ef4444;"></i></span>`;
+            }
+
+            html += `
+                <div class="doc-card-v2" onclick="abrirModalEvaluacionPago(${doc.idSolicitud})" style="cursor: pointer; border-left: 4px solid #f59e0b;">
+                    <div class="doc-card-v2-header">
+                        <div class="doc-card-v2-icon" style="background: rgba(245,158,11,0.15); color: #f59e0b;">
+                            <i class="fa-solid fa-receipt"></i>
+                            ${pagoStatusIcon}
+                        </div>
+                        <div>
+                            <div class="doc-card-v2-title">Comprobante de Pago</div>
+                            <div class="doc-card-v2-date">${doc.estado === 'aprobado' ? 'Pago Aprobado' : (doc.estado === 'rechazado' ? 'Pago Rechazado' : 'Revisar Pago')}</div>
+                        </div>
+                    </div>
+                    <div class="doc-card-v2-footer">
+                        <span class="doc-action-ver">Ver Comprobante</span>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
         let iconClass = 'fa-file-lines';
         let iconBg = '#e0e7ff';
         let iconColor = '#4338ca';
@@ -597,48 +639,6 @@ async function seleccionarAspirante(id) {
         `;
     });
 
-    // Consultar si hay comprobante de pago subido
-    if (asp.idSolicitud) {
-        try {
-            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
-            const resPago = await fetch(`/api/pagos/${asp.idSolicitud}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (resPago.ok) {
-                const pagoData = await resPago.json();
-                if (pagoData && pagoData.existe) {
-                    const est = pagoData.estado || 'PENDIENTE';
-                    let pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-clock" style="color: #f59e0b;"></i></span>`;
-                    if (est === 'APROBADO') {
-                        pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-circle-check" style="color: #10b981;"></i></span>`;
-                    } else if (est === 'RECHAZADO') {
-                        pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-circle-xmark" style="color: #ef4444;"></i></span>`;
-                    }
-
-                    html += `
-                        <div class="doc-card-v2" onclick="abrirModalEvaluacionPago(${asp.idSolicitud})" style="cursor: pointer; border-left: 4px solid #f59e0b;">
-                            <div class="doc-card-v2-header">
-                                <div class="doc-card-v2-icon" style="background: rgba(245,158,11,0.15); color: #f59e0b;">
-                                    <i class="fa-solid fa-receipt"></i>
-                                    ${pagoStatusIcon}
-                                </div>
-                                <div>
-                                    <div class="doc-card-v2-title">Comprobante de Pago</div>
-                                    <div class="doc-card-v2-date">${est === 'APROBADO' ? 'Pago Aprobado' : (est === 'RECHAZADO' ? 'Pago Rechazado' : 'Revisar Pago')}</div>
-                                </div>
-                            </div>
-                            <div class="doc-card-v2-footer">
-                                <span class="doc-action-ver">Ver Comprobante</span>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-        } catch (e) {
-            console.error("Error cargando pago en seleccionarAspirante:", e);
-        }
-    }
-
     container.innerHTML = html;
 }
 
@@ -680,11 +680,10 @@ async function abrirModalEvaluacionPago(idSolicitud) {
                     <span style="background:${estadoColor[est]}20;color:${estadoColor[est]};font-weight:bold;padding:4px 12px;border-radius:12px;font-size:12px;text-transform:uppercase;">
                         Estado: ${est}
                     </span>
-                    ${pagoData.monto ? `<span style="font-weight:bold;color:var(--color-text);">Monto: $${pagoData.monto}</span>` : ''}
                 </div>
-                ${pagoData.referencia ? `<div style="font-size:13px;color:var(--color-text-muted);margin-bottom:10px;">Referencia: <strong>${pagoData.referencia}</strong></div>` : ''}
+                ${pagoData.referencia ? `<div style="font-size:13px;color:var(--color-text-muted);margin-bottom:10px;"><i class="fa-solid fa-comment-dots" style="margin-right:4px;"></i> Comentarios del aspirante: <strong>${pagoData.referencia}</strong></div>` : ''}
                 ${previewHtml}
-                ${pagoData.observaciones ? `<div style="margin-top:12px;padding:10px;background:rgba(239,68,68,0.1);border-left:3px solid #ef4444;font-size:13px;color:#ef4444;"><strong>Observaciones:</strong> ${pagoData.observaciones}</div>` : ''}
+                ${pagoData.observaciones ? `<div style="margin-top:12px;padding:10px;background:rgba(239,68,68,0.1);border-left:3px solid #ef4444;font-size:13px;color:#ef4444;"><strong>Observaciones del evaluador:</strong> ${pagoData.observaciones}</div>` : ''}
             </div>
         `;
 
@@ -752,6 +751,7 @@ async function verificarPagoDocente(idSolicitud, estado) {
                 timer: 2000,
                 showConfirmButton: false
             });
+            await cargarAspirantesAPI();
             if (idAspiranteActivo) {
                 seleccionarAspirante(idAspiranteActivo);
             }

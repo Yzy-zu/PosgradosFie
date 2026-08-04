@@ -1876,9 +1876,7 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
                                         <i class="fa-solid fa-receipt"></i>
                                     </div>
                                     <div>
-                                        <h6 class="mb-0 fw-bold" style="color:var(--color-text);font-size:0.95rem;">Comprobante de pago</h6>
-                                        ${pagoData.referencia ? `<small class="text-muted">Ref: ${pagoData.referencia}</small>` : ''}
-                                        ${pagoData.monto ? `<small class="text-muted"> · $${pagoData.monto}</small>` : ''}
+                                        ${pagoData.referencia ? `<small class="text-muted"><i class="fa-solid fa-comment-dots me-1"></i>Comentarios: ${pagoData.referencia}</small>` : ''}
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">

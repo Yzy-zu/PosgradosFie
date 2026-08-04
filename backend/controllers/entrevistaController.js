@@ -11,7 +11,7 @@ const getEntrevistaPorSolicitud = async (req, res) => {
         const { idSolicitud } = req.params;
 
         const [rows] = await db.query(
-            `SELECT e.id, e.fecha, e.hora, e.lugar, e.enlace, e.estatus,
+            `SELECT e.id, DATE_FORMAT(e.fecha, '%Y-%m-%d') AS fecha, e.hora, e.lugar, e.enlace, e.estatus,
                     CONCAT(d.nombre, ' ', d.primerApellido, ' ', IFNULL(d.segundoApellido,'')) AS docenteNombre
              FROM entrevistas e
              LEFT JOIN docente d ON d.id = e.idDocente
