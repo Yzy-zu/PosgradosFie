@@ -112,187 +112,183 @@ html {
 }
 
 /* ==========================================================================
-   DISEÑO ESTILO FACEBOOK PARA LOGIN Y REGISTRO (POSGRADOS FIE)
+   AUTENTICACIÓN — DISEÑO INSTITUCIONAL AZUL FIE
    ========================================================================== */
-/* (Estilos legacy de Facebook eliminados) */
 
-/* ==========================================================================
-   DISEÑO PREMIUM SPLIT-SCREEN PARA LOGIN Y REGISTRO
-   ========================================================================== */
+/* Fondo oscuro elegante con degradado suave en tonos Azul FIE (sin cuadrícula) */
 .split-body {
     margin: 0;
     padding: 0;
+    min-height: 100vh;
     height: 100vh;
-    overflow: hidden;
-    background-color: var(--color-bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+    overflow-y: hidden;   /* sin scroll de página */
+    background: linear-gradient(135deg, #071527 0%, #0e2a47 50%, #0b1d33 100%);
+    background-attachment: fixed;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+/* Contenedor centrado — transición suave de ancho */
 .split-layout {
-    display: flex;
-    height: 100vh;
-    width: 100vw;
+    width: 100%;
+    max-width: 460px;
+    /* La transición anima max-width cuando se añade/quita .wide-layout */
+    transition: max-width 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    margin: 0 auto;
+    padding: 0 20px;
+    animation: authFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    position: relative;
+    z-index: 1;
 }
 
-/* -----------------------------
-   Panel Izquierdo (Branding)
------------------------------ */
-.split-brand-panel {
-    flex: 1;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    position: relative;
+/* Versión ancha — se activa desde JS al pasar de paso 1 */
+.split-layout.wide-layout {
+    max-width: 880px;
+}
+
+/* Rejillas dinámicas de columnas */
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+
+.form-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+.form-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+@media (max-width: 768px) {
+    .form-grid-3, .form-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 520px) {
+    .form-grid-2, .form-grid-3, .form-grid-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+@keyframes authFadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Zorro watermark — fijo al fondo-centro del viewport, debajo de la tarjeta */
+.zorro-watermark {
+    position: fixed;
+    bottom: -40px;
+    left: 0;
+    right: 0;
     display: flex;
-    flex-direction: column;
     justify-content: center;
-    align-items: center;
-    text-align: center;
-    color: #ffffff;
-    padding: 40px;
-    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+    animation: zorroFloat 5s ease-in-out infinite;
 }
 
-.split-brand-panel .brand-content {
-    position: relative;
-    z-index: 10;
-    max-width: 500px;
+.zorro-watermark img {
+    width: 900px;
+    max-width: 100vw;
+    opacity: 0.2;
+    filter: drop-shadow(0 0 50px rgba(255, 255, 255, 0.08));
+    user-select: none;
+    -webkit-user-drag: none;
+    display: block;
 }
 
+@keyframes zorroFloat {
+    0%   { transform: translateY(0); }
+    50%  { transform: translateY(-12px); }
+    100% { transform: translateY(0); }
+}
+
+/* Logos: FIE a la izquierda, Posgrados a la derecha sobre una cápsula blanca de alto contraste */
 .brand-logos {
+    position: relative;
+    z-index: 2;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: 30px;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
+    background: #ffffff;
+    padding: 12px 24px;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .brand-logo {
-    height: 100px;
+    height: 52px;
     width: auto;
     object-fit: contain;
-    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
-    transition: transform 0.3s ease;
+    transition: transform 0.25s ease;
 }
 
 .brand-logo:hover {
-    transform: scale(1.05);
+    transform: scale(1.04);
 }
 
-.brand-title {
-    font-size: 36px;
-    font-weight: 800;
-    margin-bottom: 16px;
-    letter-spacing: -0.5px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.brand-subtitle {
-    font-size: 16px;
-    line-height: 1.5;
-    color: #cbd5e1;
-    font-weight: 400;
-}
-
-/* Efectos de fondo panel izquierdo */
-.bg-circle {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    z-index: 1;
-    animation: floatBlob 12s infinite alternate ease-in-out;
-}
-
-.circle-1 {
-    width: 400px;
-    height: 400px;
-    background: rgba(138, 28, 36, 0.4); /* Guinda UMSNH */
-    top: -100px;
-    left: -100px;
-}
-
-.circle-2 {
-    width: 350px;
-    height: 350px;
-    background: rgba(59, 130, 246, 0.2); /* Azul suave */
-    bottom: -80px;
-    right: -80px;
-    animation-direction: alternate-reverse;
-}
-
-@keyframes floatBlob {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(40px, 40px) scale(1.1); }
-}
-
-/* -----------------------------
-   Panel Derecho (Formulario)
------------------------------ */
+/* Tarjeta de formulario — blanca, limpia, con bordes redondeados */
 .split-form-panel {
-    flex: 1;
-    max-width: 600px;
     background: #ffffff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 40px;
+    border-radius: 16px;
+    padding: 38px 36px 32px;
     position: relative;
     z-index: 2;
-    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
-}
-
-body.dark-mode .split-form-panel {
-    background: #0f172a;
-    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    border: none;
+    transition: padding 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .form-container {
     width: 100%;
-    max-width: 380px;
-    animation: fadeInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes fadeInRight {
-    from { opacity: 0; transform: translateX(30px); }
-    to { opacity: 1; transform: translateX(0); }
-}
-
+/* Títulos */
 .form-title {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 8px;
+    color: #0f172a;
+    margin-bottom: 6px;
     letter-spacing: -0.5px;
+    line-height: 1.2;
 }
 
-body.dark-mode .form-title {
-    color: #f8fafc;
+.form-title span {
+    color: #003366;
 }
 
 .form-subtitle {
-    font-size: 15px;
+    font-size: 14px;
     color: #64748b;
-    margin-bottom: 36px;
+    margin-bottom: 28px;
 }
 
-body.dark-mode .form-subtitle {
-    color: #94a3b8;
-}
-
-/* Formularios Premium */
+/* Formulario: inputs limpios y bien definidos */
 .premium-form .input-group {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     position: relative;
 }
 
 .premium-form label {
     display: block;
-    font-size: 13px;
-    font-weight: 600;
-    color: #334155;
-    margin-bottom: 8px;
-    letter-spacing: 0.3px;
-}
-
-body.dark-mode .premium-form label {
-    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 .input-wrapper {
@@ -303,106 +299,108 @@ body.dark-mode .premium-form label {
 
 .input-wrapper .input-icon {
     position: absolute;
-    left: 16px;
+    left: 14px;
     color: #94a3b8;
-    font-size: 16px;
-    transition: color 0.3s ease;
+    font-size: 15px;
+    transition: color 0.25s ease;
+    pointer-events: none;
 }
 
-.input-wrapper input {
+/* Input con borde suave y bordes redondeados */
+.input-wrapper input,
+.input-wrapper select {
     width: 100%;
-    padding: 14px 16px 14px 44px;
-    font-size: 15px;
+    padding: 12px 38px 12px 42px;
+    font-size: 14px;
     font-family: inherit;
     color: #0f172a;
     background: #f8fafc;
-    border: 2px solid transparent;
-    border-radius: 12px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
     outline: none;
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
+    -webkit-appearance: none;
 }
 
-.input-wrapper input:focus {
+.input-wrapper input::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.input-wrapper input:focus,
+.input-wrapper select:focus {
     background: #ffffff;
-    border-color: #8a1c24;
-    box-shadow: 0 4px 12px rgba(138, 28, 36, 0.1);
+    border-color: #003366;
+    box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.15);
 }
 
 .input-wrapper input:focus ~ .input-icon {
-    color: #8a1c24;
+    color: #003366;
 }
 
-body.dark-mode .input-wrapper input {
-    color: #f8fafc;
-    background: #1e293b;
+/* Input sin icono */
+.input-wrapper input:only-child,
+.input-wrapper select:only-child {
+    padding-left: 14px;
 }
 
-body.dark-mode .input-wrapper input:focus {
-    background: #0f172a;
-    border-color: #e05260;
-    box-shadow: 0 4px 12px rgba(224, 82, 96, 0.15);
-}
-
-body.dark-mode .input-wrapper input:focus ~ .input-icon {
-    color: #e05260;
-}
-
-/* Toggle Password */
+/* Toggle contraseña */
 .toggle-pwd {
     position: absolute;
-    right: 16px;
+    right: 12px;
     color: #94a3b8;
-    font-size: 16px;
+    font-size: 15px;
     cursor: pointer;
     transition: color 0.2s ease;
     padding: 4px;
 }
 
 .toggle-pwd:hover {
-    color: #8a1c24;
+    color: #003366;
 }
 
-body.dark-mode .toggle-pwd:hover {
-    color: #e05260;
-}
-
-/* Botones Split */
+/* Botón principal — Azul FIE */
 .btn-primary-split {
     width: 100%;
-    padding: 15px;
+    padding: 14px;
     margin-top: 10px;
-    background: linear-gradient(135deg, #8a1c24 0%, #681119 100%);
+    background: #003366;
     color: #ffffff;
     border: none;
-    border-radius: 12px;
-    font-size: 16px;
+    border-radius: 10px;
+    font-size: 15px;
     font-weight: 700;
+    letter-spacing: 0.3px;
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 10px;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 4px 14px rgba(138, 28, 36, 0.3);
+    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 14px rgba(0, 51, 102, 0.3);
 }
 
 .btn-primary-split:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(138, 28, 36, 0.4);
-    background: linear-gradient(135deg, #a0222a 0%, #8a1c24 100%);
+    background: #002244;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(0, 51, 102, 0.4);
 }
 
 .btn-primary-split:active {
     transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 51, 102, 0.2);
 }
 
+/* Divisor */
 .split-divider {
     display: flex;
     align-items: center;
-    margin: 30px 0;
+    margin: 24px 0;
     color: #94a3b8;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }
 
 .split-divider::before,
@@ -413,83 +411,171 @@ body.dark-mode .toggle-pwd:hover {
     background: #e2e8f0;
 }
 
-body.dark-mode .split-divider::before,
-body.dark-mode .split-divider::after {
-    background: #334155;
-}
+.split-divider span { padding: 0 14px; }
 
-.split-divider span {
-    padding: 0 16px;
-}
-
+/* Botón secundario */
 .btn-secondary-split {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
-    padding: 14px;
+    padding: 12px;
     background: transparent;
-    color: #8a1c24;
-    border: 2px solid #8a1c24;
-    border-radius: 12px;
-    font-size: 15px;
+    color: #003366;
+    border: 1.5px solid #003366;
+    border-radius: 10px;
+    font-size: 14px;
     font-weight: 700;
     text-decoration: none;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .btn-secondary-split:hover {
-    background: rgba(138, 28, 36, 0.05);
+    background: rgba(0, 51, 102, 0.05);
 }
 
-body.dark-mode .btn-secondary-split {
-    color: #e05260;
-    border-color: #e05260;
-}
-
-body.dark-mode .btn-secondary-split:hover {
-    background: rgba(224, 82, 96, 0.1);
-}
-
-/* Ayuda de input */
+/* Texto de ayuda */
 .input-help {
     display: block;
-    margin-top: 8px;
-    font-size: 12px;
+    margin-top: 5px;
+    font-size: 11px;
     color: #64748b;
+    letter-spacing: 0.2px;
 }
 
-body.dark-mode .input-help {
+/* Responsivo */
+@media (max-width: 520px) {
+    .split-layout { padding: 0 14px; margin: 20px auto; }
+    .split-form-panel { padding: 28px 22px; }
+    .brand-logo { height: 50px; }
+}
+
+/* ──────────────────────────────────────────
+   Wizard de Registro (pasos)
+────────────────────────────────────────── */
+.wizard-step {
+    display: none;
+    animation: authFadeUp 0.35s ease both;
+}
+
+.wizard-step.active {
+    display: block;
+}
+
+.wizard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.wizard-progress-bar {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #e2e8f0;
+    z-index: 1;
+    transform: translateY(-50%);
+}
+
+.wizard-progress-fill {
+    height: 100%;
+    background: #003366;
+    width: 0%;
+    transition: width 0.35s ease;
+}
+
+.wizard-step-indicator {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #f8fafc;
     color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 13px;
+    position: relative;
+    z-index: 2;
+    border: 2px solid #cbd5e1;
+    transition: all 0.3s ease;
 }
 
-/* Responsividad Split Layout */
-@media (max-width: 900px) {
-    .split-layout {
-        flex-direction: column;
-        height: auto;
-        min-height: 100vh;
-    }
-    
-    .split-brand-panel {
-        padding: 60px 20px;
-        flex: none;
-    }
-    
-    .split-form-panel {
-        max-width: 100%;
-        padding: 40px 20px;
-        border-radius: 30px 30px 0 0;
-        margin-top: -30px;
-    }
-    
-    .split-body {
-        overflow-y: auto;
-    }
+.wizard-step-indicator.active {
+    background: #003366;
+    color: #ffffff;
+    border-color: #003366;
+    box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.2);
+}
+
+.wizard-step-indicator.completed {
+    background: #10b981;
+    color: #ffffff;
+    border-color: #10b981;
+}
+
+.wizard-navigation {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.btn-wizard-prev, .btn-wizard-next {
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-wizard-prev {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+.btn-wizard-prev:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.btn-wizard-next {
+    background: #003366;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 51, 102, 0.25);
+}
+
+.btn-wizard-next:hover {
+    background: #002244;
+}
+
+/* Dos columnas en grid para el wizard */
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+@media (max-width: 500px) {
+    .form-grid-2 { grid-template-columns: 1fr; }
 }
 
 
-/* Botones de Evaluación de Documentos */
+
+
+
+
 .btn-eval-aprobar {
     padding: 10px 24px;
     font-weight: 700;

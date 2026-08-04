@@ -50,7 +50,13 @@ formulario.addEventListener("submit", async (e) => {
         const datos = await respuesta.json();
 
         if (!datos.success) {
-            alert(datos.mensaje);
+            Swal.fire({
+                icon: 'error',
+                title: 'No pudimos iniciar sesión',
+                text: datos.mensaje || 'Correo o contraseña incorrectos.',
+                confirmButtonColor: '#003366',
+                confirmButtonText: 'Intentar de nuevo'
+            });
             return;
         }
 
@@ -80,11 +86,23 @@ formulario.addEventListener("submit", async (e) => {
                 break;
 
             default:
-                alert("Rol no válido");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Acceso no autorizado',
+                    text: 'Tu cuenta no tiene un rol asignado. Contacta al administrador.',
+                    confirmButtonColor: '#003366',
+                    confirmButtonText: 'Cerrar'
+                });
         }
 
     } catch (error) {
         console.error(error);
-        alert("No fue posible conectar con el servidor.");
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de conexión',
+            text: 'No fue posible conectar con el servidor. Verifica tu conexión e intenta de nuevo.',
+            confirmButtonColor: '#003366',
+            confirmButtonText: 'Cerrar'
+        });
     }
 });

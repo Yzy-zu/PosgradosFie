@@ -2,6 +2,15 @@
 <html lang="es">
 
 <head>
+    <script>
+        // Protección de ruta: se ejecuta ANTES de renderizar el body
+        (function () {
+            if (!sessionStorage.getItem('token') || !sessionStorage.getItem('usuario')) {
+                document.documentElement.style.visibility = 'hidden';
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
     <script src="js/authInterceptor.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/i18n.js"></script>
