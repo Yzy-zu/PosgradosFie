@@ -8,9 +8,20 @@ const moduloEntrevistaRenderer = {
         if (datosEntrevista && datosEntrevista.existe && datosEntrevista.fecha) {
             const isEn = typeof getIdiomaActual === 'function' && getIdiomaActual() === 'en';
             const langCode = isEn ? 'en-US' : 'es-MX';
-            const fechaFmt = new Date(datosEntrevista.fecha + 'T00:00:00').toLocaleDateString(langCode, {
-                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-            });
+            const rawFecha = String(datosEntrevista.fecha).split('T')[0];
+            const parts = rawFecha.split('-');
+            let fechaFmt = rawFecha;
+            if (parts.length === 3) {
+                const year = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1;
+                const day = parseInt(parts[2], 10);
+                const d = new Date(year, month, day);
+                if (!isNaN(d.getTime())) {
+                    fechaFmt = d.toLocaleDateString(langCode, {
+                        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+                    });
+                }
+            }
 
             const chips = [];
             if (datosEntrevista.docenteNombre && datosEntrevista.docenteNombre.trim()) {

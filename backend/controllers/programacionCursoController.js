@@ -12,6 +12,10 @@ const programarCurso = async (req, res) => {
             observaciones
         });
 
+        if (req.app.get('io')) {
+            req.app.get('io').emit('actualizacionGlobal');
+        }
+
         return res.status(200).json(resultado);
     } catch (error) {
         console.error('Error al programar curso propedéutico:', error);
@@ -49,6 +53,10 @@ const capturarResultado = async (req, res) => {
             aprobado,
             observaciones
         });
+
+        if (req.app.get('io')) {
+            req.app.get('io').emit('actualizacionGlobal');
+        }
 
         return res.status(200).json(resultado);
     } catch (error) {

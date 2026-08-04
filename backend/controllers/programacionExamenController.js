@@ -16,6 +16,7 @@ const programarExamen = async (req, res) => {
             observaciones
         });
 
+        req.app.get('io').emit('actualizacionGlobal');
         return res.status(200).json(resultado);
     } catch (error) {
         console.error('Error al programar examen:', error);
@@ -43,6 +44,7 @@ const confirmarExamen = async (req, res) => {
     try {
         const { idSolicitud } = req.params;
         const resultado = await ProgramacionExamenService.confirmarExamen(idSolicitud);
+        req.app.get('io').emit('actualizacionGlobal');
         return res.status(200).json(resultado);
     } catch (error) {
         console.error('Error al confirmar aplicación de examen:', error);
@@ -65,6 +67,7 @@ const capturarResultado = async (req, res) => {
             observaciones
         });
 
+        req.app.get('io').emit('actualizacionGlobal');
         return res.status(200).json(resultado);
     } catch (error) {
         console.error('Error al capturar resultado de examen:', error);

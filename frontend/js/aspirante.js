@@ -11,6 +11,16 @@ socket.on('actualizacionGlobal', () => {
     const currentHash = window.location.hash;
     if (currentHash === '#inicio' || currentHash === '') {
         if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
+        if (aspiranteData && aspiranteData.id) {
+            fetch(`/api/solicitud/activa/${aspiranteData.id}`)
+                .then(res => res.json())
+                .then(soliData => {
+                    if (soliData && soliData.existe) {
+                        hidratarUI(soliData);
+                    }
+                })
+                .catch(e => console.error("Error actualizando inicio:", e));
+        }
     } else if (currentHash === '#documentos' || currentHash === '#admision') {
         if (aspiranteData && aspiranteData.id) {
             fetch(`/api/solicitud/activa/${aspiranteData.id}`)

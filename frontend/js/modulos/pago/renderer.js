@@ -27,7 +27,7 @@ const moduloPagoRenderer = {
                 <i class="fa-solid ${cfg.icono}" style="font-size:26px;color:${cfg.color};flex-shrink:0;"></i>
                 <div>
                     <div style="font-weight:700;color:${cfg.color};font-size:15px;">${cfg.texto}</div>
-                    ${pagoData.referencia ? `<div style="font-size:13px;color:var(--color-text-muted);margin-top:2px;">Referencia: <strong>${pagoData.referencia}</strong></div>` : ''}
+                    ${pagoData.referencia ? `<div style="font-size:13px;color:var(--color-text-muted);margin-top:2px;"><i class="fa-solid fa-comment-dots" style="margin-right:4px;"></i> Comentarios: <strong>${pagoData.referencia}</strong></div>` : ''}
                     ${estado === 'RECHAZADO' && pagoData.observaciones ? `<div style="font-size:13px;color:#ef4444;margin-top:4px;"><i class="fa-solid fa-triangle-exclamation"></i> ${pagoData.observaciones}</div>` : ''}
                 </div>
             </div>`;
@@ -38,17 +38,10 @@ const moduloPagoRenderer = {
 
         const formularioHtml = mostrarFormulario ? `
         <form id="form-pago" enctype="multipart/form-data">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
-                <div>
-                    <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--color-text-muted);">Monto pagado (opcional)</label>
-                    <input type="number" name="monto" step="0.01" placeholder="Ej: 350.00"
-                        style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--color-border);background:var(--color-bg);color:var(--color-text);font-size:14px;">
-                </div>
-                <div>
-                    <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--color-text-muted);">Referencia bancaria (opcional)</label>
-                    <input type="text" name="referencia" placeholder="Ej: REF-20260803"
-                        style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--color-border);background:var(--color-bg);color:var(--color-text);font-size:14px;">
-                </div>
+            <div style="margin-bottom:18px;">
+                <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--color-text-muted);">Comentarios / Notas adicionales (opcional)</label>
+                <textarea name="comentarios" rows="3" placeholder="Ingresa alguna observación o nota sobre tu pago..."
+                    style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--color-border);background:var(--color-bg);color:var(--color-text);font-size:14px;resize:vertical;font-family:inherit;"></textarea>
             </div>
             <div style="margin-bottom:22px;">
                 <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--color-text-muted);">Comprobante de pago <span style="color:var(--color-primary);">*</span></label>

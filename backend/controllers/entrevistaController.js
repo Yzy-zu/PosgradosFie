@@ -11,7 +11,7 @@ const getEntrevistaPorSolicitud = async (req, res) => {
         const { idSolicitud } = req.params;
 
         const [rows] = await db.query(
-            `SELECT e.id, e.fecha, e.hora, e.lugar, e.enlace, e.estatus,
+            `SELECT e.id, DATE_FORMAT(e.fecha, '%Y-%m-%d') AS fecha, e.hora, e.lugar, e.enlace, e.estatus,
                     CONCAT(d.nombre, ' ', d.primerApellido, ' ', IFNULL(d.segundoApellido,'')) AS docenteNombre
              FROM entrevistas e
              LEFT JOIN docente d ON d.id = e.idDocente
@@ -59,6 +59,7 @@ const programarEntrevista = async (req, res) => {
                   WHERE idSolicitud = ?`,
                 [fecha, hora, lugar || null, enlace || null, idDocente || null, idSolicitud]
             );
+            req.app.get('io').emit('actualizacionGlobal');
             return res.json({ success: true, mensaje: 'Entrevista actualizada correctamente.' });
         } else {
             // Primera vez: insertar y avanzar etapa
@@ -71,6 +72,7 @@ const programarEntrevista = async (req, res) => {
             // Avanzar etapa en el workflow
             await WorkflowService.avanzarEtapa(parseInt(idSolicitud));
 
+            req.app.get('io').emit('actualizacionGlobal');
             return res.json({ success: true, mensaje: 'Entrevista programada y etapa avanzada correctamente.' });
         }
     } catch (error) {

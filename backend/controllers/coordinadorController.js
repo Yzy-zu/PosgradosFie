@@ -110,6 +110,10 @@ actualizarDictamen: async (req, res) => {
             WHERE id = ?
         `, [estado, id]);
 
+        if (req.app.get('io')) {
+            req.app.get('io').emit('actualizacionGlobal');
+        }
+
         res.json({
             ok: true,
             mensaje: "Estado actualizado correctamente."
@@ -434,6 +438,9 @@ Lugar: ${lugar}
 
         }
 
+        // Emitir evento global de actualización
+        req.app.get('io').emit('actualizacionGlobal');
+
         // Respuesta final
         res.json({
             ok: true,
@@ -670,6 +677,8 @@ ${motivo.trim()}
         ]);
 
         await connection.commit();
+
+        req.app.get('io').emit('actualizacionGlobal');
 
         return res.json({
             ok: true,

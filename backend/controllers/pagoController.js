@@ -34,7 +34,8 @@ const getPago = async (req, res) => {
 const subirComprobante = async (req, res) => {
     try {
         const { idSolicitud } = req.params;
-        const { monto, referencia } = req.body;
+        const { comentarios, referencia } = req.body;
+        const textoComentarios = comentarios || referencia || null;
 
         if (!req.file) {
             return res.status(400).json({ success: false, mensaje: 'Debes adjuntar el comprobante de pago.' });
@@ -65,14 +66,14 @@ const subirComprobante = async (req, res) => {
         if (existing.length > 0) {
             await db.query(
                 `UPDATE pago_solicitud
-                 SET comprobante = ?, monto = ?, referencia = ?, estado = 'PENDIENTE', observaciones = NULL
+                 SET comprobante = ?, monto = NULL, referencia = ?, estado = 'PENDIENTE', observaciones = NULL
                  WHERE idSolicitud = ?`,
-                [rutaArchivo, monto || null, referencia || null, idSolicitud]
+                [rutaArchivo, textoComentarios, idSolicitud]
             );
         } else {
             await db.query(
-                'INSERT INTO pago_solicitud (idSolicitud, monto, referencia, comprobante, estado) VALUES (?, ?, ?, ?, ?)',
-                [idSolicitud, monto || null, referencia || null, rutaArchivo, 'PENDIENTE']
+                'INSERT INTO pago_solicitud (idSolicitud, monto, referencia, comprobante, estado) VALUES (?, NULL, ?, ?, ?)',
+                [idSolicitud, textoComentarios, rutaArchivo, 'PENDIENTE']
             );
         }
 

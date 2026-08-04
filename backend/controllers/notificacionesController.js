@@ -72,6 +72,10 @@ const crearNotificacion = async (req, res) => {
             [nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino || null]
         );
 
+        if (req.app.get('io')) {
+            req.app.get('io').emit('actualizacionGlobal');
+        }
+
         return res.json({
             success: true,
             mensaje: 'Notificación creada correctamente',
@@ -116,6 +120,10 @@ const actualizarNotificacion = async (req, res) => {
             [nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino || null, id]
         );
 
+        if (req.app.get('io')) {
+            req.app.get('io').emit('actualizacionGlobal');
+        }
+
         return res.json({ success: true, mensaje: 'Notificación actualizada correctamente' });
     } catch (error) {
         console.error('Error en actualizarNotificacion:', error);
@@ -128,6 +136,11 @@ const eliminarNotificacion = async (req, res) => {
     try {
         const { id } = req.params;
         await db.query('DELETE FROM notificaciones WHERE id = ?', [id]);
+
+        if (req.app.get('io')) {
+            req.app.get('io').emit('actualizacionGlobal');
+        }
+
         return res.json({ success: true, mensaje: 'Notificación eliminada correctamente' });
     } catch (error) {
         console.error('Error en eliminarNotificacion:', error);
