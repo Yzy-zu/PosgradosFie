@@ -478,11 +478,15 @@
 </section>
 
 <!-- ==========================================================
-VISTA 2: CONVOCATORIAS - NUEVO DISEÑO
+VISTA 2: CONVOCATORIAS
 ========================================================== -->
 <section id="vista-convocatorias" class="vista-seccion p-4 d-none">
 
-    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <!-- Encabezado -->
+    <div
+        class="d-flex flex-column flex-lg-row
+               justify-content-between align-items-lg-center
+               gap-3 mb-4">
 
         <div>
             <h4 class="fw-bold text-dark mb-1">
@@ -494,46 +498,77 @@ VISTA 2: CONVOCATORIAS - NUEVO DISEÑO
             </p>
         </div>
 
-        <button
-    type="button"
-    class="btn rounded-pill px-4 text-white"
-    id="btnNuevaConvocatoria"
-    data-bs-toggle="modal"
-    data-bs-target="#modalConvocatoria"
-    style="background-color: #8a1c24;">
+       <div class="d-flex flex-wrap gap-2">
 
-    <i class="fa-solid fa-plus me-2"></i>
-    Nueva convocatoria
-</button>
+    <button
+        type="button"
+        id="btnEditarConvocatoriaSeleccionada"
+        class="btn btn-outline-primary rounded-pill px-4">
+
+        <i class="fa-solid fa-pen-to-square me-2"></i>
+        Editar seleccionada
+    </button>
+
+    <button
+        type="button"
+        class="btn rounded-pill px-4 text-white"
+        id="btnNuevaConvocatoria"
+        onclick="crearConvocatoria()"
+        style="background-color: #8a1c24;">
+
+        <i class="fa-solid fa-plus me-2"></i>
+        Nueva convocatoria
+    </button>
+
+</div>
+
     </div>
 
-    <div class="card border-0 shadow-sm"
-         style="border-radius: 18px;">
+    <!-- Contenedor principal -->
+    <div
+        class="card border-0 shadow-sm"
+        style="border-radius: 18px;">
 
         <div class="card-body p-4">
 
-            <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
+            <!-- Buscador y filtros -->
+            <div
+                class="d-flex flex-column flex-xl-row
+                       justify-content-between align-items-xl-center
+                       gap-3 mb-4">
 
-                <div class="input-group"
-                     style="max-width: 380px;">
+                <!-- Buscador -->
+                <div
+                    class="input-group"
+                    style="max-width: 420px;">
 
-                    <span class="input-group-text bg-white border-end-0">
-                        <i class="fa-solid fa-magnifying-glass text-muted"></i>
+                    <span
+                        class="input-group-text bg-white border-end-0">
+
+                        <i
+                            class="fa-solid fa-magnifying-glass
+                                   text-muted">
+                        </i>
+
                     </span>
 
                     <input
                         type="text"
                         id="buscarConvocatoria"
                         class="form-control border-start-0"
-                        placeholder="Buscar convocatoria...">
+                        placeholder="Buscar por nombre, descripción, tipo o modalidad..."
+                        autocomplete="off">
 
                 </div>
 
-                <div class="d-flex gap-2">
+                <!-- Filtros -->
+                <div class="d-flex flex-wrap gap-2">
 
                     <button
                         type="button"
-                        class="btn btn-outline-secondary rounded-pill px-3">
+                        id="btnConvTodas"
+                        class="btn btn-outline-secondary rounded-pill px-3 filtro-convocatoria active"
+                        data-estado="TODAS">
 
                         <i class="fa-solid fa-filter me-2"></i>
                         Todas
@@ -541,23 +576,39 @@ VISTA 2: CONVOCATORIAS - NUEVO DISEÑO
 
                     <button
                         type="button"
-                        class="btn btn-outline-success rounded-pill px-3">
+                        id="btnConvActivas"
+                        class="btn btn-outline-success rounded-pill px-3 filtro-convocatoria"
+                        data-estado="ACTIVA">
 
                         <i class="fa-solid fa-circle-check me-2"></i>
                         Activas
+                    </button>
+
+                    <button
+                        type="button"
+                        id="btnConvCerradas"
+                        class="btn btn-outline-danger rounded-pill px-3 filtro-convocatoria"
+                        data-estado="CERRADA">
+
+                        <i class="fa-solid fa-lock me-2"></i>
+                        Cerradas
                     </button>
 
                 </div>
 
             </div>
 
-            <div class="row g-4"
-                 id="contenedorConvocatorias">
+            <!-- Tarjetas generadas desde convocatorias.js -->
+            <div
+                class="row g-4"
+                id="contenedorConvocatorias">
 
                 <div class="col-12 text-center py-5 text-muted">
 
-                    <div class="spinner-border spinner-border-sm me-2"
-                         style="color: #8a1c24;"></div>
+                    <div
+                        class="spinner-border spinner-border-sm me-2"
+                        style="color: #8a1c24;">
+                    </div>
 
                     Cargando convocatorias...
 
@@ -570,6 +621,7 @@ VISTA 2: CONVOCATORIAS - NUEVO DISEÑO
     </div>
 
 </section>
+
 <!-- ==========================================================
      VISTA 3: ASPIRANTES - NUEVO DISEÑO
 ========================================================== -->
@@ -1688,9 +1740,16 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
                             <!-- Navigation Footer (Adaptado al Tema) -->
                             <div class="d-flex justify-content-between align-items-center mt-4" style="background: var(--color-card-bg); border-top: 1px solid var(--color-border); border-radius: 0 0 16px 16px; margin: 20px -25px 0 -25px; padding: 16px 25px;">
                                 <div>
-                                    <button type="button" class="btn btn-danger btn-sm px-3" id="btnEliminarConvocatoria" style="display:none;" onclick="eliminarConvocatoria()">
-                                        <i class="fa-solid fa-trash me-1"></i> Eliminar
-                                    </button>
+                                    <button
+    type="button"
+    class="btn btn-danger btn-sm px-3"
+    id="btnEliminarConvocatoria"
+    style="display: none;">
+
+    <i class="fa-solid fa-trash me-1"></i>
+    Eliminar
+
+</button>
                                     <button type="button" class="btn btn-secondary px-4" id="btnPrevStep" style="display:none; border-radius: 8px;" onclick="pasoAnterior()">
                                         <i class="fa-solid fa-chevron-left me-1"></i> Atrás
                                     </button>
@@ -1699,9 +1758,15 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
                                     <button type="button" class="btn btn-primary px-4" id="btnNextStep" style="border-radius: 8px; font-weight: 600;" onclick="siguientePaso()">
                                         Siguiente <i class="fa-solid fa-chevron-right ms-1"></i>
                                     </button>
-                                    <button type="submit" class="btn btn-success px-4" id="btnSaveConvocatoria" style="display:none; border-radius: 8px; font-weight: 600;">
-                                        <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Convocatoria
-                                    </button>
+                                    <button
+    type="button"
+    class="btn btn-success px-4"
+    id="btnSaveConvocatoria"
+    style="display:none; border-radius: 8px; font-weight: 600;">
+
+    <i class="fa-solid fa-floppy-disk me-1"></i>
+    Guardar Convocatoria
+</button>
                                 </div>
                             </div>
                         </form>
