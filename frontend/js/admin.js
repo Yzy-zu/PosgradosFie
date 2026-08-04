@@ -328,6 +328,7 @@ function renderizarCamposRol(rol, detalles = {}) {
                 <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Primer Apellido <span class="text-danger">*</span></label><input type="text" id="det_primerApellido" class="form-control form-control-sm" ${inputStyle} value="${detalles.primerApellido || ''}" placeholder="Solo letras" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]/g, '')"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Segundo Apellido</label><input type="text" id="det_segundoApellido" class="form-control form-control-sm" ${inputStyle} value="${detalles.segundoApellido || ''}" placeholder="Solo letras" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]/g, '')"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>CURP <span class="text-danger">*</span></label><input type="text" id="det_curp" class="form-control form-control-sm" ${inputStyle} value="${detalles.curp || ''}" maxlength="18" placeholder="18 caracteres" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"></div>
+                <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>RFC <span class="text-danger">*</span></label><input type="text" id="det_rfc" class="form-control form-control-sm" ${inputStyle} value="${detalles.rfc || ''}" maxlength="13" placeholder="12 ó 13 caracteres" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Teléfono <span class="text-danger">*</span></label><input type="text" id="det_telefono" class="form-control form-control-sm" ${inputStyle} value="${detalles.telefono || ''}" maxlength="10" placeholder="10 dígitos" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
                 <div class="col-md-4 mb-2"><label class="form-label small" ${labelStyle}>Fecha Nacimiento <span class="text-danger">*</span></label><input type="date" id="det_fechaNacimiento" class="form-control form-control-sm" ${inputStyle} value="${detalles.fechaNacimiento ? detalles.fechaNacimiento.split('T')[0] : ''}"></div>
                 <div class="col-md-4 mb-2">
@@ -468,6 +469,7 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
             primerApellido: document.getElementById("det_primerApellido")?.value,
             segundoApellido: document.getElementById("det_segundoApellido")?.value,
             curp: document.getElementById("det_curp")?.value,
+            rfc: document.getElementById("det_rfc")?.value,
             telefono: document.getElementById("det_telefono")?.value,
             fechaNacimiento: document.getElementById("det_fechaNacimiento")?.value,
             estadoCivil: document.getElementById("det_estadoCivil")?.value || 'SOLTERO',
@@ -489,6 +491,7 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
             { id: 'nombre', label: 'Nombre' },
             { id: 'primerApellido', label: 'Primer Apellido' },
             { id: 'curp', label: 'CURP' },
+            { id: 'rfc', label: 'RFC' },
             { id: 'telefono', label: 'Teléfono' },
             { id: 'fechaNacimiento', label: 'Fecha Nacimiento' },
             { id: 'licenciatura', label: 'Licenciatura' },
@@ -536,6 +539,10 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
         }
         if (detalles.curp && !regexCurp.test(detalles.curp.toUpperCase())) {
             erroresRegex.push('CURP: Formato inválido. Debe contener 18 caracteres (ej. ABCD123456HDFXXX01).');
+        }
+        const regexRfc = /^[A-Z&Ñ]{3,4}\d{6}[A-Z\d]{3}$/;
+        if (detalles.rfc && !regexRfc.test(detalles.rfc.toUpperCase())) {
+            erroresRegex.push('RFC: Formato inválido. Debe contener 12 ó 13 caracteres (ej. ABCD123456XXX).');
         }
         if (detalles.telefono && !regexTelefono.test(detalles.telefono)) {
             erroresRegex.push('Teléfono: Debe contener exactamente 10 dígitos numéricos.');

@@ -1,4 +1,5 @@
 const db = require('../database/db');
+const WorkflowService = require('../services/workflowService');
 
 const coordinadorController = {
 
@@ -355,6 +356,9 @@ guardarEntrevista: async (req,res)=>{
                 lugar,
                 enlace
             ]);
+
+            // Avanzar etapa en el workflow (Entrevista → Resultado)
+            await WorkflowService.avanzarEtapa(parseInt(id));
 
         }
 

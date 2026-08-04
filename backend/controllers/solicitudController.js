@@ -16,7 +16,7 @@ const crearSolicitud = async (req, res) => {
         }
 
         // Verificar que exista la convocatoria
-        const [convocatoria] = await db.query('SELECT id FROM convocatorias WHERE id = ?', [idC]);
+        const [convocatoria] = await db.query('SELECT id, tipo FROM convocatorias WHERE id = ?', [idC]);
         if (convocatoria.length === 0) {
             return res.status(404).json({ mensaje: 'El posgrado no existe.' });
         }
@@ -48,12 +48,21 @@ const crearSolicitud = async (req, res) => {
             [idAspi, idC, idConvocatoriaOpcion || null]
         );
 
+        const idNuevaSolicitud = resultado.insertId;
+
+        // Si la convocatoria es de tipo DOCTORADO, asignar automáticamente la modalidad ENTREVISTA
+        if (convocatoria[0].tipo === 'DOCTORADO') {
+            const [modEntrevista] = await db.query("SELECT id FROM modalidad_ingreso WHERE codigo = 'ENTREVISTA' LIMIT 1");
+            const idEntrevista = modEntrevista.length > 0 ? modEntrevista[0].id : 6;
+            await WorkflowService.asignarModalidad(idNuevaSolicitud, idEntrevista);
+        }
+
         // Emitir evento global
         req.app.get('io').emit('actualizacionGlobal');
 
         return res.status(201).json({
             mensaje: 'Solicitud creada correctamente.',
-            idSolicitud: resultado.insertId
+            idSolicitud: idNuevaSolicitud
         });
     } catch (error) {
         console.error('Error en crearSolicitud:', error);
@@ -169,6 +178,22 @@ const actualizarModalidad = async (req, res) => {
         const { id } = req.params;
         const { tipoAdmision } = req.body; // El frontend ahora envía el idModalidad aquí por retrocompatibilidad temporal de variable
         const idModalidad = parseInt(tipoAdmision);
+
+        // Verificar si la solicitud pertenece a una convocatoria de Doctorado
+        const [soliInfo] = await db.query(
+            `SELECT s.id, c.tipo AS tipoConvocatoria 
+             FROM solicitud s 
+             JOIN convocatorias c ON s.idConvocatoria = c.id 
+             WHERE s.id = ?`,
+            [id]
+        );
+
+        if (soliInfo.length > 0 && soliInfo[0].tipoConvocatoria === 'DOCTORADO') {
+            const [modEntrevista] = await db.query("SELECT id FROM modalidad_ingreso WHERE codigo = 'ENTREVISTA' LIMIT 1");
+            const idEntrevista = modEntrevista.length > 0 ? modEntrevista[0].id : 6;
+            await WorkflowService.asignarModalidad(id, idEntrevista);
+            return res.status(200).json({ mensaje: 'Modalidad de Doctorado (Entrevista) asignada correctamente.' });
+        }
 
         if (!idModalidad || isNaN(idModalidad)) {
             return res.status(400).json({ mensaje: 'El ID de la modalidad es requerido.' });

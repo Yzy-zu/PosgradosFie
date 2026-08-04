@@ -1001,19 +1001,22 @@ async function avanzarEstacion(nuevaEstacion) {
 
     // Interceptar si es la estación 0 para guardar la modalidad de admisión
     if (estacionActual === 0 && currentSolicitudId) {
-        const inputModalidad = document.querySelector('input[name="modalidad"]:checked');
-        if (inputModalidad) {
-            try {
-                const res = await fetch(`/api/solicitud/modalidad/${currentSolicitudId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tipoAdmision: inputModalidad.value }) // Por retrocompatibilidad de nombre de var en frontend, enviamos el ID en value
-                });
-                if (!res.ok) {
-                    console.error("Error al guardar la modalidad en la base de datos.");
+        if (nivelAcademicoSeleccionado !== 'Doctorado') {
+            const contenedorMaestria = document.getElementById('opciones-admision-maestria');
+            const inputModalidad = contenedorMaestria ? contenedorMaestria.querySelector('input[name="modalidad"]:checked') : null;
+            if (inputModalidad) {
+                try {
+                    const res = await fetch(`/api/solicitud/modalidad/${currentSolicitudId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tipoAdmision: inputModalidad.value }) // Por retrocompatibilidad de nombre de var en frontend, enviamos el ID en value
+                    });
+                    if (!res.ok) {
+                        console.error("Error al guardar la modalidad en la base de datos.");
+                    }
+                } catch (e) {
+                    console.error("Error de conexión al guardar modalidad:", e);
                 }
-            } catch (e) {
-                console.error("Error de conexión al guardar modalidad:", e);
             }
         }
     }
@@ -2206,6 +2209,9 @@ const MODULOS_REGISTRY = {
     'PROGRAMAR_EXAMEN': (soliData, accion) => typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutarAspirante ? moduloProgramacionExamen.ejecutarAspirante(soliData, accion) : typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutar(soliData, accion),
     'CAPTURAR_RESULTADO_EXAMEN': (soliData, accion) => typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutarAspirante ? moduloProgramacionExamen.ejecutarAspirante(soliData, accion) : typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutar(soliData, accion),
     'HABILITAR_CAPTURA_RESULTADO': (soliData, accion) => typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutarAspirante ? moduloProgramacionExamen.ejecutarAspirante(soliData, accion) : typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutar(soliData, accion),
+    // --- Entrevista (Doctorado) ---
+    'VER_ENTREVISTA': (soliData) => typeof moduloEntrevista !== 'undefined' && moduloEntrevista.ejecutarAspirante(soliData),
+    // --- Curso propedéutico ---
     'PROGRAMAR_CURSO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
     'CAPTURAR_RESULTADO_CURSO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
     'CAPTURAR_RESULTADO_PROPEDEUTICO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
@@ -2213,6 +2219,9 @@ const MODULOS_REGISTRY = {
         const codigoMod = (soliData.modalidadCodigo || soliData.modalidadNombre || '').toUpperCase();
         if (codigoMod.includes('PROMEDIO')) {
             if (typeof moduloPromedio !== 'undefined') moduloPromedio.ejecutar(soliData, accion);
+        } else if (codigoMod.includes('ENTREVISTA')) {
+            // Doctorado: mostrar resultado de la entrevista (panel genérico de resultado)
+            if (typeof moduloEntrevista !== 'undefined') moduloEntrevista.ejecutarAspirante(soliData);
         } else if (codigoMod.includes('EXAMEN')) {
             if (typeof moduloProgramacionExamen !== 'undefined') {
                 (moduloProgramacionExamen.ejecutarAspirante || moduloProgramacionExamen.ejecutar)(soliData, accion);
@@ -2409,7 +2418,12 @@ function configurarPanelesNivel(nivel, idConvocatoria, documentosSubidos = []) {
     if (idConvocatoria) sessionStorage.setItem('idConvocatoriaPendiente', idConvocatoria);
 
     if (nivel === "Doctorado") {
-        if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'none';
+        const contenedorMaestria = document.getElementById('opciones-admision-maestria');
+        if (contenedorMaestria) {
+            contenedorMaestria.style.display = 'none';
+            // Desmarcar radios de Maestría para evitar selecciones fantasmas en el DOM
+            contenedorMaestria.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+        }
         if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'block';
 
         if (document.getElementById('btn-next-0')) document.getElementById('btn-next-0').disabled = true;
