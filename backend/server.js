@@ -48,14 +48,13 @@ app.use('/api/notificaciones', require('./routes/notificaciones.routes'));
 app.use('/api/aspirante', require('./routes/aspirante.routes'));
 app.use('/api/docentes', require('./routes/docentes.routes'));
 app.use('/api/coordinador', require('./routes/coordinador.routes'));
-//app.use('/api/evaluacion', require('./routes/evaluacion.routes'));
-//app.use('/api/pagos', require('./routes/pagos.routes'));
 app.use('/api/solicitud', require('./routes/solicitud.routes'));
 app.use('/api/documentos', require('./routes/documentos.routes'));
-app.use('/api/examen/programacion', require('./routes/programacionExamen.routes'));
 app.use('/api/programacion-examen', require('./routes/programacionExamen.routes'));
 app.use('/api/programacion-curso', require('./routes/programacionCurso.routes'));
 app.use('/api/validacion-promedio', require('./routes/validacionPromedio.routes'));
+app.use('/api/pagos', require('./routes/pagos.routes'));
+app.use('/api/entrevista', require('./routes/entrevista.routes'));
 app.use('/api/requisitos', require('./routes/requisitos.routes'));
 
 
@@ -85,47 +84,7 @@ app.get('/api/files/:filename', (req, res) => {
     }
 });
 
-app.post('/api/entrevistas', async (req, res) => {
-    // Recibimos idSoli e idUsua desde el frontend
-    const { idSoli, idUsua, fecha, hora, lugar } = req.body;
-
-    if (!idSoli || !idUsua || !fecha || !hora) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'Faltan campos obligatorios' 
-        });
-    }
-
-    try {
-        const db = require('./database/db'); 
-
-        // Consulta adaptada con la estructura exacta de tu imagen
-        const query = `
-            INSERT INTO entrevistas (idSolicitud, idDocente, fecha, hora, lugar, estatus, creado_en)
-            VALUES (?, ?, ?, ?, ?, 'PROGRAMADA', NOW())
-        `;
-        
-        const [resultado] = await db.query(query, [
-            parseInt(idSoli), 
-            parseInt(idUsua), 
-            fecha, 
-            hora, 
-            lugar || 'Por definir'
-        ]);
-
-        return res.json({ 
-            success: true, 
-            message: 'Entrevista agendada correctamente' 
-        });
-
-    } catch (error) {
-        console.error(" Error en MySQL al guardar entrevista:", error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'Error en la base de datos: ' + error.sqlMessage 
-        });
-    }
-});
+// Nota: La ruta POST /api/entrevistas (legacy) fue migrada a /api/entrevista via entrevista.routes.js
 
 
 

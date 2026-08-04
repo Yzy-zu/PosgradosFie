@@ -26,11 +26,11 @@ router.get(
     obtenerDocentes
 );
 
-// Obtener un docente por ID (Admin, Coordinador, Secretario o el propio Docente)
+// Obtener un docente por su idUsuario (:id = idUsua en tabla docente)
 router.get(
-    '/:id', 
-    auth, 
-    validarRol('ADMIN', 'COORDINADOR', 'SECRETARIO', 'DOCENTE'), 
+    '/:id',
+    auth,
+    validarRol('ADMIN', 'COORDINADOR', 'SECRETARIO', 'DOCENTE'),
     obtenerDocente
 );
 
@@ -42,19 +42,19 @@ router.post(
     crearDocente
 );
 
-// Actualizar un docente (Admin, Coordinador o el mismo Docente para sus datos personales)
+// Actualizar un docente por su idUsuario (:id = idUsua en tabla docente)
 router.put(
-    '/:id', 
-    auth, 
-    validarRol('ADMIN', 'COORDINADOR', 'DOCENTE'), 
+    '/:id',
+    auth,
+    validarRol('ADMIN', 'COORDINADOR', 'DOCENTE'),
     actualizarDocente
 );
 
-// Eliminar un docente (Acción crítica: reservada estrictamente para el Administrador)
+// Eliminar un docente por su idUsuario (:id = idUsua en tabla docente)
 router.delete(
-    '/:id', 
-    auth, 
-    validarRol('ADMIN'), 
+    '/:id',
+    auth,
+    validarRol('ADMIN'),
     eliminarDocente
 );
 

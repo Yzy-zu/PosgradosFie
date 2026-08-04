@@ -1,4 +1,5 @@
 const db = require('../database/db');
+const WorkflowService = require('../services/workflowService');
 
 const coordinadorController = {
 
@@ -159,13 +160,17 @@ getExpediente: async (req, res) => {
 
         `,[id]);
 
+        if (!expediente) {
+            return res.status(404).json({ ok: false, mensaje: 'Aspirante no encontrado o no tiene solicitudes registradas.' });
+        }
+
         res.json(expediente);
 
     } catch(error){
 
         console.error(error);
 
-        res.status(500).json(error);
+        res.status(500).json({ ok: false, mensaje: 'Error al obtener el expediente.' });
 
     }
 
@@ -351,6 +356,9 @@ guardarEntrevista: async (req,res)=>{
                 lugar,
                 enlace
             ]);
+
+            // Avanzar etapa en el workflow (Entrevista → Resultado)
+            await WorkflowService.avanzarEtapa(parseInt(id));
 
         }
 

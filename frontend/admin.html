@@ -8,7 +8,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="css/favico.png">
-    <title>FIE</title>
+    <title>Portal Administrador</title>
 
     <!-- Bootstrap for modals and tables -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -60,57 +60,59 @@
 
         <ul id="sidebarMenu" style="list-style: none; padding: 0; margin: 0;">
             <li>
-                <a href="#dashboard" class="nav-link active" data-target="dashboard" id="nav-dashboard" title="Inicio" data-i18n-title="sb_inicio">
+                <a href="#dashboard" class="nav-link active" data-target="dashboard" id="nav-dashboard" title="Inicio"
+                    data-i18n-title="sb_inicio">
                     <i class="fa-solid fa-gauge-high"></i>
                     <span class="text" data-i18n="sb_inicio">Inicio</span>
                 </a>
             </li>
             <li>
-                <a href="#usuarios" class="nav-link" data-target="usuarios" id="nav-usuarios" title="Usuarios" data-i18n-title="sb_usuarios">
+                <a href="#usuarios" class="nav-link" data-target="usuarios" id="nav-usuarios" title="Usuarios"
+                    data-i18n-title="sb_usuarios">
                     <i class="fa-solid fa-users"></i>
                     <span class="text" data-i18n="sb_usuarios">Usuarios</span>
                 </a>
             </li>
             <li>
-                <a href="#posgrados" class="nav-link" data-target="posgrados" id="nav-posgrados" title="Posgrados" data-i18n-title="sb_posgrados">
+                <a href="#posgrados" class="nav-link" data-target="posgrados" id="nav-posgrados" title="Posgrados"
+                    data-i18n-title="sb_posgrados">
                     <i class="fa-solid fa-graduation-cap"></i>
                     <span class="text" data-i18n="sb_posgrados">Posgrados</span>
                 </a>
             </li>
             <li>
-                <a href="#convocatorias" class="nav-link" data-target="convocatorias" id="nav-convocatorias" title="Convocatorias" data-i18n-title="sb_convocatorias">
+                <a href="#convocatorias" class="nav-link" data-target="convocatorias" id="nav-convocatorias"
+                    title="Convocatorias" data-i18n-title="sb_convocatorias">
                     <i class="fa-solid fa-bullhorn"></i>
                     <span class="text" data-i18n="sb_convocatorias">Convocatorias</span>
                 </a>
             </li>
             <li>
-                <a href="#aspirantes" class="nav-link" data-target="aspirantes" id="nav-aspirantes" title="Aspirantes" data-i18n-title="sb_aspirantes">
+                <a href="#aspirantes" class="nav-link" data-target="aspirantes" id="nav-aspirantes" title="Aspirantes"
+                    data-i18n-title="sb_aspirantes">
                     <i class="fa-solid fa-user-graduate"></i>
                     <span class="text" data-i18n="sb_aspirantes">Aspirantes</span>
                 </a>
             </li>
             <li>
-                <a href="#solicitudes" class="nav-link" data-target="solicitudes" id="nav-solicitudes" title="Solicitudes" data-i18n-title="sb_solicitudes">
+                <a href="#solicitudes" class="nav-link" data-target="solicitudes" id="nav-solicitudes"
+                    title="Solicitudes" data-i18n-title="sb_solicitudes">
                     <i class="fa-solid fa-file-signature"></i>
                     <span class="text" data-i18n="sb_solicitudes">Solicitudes</span>
                 </a>
             </li>
             <li>
-                <a href="#documentos" class="nav-link" data-target="documentos" id="nav-documentos" title="Documentos" data-i18n-title="sb_documentos">
+                <a href="#documentos" class="nav-link" data-target="documentos" id="nav-documentos" title="Documentos"
+                    data-i18n-title="sb_documentos">
                     <i class="fa-solid fa-folder-open"></i>
                     <span class="text" data-i18n="sb_documentos">Documentos</span>
                 </a>
             </li>
             <li>
-                <a href="#notificaciones" class="nav-link" data-target="notificaciones" id="nav-notificaciones" title="Notificaciones" data-i18n-title="sb_notificaciones">
+                <a href="#notificaciones" class="nav-link" data-target="notificaciones" id="nav-notificaciones"
+                    title="Notificaciones" data-i18n-title="sb_notificaciones">
                     <i class="fa-solid fa-bell"></i>
                     <span class="text" data-i18n="sb_notificaciones">Notificaciones</span>
-                </a>
-            </li>
-            <li>
-                <a href="#reportes" class="nav-link" data-target="reportes" id="nav-reportes" title="Reportes" data-i18n-title="sb_reportes">
-                    <i class="fa-solid fa-chart-bar"></i>
-                    <span class="text" data-i18n="sb_reportes">Reportes</span>
                 </a>
             </li>
         </ul>
@@ -216,14 +218,26 @@
 
         <!-- SECCIÓN: USUARIOS -->
         <div id="seccion-usuarios" class="view-section">
-            <div class="card mt-2 shadow-sm" style="flex:auto;">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0" style="color: var(--color-text);"><i class="fa-solid fa-list-ul"></i> Usuarios
-                        registrados
-                    </h5>
-                    <button class="btn btn-primary" style="width:auto; padding: 8px 15px;" data-bs-toggle="modal"
-                        data-bs-target="#modalUsuario">
-                        <i class="fa-solid fa-plus"></i> Nuevo Usuario
+            <div class="card mt-2 shadow-sm"
+                style="flex:auto; padding: 20px; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+                    <!-- Filtro por Rol (5 tipos de usuario) -->
+                    <div style="width: 220px;">
+                        <select id="filtro-usuarios-rol" onchange="filtrarUsuariosUI()"
+                            style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 38px; font-size: 0.85rem; font-weight: 600;">
+                            <option value="">Todos los roles</option>
+                            <option value="ADMIN">ADMIN</option>
+                            <option value="DOCENTE">DOCENTE</option>
+                            <option value="SECRETARIO">SECRETARIA</option>
+                            <option value="COORDINADOR">COORDINADOR</option>
+                            <option value="ASPIRANTE">ASPIRANTE</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary"
+                        style="width:auto; padding: 8px 18px; border-radius: 20px; font-weight: 600;"
+                        data-bs-toggle="modal" data-bs-target="#modalUsuario">
+                        <i class="fa-solid fa-plus me-1"></i> Nuevo Usuario
                     </button>
                 </div>
 
@@ -231,8 +245,7 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Usuario / Correo</th>
+                                <th>Correo</th>
                                 <th>Rol</th>
                                 <th>Estado</th>
                                 <th class="text-end">Acción</th>
@@ -246,19 +259,146 @@
 
         <!-- OTRAS SECCIONES (Cascarones) -->
         <div id="seccion-posgrados" class="view-section">
-            <div class="card mt-2 shadow-sm" style="flex:auto;">
-                <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i> ola</p>
+            <div class="card mt-2 shadow-sm"
+                style="flex:auto; padding: 20px; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
+                <!-- Vista de Tarjetas de Posgrados -->
+                <div id="vistaTarjetasPosgrados">
+                    <div id="contenedorPosgrados" class="dashboard-grid mt-3">
+                        <!-- Las tarjetas se inyectarán con JS -->
+                        <div class="text-center py-4 w-100" style="grid-column: 1 / -1;">
+                            <i class="fa-solid fa-spinner fa-spin me-2"></i> Cargando programas...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vista de Detalle (Especialidades) -->
+                <div id="vistaDetallePosgrado" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom"
+                        style="border-color: var(--color-border) !important;">
+                        <div>
+                            <button
+                                class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-bold mb-2 shadow-sm"
+                                onclick="cerrarDetallePosgrado()">
+                                <i class="fa-solid fa-arrow-left me-1"></i> Volver
+                            </button>
+                            <h4 class="fw-bold mb-0" id="tituloDetallePosgrado" style="color: var(--color-primary);">
+                                Posgrado</h4>
+                        </div>
+                        <button class="btn btn-sm btn-primary rounded-pill px-3 py-1 fw-bold shadow-sm"
+                            style="width: auto;" onclick="abrirModalNuevaOpcion()">
+                            <i class="fa-solid fa-plus me-1"></i> Nueva Especialidad
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Especialidad</th>
+                                    <th>Descripción</th>
+                                    <th>Estado</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaOpcionesPosgrado">
+                                <!-- Las filas se inyectarán con JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Nueva/Editar Especialidad -->
+        <div class="modal fade" id="modalOpcionPosgrado" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
+                <div class="modal-content"
+                    style="background: var(--color-card-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 16px; box-shadow: var(--shadow-lg);">
+                    <div class="modal-header border-bottom"
+                        style="border-color: var(--color-border) !important; padding: 20px 25px;">
+                        <h5 class="modal-title fw-bold" id="tituloModalOpcionPosgrado"
+                            style="color: var(--color-text);">Especialidad</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="formOpcionPosgrado">
+                        <div class="modal-body" style="padding: 25px;">
+                            <input type="hidden" id="opcion_id">
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-muted">Nombre de la Especialidad <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" id="opcion_nombre" class="form-control" required
+                                    style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;"
+                                    placeholder="Ej. Sistemas Embebidos">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-muted">Descripción</label>
+                                <textarea id="opcion_descripcion" class="form-control" rows="3"
+                                    style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px; resize: vertical;"
+                                    placeholder="Descripción de la especialidad..."></textarea>
+                            </div>
+
+                            <div class="mb-3 p-3 rounded"
+                                style="background: var(--color-bg); border: 1px solid var(--color-border);">
+                                <div class="form-check form-switch d-flex align-items-center gap-2 m-0 p-0">
+                                    <input class="form-check-input m-0" type="checkbox" id="opcion_activo" checked
+                                        style="cursor: pointer; width: 2.5rem; height: 1.25rem;">
+                                    <label class="form-check-label fw-bold small ms-2" for="opcion_activo"
+                                        style="cursor: pointer; color: var(--color-text); margin-top: 2px;">
+                                        Disponible para registro
+                                    </label>
+                                </div>
+                                <p class="text-muted small mb-0 mt-2"><i class="fa-solid fa-circle-info me-1"></i> Si se
+                                    desactiva, los aspirantes no podrán seleccionarla en su registro.</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-top d-flex gap-2"
+                            style="border-color: var(--color-border) !important; padding: 15px 25px;">
+                            <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                                data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                                <i class="fa-solid fa-floppy-disk me-1"></i> Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
         <div id="seccion-convocatorias" class="view-section">
-            <div class="card mt-2 shadow-sm" style="flex:auto;">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0" style="color: var(--color-text);"><i class="fa-solid fa-bullhorn"></i>
-                        Convocatorias</h5>
-                    <button class="btn btn-primary" style="width:auto; padding: 8px 15px;"
+            <div class="card mt-2 shadow-sm"
+                style="flex:auto; padding: 20px; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+                    <!-- Filtros de Convocatorias -->
+                    <div class="d-flex gap-2 flex-wrap align-items-center">
+                        <!-- Filtro Estado -->
+                        <div style="width: 180px;">
+                            <select id="filtro-convocatoria-estado" onchange="filtrarConvocatoriasUI()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 38px; font-size: 0.85rem; font-weight: 600;">
+                                <option value="">Estado (Todos)</option>
+                                <option value="Activa">Activas</option>
+                                <option value="Borrador">Borrador / Inactivas</option>
+                                <option value="Evaluacion">En Evaluación</option>
+                                <option value="Cerrada">Cerradas</option>
+                            </select>
+                        </div>
+                        <!-- Filtro Programa / Nivel -->
+                        <div style="width: 180px;">
+                            <select id="filtro-convocatoria-programa" onchange="filtrarConvocatoriasUI()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 38px; font-size: 0.85rem; font-weight: 600;">
+                                <option value="">Programa (Todos)</option>
+                                <option value="Maestría">Maestría</option>
+                                <option value="Doctorado">Doctorado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Botón Nueva Convocatoria -->
+                    <button class="btn btn-primary"
+                        style="width:auto; padding: 8px 18px; border-radius: 20px; font-weight: 600;"
                         onclick="crearConvocatoria()">
-                        <i class="fa-solid fa-plus"></i> Nueva Convocatoria
+                        <i class="fa-solid fa-plus me-1"></i> Nueva Convocatoria
                     </button>
                 </div>
                 <!-- Grid donde se dibujarán las tarjetas de cada convocatoria -->
@@ -271,45 +411,61 @@
         <div id="seccion-aspirantes" class="view-section">
             <!-- VISTA DE TABLA -->
             <div id="vistaTablaAspirantes">
-                <div class="card mt-2 shadow-sm" style="flex:auto;">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0" style="color: var(--color-text);"><i class="fa-solid fa-users"></i> Aspirantes
-                            registrados
-                        </h5>
+                <div class="card mt-2 shadow-sm"
+                    style="flex:auto; padding: 20px; overflow-x: auto; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
+                    <!-- Filtros Aspirantes -->
+                    <div class="d-flex gap-3 mb-3 flex-wrap align-items-center">
+                        <div class="flex-grow-1 position-relative">
+                            <i class="fa-solid fa-magnifying-glass position-absolute"
+                                style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
+                            <input type="text" id="filtro-aspirantes-texto"
+                                placeholder="Buscar por nombre, correo, licenciatura..."
+                                oninput="filtrarTablaAspirantesUI()"
+                                style="padding-left: 35px; width: 100%; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                        </div>
+                        <div style="width: 180px; flex-shrink: 0;">
+                            <select id="filtro-aspirantes-programa" onchange="filtrarTablaAspirantesUI()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                                <option value="">Programas (Todos)</option>
+                                <option value="Maestría">Maestría</option>
+                                <option value="Doctorado">Doctorado</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Correo</th>
-                                    <th>Posgrado</th>
-                                    <th class="text-end">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tablaAspirantes"></tbody>
-                        </table>
-                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
+                        <thead>
+                            <tr
+                                style="border-bottom: 2px solid var(--color-border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted);">
+                                <th style="padding: 12px 15px;">Aspirante / Contacto</th>
+                                <th style="padding: 12px 15px;">CURP</th>
+                                <th style="padding: 12px 15px;">Antecedentes Académicos</th>
+                                <th style="padding: 12px 15px;">Posgrado Solicitado</th>
+                                <th style="padding: 12px 15px; text-align: center;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaAspirantes"></tbody>
+                    </table>
                 </div>
             </div>
 
             <!-- VISTA DE PERFIL (Expediente Clínico / Académico) -->
-            <div id="vistaPerfilAspirante" class="d-none">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <button class="btn btn-outline-secondary shadow-sm" onclick="cerrarExpedienteAspirante()"
-                        style="border-radius: 8px; font-weight: 600;">
+            <div id="vistaPerfilAspirante" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <button class="btn-secondary shadow-sm" onclick="cerrarExpedienteAspirante()"
+                        style="border-radius: 8px; font-weight: 600; padding: 8px 16px; border: 1px solid var(--color-border); background: var(--color-card-bg); color: var(--color-text); cursor: pointer;">
                         <i class="fa-solid fa-arrow-left me-2"></i> Volver a la lista
                     </button>
-                    <button class="btn btn-primary shadow-sm d-none" id="btnVerExpedienteCompleto"
-                        style="border-radius: 8px; font-weight: 600;">
+                    <button class="btn-primary shadow-sm" id="btnVerExpedienteCompleto"
+                        style="display: none; border-radius: 8px; font-weight: 600; padding: 8px 16px; background: var(--color-primary); color: white; border: none; cursor: pointer;">
                         <i class="fa-solid fa-file-pdf me-2"></i> Expediente
                     </button>
                 </div>
 
-                <div class="row g-4">
+                <div style="display: flex; gap: 24px; flex-wrap: wrap;">
                     <!-- Columna Izquierda: Perfil Premium -->
-                    <div class="col-md-4">
-                        <div class="profile-card-premium h-100">
+                    <div style="flex: 1 1 300px; max-width: 400px;">
+                        <div class="profile-card-premium" style="height: 100%;">
                             <!-- Avatar con iniciales dinámico -->
                             <div id="perfil_avatar" class="avatar-initials mb-3">
                                 --
@@ -327,89 +483,112 @@
 
                             <div class="text-start px-2" style="overflow-x: hidden; word-wrap: break-word;">
                                 <!-- Datos Personales -->
-                                <h6 class="text-muted small fw-bold mb-3 border-bottom pb-1"
-                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">
-                                    Datos Personales</h6>
-                                <div class="mb-3">
-                                    <div class="profile-label-premium">CURP</div>
-                                    <div class="profile-value-premium" id="perfil_curp">-</div>
+                                <div class="profile-section-title" style="margin-top: 0;">
+                                    <i class="fa-solid fa-user"></i> Datos Personales
                                 </div>
-                                <div class="mb-3">
-                                    <div class="profile-label-premium">TELÉFONO</div>
-                                    <div class="profile-value-premium" id="perfil_telefono">-</div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="profile-label-premium">NACIMIENTO</div>
-                                    <div class="profile-value-premium" id="perfil_nacimiento">-</div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="profile-label-premium">ESTADO CIVIL</div>
-                                    <div class="profile-value-premium" id="perfil_estadoCivil">-</div>
-                                </div>
-                                <div class="mb-4">
-                                    <div class="profile-label-premium">DIRECCIÓN</div>
-                                    <div class="profile-value-premium" id="perfil_direccion" style="line-height: 1.4;">-
+
+                                <div style="display: flex; gap: 10px;">
+                                    <div class="profile-info-card" style="flex: 1;">
+                                        <div class="profile-label-premium"><i class="fa-solid fa-id-card"></i> CURP
+                                        </div>
+                                        <div class="profile-value-premium" id="perfil_curp"
+                                            style="font-family: monospace;">-</div>
+                                    </div>
+                                    <div class="profile-info-card" style="flex: 1;">
+                                        <div class="profile-label-premium"><i class="fa-solid fa-phone"></i> Teléfono
+                                        </div>
+                                        <div class="profile-value-premium" id="perfil_telefono">-</div>
                                     </div>
                                 </div>
 
-                                <!-- Datos Académicos -->
-                                <h6 class="text-muted small fw-bold mb-3 border-bottom pb-1"
-                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">
-                                    Antecedentes Académicos</h6>
-                                <div class="mb-3">
-                                    <div class="profile-label-premium">LICENCIATURA</div>
+                                <div style="display: flex; gap: 10px;">
+                                    <div class="profile-info-card" style="flex: 1;">
+                                        <div class="profile-label-premium"><i class="fa-regular fa-calendar-days"></i>
+                                            Nacimiento</div>
+                                        <div class="profile-value-premium" id="perfil_nacimiento">-</div>
+                                    </div>
+                                    <div class="profile-info-card" style="flex: 1;">
+                                        <div class="profile-label-premium"><i class="fa-solid fa-ring"></i> Estado Civil
+                                        </div>
+                                        <div class="profile-value-premium" id="perfil_estadoCivil">-</div>
+                                    </div>
+                                </div>
+
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium"><i class="fa-solid fa-location-dot"></i>
+                                        Dirección</div>
+                                    <div class="profile-value-premium" id="perfil_direccion">-</div>
+                                </div>
+
+                                <!-- Antecedentes Académicos -->
+                                <div class="profile-section-title">
+                                    <i class="fa-solid fa-graduation-cap"></i> Antecedentes Académicos
+                                </div>
+
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium"><i class="fa-solid fa-user-graduate"></i>
+                                        Licenciatura</div>
                                     <div class="profile-value-premium" id="perfil_licenciatura">-</div>
                                 </div>
-                                <div class="mb-3">
-                                    <div class="profile-label-premium">INSTITUCIÓN</div>
-                                    <div class="profile-value-premium" id="perfil_institucionLicenciatura"
-                                        style="line-height: 1.4;">-</div>
+
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium"><i class="fa-solid fa-building-columns"></i>
+                                        Institución</div>
+                                    <div class="profile-value-premium" id="perfil_institucionLicenciatura">-</div>
                                 </div>
-                                <div class="row">
-                                    <div class="col-6 mb-3">
-                                        <div class="profile-label-premium">EGRESO</div>
+
+                                <div style="display: flex; gap: 10px;">
+                                    <div class="profile-info-card" style="flex: 1;">
+                                        <div class="profile-label-premium"><i class="fa-regular fa-calendar-check"></i>
+                                            Egreso</div>
                                         <div class="profile-value-premium" id="perfil_fechaEgreso">-</div>
                                     </div>
-                                    <div class="col-6 mb-3">
-                                        <div class="profile-label-premium">TITULACIÓN</div>
+                                    <div class="profile-info-card" style="flex: 1;">
+                                        <div class="profile-label-premium"><i class="fa-solid fa-certificate"></i>
+                                            Titulación</div>
                                         <div class="profile-value-premium" id="perfil_fechaTitulacion">-</div>
                                     </div>
                                 </div>
-                                <div class="mb-4">
-                                    <div class="profile-label-premium">PROMEDIO</div>
+
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium"><i class="fa-solid fa-award"></i> Promedio</div>
                                     <div class="profile-value-premium" id="perfil_promedio">-</div>
                                 </div>
 
-                                <!-- Otros Datos -->
-                                <h6 class="text-muted small fw-bold mb-3 border-bottom pb-1"
-                                    style="text-transform: uppercase; border-color: var(--color-border) !important;">
-                                    Ocupación / Otros</h6>
-                                <div class="mb-3">
-                                    <div class="profile-label-premium">OCUPACIÓN</div>
+                                <!-- Ocupación / Otros -->
+                                <div class="profile-section-title">
+                                    <i class="fa-solid fa-briefcase"></i> Ocupación y Otros
+                                </div>
+
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium"><i class="fa-solid fa-user-tie"></i> Ocupación
+                                    </div>
                                     <div class="profile-value-premium" id="perfil_ocupacion">-</div>
                                 </div>
-                                <div class="mb-1">
-                                    <div class="profile-label-premium">OTROS ESTUDIOS</div>
-                                    <div class="profile-value-premium" id="perfil_otrosEstudios"
-                                        style="line-height: 1.4;">-</div>
+
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium"><i class="fa-solid fa-book-open"></i> Otros
+                                        Estudios</div>
+                                    <div class="profile-value-premium" id="perfil_otrosEstudios">-</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Columna Derecha: Solicitudes y Documentos -->
-                    <div class="col-md-8">
-                        <div class="card shadow-sm h-100" style="border-radius: 16px;">
-                            <div class="card-header pt-4 pb-2 px-4"
-                                style="background: transparent; border-bottom: 1px solid var(--color-border);">
-                                <h5 class="mb-0 fw-bold" style="color: var(--color-text); letter-spacing: -0.5px;">
-                                    Trámites de
-                                    Admisión</h5>
+                    <div style="flex: 2 1 500px;">
+                        <div class="card shadow-sm"
+                            style="height: 100%; border-radius: 16px; background: var(--color-card-bg); border: 1px solid var(--color-border);">
+                            <div style="padding: 24px 24px 12px 24px; border-bottom: 1px solid var(--color-border);">
+                                <h5
+                                    style="margin: 0; font-weight: bold; color: var(--color-text); font-size: 18px; letter-spacing: -0.5px;">
+                                    Trámites de Admisión</h5>
                             </div>
-                            <div class="card-body px-4 pb-4" id="contenedorSolicitudes">
-                                <div class="text-center py-5">
-                                    <i class="fa-solid fa-spinner fa-spin text-primary fs-3"></i>
-                                    <p class="text-muted mt-2">Cargando expediente...</p>
+                            <div style="padding: 24px;" id="contenedorSolicitudes">
+                                <div style="text-align: center; padding: 40px 0;">
+                                    <i class="fa-solid fa-spinner fa-spin text-primary" style="font-size: 24px;"></i>
+                                    <p style="color: var(--color-text-muted); margin-top: 10px;">Cargando expediente...
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -419,121 +598,341 @@
         </div>
 
         <div id="seccion-solicitudes" class="view-section">
-            <div class="card mt-2 shadow-sm" style="flex:auto;">
-                <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i>ola</p>
+            <!-- VISTA DE TABLA -->
+            <div id="vistaTablaSolicitudes">
+                <div class="card mt-2 shadow-sm"
+                    style="flex:auto; padding: 20px; overflow-x: auto; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
+                    <!-- Filtros Solicitudes -->
+                    <div class="d-flex gap-3 mb-3 flex-wrap align-items-center">
+                        <div class="flex-grow-1 position-relative">
+                            <i class="fa-solid fa-magnifying-glass position-absolute"
+                                style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
+                            <input type="text" id="filtro-solicitudes-texto"
+                                placeholder="Buscar por aspirante, correo o programa..."
+                                oninput="filtrarTablaSolicitudesUI()"
+                                style="padding-left: 35px; width: 100%; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                        </div>
+                        <div style="width: 180px; flex-shrink: 0;">
+                            <select id="filtro-solicitudes-estado" onchange="filtrarTablaSolicitudesUI()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                                <option value="">Estado (Todos)</option>
+                                <option value="PENDIENTE">Pendientes</option>
+                                <option value="EN_REVISION">En Revisión</option>
+                                <option value="APROBADO">Aprobadas</option>
+                                <option value="RECHAZADO">Rechazadas</option>
+                            </select>
+                        </div>
+                        <div style="width: 180px; flex-shrink: 0;">
+                            <select id="filtro-solicitudes-programa" onchange="filtrarTablaSolicitudesUI()"
+                                style="width: 100%; padding: 0 12px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
+                                <option value="">Programa (Todos)</option>
+                                <option value="Maestría">Maestría</option>
+                                <option value="Doctorado">Doctorado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
+                        <thead>
+                            <tr
+                                style="border-bottom: 2px solid var(--color-border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted);">
+                                <th style="padding: 12px 15px;">Aspirante / Contacto</th>
+                                <th style="padding: 12px 15px;">Programa Solicitado</th>
+                                <th style="padding: 12px 15px;">Modalidad / Etapa</th>
+                                <th style="padding: 12px 15px;">Estado</th>
+                                <th style="padding: 12px 15px; text-align: center;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaSolicitudes"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VISTA DE DETALLE (Documentos y Estado) -->
+            <div id="vistaDetalleSolicitud" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <button class="btn-secondary shadow-sm" onclick="cerrarDetalleSolicitud()"
+                        style="border-radius: 8px; font-weight: 600; padding: 8px 16px; border: 1px solid var(--color-border); background: var(--color-card-bg); color: var(--color-text); cursor: pointer;">
+                        <i class="fa-solid fa-arrow-left me-2"></i> Volver a la lista
+                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn-primary shadow-sm" id="btnDescargarDocsSolicitud"
+                            style="display: none; border-radius: 8px; font-weight: 600; padding: 8px 16px; background: var(--color-primary); color: white; border: none; cursor: pointer;">
+                            <i class="fa-solid fa-download me-2"></i> Descargar Todo
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Resumen del Aspirante -->
+                    <div class="col-lg-4 col-md-12">
+                        <div class="profile-card-premium h-100">
+                            <div id="solDet_avatar" class="avatar-initials mb-3">--</div>
+                            <h4 class="mb-1 fw-bold" style="color: var(--color-text);" id="solDet_nombreCompleto">
+                                Cargando...</h4>
+                            <p class="text-muted mb-3" style="font-size: 0.9rem;" id="solDet_correo">correo@ejemplo.com
+                            </p>
+
+                            <span class="soft-badge mb-4 d-inline-block" id="solDet_estado">Estado</span>
+
+                            <hr style="border-color: var(--color-border); margin: 20px 0;">
+
+                            <div class="text-start px-2">
+                                <div class="profile-section-title" style="margin-top: 0;">
+                                    <i class="fa-solid fa-book-bookmark"></i> Detalles de la Solicitud
+                                </div>
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium">Programa</div>
+                                    <div class="profile-value-premium" id="solDet_programa">-</div>
+                                </div>
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium">Opciones</div>
+                                    <div class="profile-value-premium" id="solDet_opcion">-</div>
+                                </div>
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium">Modalidad</div>
+                                    <div class="profile-value-premium" id="solDet_modalidad">-</div>
+                                </div>
+                                <div class="profile-info-card">
+                                    <div class="profile-label-premium">Etapa Actual</div>
+                                    <div class="profile-value-premium fw-bold text-primary" id="solDet_etapa">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expediente y Acciones -->
+                    <div class="col-lg-8 col-md-12">
+                        <div class="card shadow-sm h-100"
+                            style="border-radius: 16px; background: var(--color-card-bg); border: 1px solid var(--color-border);">
+                            <div style="padding: 24px 24px 12px 24px; border-bottom: 1px solid var(--color-border);">
+                                <h5
+                                    style="margin: 0; font-weight: bold; color: var(--color-text); font-size: 18px; letter-spacing: -0.5px;">
+                                    Documentos Entregados</h5>
+                            </div>
+                            <div style="padding: 24px;">
+                                <div id="contenedorDocumentosSolicitud">
+                                    <div style="text-align: center; padding: 40px 0;">
+                                        <i class="fa-solid fa-spinner fa-spin text-primary"
+                                            style="font-size: 24px;"></i>
+                                        <p style="color: var(--color-text-muted); margin-top: 10px;">Cargando
+                                            documentos...</p>
+                                    </div>
+                                </div>
+                                <!-- Comprobante de pago (se inyecta por JS si la etapa es PAGO) -->
+                                <div id="contenedorComprobantePago"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div id="seccion-documentos" class="view-section">
-            <div class="card mt-2 shadow-sm" style="flex:auto;">
-                <p style="color:#555; margin:0;"><i class="fa-solid fa-circle-info text-info me-2"></i>ola</p>
-            </div>
-        </div>
-
-        <div id="seccion-notificaciones" class="view-section">
-            <div class="chat-layout mt-2">
-                <!-- Sidebar: Lista de Mensajes -->
-                <div class="chat-sidebar">
-                    <div class="chat-sidebar-header">
-                        <h6 class="mb-0 fw-bold" style="color: var(--color-text);"><i
-                                class="fa-solid fa-bell text-primary me-2"></i> Notificaciones</h6>
-                        <button class="btn btn-sm btn-primary rounded-circle"
-                            style="width: 32px; height: 32px; padding: 0;" onclick="mostrarRedaccionNotificacion()"
-                            title="Nuevo Mensaje">
-                            <i class="fa-solid fa-plus"></i>
-                        </button>
+            <div class="card mt-2 shadow-sm file-explorer-card"
+                style="flex:auto; padding: 0; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; min-height: 500px;">
+                <!-- Header / Toolbar -->
+                <div class="file-explorer-toolbar d-flex justify-content-between align-items-center p-3 border-bottom"
+                    style="background: var(--color-bg); border-color: var(--color-border) !important;">
+                    <div class="breadcrumbs-container d-flex align-items-center gap-2" id="docBreadcrumbs"
+                        style="font-weight: 500; font-size: 1.05rem; color: var(--color-text);">
+                        <span class="breadcrumb-item" style="cursor: pointer; color: var(--color-primary);"
+                            onclick="exploradorIrRaiz()"><i class="fa-solid fa-house me-2"></i>Inicio</span>
                     </div>
-                    <div class="chat-list" id="listaNotificacionesChat">
-                        <div class="p-4 text-center text-muted small"><i class="fa-solid fa-spinner fa-spin"></i>
-                            Cargando...</div>
+
+                    <div class="toolbar-actions d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm"
+                            onclick="cargarExploradorDocumentos()" title="Recargar">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Main Content: Lectura o Redacción -->
-                <div class="chat-main">
-                    <!-- Modo Lectura -->
-                    <div id="chatReadMode" class="chat-read-mode"
-                        style="display: flex; flex-direction: column; height: 100%;">
-                        <div class="chat-header">
+                <!-- Main Content Area (Grid) -->
+                <div class="file-explorer-content p-4"
+                    style="flex: 1; overflow-y: auto; background: var(--color-card-bg);">
+                    <div id="exploradorGrid" class="explorer-grid"
+                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 20px;">
+                        <div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;">
+                            <i class="fa-solid fa-spinner fa-spin fa-2x mb-3 text-primary"></i>
+                            <p>Cargando explorador...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN: NOTIFICACIONES -->
+        <div id="seccion-notificaciones" class="view-section">
+            <!-- Hub Principal de Notificaciones (2 Columnas) -->
+            <div class="row g-4 mt-1">
+                <!-- Columna Izquierda: Lista e Historial de Envíos -->
+                <div class="col-lg-5 col-md-12">
+                    <div class="card shadow-sm h-100"
+                        style="background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 16px; display: flex; flex-direction: column;">
+                        <!-- Barra de Filtro y Búsqueda -->
+                        <div class="p-3 border-bottom" style="border-color: var(--color-border) !important;">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <div class="position-relative flex-grow-1">
+                                    <i class="fa-solid fa-magnifying-glass position-absolute"
+                                        style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted);"></i>
+                                    <input type="text" id="filtro-notif-texto" placeholder="Buscar avisos..."
+                                        oninput="filtrarNotificacionesUI()" class="form-control form-control-sm ps-5"
+                                        style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 20px;">
+                                </div>
+                                <button
+                                    class="btn btn-sm btn-primary rounded-pill px-3 py-1 fw-bold text-nowrap d-inline-flex align-items-center gap-1 shadow-sm"
+                                    onclick="mostrarRedaccionNotificacion()">
+                                    <i class="fa-solid fa-plus"></i> Nueva Notificación
+                                </button>
+                            </div>
+                            <div class="d-flex gap-2 overflow-auto py-1 custom-scroll" id="filtro-notif-audiencia">
+                                <button
+                                    class="btn btn-sm btn-primary rounded-pill px-3 py-1 text-nowrap notif-filter-pill active"
+                                    onclick="filtrarNotifAudiencia('todos', this)">Todos</button>
+                                <button
+                                    class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 text-nowrap notif-filter-pill"
+                                    onclick="filtrarNotifAudiencia('aspirantes', this)">Aspirantes</button>
+                                <button
+                                    class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 text-nowrap notif-filter-pill"
+                                    onclick="filtrarNotifAudiencia('docentes', this)">Docentes</button>
+                                <button
+                                    class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 text-nowrap notif-filter-pill"
+                                    onclick="filtrarNotifAudiencia('secretario', this)">Secretaría</button>
+                                <button
+                                    class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 text-nowrap notif-filter-pill"
+                                    onclick="filtrarNotifAudiencia('individual', this)">Individuales</button>
+                            </div>
+                        </div>
+
+                        <!-- Feed / Lista de Notificaciones -->
+                        <div class="p-2 custom-scroll flex-grow-1" id="listaNotificacionesChat"
+                            style="max-height: 550px; overflow-y: auto;">
+                            <div class="p-4 text-center text-muted small">
+                                <i class="fa-solid fa-spinner fa-spin me-2"></i> Cargando avisos...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna Derecha: Vista Previa o Editor -->
+                <div class="col-lg-7 col-md-12">
+                    <!-- Modo Previsualización / Detalle de Notificación -->
+                    <div id="chatReadMode" class="card shadow-sm h-100"
+                        style="background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 16px; min-height: 500px; display: flex; flex-direction: column;">
+                        <div class="p-3 border-bottom d-flex justify-content-between align-items-center"
+                            style="border-color: var(--color-border) !important;">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="chat-avatar bg-primary" id="chatReadAvatar"><i
-                                        class="fa-solid fa-bullhorn"></i></div>
+                                <div class="avatar-initials bg-primary text-white" id="chatReadAvatar"
+                                    style="width: 42px; height: 42px; font-size: 1.1rem; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa-solid fa-bullhorn"></i>
+                                </div>
                                 <div>
-                                    <h6 class="mb-0 fw-bold" id="chatReadTitle">Selecciona un mensaje</h6>
-                                    <small class="text-muted" id="chatReadDestino">Para leer los detalles</small>
+                                    <h6 class="fw-bold mb-0" id="chatReadTitle" style="color: var(--color-text);">
+                                        Selecciona una notificación</h6>
+                                    <small class="text-muted" id="chatReadDestino">Haz clic en un aviso de la lista para
+                                        inspeccionarlo</small>
                                 </div>
                             </div>
-                            <button class="btn btn-sm btn-outline-danger" id="btnEliminarNotifChat"
-                                style="display: none;" onclick="eliminarNotificacionActiva()">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
+                            <div class="d-flex align-items-center gap-2">
+                                <button class="btn btn-sm btn-outline-primary" id="btnEditarNotifChat"
+                                    style="display: none;" onclick="editarNotificacionActiva()">
+                                    <i class="fa-solid fa-pen-to-square me-1"></i> Editar
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" id="btnEliminarNotifChat"
+                                    style="display: none;" onclick="eliminarNotificacionActiva()">
+                                    <i class="fa-solid fa-trash me-1"></i> Eliminar
+                                </button>
+                            </div>
                         </div>
-                        <div class="chat-body" id="chatReadBody">
-                            <div class="d-flex justify-content-center align-items-center h-100 text-muted">
-                                <div class="text-center">
-                                    <i class="fa-regular fa-comments fa-3x mb-3 opacity-50"></i>
-                                    <p>Selecciona una notificación de la lista <br>para ver el mensaje completo.</p>
-                                </div>
+
+                        <div class="p-4 flex-grow-1" id="chatReadBody">
+                            <div
+                                class="d-flex flex-column justify-content-center align-items-center h-100 text-muted py-5">
+                                <img src="css/umsnhLogo.png" alt="Logo Posgrados" style="width: 120px; opacity: 0.3;"
+                                    class="mb-3">
+                                <h6 class="fw-semibold text-muted">Ningún aviso seleccionado</h6>
+                                <p class="small text-muted text-center max-w-sm">Selecciona una notificación del panel
+                                    izquierdo para ver los detalles del envío o crear una nueva para tu audiencia.</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Modo Redacción -->
-                    <div id="chatComposeMode" class="chat-compose"
-                        style="display: none; flex-direction: column; height: 100%;">
-                        <div class="chat-header" style="margin: -20px -20px 20px -20px; padding: 15px 20px;">
-                            <h6 class="mb-0 fw-bold text-primary"><i class="fa-solid fa-pen-to-square me-2"></i> Nuevo
-                                Mensaje</h6>
-                            <button class="btn-close" onclick="cerrarRedaccionNotificacion()"></button>
+                    <!-- Modo Redacción / Creación de Notificación -->
+                    <div id="chatComposeMode" class="card shadow-sm h-100"
+                        style="display: none; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 16px; flex-direction: column;">
+                        <div class="p-3 border-bottom d-flex justify-content-between align-items-center"
+                            style="border-color: var(--color-border) !important;">
+                            <h6 class="fw-bold mb-0 text-primary d-flex align-items-center gap-2"
+                                id="notifComposeTitle">
+                                <i class="fa-solid fa-paper-plane"></i> Emitir Nueva Notificación
+                            </h6>
+                            <button type="button" class="btn-close" onclick="cerrarRedaccionNotificacion()"></button>
                         </div>
 
-                        <form id="formNotificacion" class="d-flex flex-column" style="flex: 1;">
+                        <form id="formNotificacion" class="p-4 d-flex flex-column h-100">
                             <input type="hidden" id="idNotificacionForm">
 
                             <div class="row g-3 mb-3">
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold small text-muted">Público Destino</label>
-                                    <select class="form-select form-select-sm" id="notif_destino" required>
-                                        <option value="">Seleccione...</option>
+                                    <label class="form-label fw-bold small text-muted">Público Destino <span
+                                            class="text-danger">*</span></label>
+                                    <select class="form-select" id="notif_destino" required
+                                        style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        <option value="">Seleccione público...</option>
                                         <option value="todos">Todos los Usuarios</option>
                                         <option value="aspirantes">Aspirantes</option>
-                                        <option value="secretario">Secretaría</option>
                                         <option value="docentes">Docentes</option>
+                                        <option value="secretario">Secretaría</option>
                                         <option value="coordinador">Coordinador</option>
                                         <option value="individual">Aspirante Individual</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6" id="div_notif_idDestino" style="display: none;">
-                                    <label class="form-label fw-bold small text-muted">Aspirante Específico</label>
-                                    <select class="form-select form-select-sm" id="notif_idDestino">
+                                    <label class="form-label fw-bold small text-muted">Aspirante Específico <span
+                                            class="text-danger">*</span></label>
+                                    <select class="form-select" id="notif_idDestino"
+                                        style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                         <option value="">Cargando aspirantes...</option>
                                     </select>
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label fw-bold small text-muted">Título</label>
+                                <label class="form-label fw-bold small text-muted">Título del Aviso <span
+                                        class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="notif_titulo"
-                                    placeholder="Ej. Aviso Importante" required>
+                                    placeholder="Ej. Inicio de Entrega de Documentación" required
+                                    style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                             </div>
 
-                            <div class="mb-3" style="flex: 1; display: flex; flex-direction: column;">
-                                <label class="form-label fw-bold small text-muted">Mensaje</label>
-                                <textarea class="form-control" id="notif_mensaje"
-                                    placeholder="Escribe tu mensaje aquí..." required
-                                    style="flex: 1; resize: none; min-height: 150px; border-radius: 8px;"></textarea>
+                            <div class="mb-3 flex-grow-1 d-flex flex-column">
+                                <label class="form-label fw-bold small text-muted">Mensaje / Contenido <span
+                                        class="text-danger">*</span></label>
+                                <textarea class="form-control flex-grow-1" id="notif_mensaje"
+                                    placeholder="Escribe el mensaje del aviso aquí..." required rows="5"
+                                    style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px; resize: vertical; min-height: 140px;"></textarea>
                             </div>
 
-                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top"
+                                style="border-color: var(--color-border) !important;">
                                 <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="notif_estado_switch" checked>
-                                    <label class="form-check-label small text-muted" for="notif_estado_switch">Visible
-                                        para los usuarios</label>
+                                    <input class="form-check-input" type="checkbox" id="notif_estado_switch" checked
+                                        style="cursor: pointer;">
+                                    <label class="form-check-label small fw-semibold" for="notif_estado_switch"
+                                        style="cursor: pointer; color: var(--color-text);">
+                                        Publicar inmediatamente (Visible)
+                                    </label>
                                 </div>
-                                <button type="submit" class="btn btn-primary px-4 rounded-pill shadow-sm"
-                                    style="background-color: #25D366; border-color: #25D366;">
-                                    <i class="fa-solid fa-paper-plane icon-anim-send me-2"></i> Enviar Notificación
-                                </button>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-secondary px-3 rounded-pill"
+                                        onclick="cerrarRedaccionNotificacion()">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" class="btn btn-primary px-4 rounded-pill shadow-sm fw-bold">
+                                        <i class="fa-solid fa-paper-plane me-1"></i> Guardar y Enviar
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -543,10 +942,14 @@
 
         <!-- Modal Nuevo Usuario -->
         <div class="modal fade" id="modalUsuario" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog" id="dialogUsuario" style="transition: max-width 0.4s ease-in-out; max-width: 500px;">
-                <div class="modal-content" style="background: var(--color-card-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-lg);">
-                    <div class="modal-header d-flex justify-content-between align-items-center" style="border-bottom: 1px solid var(--color-border); padding: 20px 25px;">
-                        <h5 class="modal-title fw-bold" style="color: var(--color-text); font-size: 1.25rem;"><i class="fa-solid fa-user-plus text-primary me-2"></i> Nuevo Usuario</h5>
+            <div class="modal-dialog" id="dialogUsuario"
+                style="transition: max-width 0.4s ease-in-out; max-width: 500px;">
+                <div class="modal-content"
+                    style="background: var(--color-card-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-lg);">
+                    <div class="modal-header d-flex justify-content-between align-items-center"
+                        style="border-bottom: 1px solid var(--color-border); padding: 20px 25px;">
+                        <h5 class="modal-title fw-bold mb-0" style="color: var(--color-text); font-size: 1.25rem;">Nuevo
+                            Usuario</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
@@ -558,19 +961,27 @@
                                 <!-- Lado izquierdo: Info Básica -->
                                 <div style="flex: 1; min-width: 450px;">
                                     <div class="mb-3">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Correo Electrónico</label>
-                                        <input type="email" id="correo" class="form-control" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        <label class="form-label fw-bold small"
+                                            style="color: var(--color-text-muted);">Correo Electrónico</label>
+                                        <input type="email" id="correo" class="form-control" required
+                                            style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Contraseña</label>
-                                        <input type="password" id="password" class="form-control" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
-                                        <small class="d-block mt-1" style="color: var(--color-text-muted); font-size: 0.8rem;">Dejar en blanco si está editando y no desea cambiarla.</small>
+                                        <label class="form-label fw-bold small"
+                                            style="color: var(--color-text-muted);">Contraseña</label>
+                                        <input type="password" id="password" class="form-control"
+                                            style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        <small class="d-block mt-1"
+                                            style="color: var(--color-text-muted); font-size: 0.8rem;">Dejar en blanco
+                                            si está editando y no desea cambiarla.</small>
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Rol de Usuario</label>
-                                        <select id="rol" class="form-select" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        <label class="form-label fw-bold small"
+                                            style="color: var(--color-text-muted);">Rol de Usuario</label>
+                                        <select id="rol" class="form-select"
+                                            style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                             <option value="ADMIN">Administrador</option>
                                             <option value="COORDINADOR">Coordinador</option>
                                             <option value="SECRETARIO">Secretario</option>
@@ -579,31 +990,41 @@
                                         </select>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Estado de Cuenta</label>
-                                        <select id="activo" class="form-select" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        <label class="form-label fw-bold small"
+                                            style="color: var(--color-text-muted);">Estado de Cuenta</label>
+                                        <select id="activo" class="form-select"
+                                            style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                             <option value="1">Activo</option>
                                             <option value="0">Inactivo</option>
                                         </select>
                                     </div>
 
                                     <div class="mb-3 text-start" id="contenedorBtnDetalles" style="display:none;">
-                                        <button type="button" class="btn btn-link text-decoration-none p-0 fw-bold" style="color: var(--color-primary);" onclick="toggleDetallesUsuario()" id="btnToggleDetalles">
-                                            <i class="fa-solid fa-chevron-right me-1"></i> Ver detalles específicos del rol
+                                        <button type="button" class="btn btn-link text-decoration-none p-0 fw-bold"
+                                            style="color: var(--color-primary);" onclick="toggleDetallesUsuario()"
+                                            id="btnToggleDetalles">
+                                            <i class="fa-solid fa-chevron-right me-1"></i> Ver detalles específicos del
+                                            rol
                                         </button>
                                     </div>
                                 </div>
 
                                 <!-- Lado derecho: Detalles (Expansión horizontal) -->
-                                <div id="detallesExtendidos" style="width: 0; overflow: hidden; opacity: 0; padding: 0; transition: all 0.4s ease-in-out; background: var(--color-bg); border: 1px solid var(--color-border) !important; border-radius: 12px;">
+                                <div id="detallesExtendidos"
+                                    style="width: 0; overflow: hidden; opacity: 0; padding: 0; transition: all 0.4s ease-in-out; background: var(--color-bg); border: 1px solid var(--color-border) !important; border-radius: 12px;">
                                     <!-- Los campos dinámicos se inyectarán aquí -->
                                 </div>
                             </div>
 
-                            <div class="d-flex justify-content-between align-items-center mt-4 pt-3" style="border-top: 1px solid var(--color-border);">
-                                <button type="button" class="btn btn-danger px-4" id="btnEliminarUsuario" style="display:none; border-radius: 8px; font-weight: 600;" onclick="eliminarUsuario(document.getElementById('idUsuarioForm').value)">
+                            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 gap-3"
+                                style="border-top: 1px solid var(--color-border);">
+                                <button type="button" class="btn btn-outline-danger px-4 py-2" id="btnEliminarUsuario"
+                                    style="display:none; border-radius: 20px; font-weight: 600; font-size: 0.9rem;"
+                                    onclick="eliminarUsuario(document.getElementById('idUsuarioForm').value)">
                                     <i class="fa-solid fa-trash me-1"></i> Eliminar
                                 </button>
-                                <button type="submit" class="btn btn-primary px-4 ms-auto" style="border-radius: 8px; font-weight: 600;">
+                                <button type="submit" class="btn btn-primary px-4 py-2 ms-auto"
+                                    style="border-radius: 20px; font-weight: 600; font-size: 0.9rem;">
                                     <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Usuario
                                 </button>
                             </div>
@@ -616,9 +1037,12 @@
         <!-- Modal Convocatoria -->
         <div class="modal fade" id="modalConvocatoria" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-xl">
-                <div class="modal-content" style="background: var(--color-card-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-lg);">
-                    <div class="modal-header d-flex justify-content-between align-items-center" style="border-bottom: 1px solid var(--color-border); padding: 20px 25px;">
-                        <h5 class="modal-title fw-bold" id="tituloModalConvocatoria" style="color: var(--color-text); font-size: 1.25rem;">
+                <div class="modal-content"
+                    style="background: var(--color-card-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-lg);">
+                    <div class="modal-header d-flex justify-content-between align-items-center"
+                        style="border-bottom: 1px solid var(--color-border); padding: 20px 25px;">
+                        <h5 class="modal-title fw-bold" id="tituloModalConvocatoria"
+                            style="color: var(--color-text); font-size: 1.25rem;">
                             <i class="fa-solid fa-bullhorn text-primary me-2"></i> Nueva Convocatoria
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -629,19 +1053,23 @@
 
                             <!-- Stepper UI Nodos Interactivos -->
                             <div class="wizard-stepper">
-                                <div class="step-indicator active" id="indicator-1" onclick="irAlPaso(1)" title="Paso 1: Datos Generales">
+                                <div class="step-indicator active" id="indicator-1" onclick="irAlPaso(1)"
+                                    title="Paso 1: Datos Generales">
                                     <span class="step-label">Datos</span>
                                     1
                                 </div>
-                                <div class="step-indicator" id="indicator-2" onclick="irAlPaso(2)" title="Paso 2: Calendario">
+                                <div class="step-indicator" id="indicator-2" onclick="irAlPaso(2)"
+                                    title="Paso 2: Calendario">
                                     <span class="step-label">Fechas</span>
                                     2
                                 </div>
-                                <div class="step-indicator" id="indicator-3" onclick="irAlPaso(3)" title="Paso 3: Evaluación">
+                                <div class="step-indicator" id="indicator-3" onclick="irAlPaso(3)"
+                                    title="Paso 3: Evaluación">
                                     <span class="step-label">Evaluación</span>
                                     3
                                 </div>
-                                <div class="step-indicator" id="indicator-4" onclick="irAlPaso(4)" title="Paso 4: Requisitos">
+                                <div class="step-indicator" id="indicator-4" onclick="irAlPaso(4)"
+                                    title="Paso 4: Requisitos">
                                     <span class="step-label">Requisitos</span>
                                     4
                                 </div>
@@ -649,35 +1077,52 @@
 
                             <!-- Step 1: Datos Generales -->
                             <div class="step-pane active" id="step-pane-1">
-                                <h6 class="fw-bold mb-3" style="color: var(--color-primary); font-size: 1rem;"><i class="fa-solid fa-circle-info me-2"></i> Información General</h6>
+                                <h6 class="fw-bold mb-3" style="color: var(--color-primary); font-size: 1rem;"><i
+                                        class="fa-solid fa-circle-info me-2"></i> Información General</h6>
                                 <div class="row mb-3">
                                     <div class="col-md-12">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Posgrado</label>
-                                        <select id="convocatoria_posgrado" class="form-select form-select-sm" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        <label class="form-label fw-bold small"
+                                            style="color: var(--color-text-muted);">Posgrado</label>
+                                        <select id="convocatoria_posgrado" class="form-select form-select-sm" required
+                                            style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                             <option value="">Seleccione un posgrado...</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col-12">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);"><i class="fa-solid fa-layer-group text-primary me-1"></i> Especialidades / Líneas de Investigación Asignadas:</label>
-                                        <div id="contenedorOpcionesPosgrado" class="p-3 border rounded" style="background: var(--color-bg); border-color: var(--color-border) !important; border-radius: 8px;">
-                                            <p class="text-muted small mb-0"><i class="fa-solid fa-circle-info me-1"></i> Selecciona un posgrado para ver y gestionar sus especialidades.</p>
+                                        <label class="form-label fw-bold small"
+                                            style="color: var(--color-text-muted);"><i
+                                                class="fa-solid fa-layer-group text-primary me-1"></i> Especialidades /
+                                            Líneas de Investigación Asignadas:</label>
+                                        <div id="contenedorOpcionesPosgrado" class="p-3 border rounded"
+                                            style="background: var(--color-bg); border-color: var(--color-border) !important; border-radius: 8px;">
+                                            <p class="text-muted small mb-0"><i
+                                                    class="fa-solid fa-circle-info me-1"></i> Selecciona un posgrado
+                                                para ver y gestionar sus especialidades.</p>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Nombre de la Convocatoria</label>
-                                    <input type="text" id="convocatoria_nombre" class="form-control form-control-sm" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                    <label class="form-label fw-bold small"
+                                        style="color: var(--color-text-muted);">Nombre de la Convocatoria</label>
+                                    <input type="text" id="convocatoria_nombre" class="form-control form-control-sm"
+                                        required
+                                        style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Descripción</label>
-                                    <textarea id="convocatoria_descripcion" class="form-control form-control-sm" rows="2" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;"></textarea>
+                                    <label class="form-label fw-bold small"
+                                        style="color: var(--color-text-muted);">Descripción</label>
+                                    <textarea id="convocatoria_descripcion" class="form-control form-control-sm"
+                                        rows="2"
+                                        style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;"></textarea>
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col-4">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Estado</label>
-                                        <select id="convocatoria_estado" class="form-select form-select-sm" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        <label class="form-label fw-bold small"
+                                            style="color: var(--color-text-muted);">Estado</label>
+                                        <select id="convocatoria_estado" class="form-select form-select-sm"
+                                            style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                             <option value="Borrador">Borrador</option>
                                             <option value="Activa">Activa</option>
                                             <option value="Evaluacion">Evaluación</option>
@@ -685,124 +1130,188 @@
                                         </select>
                                     </div>
                                     <div class="col-4">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Modalidad</label>
-                                        <select id="convocatoria_modalidad" class="form-select form-select-sm" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        <label class="form-label fw-bold small"
+                                            style="color: var(--color-text-muted);">Modalidad</label>
+                                        <select id="convocatoria_modalidad" class="form-select form-select-sm"
+                                            style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                             <option value="Escolarizada">Escolarizada</option>
                                             <option value="En linea">En línea</option>
                                             <option value="Mixta">Mixta</option>
                                         </select>
                                     </div>
                                     <div class="col-4">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Duración (meses)</label>
-                                        <input type="number" id="convocatoria_duracion" class="form-control form-control-sm" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        <label class="form-label fw-bold small"
+                                            style="color: var(--color-text-muted);">Duración (meses)</label>
+                                        <input type="number" id="convocatoria_duracion"
+                                            class="form-control form-control-sm" required
+                                            style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Step 2: Fechas Principales -->
                             <div class="step-pane" id="step-pane-2">
-                                <h6 class="fw-bold mb-3" style="color: var(--color-primary); font-size: 1rem;"><i class="fa-regular fa-calendar me-2"></i> Calendario Principal</h6>
+                                <h6 class="fw-bold mb-3" style="color: var(--color-primary); font-size: 1rem;"><i
+                                        class="fa-regular fa-calendar me-2"></i> Calendario Principal</h6>
                                 <div class="row mb-3">
                                     <div class="col-6">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Inicio Convocatoria</label>
-                                        <input type="text" id="convocatoria_fecha_inicio" class="form-control form-control-sm date-single" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        <label class="form-label fw-bold small"
+                                            style="color: var(--color-text-muted);">Inicio Convocatoria</label>
+                                        <input type="text" id="convocatoria_fecha_inicio"
+                                            class="form-control form-control-sm date-single" required
+                                            style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                     </div>
                                     <div class="col-6">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Fin Convocatoria</label>
-                                        <input type="text" id="convocatoria_fecha_fin" class="form-control form-control-sm date-single" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        <label class="form-label fw-bold small"
+                                            style="color: var(--color-text-muted);">Fin Convocatoria</label>
+                                        <input type="text" id="convocatoria_fecha_fin"
+                                            class="form-control form-control-sm date-single" required
+                                            style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                     </div>
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col-6">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Inicio Recepción de Docs.</label>
-                                        <input type="text" id="convocatoria_fechaInicioDocumentos" class="form-control form-control-sm date-single" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        <label class="form-label fw-bold small"
+                                            style="color: var(--color-text-muted);">Inicio Recepción de Docs.</label>
+                                        <input type="text" id="convocatoria_fechaInicioDocumentos"
+                                            class="form-control form-control-sm date-single" required
+                                            style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                     </div>
                                     <div class="col-6">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Fin Recepción de Docs.</label>
-                                        <input type="text" id="convocatoria_fechaFinDocumentos" class="form-control form-control-sm date-single" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        <label class="form-label fw-bold small"
+                                            style="color: var(--color-text-muted);">Fin Recepción de Docs.</label>
+                                        <input type="text" id="convocatoria_fechaFinDocumentos"
+                                            class="form-control form-control-sm date-single" required
+                                            style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                     </div>
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col-6">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Inicio Ciclo Escolar</label>
-                                        <input type="text" id="convocatoria_fechaInicioEscolar" class="form-control form-control-sm date-single" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        <label class="form-label fw-bold small"
+                                            style="color: var(--color-text-muted);">Inicio Ciclo Escolar</label>
+                                        <input type="text" id="convocatoria_fechaInicioEscolar"
+                                            class="form-control form-control-sm date-single" required
+                                            style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                     </div>
                                     <div class="col-6">
-                                        <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Publicación Resultados</label>
-                                        <input type="text" id="convocatoria_fechaResultados" class="form-control form-control-sm date-single" required style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                        <label class="form-label fw-bold small"
+                                            style="color: var(--color-text-muted);">Publicación Resultados</label>
+                                        <input type="text" id="convocatoria_fechaResultados"
+                                            class="form-control form-control-sm date-single" required
+                                            style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Step 3: Fechas Específicas -->
                             <div class="step-pane" id="step-pane-3">
-                                <h6 class="fw-bold mb-3" style="color: var(--color-primary); font-size: 1rem;"><i class="fa-solid fa-list-check me-2"></i> Fechas de Evaluación Específicas</h6>
+                                <h6 class="fw-bold mb-3" style="color: var(--color-primary); font-size: 1rem;"><i
+                                        class="fa-solid fa-list-check me-2"></i> Fechas de Evaluación Específicas</h6>
 
-                                <div id="grupo_entrevistas" style="display:none; background: var(--color-bg); border: 1px solid var(--color-border) !important; border-radius: 10px;" class="p-3 mb-3">
-                                    <h6 class="fw-bold" style="color: var(--color-text);"><i class="fa-solid fa-users text-primary me-2"></i> Periodo de Entrevistas (Doctorado)</h6>
+                                <div id="grupo_entrevistas"
+                                    style="display:none; background: var(--color-bg); border: 1px solid var(--color-border) !important; border-radius: 10px;"
+                                    class="p-3 mb-3">
+                                    <h6 class="fw-bold" style="color: var(--color-text);"><i
+                                            class="fa-solid fa-users text-primary me-2"></i> Periodo de Entrevistas
+                                        (Doctorado)</h6>
                                     <div class="row mt-3">
                                         <div class="col-6">
-                                            <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Inicio</label>
-                                            <input type="text" id="convocatoria_fechaEntrevistaInicio" class="form-control form-control-sm date-single" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                            <label class="form-label fw-bold small"
+                                                style="color: var(--color-text-muted);">Inicio</label>
+                                            <input type="text" id="convocatoria_fechaEntrevistaInicio"
+                                                class="form-control form-control-sm date-single"
+                                                style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                         </div>
                                         <div class="col-6">
-                                            <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Fin</label>
-                                            <input type="text" id="convocatoria_fechaEntrevistaFin" class="form-control form-control-sm date-single" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                            <label class="form-label fw-bold small"
+                                                style="color: var(--color-text-muted);">Fin</label>
+                                            <input type="text" id="convocatoria_fechaEntrevistaFin"
+                                                class="form-control form-control-sm date-single"
+                                                style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                         </div>
                                     </div>
                                 </div>
 
-                                <div id="grupo_fechas_academicas" style="display:none; background: var(--color-bg); border: 1px solid var(--color-border) !important; border-radius: 10px;" class="p-3 mb-3">
-                                    <h6 class="fw-bold" style="color: var(--color-text);"><i class="fa-solid fa-graduation-cap text-primary me-2"></i> Académicas (Maestría)</h6>
+                                <div id="grupo_fechas_academicas"
+                                    style="display:none; background: var(--color-bg); border: 1px solid var(--color-border) !important; border-radius: 10px;"
+                                    class="p-3 mb-3">
+                                    <h6 class="fw-bold" style="color: var(--color-text);"><i
+                                            class="fa-solid fa-graduation-cap text-primary me-2"></i> Académicas
+                                        (Maestría)</h6>
                                     <div class="row mt-3 mb-3">
                                         <div class="col-6">
-                                            <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Inicio Curso</label>
-                                            <input type="text" id="convocatoria_inicioCurso" class="form-control form-control-sm date-single" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                            <label class="form-label fw-bold small"
+                                                style="color: var(--color-text-muted);">Inicio Curso</label>
+                                            <input type="text" id="convocatoria_inicioCurso"
+                                                class="form-control form-control-sm date-single"
+                                                style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                         </div>
                                         <div class="col-6">
-                                            <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Fin Curso Propedéutico</label>
-                                            <input type="text" id="convocatoria_finCurso" class="form-control form-control-sm date-single" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                            <label class="form-label fw-bold small"
+                                                style="color: var(--color-text-muted);">Fin Curso Propedéutico</label>
+                                            <input type="text" id="convocatoria_finCurso"
+                                                class="form-control form-control-sm date-single"
+                                                style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                         </div>
                                     </div>
                                     <div class="row">
                                         <div class="col-6">
-                                            <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Inicio Examen Admisión</label>
-                                            <input type="text" id="convocatoria_inicioExamen" class="form-control form-control-sm date-single" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                            <label class="form-label fw-bold small"
+                                                style="color: var(--color-text-muted);">Inicio Examen Admisión</label>
+                                            <input type="text" id="convocatoria_inicioExamen"
+                                                class="form-control form-control-sm date-single"
+                                                style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                         </div>
                                         <div class="col-6">
-                                            <label class="form-label fw-bold small" style="color: var(--color-text-muted);">Fin Examen Admisión</label>
-                                            <input type="text" id="convocatoria_finExamen" class="form-control form-control-sm date-single" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
+                                            <label class="form-label fw-bold small"
+                                                style="color: var(--color-text-muted);">Fin Examen Admisión</label>
+                                            <input type="text" id="convocatoria_finExamen"
+                                                class="form-control form-control-sm date-single"
+                                                style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px;">
                                         </div>
                                     </div>
                                 </div>
 
-                                <p class="small mt-2" style="color: var(--color-text-muted);"><i class="fa-solid fa-circle-info me-1"></i> Estos campos se muestran dependiendo si el posgrado seleccionado es Maestría o Doctorado.</p>
+                                <p class="small mt-2" style="color: var(--color-text-muted);"><i
+                                        class="fa-solid fa-circle-info me-1"></i> Estos campos se muestran dependiendo
+                                    si el posgrado seleccionado es Maestría o Doctorado.</p>
                             </div>
 
                             <!-- Step 4: Requisitos -->
                             <div class="step-pane" id="step-pane-4">
-                                <h6 class="fw-bold mb-3" style="color: var(--color-primary); font-size: 1rem;"><i class="fa-solid fa-folder-open me-2"></i> Requisitos Solicitados</h6>
-                                <p class="small mb-3" style="color: var(--color-text-muted);">Seleccione los requisitos que los aspirantes deberán cumplir. Marque la casilla de "Obligatorio" si el documento es indispensable.</p>
-                                <div id="contenedorRequisitos" class="p-3 border rounded custom-scroll" style="background: var(--color-bg); border: 1px solid var(--color-border) !important; border-radius: 10px; max-height: 350px; overflow-y: auto;">
-                                    <p class="text-center" style="color: var(--color-text-muted);"><i class="fa-solid fa-spinner fa-spin me-2"></i> Cargando catálogo...</p>
+                                <h6 class="fw-bold mb-3" style="color: var(--color-primary); font-size: 1rem;"><i
+                                        class="fa-solid fa-folder-open me-2"></i> Requisitos Solicitados</h6>
+                                <p class="small mb-3" style="color: var(--color-text-muted);">Seleccione los requisitos
+                                    que los aspirantes deberán cumplir. Marque la casilla de "Obligatorio" si el
+                                    documento es indispensable.</p>
+                                <div id="contenedorRequisitos" class="p-3 border rounded custom-scroll"
+                                    style="background: var(--color-bg); border: 1px solid var(--color-border) !important; border-radius: 10px; max-height: 350px; overflow-y: auto;">
+                                    <p class="text-center" style="color: var(--color-text-muted);"><i
+                                            class="fa-solid fa-spinner fa-spin me-2"></i> Cargando catálogo...</p>
                                 </div>
                             </div>
 
                             <!-- Navigation Footer (Adaptado al Tema) -->
-                            <div class="d-flex justify-content-between align-items-center mt-4" style="background: var(--color-card-bg); border-top: 1px solid var(--color-border); border-radius: 0 0 16px 16px; margin: 20px -25px 0 -25px; padding: 16px 25px;">
+                            <div class="d-flex justify-content-between align-items-center mt-4"
+                                style="background: var(--color-card-bg); border-top: 1px solid var(--color-border); border-radius: 0 0 16px 16px; margin: 20px -25px 0 -25px; padding: 16px 25px;">
                                 <div>
-                                    <button type="button" class="btn btn-danger btn-sm px-3" id="btnEliminarConvocatoria" style="display:none;" onclick="eliminarConvocatoria()">
+                                    <button type="button" class="btn btn-danger btn-sm px-3"
+                                        id="btnEliminarConvocatoria" style="display:none;"
+                                        onclick="eliminarConvocatoria()">
                                         <i class="fa-solid fa-trash me-1"></i> Eliminar
                                     </button>
-                                    <button type="button" class="btn btn-secondary px-4" id="btnPrevStep" style="display:none; border-radius: 8px;" onclick="pasoAnterior()">
+                                    <button type="button" class="btn btn-secondary px-4" id="btnPrevStep"
+                                        style="display:none; border-radius: 8px;" onclick="pasoAnterior()">
                                         <i class="fa-solid fa-chevron-left me-1"></i> Atrás
                                     </button>
                                 </div>
                                 <div>
-                                    <button type="button" class="btn btn-primary px-4" id="btnNextStep" style="border-radius: 8px; font-weight: 600;" onclick="siguientePaso()">
+                                    <button type="button" class="btn btn-primary px-4" id="btnNextStep"
+                                        style="border-radius: 8px; font-weight: 600;" onclick="siguientePaso()">
                                         Siguiente <i class="fa-solid fa-chevron-right ms-1"></i>
                                     </button>
-                                    <button type="submit" class="btn btn-success px-4" id="btnSaveConvocatoria" style="display:none; border-radius: 8px; font-weight: 600;">
+                                    <button type="submit" class="btn btn-success px-4" id="btnSaveConvocatoria"
+                                        style="display:none; border-radius: 8px; font-weight: 600;">
                                         <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Convocatoria
                                     </button>
                                 </div>
@@ -890,6 +1399,7 @@
     <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
     <!-- Incluir Socket.IO del servidor -->
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="js/admin.js"></script>
 
 </body>

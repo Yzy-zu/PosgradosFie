@@ -49,7 +49,7 @@ function cerrarSidebarMobile() {
     }
 }
 
-// Inicializar estado de interfaz al cargar (Sidebar y Tema)
+// Inicializar estado de interfaz y eventos globales al cargar el DOM
 document.addEventListener("DOMContentLoaded", () => {
     // Restaurar Sidebar
     const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
@@ -69,9 +69,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (selectTema) {
         selectTema.value = temaSeleccionado;
     }
-});
 
-// ==== MANEJO DE SESIÓN ====
+    // Cierra el menú de perfil si se hace clic fuera de él
+    window.addEventListener('click', function () {
+        const dropdown = document.getElementById('profile-dropdown');
+        if (dropdown && dropdown.classList.contains('show')) {
+            dropdown.classList.remove('show');
+        }
+    });
+
+    // Vincular clic del contenedor del perfil si existe
+    const profileContainer = document.querySelector('.profile-container');
+    if (profileContainer) {
+        profileContainer.addEventListener('click', toggleProfileMenu);
+    }
+});
 function cerrarSesion() {
     Swal.fire({
         title: '¿Cerrar sesión?',

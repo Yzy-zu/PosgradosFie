@@ -23,8 +23,22 @@ socket.on('actualizacionGlobal', () => {
                 .catch(e => console.error("Error validando estado de solicitud:", e));
         }
     } else if (currentHash === '#convocatorias') {
-        // BUG-01 Fix: cargarConvocatorias ahora existe como función real
-        cargarConvocatorias();
+        // Antes de renderizar la lista, verificar si ya hay solicitud activa.
+        // Si la hay, mantener la tarjeta de solicitud activa en lugar de sobreescribirla.
+        if (aspiranteData && aspiranteData.id) {
+            fetch(`/api/solicitud/activa/${aspiranteData.id}`)
+                .then(res => res.json())
+                .then(soliData => {
+                    if (soliData && soliData.existe) {
+                        hidratarUI(soliData); // Conservar la tarjeta de solicitud activa
+                    } else {
+                        cargarConvocatorias(); // Solo mostrar lista si no hay solicitud
+                    }
+                })
+                .catch(() => cargarConvocatorias()); // Fallback seguro
+        } else {
+            cargarConvocatorias();
+        }
     }
 });
 
@@ -751,7 +765,9 @@ async function activarModulosPostRegistro(nombrePrograma) {
                 window.convocatoriasDisponibles = activas;
 
                 const ofertaTxt = typeof t === 'function' ? t('conv_oferta_desbloqueada') : 'Oferta Académica Desbloqueada:';
-                const nivelTxt = nivel === 'DOCTORADO' ? (typeof t === 'function' ? t('sb_doctorados') || 'Doctorados' : 'Doctorados') : (typeof t === 'function' ? t('sb_maestrias') || 'Maestrías' : 'Maestrías');
+                const nivelTxt = nivel === 'DOCTORADO' 
+                    ? (typeof t === 'function' && t('sb_doctorados') !== 'sb_doctorados' ? t('sb_doctorados') : 'Doctorados') 
+                    : (typeof t === 'function' && t('sb_maestrias') !== 'sb_maestrias' ? t('sb_maestrias') : 'Maestrías');
                 htmlConvocatorias = `<h3 style="color: var(--color-text); font-weight: 700; margin-bottom: 15px;">${ofertaTxt} ${nivelTxt} FIE</h3>`;
 
                 if (activas.length === 0) {
@@ -985,19 +1001,22 @@ async function avanzarEstacion(nuevaEstacion) {
 
     // Interceptar si es la estación 0 para guardar la modalidad de admisión
     if (estacionActual === 0 && currentSolicitudId) {
-        const inputModalidad = document.querySelector('input[name="modalidad"]:checked');
-        if (inputModalidad) {
-            try {
-                const res = await fetch(`/api/solicitud/modalidad/${currentSolicitudId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tipoAdmision: inputModalidad.value }) // Por retrocompatibilidad de nombre de var en frontend, enviamos el ID en value
-                });
-                if (!res.ok) {
-                    console.error("Error al guardar la modalidad en la base de datos.");
+        if (nivelAcademicoSeleccionado !== 'Doctorado') {
+            const contenedorMaestria = document.getElementById('opciones-admision-maestria');
+            const inputModalidad = contenedorMaestria ? contenedorMaestria.querySelector('input[name="modalidad"]:checked') : null;
+            if (inputModalidad) {
+                try {
+                    const res = await fetch(`/api/solicitud/modalidad/${currentSolicitudId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tipoAdmision: inputModalidad.value }) // Por retrocompatibilidad de nombre de var en frontend, enviamos el ID en value
+                    });
+                    if (!res.ok) {
+                        console.error("Error al guardar la modalidad en la base de datos.");
+                    }
+                } catch (e) {
+                    console.error("Error de conexión al guardar modalidad:", e);
                 }
-            } catch (e) {
-                console.error("Error de conexión al guardar modalidad:", e);
             }
         }
     }
@@ -2190,6 +2209,9 @@ const MODULOS_REGISTRY = {
     'PROGRAMAR_EXAMEN': (soliData, accion) => typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutarAspirante ? moduloProgramacionExamen.ejecutarAspirante(soliData, accion) : typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutar(soliData, accion),
     'CAPTURAR_RESULTADO_EXAMEN': (soliData, accion) => typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutarAspirante ? moduloProgramacionExamen.ejecutarAspirante(soliData, accion) : typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutar(soliData, accion),
     'HABILITAR_CAPTURA_RESULTADO': (soliData, accion) => typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutarAspirante ? moduloProgramacionExamen.ejecutarAspirante(soliData, accion) : typeof moduloProgramacionExamen !== 'undefined' && moduloProgramacionExamen.ejecutar(soliData, accion),
+    // --- Entrevista (Doctorado) ---
+    'VER_ENTREVISTA': (soliData) => typeof moduloEntrevista !== 'undefined' && moduloEntrevista.ejecutarAspirante(soliData),
+    // --- Curso propedéutico ---
     'PROGRAMAR_CURSO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
     'CAPTURAR_RESULTADO_CURSO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
     'CAPTURAR_RESULTADO_PROPEDEUTICO': (soliData, accion) => typeof moduloCurso !== 'undefined' && moduloCurso.ejecutar(soliData, accion),
@@ -2197,6 +2219,9 @@ const MODULOS_REGISTRY = {
         const codigoMod = (soliData.modalidadCodigo || soliData.modalidadNombre || '').toUpperCase();
         if (codigoMod.includes('PROMEDIO')) {
             if (typeof moduloPromedio !== 'undefined') moduloPromedio.ejecutar(soliData, accion);
+        } else if (codigoMod.includes('ENTREVISTA')) {
+            // Doctorado: mostrar resultado de la entrevista (panel genérico de resultado)
+            if (typeof moduloEntrevista !== 'undefined') moduloEntrevista.ejecutarAspirante(soliData);
         } else if (codigoMod.includes('EXAMEN')) {
             if (typeof moduloProgramacionExamen !== 'undefined') {
                 (moduloProgramacionExamen.ejecutarAspirante || moduloProgramacionExamen.ejecutar)(soliData, accion);
@@ -2205,7 +2230,9 @@ const MODULOS_REGISTRY = {
             if (typeof moduloCurso !== 'undefined') moduloCurso.ejecutar(soliData, accion);
         }
     },
-    'VALIDAR_PROMEDIO': (soliData, accion) => typeof moduloPromedio !== 'undefined' && moduloPromedio.ejecutar(soliData, accion)
+    'VALIDAR_PROMEDIO': (soliData, accion) => typeof moduloPromedio !== 'undefined' && moduloPromedio.ejecutar(soliData, accion),
+    'SUBIR_COMPROBANTE_PAGO': (soliData, accion) => typeof moduloPago !== 'undefined' && moduloPago.ejecutar(soliData, accion),
+    'VERIFICAR_PAGO':         (soliData, accion) => typeof moduloPago !== 'undefined' && moduloPago.ejecutar(soliData, accion),
 };
 
 /**
@@ -2391,7 +2418,12 @@ function configurarPanelesNivel(nivel, idConvocatoria, documentosSubidos = []) {
     if (idConvocatoria) sessionStorage.setItem('idConvocatoriaPendiente', idConvocatoria);
 
     if (nivel === "Doctorado") {
-        if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'none';
+        const contenedorMaestria = document.getElementById('opciones-admision-maestria');
+        if (contenedorMaestria) {
+            contenedorMaestria.style.display = 'none';
+            // Desmarcar radios de Maestría para evitar selecciones fantasmas en el DOM
+            contenedorMaestria.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+        }
         if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'block';
 
         if (document.getElementById('btn-next-0')) document.getElementById('btn-next-0').disabled = true;

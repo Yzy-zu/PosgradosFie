@@ -48,8 +48,8 @@ const moduloCursoDocenteRenderer = {
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                    <button type="button" class="btn-secondary" onclick="document.getElementById('modal-docente-dinamico').style.display='none'" style="padding: 10px 20px; border-radius: 6px; font-weight: 600;">Cancelar</button>
-                    <button type="button" class="btn-primary" id="btn-guardar-programacion-curso" style="padding: 10px 20px; border-radius: 6px; font-weight: 600; border: none;">${soliData.modoReprogramar ? 'Actualizar Programación' : 'Guardar Programación'}</button>
+                    <button type="button" class="modal-btn-secondary" onclick="document.getElementById('modal-docente-dinamico').style.display='none'">Cancelar</button>
+                    <button type="button" class="modal-btn-primary" id="btn-guardar-programacion-curso">${soliData.modoReprogramar ? 'Actualizar Programación' : 'Guardar Programación'}</button>
                 </div>
             </form>
         `;
@@ -102,8 +102,8 @@ const moduloCursoDocenteRenderer = {
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                    <button type="button" class="btn-secondary" onclick="document.getElementById('modal-docente-dinamico').style.display='none'" style="padding: 10px 20px; border-radius: 6px; font-weight: 600;">Cancelar</button>
-                    <button type="button" class="btn-primary" id="btn-guardar-captura-curso" style="padding: 10px 20px; border-radius: 6px; font-weight: 600; border: none;">Guardar Resultado</button>
+                    <button type="button" class="modal-btn-secondary" onclick="document.getElementById('modal-docente-dinamico').style.display='none'">Cancelar</button>
+                    <button type="button" class="modal-btn-primary" id="btn-guardar-captura-curso">Guardar Resultado</button>
                 </div>
             </form>
         `;

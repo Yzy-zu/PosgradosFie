@@ -1,5 +1,6 @@
 const db = require('../database/db');
 const WorkflowService = require('./workflowService');
+const { ETAPAS } = require('../constants');
 
 class ProgramacionExamenService {
     /**
@@ -87,9 +88,9 @@ class ProgramacionExamenService {
             [idSolicitud, calificacion, aprobado ? 1 : 0, observaciones || null]
         );
 
-        // Al capturar la calificación final del examen, avanzamos la solicitud directamente a la etapa de Resultado (etapa 6)
+        // Al capturar la calificación, avanzamos directamente a la etapa de Resultado
         const [etapasResultado] = await db.query("SELECT id FROM etapa_proceso WHERE nombre = 'Resultado' LIMIT 1");
-        const idEtapaResultado = etapasResultado.length > 0 ? etapasResultado[0].id : 6;
+        const idEtapaResultado = etapasResultado.length > 0 ? etapasResultado[0].id : ETAPAS.RESULTADO;
 
         await db.query('UPDATE solicitud SET idEtapaActual = ? WHERE id = ?', [idEtapaResultado, idSolicitud]);
 

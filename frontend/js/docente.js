@@ -10,7 +10,9 @@ const DOCENTE_MODULOS_REGISTRY = {
     'PROGRAMAR_CURSO': typeof moduloCurso !== 'undefined' ? moduloCurso : null,
     'CAPTURAR_RESULTADO_CURSO': typeof moduloCurso !== 'undefined' ? moduloCurso : null,
     'CAPTURAR_RESULTADO_PROPEDEUTICO': typeof moduloCurso !== 'undefined' ? moduloCurso : null,
-    'VALIDAR_PROMEDIO': typeof moduloPromedio !== 'undefined' ? moduloPromedio : null
+    'VALIDAR_PROMEDIO': typeof moduloPromedio !== 'undefined' ? moduloPromedio : null,
+    'SUBIR_COMPROBANTE_PAGO': typeof moduloPago !== 'undefined' ? moduloPago : null,
+    'VERIFICAR_PAGO': typeof moduloPago !== 'undefined' ? moduloPago : null
 };
 
 function abrirModalDinamico() {
@@ -31,11 +33,11 @@ async function abrirWorkflowSolicitud(idSolicitud) {
         const res = await fetch(`/api/solicitud/activa/${idSolicitud}?role=Docente`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         if (!res.ok) throw new Error("No se pudo obtener la solicitud");
-        
+
         const solicitudData = await res.json();
-        
+
         if (!solicitudData.accionesDisponibles || solicitudData.accionesDisponibles.length === 0) {
             // alert("No hay acciones disponibles para esta solicitud en este momento.");
             // Si el docente solo la está viendo en read-only
@@ -77,9 +79,9 @@ async function abrirModalReprogramarExamen(idAspi) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error("No se pudo obtener la solicitud");
-        
+
         const solicitudData = await res.json();
-        
+
         const body = document.getElementById('modal-dinamico-body');
         if (body) body.innerHTML = '';
 
@@ -172,10 +174,10 @@ document.addEventListener("DOMContentLoaded", async function () {
             const res = await fetch('/api/solicitud/ingreso/modalidades');
             if (!res.ok) return;
             const modalidades = await res.json();
-            
+
             const container = document.getElementById('dynamic-menu-container');
             if (!container) return;
-            
+
             window.modalidadesActivas = modalidades; // Guardar para uso global
 
             modalidades.forEach(mod => {
@@ -251,6 +253,7 @@ async function cargarAspirantesAPI() {
 
                 return {
                     id: asp.id,
+                    idSolicitud: sol ? (sol.idSolicitud || sol.id) : null,
                     nombre: `${asp.nombre || ''} ${asp.primerApellido || ''} ${asp.segundoApellido || ''}`.trim() || (typeof t === 'function' ? t('docente_sin_nombre') : "Sin nombre"),
                     programa: sol ? sol.convocatoriaNombre : (typeof t === 'function' ? t('docente_sin_solicitud') : "Sin Solicitud"),
                     correo: asp.correo || (typeof t === 'function' ? t('docente_sin_correo') : "Sin correo"),
@@ -300,7 +303,7 @@ function switchView(viewId) {
     // Gestionar filtros en la topbar
     const allFilters = document.querySelectorAll('.topbar-filtros');
     allFilters.forEach(f => f.style.display = 'none');
-    
+
     const activeFilters = document.getElementById(`filtros-vista-${viewId}`);
     if (activeFilters) {
         activeFilters.style.display = 'flex';
@@ -401,41 +404,10 @@ function actualizarEstadisticas() {
     });
 
     // Inyectar contadores numéricos en el dashboard
-    document.getElementById('stat-total').innerText = totalAspirantes;
-    document.getElementById('stat-revisados').innerText = revisadosCompleto;
-    document.getElementById('stat-incompletos').innerText = incompletos;
-    document.getElementById('stat-pendientes').innerText = pendientes;
-
-    // Actualizar leyenda de gráfica de documentos
-    document.getElementById('lbl-aprobados').innerText = docsAprobados;
-    document.getElementById('lbl-rechazados').innerText = docsRechazados;
-    document.getElementById('lbl-pendientes').innerText = docsPendientes;
-
-    // Calcular porcentajes para la gráfica circular (Pie Chart Conic-Gradient)
-    if (totalDocs > 0) {
-        let porcAprobado = (docsAprobados / totalDocs) * 100;
-        let porcRechazado = (docsRechazados / totalDocs) * 100;
-
-        let finAprobados = porcAprobado;
-        let finRechazados = finAprobados + porcRechazado;
-
-        const grafica = document.getElementById('grafica-pastel');
-        if (grafica) {
-            grafica.style.background = `conic-gradient(
-                #27ae60 0% ${finAprobados}%, 
-                #c0392b ${finAprobados}% ${finRechazados}%, 
-                #7f8c8d ${finRechazados}% 100%
-            )`;
-        }
-
-        const txtPorcentaje = document.getElementById('txt-porcentaje');
-        if (txtPorcentaje) {
-            txtPorcentaje.innerText = `${Math.round(porcAprobado)}%`;
-        }
-    } else {
-        const txtPorcentaje = document.getElementById('txt-porcentaje');
-        if (txtPorcentaje) txtPorcentaje.innerText = "0%";
-    }
+    if (document.getElementById('stat-total')) document.getElementById('stat-total').innerText = totalAspirantes;
+    if (document.getElementById('stat-revisados')) document.getElementById('stat-revisados').innerText = revisadosCompleto;
+    if (document.getElementById('stat-incompletos')) document.getElementById('stat-incompletos').innerText = incompletos;
+    if (document.getElementById('stat-pendientes')) document.getElementById('stat-pendientes').innerText = pendientes;
 }
 
 /**
@@ -515,7 +487,7 @@ function renderizarListaAspirantes(lista) {
 /**
  * Abre el expediente del aspirante seleccionado en el panel de detalle derecho
  */
-function seleccionarAspirante(id) {
+async function seleccionarAspirante(id) {
     idAspiranteActivo = id;
 
     // Volver a renderizar la lista para actualizar el resaltado ".active"
@@ -553,15 +525,11 @@ function seleccionarAspirante(id) {
         badgeEstado.innerText = typeof t === 'function' ? t('docente_completos') : "Expediente Completo";
     }
 
-    // Ocultar previsualización de documentos previos
-    // cerrarVistaPrevia(); (No lo necesitamos ejecutar aquí porque ahora es modal y ya debería estar cerrado)
-
     // Rellenar cuadrícula de documentos
     const container = document.getElementById('docs-dinamicos-container');
     let html = '';
 
     asp.documentos.forEach(doc => {
-        let badgeHtml = '';
         let iconClass = 'fa-file-lines';
         let iconBg = '#e0e7ff';
         let iconColor = '#4338ca';
@@ -629,13 +597,179 @@ function seleccionarAspirante(id) {
         `;
     });
 
+    // Consultar si hay comprobante de pago subido
+    if (asp.idSolicitud) {
+        try {
+            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+            const resPago = await fetch(`/api/pagos/${asp.idSolicitud}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (resPago.ok) {
+                const pagoData = await resPago.json();
+                if (pagoData && pagoData.existe) {
+                    const est = pagoData.estado || 'PENDIENTE';
+                    let pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-clock" style="color: #f59e0b;"></i></span>`;
+                    if (est === 'APROBADO') {
+                        pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-circle-check" style="color: #10b981;"></i></span>`;
+                    } else if (est === 'RECHAZADO') {
+                        pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-circle-xmark" style="color: #ef4444;"></i></span>`;
+                    }
+
+                    html += `
+                        <div class="doc-card-v2" onclick="abrirModalEvaluacionPago(${asp.idSolicitud})" style="cursor: pointer; border-left: 4px solid #f59e0b;">
+                            <div class="doc-card-v2-header">
+                                <div class="doc-card-v2-icon" style="background: rgba(245,158,11,0.15); color: #f59e0b;">
+                                    <i class="fa-solid fa-receipt"></i>
+                                    ${pagoStatusIcon}
+                                </div>
+                                <div>
+                                    <div class="doc-card-v2-title">Comprobante de Pago</div>
+                                    <div class="doc-card-v2-date">${est === 'APROBADO' ? 'Pago Aprobado' : (est === 'RECHAZADO' ? 'Pago Rechazado' : 'Revisar Pago')}</div>
+                                </div>
+                            </div>
+                            <div class="doc-card-v2-footer">
+                                <span class="doc-action-ver">Ver Comprobante</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        } catch (e) {
+            console.error("Error cargando pago en seleccionarAspirante:", e);
+        }
+    }
+
     container.innerHTML = html;
+}
+
+async function abrirModalEvaluacionPago(idSolicitud) {
+    mostrarLoader();
+    try {
+        const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+        const res = await fetch(`/api/pagos/${idSolicitud}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        ocultarLoader();
+
+        if (!res.ok) {
+            Swal.fire('Error', 'No se pudieron obtener los datos del pago.', 'error');
+            return;
+        }
+
+        const pagoData = await res.json();
+        if (!pagoData || !pagoData.existe) {
+            Swal.fire('Información', 'El aspirante aún no ha subido comprobante de pago.', 'info');
+            return;
+        }
+
+        const urlCompleta = `/api/files/${pagoData.comprobante}?token=${token}`;
+        const est = pagoData.estado || 'PENDIENTE';
+        const estadoColor = { PENDIENTE: '#f59e0b', APROBADO: '#10b981', RECHAZADO: '#ef4444' };
+
+        const ext = (pagoData.comprobante || '').split('.').pop().toLowerCase();
+        let previewHtml = '';
+        if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+            previewHtml = `<img src="${urlCompleta}" style="max-width:100%;max-height:350px;display:block;margin:0 auto;border-radius:8px;object-fit:contain;">`;
+        } else {
+            previewHtml = `<iframe src="${urlCompleta}" width="100%" height="320px" style="border:none;border-radius:8px;"></iframe>`;
+        }
+
+        const modalHtml = `
+            <div style="text-align:left;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+                    <span style="background:${estadoColor[est]}20;color:${estadoColor[est]};font-weight:bold;padding:4px 12px;border-radius:12px;font-size:12px;text-transform:uppercase;">
+                        Estado: ${est}
+                    </span>
+                    ${pagoData.monto ? `<span style="font-weight:bold;color:var(--color-text);">Monto: $${pagoData.monto}</span>` : ''}
+                </div>
+                ${pagoData.referencia ? `<div style="font-size:13px;color:var(--color-text-muted);margin-bottom:10px;">Referencia: <strong>${pagoData.referencia}</strong></div>` : ''}
+                ${previewHtml}
+                ${pagoData.observaciones ? `<div style="margin-top:12px;padding:10px;background:rgba(239,68,68,0.1);border-left:3px solid #ef4444;font-size:13px;color:#ef4444;"><strong>Observaciones:</strong> ${pagoData.observaciones}</div>` : ''}
+            </div>
+        `;
+
+        Swal.fire({
+            title: 'Comprobante de Pago',
+            html: modalHtml,
+            width: '600px',
+            showCancelButton: true,
+            showDenyButton: est === 'PENDIENTE',
+            showConfirmButton: est === 'PENDIENTE',
+            confirmButtonText: '<i class="fa-solid fa-check"></i> Aprobar Pago',
+            confirmButtonColor: '#10b981',
+            denyButtonText: '<i class="fa-solid fa-xmark"></i> Rechazar Pago',
+            denyButtonColor: '#ef4444',
+            cancelButtonText: 'Cerrar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                verificarPagoDocente(idSolicitud, 'APROBADO');
+            } else if (result.isDenied) {
+                verificarPagoDocente(idSolicitud, 'RECHAZADO');
+            }
+        });
+    } catch (e) {
+        ocultarLoader();
+        console.error("Error en abrirModalEvaluacionPago:", e);
+    }
+}
+
+async function verificarPagoDocente(idSolicitud, estado) {
+    let observaciones = '';
+    if (estado === 'RECHAZADO') {
+        const { value: text, isConfirmed } = await Swal.fire({
+            title: 'Rechazar Comprobante de Pago',
+            input: 'textarea',
+            inputLabel: 'Motivo del rechazo',
+            inputPlaceholder: 'Indica por qué se rechaza el comprobante...',
+            showCancelButton: true,
+            confirmButtonText: 'Confirmar Rechazo',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#ef4444'
+        });
+        if (!isConfirmed) return;
+        observaciones = text || 'Comprobante no válido.';
+    }
+
+    mostrarLoader();
+    try {
+        const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+        const res = await fetch(`/api/pagos/verificar/${idSolicitud}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ decision: estado, estado, observaciones })
+        });
+        const data = await res.json();
+        ocultarLoader();
+
+        if (res.ok && data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Actualizado!',
+                text: data.mensaje || `El pago ha sido ${estado.toLowerCase()}.`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+            if (idAspiranteActivo) {
+                seleccionarAspirante(idAspiranteActivo);
+            }
+        } else {
+            Swal.fire('Error', data.mensaje || 'No se pudo actualizar el estado del pago.', 'error');
+        }
+    } catch (e) {
+        ocultarLoader();
+        console.error("Error en verificarPagoDocente:", e);
+        Swal.fire('Error', 'Ocurrió un error de conexión.', 'error');
+    }
 }
 
 // Variables globales para la evaluación en modal
 let documentoAEvaluar = null;
 
 function abrirModalEvaluacion(docId) {
+    resetearBotonAprobar();
     const asp = aspirantes.find(a => a.id === idAspiranteActivo);
     if (!asp) return;
 
@@ -795,19 +929,70 @@ function abrirNotificacion(remitenteKey, element) {
     }
 }
 
+// Confirmación con temporizador de 3s para Aprobar Documento
+let timerConfirmacionAprobar = null;
+let enConfirmacionAprobar = false;
+
+function clickAprobarDocumentoModal(btn) {
+    if (!btn) btn = document.getElementById('btn-eval-aprobar-modal');
+
+    if (enConfirmacionAprobar) {
+        // Segundo clic dentro de los 3 segundos -> Confirmar
+        resetearBotonAprobar(btn);
+        aprobarDocumentoModal();
+    } else {
+        // Primer clic -> Activar cuenta regresiva
+        enConfirmacionAprobar = true;
+        let tiempoRestante = 3;
+
+        if (btn) {
+            btn.classList.add('btn-confirming');
+            btn.innerHTML = `<i class="fa-solid fa-circle-question"></i> ¿Seguro? (${tiempoRestante}s)`;
+        }
+
+        if (timerConfirmacionAprobar) clearInterval(timerConfirmacionAprobar);
+
+        timerConfirmacionAprobar = setInterval(() => {
+            tiempoRestante--;
+            if (tiempoRestante > 0) {
+                if (btn) btn.innerHTML = `<i class="fa-solid fa-circle-question"></i> ¿Seguro? (${tiempoRestante}s)`;
+            } else {
+                resetearBotonAprobar(btn);
+            }
+        }, 1000);
+    }
+}
+
+function resetearBotonAprobar(btn) {
+    if (timerConfirmacionAprobar) {
+        clearInterval(timerConfirmacionAprobar);
+        timerConfirmacionAprobar = null;
+    }
+    enConfirmacionAprobar = false;
+    if (!btn) btn = document.getElementById('btn-eval-aprobar-modal');
+    if (btn) {
+        btn.classList.remove('btn-confirming');
+        const txtAprobar = typeof t === 'function' ? t('docente_btn_aprobar') : 'Aprobar Documento';
+        btn.innerHTML = `<i class="fa-solid fa-check"></i> ${txtAprobar}`;
+    }
+}
+
 function cerrarModalEvaluacion() {
+    resetearBotonAprobar();
     document.getElementById('modal-evaluacion-doc').style.display = 'none';
     document.getElementById('eval-tab-documento').innerHTML = '';
     documentoAEvaluar = null;
 }
 
 function mostrarOpcionesRechazo() {
+    resetearBotonAprobar();
     document.getElementById('eval-botones-container').style.display = 'none';
     document.getElementById('eval-panel-rechazo').style.display = 'block';
     document.getElementById('eval-modal-nota').focus();
 }
 
 function ocultarOpcionesRechazo() {
+    resetearBotonAprobar();
     document.getElementById('eval-botones-container').style.display = 'flex';
     document.getElementById('eval-panel-rechazo').style.display = 'none';
 }
@@ -1110,13 +1295,11 @@ function abrirModalPerfilDocente() {
                 </div>
             </div>
         </div>`,
-        showConfirmButton: true,
-        confirmButtonText: typeof t === 'function' ? t('docente_modal_cerrar') : 'Cerrar',
-        buttonsStyling: false,
+        showConfirmButton: false,
+        showCloseButton: true,
         width: '720px',
         customClass: {
             popup: 'pm-popup',
-            confirmButton: 'pm-btn-close',
             htmlContainer: 'pm-html-container'
         }
     });
@@ -1166,10 +1349,10 @@ function filtrarTablaAspirantes() {
     const input = document.getElementById('buscar-aspirante-tabla');
     if (!input) return;
     const query = input.value.toLowerCase().trim();
-    const filtrados = aspirantes.filter(asp => 
-        asp.nombre.toLowerCase().includes(query) || 
-        asp.programa.toLowerCase().includes(query) || 
-        asp.correo.toLowerCase().includes(query) || 
+    const filtrados = aspirantes.filter(asp =>
+        asp.nombre.toLowerCase().includes(query) ||
+        asp.programa.toLowerCase().includes(query) ||
+        asp.correo.toLowerCase().includes(query) ||
         asp.mecanismo.toLowerCase().includes(query)
     );
     renderizarTablaAspirantesGeneral(filtrados);
@@ -1186,19 +1369,19 @@ async function cargarTablaExamenesPorCodigo(codigo) {
         if (!respuesta.ok) throw new Error("Error al obtener solicitudes para exámenes");
 
         const data = await respuesta.json();
-        
+
         // Evaluamos TODAS las solicitudes devueltas (Data-Driven puro).
         // El backend ya incluyó accionesDisponibles en cada solicitud, evitando peticiones N+1.
         const nuevosExamenes = data.map(sol => {
             const acciones = sol.accionesDisponibles || [];
-            
+
             // Determinamos si esta solicitud tiene alguna acción que pertenezca a ESTE módulo
             // Usamos DOCENTE_MODULOS_REGISTRY para evitar hardcodear nombres de acción
-            const accionValida = acciones.find(a => 
-                DOCENTE_MODULOS_REGISTRY[a.codigo] && 
+            const accionValida = acciones.find(a =>
+                DOCENTE_MODULOS_REGISTRY[a.codigo] &&
                 DOCENTE_MODULOS_REGISTRY[a.codigo] === moduloProgramacionExamen
             );
-            
+
             if (accionValida) {
                 return { ...sol, accionActual: accionValida.codigo };
             }
@@ -1236,13 +1419,13 @@ async function confirmarAplicacionExamen(idSolicitud) {
             }
         });
         const data = await res.json();
-        if(data.success) {
+        if (data.success) {
             Swal.fire('¡Confirmado!', 'Examen confirmado. Ahora puedes capturar resultados.', 'success');
             cargarTablaExamenesPorCodigo('EXAMEN');
         } else {
             Swal.fire('Error', data.mensaje, 'error');
         }
-    } catch(e) {
+    } catch (e) {
         console.error(e);
         Swal.fire('Error', 'No se pudo confirmar el examen', 'error');
     }
@@ -1266,7 +1449,7 @@ function renderExamenesCards(dataList) {
     dataList.forEach(item => {
         const tieneProgramacion = !!item.idProgramacion;
         const accion = item.accionActual;
-        
+
         let fechaObj = item.fecha ? new Date(item.fecha) : null;
         let fechaStr = fechaObj ? fechaObj.toISOString().split('T')[0] : null;
         let esHoy = fechaStr === hoyStr;
@@ -1276,7 +1459,7 @@ function renderExamenesCards(dataList) {
         let borderColor = 'var(--color-border)';
         let badgeHTML = '';
         let estadoLabel = 'Sin programar';
-        
+
         let disableProgramar = 'disabled';
         let disableEditar = 'disabled';
         let disableCapturar = 'disabled';
@@ -1295,7 +1478,7 @@ function renderExamenesCards(dataList) {
                 borderColor = 'var(--color-primary)';
                 estadoLabel = '✓ Examen programado';
                 disableEditar = '';
-                
+
                 if (esHoy) {
                     contHoy++;
                     badgeHTML = `<span style="background: var(--color-primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-left: 8px;">HOY</span>`;
@@ -1327,13 +1510,13 @@ function renderExamenesCards(dataList) {
         }
 
         const botonHTML = `
-            <div style="display: flex; gap: 8px; margin-top: 4px;">
-                <button class="${disableProgramar ? '' : 'btn-primary'}" onclick="abrirWorkflowSolicitud(${item.idAspi})" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableProgramar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'border: none; cursor: pointer;'}" ${disableProgramar}>
-                    <i class="fa-solid fa-calendar-plus" style="margin-right: 4px;"></i> ${t('docente_btn_programar')}</button>
-                <button class="${disableEditar ? '' : 'btn-secondary'}" onclick="abrirModalReprogramarExamen(${item.idAspi})" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableEditar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'cursor: pointer;'}" ${disableEditar}>
-                    <i class="fa-solid fa-pen" style="margin-right: 4px;"></i> ${t('docente_btn_reprogramar')}</button>
-                <button class="${disableCapturar ? '' : 'btn-primary'}" onclick="${accionCapturar}" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableCapturar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'border: none; cursor: pointer; background: var(--color-primary); color: white;'}" ${disableCapturar}>
-                    <i class="fa-solid fa-graduation-cap" style="margin-right: 4px;"></i> ${t('docente_btn_capturar')}</button>
+            <div style="display: flex; gap: 6px; margin-top: 4px;">
+                <button class="card-action-btn ${disableProgramar ? 'disabled' : 'card-action-btn-primary'}" onclick="abrirWorkflowSolicitud(${item.idAspi})" ${disableProgramar}>
+                    <i class="fa-solid fa-calendar-plus"></i> ${t('docente_btn_programar')}</button>
+                <button class="card-action-btn ${disableEditar ? 'disabled' : 'card-action-btn-secondary'}" onclick="abrirModalReprogramarExamen(${item.idAspi})" ${disableEditar}>
+                    <i class="fa-solid fa-pen"></i> ${t('docente_btn_reprogramar')}</button>
+                <button class="card-action-btn ${disableCapturar ? 'disabled' : 'card-action-btn-primary'}" onclick="${accionCapturar}" ${disableCapturar}>
+                    <i class="fa-solid fa-graduation-cap"></i> ${t('docente_btn_capturar')}</button>
             </div>
         `;
 
@@ -1346,9 +1529,9 @@ function renderExamenesCards(dataList) {
             programBadge = `<span style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; margin-right: 5px;">M</span>`;
         }
 
-        const formattedDate = fechaObj ? fechaObj.toLocaleDateString() : '--';
-        const formattedTime = item.hora ? item.hora.substring(0, 5) : '--';
-        const formattedLugar = item.lugar || '--';
+        const formattedDate = fechaObj ? fechaObj.toLocaleDateString() : 'Sin asignar';
+        const formattedTime = item.hora ? item.hora.substring(0, 5) : 'Sin asignar';
+        const formattedLugar = item.lugar || 'Sin asignar';
 
         const card = document.createElement('div');
         card.style.background = 'var(--color-card-bg)';
@@ -1420,26 +1603,37 @@ async function cargarTablaPropedeuticoPorCodigo(codigo = 'PROPEDEUTICO') {
         if (!respuesta.ok) throw new Error("Error al obtener solicitudes para curso propedéutico");
 
         const data = await respuesta.json();
-        
+
         const nuevosCursos = data.map(sol => {
             const acciones = sol.accionesDisponibles || [];
-            
-            const accionValida = acciones.find(a => 
-                DOCENTE_MODULOS_REGISTRY[a.codigo] && 
+
+            const accionValida = acciones.find(a =>
+                DOCENTE_MODULOS_REGISTRY[a.codigo] &&
                 DOCENTE_MODULOS_REGISTRY[a.codigo] === moduloCurso
             );
-            
+
+            let accionActual = 'FINALIZADO';
             if (accionValida) {
-                return { ...sol, accionActual: accionValida.codigo };
+                accionActual = accionValida.codigo;
+            } else if (sol.etapaNombre && (sol.etapaNombre.toLowerCase().includes('propedéutico') || sol.etapaNombre.toLowerCase().includes('resultado'))) {
+                accionActual = sol.idProgramacion ? 'CAPTURAR_RESULTADO_CURSO' : 'PROGRAMAR_CURSO';
             }
-            if (sol.etapaNombre && sol.etapaNombre.toLowerCase().includes('propedéutico')) {
-                return { ...sol, accionActual: sol.idProgramacion ? 'CAPTURAR_RESULTADO_CURSO' : 'PROGRAMAR_CURSO' };
+
+            const tieneProgramacion = !!sol.idProgramacion || !!sol.fecha;
+            let uiEstadoId = 'sin_programar';
+            if (accionActual === 'PROGRAMAR_CURSO') {
+                uiEstadoId = tieneProgramacion ? 'programado' : 'sin_programar';
+            } else if (accionActual === 'CAPTURAR_RESULTADO_CURSO' || accionActual === 'CAPTURAR_RESULTADO_PROPEDEUTICO') {
+                uiEstadoId = 'en_curso';
+            } else {
+                uiEstadoId = 'finalizado';
             }
-            return { ...sol, accionActual: 'FINALIZADO' };
+
+            return { ...sol, accionActual, uiEstadoId };
         }).filter(resultado => resultado !== null);
 
         cursosActivos = nuevosCursos;
-        renderCursosCards(cursosActivos);
+        filtrarTablaPropedeuticoUI();
     } catch (error) {
         console.error("Error al cargar la tabla propedéutico:", error);
         contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">Error al cargar datos del servidor.</div>`;
@@ -1463,11 +1657,11 @@ function renderCursosCards(dataList) {
     dataList.forEach(item => {
         const tieneProgramacion = !!item.idProgramacion || !!item.fecha;
         const accion = item.accionActual;
-        
+
         let uiEstadoId = 'sin_programar';
         let borderColor = 'var(--color-border)';
         let estadoLabel = 'Sin programar';
-        
+
         let disableProgramar = 'disabled';
         let disableEditar = 'disabled';
         let disableCapturar = 'disabled';
@@ -1487,10 +1681,20 @@ function renderCursosCards(dataList) {
                 disableCapturar = '';
             }
         } else if (accion === 'CAPTURAR_RESULTADO_CURSO' || accion === 'CAPTURAR_RESULTADO_PROPEDEUTICO') {
-            uiEstadoId = 'esperando';
+            uiEstadoId = 'en_curso';
             contEsperando++;
             borderColor = 'var(--color-primary)';
-            estadoLabel = 'Esperando resultado';
+            
+            const formatDateSafe = (dateString) => {
+                if (!dateString) return 'Sin definir';
+                // Añadimos T00:00:00 para evitar desfasaje de zona horaria si la fecha viene sin hora
+                const d = new Date(dateString.includes('T') ? dateString : dateString + 'T00:00:00');
+                return d.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            };
+            const fInicio = formatDateSafe(item.fecha);
+            const fFin = formatDateSafe(item.fechaFin);
+            
+            estadoLabel = `En curso vigente de ${fInicio} a ${fFin}`;
             disableEditar = '';
             disableCapturar = '';
         } else {
@@ -1501,13 +1705,13 @@ function renderCursosCards(dataList) {
         }
 
         const botonHTML = `
-            <div style="display: flex; gap: 8px; margin-top: 4px;">
-                <button class="${disableProgramar ? '' : 'btn-primary'}" onclick="abrirProgramacionCurso(${item.idSolicitud}, '${(item.aspiranteNombre || '').replace(/'/g, "\\'")}')" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableProgramar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'border: none; cursor: pointer;'}" ${disableProgramar}>
-                    <i class="fa-solid fa-calendar-plus" style="margin-right: 4px;"></i> ${t('docente_btn_programar')}</button>
-                <button class="${disableEditar ? '' : 'btn-secondary'}" onclick="abrirReprogramacionCurso(${item.idSolicitud}, '${(item.aspiranteNombre || '').replace(/'/g, "\\'")}')" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableEditar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'cursor: pointer;'}" ${disableEditar}>
-                    <i class="fa-solid fa-pen" style="margin-right: 4px;"></i> ${t('docente_btn_reprogramar')}</button>
-                <button class="${disableCapturar ? '' : 'btn-primary'}" onclick="abrirCapturaCurso(${item.idSolicitud}, '${(item.aspiranteNombre || '').replace(/'/g, "\\'")}')" style="flex: 1; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 8px 4px; transition: all 0.2s; ${disableCapturar ? 'background: var(--color-bg); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: not-allowed;' : 'border: none; cursor: pointer; background: var(--color-primary); color: white;'}" ${disableCapturar}>
-                    <i class="fa-solid fa-graduation-cap" style="margin-right: 4px;"></i> ${t('docente_btn_capturar')}</button>
+            <div style="display: flex; gap: 6px; margin-top: 4px;">
+                <button class="card-action-btn ${disableProgramar ? 'disabled' : 'card-action-btn-primary'}" onclick="abrirProgramacionCurso(${item.idSolicitud}, '${(item.aspiranteNombre || '').replace(/'/g, "\\'")}')" ${disableProgramar}>
+                    <i class="fa-solid fa-calendar-plus"></i> ${t('docente_btn_programar')}</button>
+                <button class="card-action-btn ${disableEditar ? 'disabled' : 'card-action-btn-secondary'}" onclick="abrirReprogramacionCurso(${item.idSolicitud}, '${(item.aspiranteNombre || '').replace(/'/g, "\\'")}')" ${disableEditar}>
+                    <i class="fa-solid fa-pen"></i> ${t('docente_btn_reprogramar')}</button>
+                <button class="card-action-btn ${disableCapturar ? 'disabled' : 'card-action-btn-primary'}" onclick="abrirCapturaCurso(${item.idSolicitud}, '${(item.aspiranteNombre || '').replace(/'/g, "\\'")}')" ${disableCapturar}>
+                    <i class="fa-solid fa-graduation-cap"></i> ${t('docente_btn_capturar')}</button>
             </div>
         `;
 
@@ -1568,14 +1772,51 @@ function filtrarTablaPropedeuticoUI() {
     const estado = estadoSelect ? estadoSelect.value : '';
     const programa = programaSelect ? programaSelect.value : '';
 
+    // Si se seleccionó un estado del desplegable, desactivamos el toggle de "En cursos"
+    if (estado !== '' && window.filtroEnCursoActivo) {
+        window.filtroEnCursoActivo = false;
+        const btn = document.getElementById('btn-filtro-en-curso');
+        if (btn) {
+            btn.style.background = 'var(--color-input-bg)';
+            btn.style.color = 'var(--color-text)';
+            btn.style.borderColor = 'var(--color-border)';
+        }
+    }
+
     const filtrados = cursosActivos.filter(item => {
         const matchTexto = item.aspiranteNombre.toLowerCase().includes(texto) || (item.opcionNombre && item.opcionNombre.toLowerCase().includes(texto));
-        const matchEstado = estado === '' || item.uiEstadoId === estado;
+        
+        let matchEstado;
+        if (window.filtroEnCursoActivo) {
+            matchEstado = item.uiEstadoId === 'en_curso';
+        } else {
+            // Si el estado es vacío (Todos), ocultamos los de 'en_curso' para que solo salgan con el botón
+            matchEstado = estado === '' ? item.uiEstadoId !== 'en_curso' : item.uiEstadoId === estado;
+        }
+        
         const matchPrograma = programa === '' || (item.posgradoTipo && item.posgradoTipo.toLowerCase().includes(programa.toLowerCase()));
         return matchTexto && matchEstado && matchPrograma;
     });
 
     renderCursosCards(filtrados);
+}
+
+window.filtroEnCursoActivo = false;
+function toggleFiltroEnCurso() {
+    window.filtroEnCursoActivo = !window.filtroEnCursoActivo;
+    const btn = document.getElementById('btn-filtro-en-curso');
+    const selectEstado = document.getElementById('filtro-curso-estado');
+    if (window.filtroEnCursoActivo) {
+        btn.style.background = 'var(--color-primary)';
+        btn.style.color = 'white';
+        btn.style.borderColor = 'var(--color-primary)';
+        if(selectEstado) selectEstado.value = ''; // Reset select
+    } else {
+        btn.style.background = 'var(--color-input-bg)';
+        btn.style.color = 'var(--color-text)';
+        btn.style.borderColor = 'var(--color-border)';
+    }
+    filtrarTablaPropedeuticoUI();
 }
 
 function abrirProgramacionCurso(idSolicitud, aspiranteNombre) {
@@ -1584,7 +1825,7 @@ function abrirProgramacionCurso(idSolicitud, aspiranteNombre) {
     if (!modal || !body) return;
     body.innerHTML = '';
     modal.style.display = 'flex';
-    
+
     moduloCurso.ejecutar({
         idSolicitud,
         aspiranteNombre,
@@ -1600,7 +1841,7 @@ function abrirReprogramacionCurso(idSolicitud, aspiranteNombre) {
     if (!modal || !body) return;
     body.innerHTML = '';
     modal.style.display = 'flex';
-    
+
     moduloCurso.ejecutar({
         idSolicitud,
         aspiranteNombre,
@@ -1616,7 +1857,7 @@ function abrirCapturaCurso(idSolicitud, aspiranteNombre) {
     if (!modal || !body) return;
     body.innerHTML = '';
     modal.style.display = 'flex';
-    
+
     moduloCurso.ejecutar({
         idSolicitud,
         aspiranteNombre,
@@ -1797,13 +2038,17 @@ async function cargarAspirantes() {
         tbody.innerHTML = "";
 
         if (!aspirantes || aspirantes.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='3' style='text-align: center; color: var(--color-text-muted); padding: 25px;'>No hay aspirantes registrados.</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='5' style='text-align: center; color: var(--color-text-muted); padding: 25px;'>No hay aspirantes registrados.</td></tr>";
             return;
         }
 
         for (const aspirante of aspirantes) {
             const tr = document.createElement("tr");
             tr.style.borderBottom = "1px solid var(--color-border)";
+            tr.style.transition = "background 0.2s";
+            tr.onmouseover = function () { this.style.background = 'var(--color-bg)'; };
+            tr.onmouseout = function () { this.style.background = 'transparent'; };
+
             // Formatear nombre completo
             const nombreCompleto = `${aspirante.nombre || ''} ${aspirante.primerApellido || ''} ${aspirante.segundoApellido || ''}`.trim();
 
@@ -1813,8 +2058,7 @@ async function cargarAspirantes() {
                     const respuesta1 = await fetch(`/api/usuario/${idUsuario}`);
                     const usuario1 = await respuesta1.json();
                     return usuario1.correo;
-                    if (typeof aplicarIdioma === "function") aplicarIdioma();
-        } catch (e) {
+                } catch (e) {
                     return null;
                 }
             }
@@ -1829,8 +2073,7 @@ async function cargarAspirantes() {
                         const sol = exp.solicitudes[0];
                         return sol.convocatoriaNombre || sol.opcionNombre || null;
                     }
-                    if (typeof aplicarIdioma === "function") aplicarIdioma();
-        } catch (e) {
+                } catch (e) {
                     return null;
                 }
                 return null;
@@ -1842,18 +2085,45 @@ async function cargarAspirantes() {
             const posgradoTxt = posgradoNombreReal || 'Sin posgrado seleccionado';
             const badgeClass = posgradoNombreReal ? 'soft-badge-primary' : 'soft-badge-secondary';
 
+            const curpStr = aspirante.curp || 'Sin CURP';
+            const telefonoStr = aspirante.telefono || 'Sin teléfono';
+            const licenciaturaStr = aspirante.licenciatura || 'Licenciatura no especificada';
+            const institucionStr = aspirante.institucionLicenciatura || 'Institución no especificada';
+            const promedioStr = (aspirante.promedio !== null && aspirante.promedio !== undefined) ? aspirante.promedio : null;
+
+            const iniNombre = (aspirante.nombre || '').charAt(0).toUpperCase();
+            const iniApellido = (aspirante.primerApellido || '').charAt(0).toUpperCase();
+            const iniciales = (iniNombre + iniApellido) || 'A';
+
             tr.style.cursor = "pointer";
             tr.onclick = () => verExpedienteAspirante(aspirante.id);
             tr.innerHTML = `
-                <td style="padding: 12px 15px;">
-                    <strong style="color: var(--color-text); font-size: 0.95rem;">${nombreCompleto || 'Sin nombre'}</strong><br>
-                    <small style="color: var(--color-text-muted); font-size: 0.82rem;">${correoReal}</small>
+                <td style="padding: 14px 15px; vertical-align: middle;">
+                    <strong style="color: var(--color-text); font-size: 0.95rem; display: block;">${nombreCompleto || 'Sin nombre'}</strong>
+                    <small style="font-size: 0.8rem; color: var(--color-text-muted); display: block; margin-top: 3px;">
+                        <i class="fa-regular fa-envelope me-1" style="color: var(--color-primary);"></i>${correoReal}
+                    </small>
                 </td>
-                <td style="padding: 12px 15px;">
-                    <span class="soft-badge ${badgeClass}"><i class="fa-solid fa-graduation-cap me-1"></i> ${posgradoTxt}</span>
+                <td style="padding: 14px 15px; vertical-align: middle;">
+                    <div style="font-size: 0.85rem; font-weight: 600; color: var(--color-text); font-family: monospace;">
+                        <i class="fa-solid me-1" style="color: var(--color-text-muted);"></i>${curpStr}
+                    </div>
                 </td>
-                <td style="padding: 12px 15px; text-align: center;">
-                    <button onclick="event.stopPropagation(); verExpedienteAspirante(${aspirante.id});" title="Ver expediente" style="background: transparent; border: none; color: var(--color-primary); font-size: 1.1rem; cursor: pointer; padding: 6px 10px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.15)'" onmouseout="this.style.background='transparent'">
+                <td style="padding: 14px 15px; vertical-align: middle;">
+                    <div style="font-size: 0.88rem; font-weight: 600; color: var(--color-text);">
+                        <i class="fa-solid me-1" style="color: var(--color-primary);"></i>${licenciaturaStr}
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--color-text-muted); margin-top: 2px;">
+                        ${institucionStr} ${promedioStr ? `<span style="background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.25); padding: 1px 6px; border-radius: 10px; font-weight: 700; font-size: 10px; margin-left: 6px;">Prom: ${promedioStr}</span>` : ''}
+                    </div>
+                </td>
+                <td style="padding: 14px 15px; vertical-align: middle;">
+                    <span class="soft-badge ${badgeClass}" style="padding: 6px 12px; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-book-bookmark"></i> ${posgradoTxt}
+                    </span>
+                </td>
+                <td style="padding: 14px 15px; text-align: center; vertical-align: middle;">
+                    <button onclick="event.stopPropagation(); verExpedienteAspirante(${aspirante.id});" title="Ver expediente" style="background: transparent; border: none; color: var(--color-primary); font-size: 1.25rem; cursor: pointer; padding: 6px 10px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.15)'" onmouseout="this.style.background='transparent'">
                         <i class="fa-solid fa-folder-open"></i>
                     </button>
                 </td>
@@ -1862,7 +2132,7 @@ async function cargarAspirantes() {
         }
     } catch (error) {
         console.error("Error al cargar aspirantes:", error);
-        tbody.innerHTML = "<tr><td colspan='3' style='text-align: center; color: var(--color-text-muted); padding: 25px;'>Esperando API de aspirantes...</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='5' style='text-align: center; color: var(--color-text-muted); padding: 25px;'>Esperando API de aspirantes...</td></tr>";
     } finally {
         ocultarLoader();
     }
@@ -2017,7 +2287,7 @@ function toggleSolicitudDocs(containerId, chevronId) {
     const container = document.getElementById(containerId);
     const chevron = document.getElementById(chevronId);
     if (!container) return;
-    
+
     if (container.style.display === "none" || container.style.display === "") {
         container.style.display = "block";
         if (chevron) chevron.style.transform = "rotate(180deg)";
@@ -2028,7 +2298,7 @@ function toggleSolicitudDocs(containerId, chevronId) {
 }
 
 // Funciones de Filtrado UI para Aspirantes
-window.filtrarTablaAspirantesUI = function() {
+window.filtrarTablaAspirantesUI = function () {
     const texto = (document.getElementById('filtro-aspirantes-texto')?.value || '').toLowerCase();
     const programa = (document.getElementById('filtro-aspirantes-programa')?.value || '').toLowerCase();
 

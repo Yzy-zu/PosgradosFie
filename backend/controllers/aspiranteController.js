@@ -62,18 +62,18 @@ const registrarAspirante = async (req, res) => {
 
         // Insertar usuario
         const [resultadoUsuario] = await connection.query(
-            'INSERT INTO usuario(correo, password, rol) VALUES(?, ?, ?)',
-            [correo, passwordHash, 'aspirante']
+            'INSERT INTO usuario(correo, contraseña, rol) VALUES(?, ?, ?)',
+            [correo, passwordHash, 'ASPIRANTE']
         );
 
         const idUsuario = resultadoUsuario.insertId;
 
-        // Insertar aspirante
+        // Insertar aspirante (correo no va aquí, ya está en usuario)
         await connection.query(
             `INSERT INTO aspirante
-            (nombre, primerApellido, segundoApellido, curp, correo, telefono, fechaNacimiento, direccion, rfc, idUsuario)
-            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [nombre, primerApellido, segundoApellido, curp, correo, telefono, fechaNacimiento, direccion, rfc, idUsuario]
+            (nombre, primerApellido, segundoApellido, curp, rfc, telefono, fechaNacimiento, direccion, idUsuario)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [nombre, primerApellido, segundoApellido, curp, rfc, telefono, fechaNacimiento, direccion, idUsuario]
         );
 
         await connection.commit();

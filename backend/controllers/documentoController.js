@@ -1,6 +1,42 @@
 const db = require('../database/db');
 const WorkflowService = require('../services/workflowService');
 
+// Obtener todos los documentos para el explorador
+const getExploradorDocumentos = async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                COALESCE(p.nombre, 'Sin Programa') AS programa,
+                s.id AS idSolicitud,
+                a.id AS aspiranteId,
+                CONCAT(a.nombre, ' ', a.primerApellido, IFNULL(CONCAT(' ', a.segundoApellido), '')) AS aspiranteNombreCompleto,
+                sd.id AS idDocumento,
+                cr.nombre AS requisitoNombre,
+                sd.rutaArchivo,
+                sd.estadoValidacion,
+                sd.intentos
+            FROM solicitud_documentos sd
+            JOIN solicitud s ON sd.idSolicitud = s.id
+            JOIN aspirante a ON s.idAspi = a.id
+            LEFT JOIN convocatoria_opcion co ON s.idConvocatoriaOpcion = co.id
+            LEFT JOIN opcion_posgrado op ON co.opcion_posgrado_id = op.id
+            LEFT JOIN posgrado p ON op.posgrado_id = p.id
+            JOIN catalogo_requisitos cr ON sd.idRequisito = cr.id
+            WHERE sd.id IN (
+                SELECT MAX(id) 
+                FROM solicitud_documentos 
+                GROUP BY idSolicitud, idRequisito
+            )
+            ORDER BY p.nombre, a.primerApellido, a.nombre, cr.nombre;
+        `;
+        const [documentos] = await db.query(query);
+        return res.json({ success: true, documentos });
+    } catch (error) {
+        console.error('Error en getExploradorDocumentos:', error);
+        return res.status(500).json({ success: false, mensaje: 'Error al obtener documentos para el explorador.' });
+    }
+};
+
 // Subir documento
 const subirDocumento = async (req, res) => {
     try {
@@ -150,5 +186,6 @@ const reemplazarDocumento = async (req, res) => {
 module.exports = {
     subirDocumento,
     evaluarDocumento,
-    reemplazarDocumento
+    reemplazarDocumento,
+    getExploradorDocumentos
 };

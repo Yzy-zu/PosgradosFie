@@ -1,5 +1,6 @@
 const db = require('../database/db');
 const WorkflowService = require('./workflowService');
+const { REQUISITOS, ETAPAS } = require('../constants');
 
 class ValidacionPromedioService {
     /**
@@ -55,13 +56,13 @@ class ValidacionPromedioService {
                  GROUP BY idRequisito
              ) sd2 ON sd1.idRequisito = sd2.idRequisito AND sd1.intentos = sd2.maxIntentos
              JOIN catalogo_requisitos cr ON sd1.idRequisito = cr.id
-             WHERE sd1.idSolicitud = ? AND sd1.idRequisito IN (9, 10, 11)`,
-            [idSolicitud, idSolicitud]
+             WHERE sd1.idSolicitud = ? AND sd1.idRequisito IN (?, ?, ?)`,
+            [idSolicitud, idSolicitud, REQUISITOS.TITULO_LICENCIATURA, REQUISITOS.CERTIFICADO_CALIFICACIONES, REQUISITOS.CEDULA_PROFESIONAL]
         );
 
-        const certificado = documentos.find(d => d.idRequisito === 10) || null;
-        const titulo = documentos.find(d => d.idRequisito === 9) || null;
-        const cedula = documentos.find(d => d.idRequisito === 11) || null;
+        const certificado = documentos.find(d => d.idRequisito === REQUISITOS.CERTIFICADO_CALIFICACIONES) || null;
+        const titulo      = documentos.find(d => d.idRequisito === REQUISITOS.TITULO_LICENCIATURA)        || null;
+        const cedula      = documentos.find(d => d.idRequisito === REQUISITOS.CEDULA_PROFESIONAL)         || null;
 
         // 3. Obtener dictamen de evaluación de promedio previo
         const [dictamen] = await db.query(
@@ -129,7 +130,7 @@ class ValidacionPromedioService {
         if (esValido) {
             // Solo avanzamos la etapa si la solicitud se encuentra en la etapa de Validación de Promedio (ID 5)
             const idEtapaActual = solicitudes[0].idEtapaActual;
-            if (idEtapaActual === 5) {
+            if (idEtapaActual === ETAPAS.VALIDACION_PROMEDIO) {
                 avanceWorkflow = await WorkflowService.avanzarEtapa(idSolicitud);
                 if (!avanceWorkflow.completado) {
                     await db.query("UPDATE solicitud SET estado = 'EN_REVISION' WHERE id = ?", [idSolicitud]);
