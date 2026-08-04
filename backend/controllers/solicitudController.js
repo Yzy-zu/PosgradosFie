@@ -143,6 +143,9 @@ const cancelarSolicitud = async (req, res) => {
     try {
         const { id } = req.params;
         await db.query("UPDATE solicitud SET estado = 'CANCELADO' WHERE id = ?", [id]);
+        if (req.app.get('io')) {
+            req.app.get('io').emit('actualizacionGlobal');
+        }
         return res.status(200).json({ mensaje: 'Solicitud cancelada exitosamente.' });
     } catch (error) {
         console.error('Error en cancelarSolicitud:', error);
@@ -192,6 +195,9 @@ const actualizarModalidad = async (req, res) => {
             const [modEntrevista] = await db.query("SELECT id FROM modalidad_ingreso WHERE codigo = 'ENTREVISTA' LIMIT 1");
             const idEntrevista = modEntrevista.length > 0 ? modEntrevista[0].id : 6;
             await WorkflowService.asignarModalidad(id, idEntrevista);
+            if (req.app.get('io')) {
+                req.app.get('io').emit('actualizacionGlobal');
+            }
             return res.status(200).json({ mensaje: 'Modalidad de Doctorado (Entrevista) asignada correctamente.' });
         }
 
@@ -206,6 +212,10 @@ const actualizarModalidad = async (req, res) => {
         }
 
         await WorkflowService.asignarModalidad(id, idModalidad);
+
+        if (req.app.get('io')) {
+            req.app.get('io').emit('actualizacionGlobal');
+        }
 
         return res.status(200).json({ mensaje: 'Modalidad actualizada correctamente.' });
     } catch (error) {

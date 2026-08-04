@@ -59,6 +59,7 @@ const programarEntrevista = async (req, res) => {
                   WHERE idSolicitud = ?`,
                 [fecha, hora, lugar || null, enlace || null, idDocente || null, idSolicitud]
             );
+            req.app.get('io').emit('actualizacionGlobal');
             return res.json({ success: true, mensaje: 'Entrevista actualizada correctamente.' });
         } else {
             // Primera vez: insertar y avanzar etapa
@@ -71,6 +72,7 @@ const programarEntrevista = async (req, res) => {
             // Avanzar etapa en el workflow
             await WorkflowService.avanzarEtapa(parseInt(idSolicitud));
 
+            req.app.get('io').emit('actualizacionGlobal');
             return res.json({ success: true, mensaje: 'Entrevista programada y etapa avanzada correctamente.' });
         }
     } catch (error) {

@@ -281,6 +281,9 @@ async function cargarAspirantesAPI() {
             actualizarEstadisticas();
             filtrarYMostrarAspirantes();
             renderizarVistasAdicionalesDocente();
+            if (idAspiranteActivo) {
+                seleccionarAspirante(idAspiranteActivo);
+            }
         } else {
             console.error("Error al obtener aspirantes de la API");
         }
