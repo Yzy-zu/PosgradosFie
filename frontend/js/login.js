@@ -1,9 +1,38 @@
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Auto-llenar correo si proviene de URL (ej. tras registro exitoso)
+    const urlParams = new URLSearchParams(window.location.search);
+    const correoParam = urlParams.get("correo");
+    const usuarioInput = document.getElementById("usuario");
+    if (correoParam && usuarioInput) {
+        usuarioInput.value = correoParam;
+        const passwordInput = document.getElementById("password");
+        if (passwordInput) passwordInput.focus();
+    }
+
+    // 2. Toggle visibilidad de contraseña (ojo)
+    const togglePasswordIcon = document.getElementById("togglePassword");
+    const passwordInput = document.getElementById("password");
+    if (togglePasswordIcon && passwordInput) {
+        togglePasswordIcon.addEventListener("click", () => {
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                togglePasswordIcon.classList.remove("fa-eye");
+                togglePasswordIcon.classList.add("fa-eye-slash");
+            } else {
+                passwordInput.type = "password";
+                togglePasswordIcon.classList.remove("fa-eye-slash");
+                togglePasswordIcon.classList.add("fa-eye");
+            }
+        });
+    }
+});
+
 const formulario = document.getElementById("loginForm");
 
 formulario.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const usuario = document.getElementById("usuario").value;
+    const usuario = document.getElementById("usuario").value.trim();
     const password = document.getElementById("password").value;
 
     try {
@@ -25,7 +54,7 @@ formulario.addEventListener("submit", async (e) => {
             return;
         }
 
-        // Guardar token e información del usuario usando la variable 'datos'
+        // Guardar token e información del usuario
         sessionStorage.setItem("usuario", JSON.stringify(datos.usuario));
         sessionStorage.setItem("token", datos.token);
 

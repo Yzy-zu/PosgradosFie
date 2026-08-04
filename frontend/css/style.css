@@ -111,76 +111,383 @@ html {
     scrollbar-color: var(--color-primary, #3b82f6) rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Contenedor de Login (Centrado) */
-.login-container {
-    width: 100vw;
+/* ==========================================================================
+   DISEÑO ESTILO FACEBOOK PARA LOGIN Y REGISTRO (POSGRADOS FIE)
+   ========================================================================== */
+/* (Estilos legacy de Facebook eliminados) */
+
+/* ==========================================================================
+   DISEÑO PREMIUM SPLIT-SCREEN PARA LOGIN Y REGISTRO
+   ========================================================================== */
+.split-body {
+    margin: 0;
+    padding: 0;
     height: 100vh;
+    overflow: hidden;
+    background-color: var(--color-bg);
+}
+
+.split-layout {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* -----------------------------
+   Panel Izquierdo (Branding)
+----------------------------- */
+.split-brand-panel {
+    flex: 1;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #ffffff;
+    padding: 40px;
+    overflow: hidden;
+}
+
+.split-brand-panel .brand-content {
+    position: relative;
+    z-index: 10;
+    max-width: 500px;
+}
+
+.brand-logos {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #f5f5f5;
+    gap: 30px;
+    margin-bottom: 30px;
 }
 
-.login-card {
+.brand-logo {
+    height: 100px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+    transition: transform 0.3s ease;
+}
+
+.brand-logo:hover {
+    transform: scale(1.05);
+}
+
+.brand-title {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.brand-subtitle {
+    font-size: 16px;
+    line-height: 1.5;
+    color: #cbd5e1;
+    font-weight: 400;
+}
+
+/* Efectos de fondo panel izquierdo */
+.bg-circle {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: 1;
+    animation: floatBlob 12s infinite alternate ease-in-out;
+}
+
+.circle-1 {
+    width: 400px;
+    height: 400px;
+    background: rgba(138, 28, 36, 0.4); /* Guinda UMSNH */
+    top: -100px;
+    left: -100px;
+}
+
+.circle-2 {
+    width: 350px;
+    height: 350px;
+    background: rgba(59, 130, 246, 0.2); /* Azul suave */
+    bottom: -80px;
+    right: -80px;
+    animation-direction: alternate-reverse;
+}
+
+@keyframes floatBlob {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(40px, 40px) scale(1.1); }
+}
+
+/* -----------------------------
+   Panel Derecho (Formulario)
+----------------------------- */
+.split-form-panel {
+    flex: 1;
+    max-width: 600px;
     background: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     padding: 40px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    text-align: center;
+    position: relative;
+    z-index: 2;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
+}
+
+body.dark-mode .split-form-panel {
+    background: #0f172a;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.form-container {
     width: 100%;
-    max-width: 400px;
+    max-width: 380px;
+    animation: fadeInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.login-card img {
-    width: 120px;
-    margin-bottom: 25px;
+@keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
 }
 
-.form-group {
-    text-align: left;
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    font-weight: bold;
+.form-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1e293b;
     margin-bottom: 8px;
-    color: #555;
+    letter-spacing: -0.5px;
 }
 
-.form-group input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background-color: #f9f9f9;
+body.dark-mode .form-title {
+    color: #f8fafc;
 }
 
-.btn-primary {
-    width: 100%;
-    padding: 12px 20px;
-    background: linear-gradient(135deg, #8a1c24 0%, #c0392b 100%);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
+.form-subtitle {
     font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 4px 14px rgba(138, 28, 36, 0.30), 0 1px 3px rgba(0, 0, 0, 0.1);
+    color: #64748b;
+    margin-bottom: 36px;
+}
+
+body.dark-mode .form-subtitle {
+    color: #94a3b8;
+}
+
+/* Formularios Premium */
+.premium-form .input-group {
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.premium-form label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 8px;
     letter-spacing: 0.3px;
 }
 
-.btn-primary:hover {
-    background: linear-gradient(135deg, #a0222a 0%, #c0392b 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(138, 28, 36, 0.40), 0 2px 6px rgba(0, 0, 0, 0.12);
+body.dark-mode .premium-form label {
+    color: #cbd5e1;
 }
 
-.btn-primary:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(138, 28, 36, 0.25);
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
 }
+
+.input-wrapper .input-icon {
+    position: absolute;
+    left: 16px;
+    color: #94a3b8;
+    font-size: 16px;
+    transition: color 0.3s ease;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 14px 16px 14px 44px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #0f172a;
+    background: #f8fafc;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.input-wrapper input:focus {
+    background: #ffffff;
+    border-color: #8a1c24;
+    box-shadow: 0 4px 12px rgba(138, 28, 36, 0.1);
+}
+
+.input-wrapper input:focus ~ .input-icon {
+    color: #8a1c24;
+}
+
+body.dark-mode .input-wrapper input {
+    color: #f8fafc;
+    background: #1e293b;
+}
+
+body.dark-mode .input-wrapper input:focus {
+    background: #0f172a;
+    border-color: #e05260;
+    box-shadow: 0 4px 12px rgba(224, 82, 96, 0.15);
+}
+
+body.dark-mode .input-wrapper input:focus ~ .input-icon {
+    color: #e05260;
+}
+
+/* Toggle Password */
+.toggle-pwd {
+    position: absolute;
+    right: 16px;
+    color: #94a3b8;
+    font-size: 16px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    padding: 4px;
+}
+
+.toggle-pwd:hover {
+    color: #8a1c24;
+}
+
+body.dark-mode .toggle-pwd:hover {
+    color: #e05260;
+}
+
+/* Botones Split */
+.btn-primary-split {
+    width: 100%;
+    padding: 15px;
+    margin-top: 10px;
+    background: linear-gradient(135deg, #8a1c24 0%, #681119 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 14px rgba(138, 28, 36, 0.3);
+}
+
+.btn-primary-split:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(138, 28, 36, 0.4);
+    background: linear-gradient(135deg, #a0222a 0%, #8a1c24 100%);
+}
+
+.btn-primary-split:active {
+    transform: translateY(0);
+}
+
+.split-divider {
+    display: flex;
+    align-items: center;
+    margin: 30px 0;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.split-divider::before,
+.split-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+}
+
+body.dark-mode .split-divider::before,
+body.dark-mode .split-divider::after {
+    background: #334155;
+}
+
+.split-divider span {
+    padding: 0 16px;
+}
+
+.btn-secondary-split {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    color: #8a1c24;
+    border: 2px solid #8a1c24;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary-split:hover {
+    background: rgba(138, 28, 36, 0.05);
+}
+
+body.dark-mode .btn-secondary-split {
+    color: #e05260;
+    border-color: #e05260;
+}
+
+body.dark-mode .btn-secondary-split:hover {
+    background: rgba(224, 82, 96, 0.1);
+}
+
+/* Ayuda de input */
+.input-help {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+body.dark-mode .input-help {
+    color: #94a3b8;
+}
+
+/* Responsividad Split Layout */
+@media (max-width: 900px) {
+    .split-layout {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    .split-brand-panel {
+        padding: 60px 20px;
+        flex: none;
+    }
+    
+    .split-form-panel {
+        max-width: 100%;
+        padding: 40px 20px;
+        border-radius: 30px 30px 0 0;
+        margin-top: -30px;
+    }
+    
+    .split-body {
+        overflow-y: auto;
+    }
+}
+
 
 /* Botones de Evaluación de Documentos */
 .btn-eval-aprobar {
@@ -2239,78 +2546,6 @@ body.dark-mode .admission-card:hover {
 }
 
 /* Ajustes adicionales para mantener consistencia visual exacta */
-.login-card {
-    max-width: 450px;
-    margin: 40px auto;
-    padding: 30px;
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    text-align: center;
-}
-
-.login-card img {
-    max-height: 100px;
-    margin-bottom: 20px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.form-group {
-    text-align: left;
-    margin-bottom: 18px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 600;
-    color: #333;
-    font-size: 14px;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 14px;
-}
-
-.btn-primary {
-    width: 100%;
-    padding: 12px;
-    background-color: #1a1f2c;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 14px;
-    margin-top: 10px;
-}
-
-.btn-primary:hover {
-    background-color: #242b3d;
-}
-
-.link-container {
-    margin-top: 20px;
-    font-size: 13px;
-    color: #666;
-}
-
-.link-container a {
-    color: #8a1c24;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-.link-container a:hover {
-    text-decoration: underline;
-}
 
 /* --- ESTILOS MOVIDOS DESDE DOCENTE.CSS --- */
 .aspirantes-layout {

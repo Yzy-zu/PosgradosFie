@@ -4,57 +4,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UMSNH - Registro de Aspirante</title>
-    <!-- Enlazamos tus mismos estilos del Login -->
+    <link rel="shortcut icon" href="css/favico.png">
+    <title>UMSNH - Registro de Aspirante | Posgrados FIE</title>
+
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body>
+<body class="split-body">
+    <div class="split-layout">
+        <!-- Panel Izquierdo: Branding Premium -->
+        <div class="split-brand-panel">
+            <div class="brand-content">
+                <div class="brand-logos">
+                    <img src="css/fie_logo.png" alt="Logo FIE" class="brand-logo">
+                    <img src="css/posgradofie.png" alt="Logo Posgrados FIE" class="brand-logo">
+                </div>
+                <h1 class="brand-title">Crea tu Cuenta</h1>
+                <p class="brand-subtitle">
+                    Regístrate con tu correo institucional para ingresar a la plataforma y postularte a los programas de posgrado FIE UMSNH.
+                </p>
+            </div>
+            <!-- Círculos decorativos de fondo -->
+            <div class="bg-circle circle-1"></div>
+            <div class="bg-circle circle-2"></div>
+        </div>
 
-    <div class="login-container">
-        <div class="login-card">
-            <!-- Escudo institucional centrado superior -->
-            <img src="css/Escudo UMSNH.webp" alt="Escudo UMSNH">
+        <!-- Panel Derecho: Formulario Limpio -->
+        <div class="split-form-panel">
+            <div class="form-container">
+                <h2 class="form-title">Registro de Aspirante</h2>
+                <p class="form-subtitle">Es rápido y fácil.</p>
+                
+                <form id="formularioRegistro" class="premium-form" onsubmit="enviarRegistro(event)">
+                    <div class="input-group">
+                        <label for="reg-correo">Correo Institucional</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-envelope input-icon"></i>
+                            <input
+                                type="email"
+                                id="reg-correo"
+                                placeholder="ejemplo@umich.mx"
+                                required
+                                autocomplete="email">
+                        </div>
+                        <small class="input-help">Debe terminar estrictamente en <strong>@umich.mx</strong></small>
+                    </div>
 
-            <h2 style="color: #1a1f2c; margin-bottom: 5px; font-size: 20px; font-weight: 700;">Registro de Aspirante
-            </h2>
-            <p style="color: #666; font-size: 13px; margin-bottom: 25px;">Crea tu cuenta para el ingreso al Posgrado FIE
-            </p>
+                    <div class="input-group">
+                        <label for="reg-password">Contraseña nueva</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input
+                                type="password"
+                                id="reg-password"
+                                placeholder="••••••••"
+                                required
+                                autocomplete="new-password">
+                            <i class="fa-solid fa-eye toggle-pwd" id="toggleRegPassword" onclick="toggleRegPasswordVisibility()" title="Mostrar contraseña"></i>
+                        </div>
+                    </div>
 
-            <!-- Formulario de captura -->
-            <form id="formularioRegistro" onsubmit="enviarRegistro(event)">
+                    <button type="submit" class="btn-primary-split">
+                        Registrarte <i class="fa-solid fa-user-plus"></i>
+                    </button>
+                </form>
 
-                <div class="form-group">
-                    <label for="reg-correo">Correo electrónico institucional</label>
-                    <input type="email" id="reg-correo" placeholder="usuario@umich.mx" required>
-                    <small style="display: block; margin-top: 4px; font-size: 11px; color: #777; text-align: left;">
-                        Debe terminar estrictamente en <strong style="color: #8a1c24;">@umich.mx</strong>
-                    </small>
+                <div class="split-divider">
+                    <span>¿Ya tienes una cuenta?</span>
                 </div>
 
-                <div class="form-group">
-                    <label for="reg-password">Contraseña</label>
-                    <input type="password" id="reg-password" placeholder="Crea una contraseña segura" required>
-                </div>
-
-                <!-- Botón de acción principal solicitado -->
-                <button type="submit" class="btn-primary">
-                    Registrarse y Continuar
-                </button>
-            </form>
-
-            <!-- Opción solicitada para usuarios que ya poseen una cuenta activa -->
-            <div class="link-container">
-                ¿Ya tienes una cuenta? <a href="login.html">Inicia sesión aquí</a>
+                <a href="login.html" class="btn-secondary-split">
+                    Inicia sesión aquí
+                </a>
             </div>
         </div>
     </div>
 
     <!-- Script de control de lógica independiente -->
     <script>
+        function toggleRegPasswordVisibility() {
+            const pwdInput = document.getElementById('reg-password');
+            const toggleIcon = document.getElementById('toggleRegPassword');
+            if (!pwdInput || !toggleIcon) return;
+
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                pwdInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
         async function enviarRegistro(event) {
             event.preventDefault();
-            // 1. OBTENER LOS TRES VALORES DESDE EL HTML (Te faltaba el nombre)
             const correo = document.getElementById('reg-correo').value.trim().toLowerCase();
             const password = document.getElementById('reg-password').value.trim();
 
@@ -65,13 +116,12 @@
             }
 
             try {
-                // Envío de parámetros estructurados a tu API en Node.js
                 const respuesta = await fetch("/api/auth/register", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({ // Ahora sí tiene valor real
+                    body: JSON.stringify({
                         correo,
                         password,
                         rol: "ASPIRANTE"
@@ -83,10 +133,9 @@
                 if (datos.success) {
                     alert("¡Registro exitoso! Por favor, inicia sesión con tu nueva cuenta.");
 
-                    // Redirigir directamente al panel de aspirante
+                    // Redirigir directamente al login prellenando el correo
                     window.location.href = `login.html?correo=${encodeURIComponent(correo)}`;
                 } else {
-                    // Esto te mostrará el error exacto que te arroje el backend en el alert
                     alert(datos.mensaje || "Error al procesar el registro del aspirante.");
                 }
 
