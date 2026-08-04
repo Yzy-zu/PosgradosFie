@@ -765,7 +765,9 @@ async function activarModulosPostRegistro(nombrePrograma) {
                 window.convocatoriasDisponibles = activas;
 
                 const ofertaTxt = typeof t === 'function' ? t('conv_oferta_desbloqueada') : 'Oferta Académica Desbloqueada:';
-                const nivelTxt = nivel === 'DOCTORADO' ? (typeof t === 'function' ? t('sb_doctorados') || 'Doctorados' : 'Doctorados') : (typeof t === 'function' ? t('sb_maestrias') || 'Maestrías' : 'Maestrías');
+                const nivelTxt = nivel === 'DOCTORADO' 
+                    ? (typeof t === 'function' && t('sb_doctorados') !== 'sb_doctorados' ? t('sb_doctorados') : 'Doctorados') 
+                    : (typeof t === 'function' && t('sb_maestrias') !== 'sb_maestrias' ? t('sb_maestrias') : 'Maestrías');
                 htmlConvocatorias = `<h3 style="color: var(--color-text); font-weight: 700; margin-bottom: 15px;">${ofertaTxt} ${nivelTxt} FIE</h3>`;
 
                 if (activas.length === 0) {

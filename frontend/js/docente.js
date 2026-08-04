@@ -1612,17 +1612,28 @@ async function cargarTablaPropedeuticoPorCodigo(codigo = 'PROPEDEUTICO') {
                 DOCENTE_MODULOS_REGISTRY[a.codigo] === moduloCurso
             );
 
+            let accionActual = 'FINALIZADO';
             if (accionValida) {
-                return { ...sol, accionActual: accionValida.codigo };
+                accionActual = accionValida.codigo;
+            } else if (sol.etapaNombre && (sol.etapaNombre.toLowerCase().includes('propedéutico') || sol.etapaNombre.toLowerCase().includes('resultado'))) {
+                accionActual = sol.idProgramacion ? 'CAPTURAR_RESULTADO_CURSO' : 'PROGRAMAR_CURSO';
             }
-            if (sol.etapaNombre && sol.etapaNombre.toLowerCase().includes('propedéutico')) {
-                return { ...sol, accionActual: sol.idProgramacion ? 'CAPTURAR_RESULTADO_CURSO' : 'PROGRAMAR_CURSO' };
+
+            const tieneProgramacion = !!sol.idProgramacion || !!sol.fecha;
+            let uiEstadoId = 'sin_programar';
+            if (accionActual === 'PROGRAMAR_CURSO') {
+                uiEstadoId = tieneProgramacion ? 'programado' : 'sin_programar';
+            } else if (accionActual === 'CAPTURAR_RESULTADO_CURSO' || accionActual === 'CAPTURAR_RESULTADO_PROPEDEUTICO') {
+                uiEstadoId = 'en_curso';
+            } else {
+                uiEstadoId = 'finalizado';
             }
-            return { ...sol, accionActual: 'FINALIZADO' };
+
+            return { ...sol, accionActual, uiEstadoId };
         }).filter(resultado => resultado !== null);
 
         cursosActivos = nuevosCursos;
-        renderCursosCards(cursosActivos);
+        filtrarTablaPropedeuticoUI();
     } catch (error) {
         console.error("Error al cargar la tabla propedéutico:", error);
         contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">Error al cargar datos del servidor.</div>`;
@@ -1670,10 +1681,20 @@ function renderCursosCards(dataList) {
                 disableCapturar = '';
             }
         } else if (accion === 'CAPTURAR_RESULTADO_CURSO' || accion === 'CAPTURAR_RESULTADO_PROPEDEUTICO') {
-            uiEstadoId = 'esperando';
+            uiEstadoId = 'en_curso';
             contEsperando++;
             borderColor = 'var(--color-primary)';
-            estadoLabel = 'Esperando resultado';
+            
+            const formatDateSafe = (dateString) => {
+                if (!dateString) return 'Sin definir';
+                // Añadimos T00:00:00 para evitar desfasaje de zona horaria si la fecha viene sin hora
+                const d = new Date(dateString.includes('T') ? dateString : dateString + 'T00:00:00');
+                return d.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            };
+            const fInicio = formatDateSafe(item.fecha);
+            const fFin = formatDateSafe(item.fechaFin);
+            
+            estadoLabel = `En curso vigente de ${fInicio} a ${fFin}`;
             disableEditar = '';
             disableCapturar = '';
         } else {
@@ -1751,14 +1772,51 @@ function filtrarTablaPropedeuticoUI() {
     const estado = estadoSelect ? estadoSelect.value : '';
     const programa = programaSelect ? programaSelect.value : '';
 
+    // Si se seleccionó un estado del desplegable, desactivamos el toggle de "En cursos"
+    if (estado !== '' && window.filtroEnCursoActivo) {
+        window.filtroEnCursoActivo = false;
+        const btn = document.getElementById('btn-filtro-en-curso');
+        if (btn) {
+            btn.style.background = 'var(--color-input-bg)';
+            btn.style.color = 'var(--color-text)';
+            btn.style.borderColor = 'var(--color-border)';
+        }
+    }
+
     const filtrados = cursosActivos.filter(item => {
         const matchTexto = item.aspiranteNombre.toLowerCase().includes(texto) || (item.opcionNombre && item.opcionNombre.toLowerCase().includes(texto));
-        const matchEstado = estado === '' || item.uiEstadoId === estado;
+        
+        let matchEstado;
+        if (window.filtroEnCursoActivo) {
+            matchEstado = item.uiEstadoId === 'en_curso';
+        } else {
+            // Si el estado es vacío (Todos), ocultamos los de 'en_curso' para que solo salgan con el botón
+            matchEstado = estado === '' ? item.uiEstadoId !== 'en_curso' : item.uiEstadoId === estado;
+        }
+        
         const matchPrograma = programa === '' || (item.posgradoTipo && item.posgradoTipo.toLowerCase().includes(programa.toLowerCase()));
         return matchTexto && matchEstado && matchPrograma;
     });
 
     renderCursosCards(filtrados);
+}
+
+window.filtroEnCursoActivo = false;
+function toggleFiltroEnCurso() {
+    window.filtroEnCursoActivo = !window.filtroEnCursoActivo;
+    const btn = document.getElementById('btn-filtro-en-curso');
+    const selectEstado = document.getElementById('filtro-curso-estado');
+    if (window.filtroEnCursoActivo) {
+        btn.style.background = 'var(--color-primary)';
+        btn.style.color = 'white';
+        btn.style.borderColor = 'var(--color-primary)';
+        if(selectEstado) selectEstado.value = ''; // Reset select
+    } else {
+        btn.style.background = 'var(--color-input-bg)';
+        btn.style.color = 'var(--color-text)';
+        btn.style.borderColor = 'var(--color-border)';
+    }
+    filtrarTablaPropedeuticoUI();
 }
 
 function abrirProgramacionCurso(idSolicitud, aspiranteNombre) {
