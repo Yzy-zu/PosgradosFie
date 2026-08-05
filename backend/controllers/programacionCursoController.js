@@ -19,6 +19,9 @@ const programarCurso = async (req, res) => {
         return res.status(200).json(resultado);
     } catch (error) {
         console.error('Error al programar curso propedéutico:', error);
+        if (error.message && error.message.includes('Error de configuración')) {
+            return res.status(400).json({ success: false, mensaje: error.message });
+        }
         return res.status(500).json({ success: false, mensaje: 'Error interno al programar el curso propedéutico.' });
     }
 };
@@ -54,6 +57,10 @@ const capturarResultado = async (req, res) => {
             observaciones
         });
 
+        if (resultado.bloqueo) {
+            return res.status(422).json(resultado);
+        }
+
         if (req.app.get('io')) {
             req.app.get('io').emit('actualizacionGlobal');
         }
@@ -61,6 +68,9 @@ const capturarResultado = async (req, res) => {
         return res.status(200).json(resultado);
     } catch (error) {
         console.error('Error al capturar resultado de curso propedéutico:', error);
+        if (error.message && error.message.includes('Regresión de workflow impedida')) {
+            return res.status(400).json({ success: false, mensaje: error.message });
+        }
         return res.status(500).json({ success: false, mensaje: 'Error interno al capturar resultado del curso propedéutico.' });
     }
 };

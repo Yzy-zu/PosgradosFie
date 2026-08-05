@@ -1829,9 +1829,15 @@ function abrirProgramacionCurso(idSolicitud, aspiranteNombre) {
     body.innerHTML = '';
     modal.style.display = 'flex';
 
+    const item = (typeof cursosActivos !== 'undefined' && Array.isArray(cursosActivos)) 
+        ? cursosActivos.find(c => (c.idSolicitud || c.id) === idSolicitud) 
+        : null;
+
     moduloCurso.ejecutar({
         idSolicitud,
-        aspiranteNombre,
+        aspiranteNombre: (item && item.aspiranteNombre) || aspiranteNombre,
+        posgradoNombre: item ? item.posgradoNombre : null,
+        opcionNombre: item ? (item.opcionNombre || item.opcionElegida) : null,
         esDocente: true,
         accionActiva: 'PROGRAMAR_CURSO',
         modoReprogramar: false
@@ -1845,9 +1851,15 @@ function abrirReprogramacionCurso(idSolicitud, aspiranteNombre) {
     body.innerHTML = '';
     modal.style.display = 'flex';
 
+    const item = (typeof cursosActivos !== 'undefined' && Array.isArray(cursosActivos)) 
+        ? cursosActivos.find(c => (c.idSolicitud || c.id) === idSolicitud) 
+        : null;
+
     moduloCurso.ejecutar({
         idSolicitud,
-        aspiranteNombre,
+        aspiranteNombre: (item && item.aspiranteNombre) || aspiranteNombre,
+        posgradoNombre: item ? item.posgradoNombre : null,
+        opcionNombre: item ? (item.opcionNombre || item.opcionElegida) : null,
         esDocente: true,
         accionActiva: 'PROGRAMAR_CURSO',
         modoReprogramar: true
@@ -1861,9 +1873,15 @@ function abrirCapturaCurso(idSolicitud, aspiranteNombre) {
     body.innerHTML = '';
     modal.style.display = 'flex';
 
+    const item = (typeof cursosActivos !== 'undefined' && Array.isArray(cursosActivos)) 
+        ? cursosActivos.find(c => (c.idSolicitud || c.id) === idSolicitud) 
+        : null;
+
     moduloCurso.ejecutar({
         idSolicitud,
-        aspiranteNombre,
+        aspiranteNombre: (item && item.aspiranteNombre) || aspiranteNombre,
+        posgradoNombre: item ? item.posgradoNombre : null,
+        opcionNombre: item ? (item.opcionNombre || item.opcionElegida) : null,
         esDocente: true,
         accionActiva: 'CAPTURAR_RESULTADO_CURSO',
         modoCapturar: true
@@ -2393,3 +2411,219 @@ document.addEventListener('DOMContentLoaded', () => {
         startAutoSlide();
     }
 });
+
+// --- EVALUACION POR TEMAS HELPER ---
+const EvaluacionTemasHelper = {
+    async renderizar(idSolicitud, contenedor) {
+        contenedor.innerHTML = '<p class="text-muted"><i class="fa-solid fa-spinner fa-spin"></i> Cargando temas...</p>';
+        
+        try {
+            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+            const res = await fetch(`/api/solicitud-temas/${idSolicitud}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!res.ok) {
+                throw new Error("HTTP Status " + res.status);
+            }
+
+            const temas = await res.json();
+
+            this.errorCarga = this.errorCarga || {};
+            this.errorCarga[idSolicitud] = false;
+
+            if (!temas || temas.length === 0) {
+                contenedor.innerHTML = '';
+                return;
+            }
+
+            // Guardar temas para la validación posterior
+            this.temasCache = this.temasCache || {};
+            this.temasCache[idSolicitud] = temas;
+
+            let html = `
+                <div style="margin-bottom: 20px; border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; background: var(--color-bg);">
+                    <h6 style="margin-bottom: 12px; font-weight: 600; color: var(--color-text);">Evaluación por Temas</h6>
+                    <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 15px;">Guarde cada tema individualmente antes de finalizar la captura general.</p>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 custom-premium-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tema</th>
+                                    <th style="width: 130px;">Calificación</th>
+                                    <th>Observaciones</th>
+                                    <th style="width: 110px;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="temas-tbody-${idSolicitud}">
+            `;
+
+            temas.forEach(tema => {
+                const calif = (tema.calificacion !== null && tema.calificacion !== undefined) ? tema.calificacion : '';
+                const obs = tema.observaciones || '';
+                const btnClase = (tema.calificacion !== null && tema.calificacion !== undefined) ? 'btn-success' : 'btn-primary';
+                const btnIcon = (tema.calificacion !== null && tema.calificacion !== undefined) ? 'fa-check' : 'fa-save';
+                const btnText = (tema.calificacion !== null && tema.calificacion !== undefined) ? 'Guardado' : 'Guardar';
+                
+                html += `
+                    <tr data-tema-id="${tema.id}">
+                        <td style="font-size: 0.9rem; color: var(--color-text);">${tema.nombreTema || 'Tema'}</td>
+                        <td>
+                            <input type="number" class="form-control form-control-sm tema-calif" step="1" min="1" max="10" value="${calif}" placeholder="1-10" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px;">
+                        </td>
+                        <td>
+                            <input type="text" class="form-control form-control-sm tema-obs" value="${obs}" placeholder="Opcional" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px;">
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm ${btnClase} btn-guardar-tema" onclick="EvaluacionTemasHelper.guardarTema(this, ${tema.id}, ${idSolicitud})" title="Guardar">
+                                <i class="fa-solid ${btnIcon}"></i> <span class="btn-text">${btnText}</span>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            contenedor.innerHTML = html;
+            this.recalcularPromedio(idSolicitud);
+        } catch (error) {
+            console.error("Error al cargar temas:", error);
+            this.errorCarga = this.errorCarga || {};
+            this.errorCarga[idSolicitud] = true;
+            
+            contenedor.innerHTML = `
+                <div class="alert alert-danger" style="margin-bottom: 20px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Error al cargar los temas de evaluación. No podrá finalizar la captura hasta que se resuelva.
+                    <button class="btn btn-sm btn-outline-danger ms-2" onclick="EvaluacionTemasHelper.renderizar(${idSolicitud}, document.getElementById('${contenedor.id}'))">
+                        <i class="fa-solid fa-rotate-right"></i> Reintentar
+                    </button>
+                </div>
+            `;
+        }
+    },
+
+    async guardarTema(btn, idSolicitudTema, idSolicitud) {
+        const tr = btn.closest('tr');
+        const calificacionVal = tr.querySelector('.tema-calif').value;
+        const observaciones = tr.querySelector('.tema-obs').value;
+
+        if (calificacionVal === '') {
+            Swal.fire({ icon: 'warning', title: 'Calificación Requerida', text: 'Debes ingresar una calificación para este tema.', timer: 2000 });
+            return;
+        }
+
+        try {
+            btn.disabled = true;
+            const btnTextSpan = btn.querySelector('.btn-text');
+            if (btnTextSpan) btnTextSpan.innerText = 'Guardando...';
+
+            const calificacion = parseInt(calificacionVal, 10);
+            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+            const res = await fetch(`/api/solicitud-temas/${idSolicitudTema}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ calificacion, observaciones })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.mensaje || 'Error al guardar');
+
+            btn.className = 'btn btn-sm btn-success btn-guardar-tema';
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> <span class="btn-text">Guardado</span>';
+            
+            // Actualizar caché
+            if (this.temasCache && this.temasCache[idSolicitud]) {
+                const tema = this.temasCache[idSolicitud].find(t => t.id === idSolicitudTema);
+                if (tema) {
+                    tema.calificacion = calificacion;
+                }
+            }
+
+            this.recalcularPromedio(idSolicitud);
+
+        } catch (error) {
+            console.error("Error al guardar tema:", error);
+            Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+            btn.className = 'btn btn-sm btn-danger btn-guardar-tema';
+            btn.innerHTML = '<i class="fa-solid fa-times"></i> <span class="btn-text">Reintentar</span>';
+        } finally {
+            btn.disabled = false;
+        }
+    },
+
+    marcarComoModificado(input, idSolicitud) {
+        if (input.classList.contains('tema-calif')) {
+            // Regex y sanitización: solo enteros del 1 al 10, sin decimales
+            let valStr = input.value.replace(/[^0-9]/g, '');
+            if (valStr !== '') {
+                let num = parseInt(valStr, 10);
+                if (num > 10) num = 10;
+                if (num < 1) num = 1;
+                input.value = num;
+            } else {
+                input.value = '';
+            }
+        }
+
+        const tr = input.closest('tr');
+        const btn = tr.querySelector('.btn-guardar-tema');
+        if (btn && !btn.className.includes('btn-primary')) {
+            btn.className = 'btn btn-sm btn-primary btn-guardar-tema';
+            btn.innerHTML = '<i class="fa-solid fa-save"></i> <span class="btn-text">Guardar</span>';
+        }
+        if (idSolicitud) {
+            this.recalcularPromedio(idSolicitud);
+        }
+    },
+
+    recalcularPromedio(idSolicitud) {
+        const tbody = document.getElementById(`temas-tbody-${idSolicitud}`);
+        if (!tbody) return;
+
+        const inputs = tbody.querySelectorAll('.tema-calif');
+        let suma = 0;
+        let contador = 0;
+
+        inputs.forEach(inp => {
+            const val = parseFloat(inp.value);
+            if (!isNaN(val)) {
+                suma += val;
+                contador++;
+            }
+        });
+
+        const promedioStr = contador > 0 ? Math.round(suma / contador).toString() : '';
+
+        const campoCalifCurso = document.getElementById('cap-curso-calificacion');
+        const campoCalifExamen = document.getElementById('cap-examen-calificacion');
+
+        if (campoCalifCurso) campoCalifCurso.value = promedioStr;
+        if (campoCalifExamen) campoCalifExamen.value = promedioStr;
+    },
+
+    validarTodosEvaluados(idSolicitud) {
+        // Bloquear si hubo error en la carga de temas
+        if (this.errorCarga && this.errorCarga[idSolicitud]) return false;
+
+        const tbody = document.getElementById(`temas-tbody-${idSolicitud}`);
+        
+        // Si no hay tbody, pero la caché indica que debería haber temas, es una inconsistencia
+        if (!tbody) {
+            if (this.temasCache && this.temasCache[idSolicitud] && this.temasCache[idSolicitud].length > 0) return false;
+            return true; 
+        }
+
+        // Bloquear si hay algún botón en estado primario (lo que significa que hay temas sin guardar o modificados)
+        const unsavedButtons = tbody.querySelectorAll('.btn-primary.btn-guardar-tema');
+        return unsavedButtons.length === 0;
+    }
+};

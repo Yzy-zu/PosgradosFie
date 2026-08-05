@@ -20,6 +20,9 @@ const programarExamen = async (req, res) => {
         return res.status(200).json(resultado);
     } catch (error) {
         console.error('Error al programar examen:', error);
+        if (error.message && error.message.includes('Error de configuración')) {
+            return res.status(400).json({ success: false, mensaje: error.message });
+        }
         return res.status(500).json({ success: false, mensaje: 'Error interno al programar el examen.' });
     }
 };
@@ -67,10 +70,17 @@ const capturarResultado = async (req, res) => {
             observaciones
         });
 
+        if (resultado.bloqueo) {
+            return res.status(422).json(resultado);
+        }
+
         req.app.get('io').emit('actualizacionGlobal');
         return res.status(200).json(resultado);
     } catch (error) {
         console.error('Error al capturar resultado de examen:', error);
+        if (error.message && error.message.includes('Regresión de workflow impedida')) {
+            return res.status(400).json({ success: false, mensaje: error.message });
+        }
         return res.status(500).json({ success: false, mensaje: 'Error interno al capturar resultado.' });
     }
 };

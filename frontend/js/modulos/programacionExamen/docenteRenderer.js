@@ -75,16 +75,28 @@ const moduloProgramacionExamenDocenteRenderer = {
         const divContainer = document.createElement('div');
         divContainer.className = 'modulo-capturar-examen';
         
+        const posgradoHTML = soliData.posgradoNombre ? `<strong>Posgrado:</strong> ${soliData.posgradoNombre}<br>` : '';
+        const especialidadHTML = (soliData.opcionNombre || soliData.opcionElegida) ? `<strong>Especialidad:</strong> ${soliData.opcionNombre || soliData.opcionElegida}<br>` : '';
+
         divContainer.innerHTML = `
-            <div style="margin-bottom: 20px;">
-                <p>Ingrese la calificación final y el dictamen para el aspirante <strong>${soliData.aspiranteNombre || 'Seleccionado'}</strong>.</p>
+            <div style="margin-bottom: 20px; padding: 15px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 8px;">
+                <p style="margin: 0; font-size: 0.95rem; line-height: 1.6;">
+                    <strong>Aspirante:</strong> ${soliData.aspiranteNombre || ''}<br>
+                    ${posgradoHTML}
+                    ${especialidadHTML}
+                </p>
+                <p style="margin: 12px 0 0 0; font-size: 0.9rem; color: var(--color-text-muted);">
+                    Ingrese la calificación final y el dictamen a continuación.
+                </p>
             </div>
             
             <form id="form-capturar-examen" onsubmit="event.preventDefault();">
+                <div id="contenedor-evaluacion-temas-${soliData.idSolicitud || soliData.id}"></div>
+                
                 <div style="display: flex; gap: 15px; margin-bottom: 20px;">
                     <div style="flex: 1;">
-                        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--color-text-muted); font-size: 0.9rem;">Calificación (Opcional)</label>
-                        <input type="number" id="cap-examen-calificacion" class="form-control" step="0.01" min="0" max="100" placeholder="Ej: 85.50" style="width: 100%; padding: 10px 12px; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 6px; outline: none; box-sizing: border-box;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--color-text-muted); font-size: 0.9rem;">Promedio Final</label>
+                        <input type="text" id="cap-examen-calificacion" class="form-control" readonly placeholder="Se calcula automáticamente" style="width: 100%; padding: 10px 12px; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 6px; outline: none; box-sizing: border-box; cursor: not-allowed; font-weight: bold;">
                     </div>
                     <div style="flex: 1;">
                         <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--color-text-muted); font-size: 0.9rem;">Dictamen Final *</label>
@@ -109,6 +121,11 @@ const moduloProgramacionExamenDocenteRenderer = {
         `;
 
         modalBody.appendChild(divContainer);
+
+        // Renderizar Evaluación por Temas
+        if (typeof EvaluacionTemasHelper !== 'undefined') {
+            EvaluacionTemasHelper.renderizar(soliData.idSolicitud || soliData.id, document.getElementById(`contenedor-evaluacion-temas-${soliData.idSolicitud || soliData.id}`));
+        }
 
         // Binding del botón guardar
         const btnGuardar = divContainer.querySelector('#btn-guardar-captura');
@@ -175,7 +192,12 @@ const moduloProgramacionExamenDocenteRenderer = {
             return;
         }
 
-        const calificacion = calificacionVal ? parseFloat(calificacionVal) : null;
+        if (typeof EvaluacionTemasHelper !== 'undefined' && !EvaluacionTemasHelper.validarTodosEvaluados(idSolicitud)) {
+            Swal.fire({ icon: 'warning', title: 'Evaluación Pendiente', text: 'Por favor, guarda la calificación de todos los temas antes de finalizar.', confirmButtonColor: '#f59e0b' });
+            return;
+        }
+
+        const calificacion = calificacionVal ? parseInt(calificacionVal, 10) : null;
         const aprobado = aprobadoVal === '1';
 
         try {

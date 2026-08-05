@@ -56,7 +56,7 @@ app.use('/api/validacion-promedio', require('./routes/validacionPromedio.routes'
 app.use('/api/pagos', require('./routes/pagos.routes'));
 app.use('/api/entrevista', require('./routes/entrevista.routes'));
 app.use('/api/requisitos', require('./routes/requisitos.routes'));
-
+app.use('/api/solicitud-temas', require('./routes/solicitudTema.routes'));
 
 // -------------------------------------------------------------------
 // Ruta protegida para servir archivos de solicitud (Bug 10 Fix)
