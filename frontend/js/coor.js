@@ -12,7 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
             cargarMetricas();
             const hash = window.location.hash;
             if (hash === '#aspirantes') cargarAspirantes();
-            if (hash === '#convocatorias') cargarConvocatorias();
+            if (
+    typeof window.cargarConvocatorias ===
+    "function"
+) {
+    window.cargarConvocatorias();
+}
             if (hash === '#entrevistas') cargarEntrevistas();
         });
     }
@@ -125,7 +130,7 @@ async function cargarMetricas() {
 /* ==========================================================
    3. CONVOCATORIAS
 ========================================================== */
-async function cargarConvocatorias() {
+async function cargarConvocatoriasViejas() {
     const contenedor = document.getElementById('contenedorConvocatorias');
     if (!contenedor) return;
 

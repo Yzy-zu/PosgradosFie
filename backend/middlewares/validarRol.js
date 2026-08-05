@@ -1,25 +1,46 @@
-
 const validarRol = (...rolesPermitidos) => {
+
+    const rolesNormalizados =
+        rolesPermitidos.map(
+            rol =>
+                String(rol)
+                    .trim()
+                    .toUpperCase()
+        );
+
     return (req, res, next) => {
-        // Obtenemos el usuario que previamente inyectó el middleware 'auth'
-        const usuario = req.usuario; 
+
+        const usuario =
+            req.usuario;
 
         if (!usuario) {
+
             return res.status(401).json({
                 ok: false,
-                msg: 'No hay un usuario autenticado en la petición.'
+                mensaje:
+                    "No hay un usuario autenticado en la petición."
             });
         }
 
-        // Verificamos si el rol del usuario está dentro de los roles permitidos
-        if (!rolesPermitidos.includes(usuario.rol)) {
+        const rolUsuario =
+            String(usuario.rol || "")
+                .trim()
+                .toUpperCase();
+
+        if (
+            !rolesNormalizados.includes(
+                rolUsuario
+            )
+        ) {
+
             return res.status(403).json({
                 ok: false,
-                msg: `Acceso denegado. Se requiere uno de los siguientes roles: [${rolesPermitidos.join(', ')}]`
+                mensaje:
+                    `Acceso denegado. Roles permitidos: ${rolesNormalizados.join(", ")}`
             });
         }
 
-        next(); // Si tiene el rol, continúa a la ruta/controlador
+        next();
     };
 };
 

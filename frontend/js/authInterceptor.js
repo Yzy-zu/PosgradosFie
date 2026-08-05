@@ -1,56 +1,143 @@
-// authInterceptor.js
-const originalFetch = window.fetch;
+// ==========================================================
+// INTERCEPTOR GLOBAL DE FETCH
+// ==========================================================
 
-window.fetch = async (...args) => {
-    let [resource, config] = args;
+const originalFetch = window.fetch.bind(window);
 
-    // 1. Obtener el token (asegúrate de que el nombre coincida con tu login)
-    const token = sessionStorage.getItem('token');
+window.fetch = async (resource, config = {}) => {
 
-    config = config || {};
-    config.headers = config.headers || {};
+    // Buscar el token en ambos almacenamientos
+    const token =
+        sessionStorage.getItem("token") ||
+        localStorage.getItem("token") ||
+        "";
 
-    // 2. Inyectar el token en las cabeceras si existe
-    if (token) {
-        if (config.headers instanceof Headers) {
-            config.headers.append('Authorization', `Bearer ${token}`);
-        } else {
-            config.headers['Authorization'] = `Bearer ${token}`;
-        }
+    /*
+     * Usar Headers permite conservar las cabeceras existentes
+     * y evita problemas cuando config.headers es un objeto,
+     * una instancia de Headers o un arreglo.
+     */
+    const headers =
+        new Headers(config.headers || {});
+
+    // Agregar el token únicamente cuando exista
+    if (token && !headers.has("Authorization")) {
+        headers.set(
+            "Authorization",
+            `Bearer ${token}`
+        );
     }
 
+    const configuracionFinal = {
+        ...config,
+        headers
+    };
+
+    const url =
+        typeof resource === "string"
+            ? resource
+            : resource?.url || "";
+
     try {
-        const response = await originalFetch.call(window, resource, config);
 
-        if (response.status === 401 || response.status === 403) {
-            const url = typeof resource === 'string' ? resource : resource?.url || '';
+        const response =
+            await originalFetch(
+                resource,
+                configuracionFinal
+            );
 
-            if (!url.includes('/api/auth/login')) {
-                // Bug 3 Fix: usar SweetAlert2 si está disponible, sin alert() nativo
-                const mensaje = 'Tu sesión ha expirado o no tienes permisos. Serás redirigido al inicio de sesión.';
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        title: 'Sesión Expirada',
-                        text: mensaje,
-                        icon: 'warning',
-                        confirmButtonColor: '#8a1c24',
-                        confirmButtonText: 'Entendido',
-                        allowOutsideClick: false
-                    }).then(() => {
-                        sessionStorage.clear();
-                        window.location.href = 'login.html';
-                    });
-                } else {
-                    console.warn('[Auth] Sesión expirada. Redirigiendo a login...');
-                    sessionStorage.clear();
-                    window.location.href = 'login.html';
-                }
-                return Promise.reject(new Error("Sesión expirada"));
+        /*
+         * 401: token ausente, inválido o expirado.
+         * En este caso sí se elimina la sesión.
+         */
+        if (
+            response.status === 401 &&
+            !url.includes("/api/auth/login")
+        ) {
+
+            const mensaje =
+                "Tu sesión ha expirado. Inicia sesión nuevamente.";
+
+            if (typeof Swal !== "undefined") {
+
+                await Swal.fire({
+                    title: "Sesión expirada",
+                    text: mensaje,
+                    icon: "warning",
+                    confirmButtonColor: "#8a1c24",
+                    confirmButtonText: "Entendido",
+                    allowOutsideClick: false
+                });
             }
+
+            sessionStorage.clear();
+            localStorage.removeItem("token");
+
+            window.location.href =
+                "login.html";
+
+            throw new Error(
+                "Sesión expirada."
+            );
+        }
+
+        /*
+         * 403: el usuario está autenticado, pero el servidor
+         * no le permite realizar esa operación.
+         *
+         * No se debe cerrar la sesión automáticamente.
+         */
+        if (
+            response.status === 403 &&
+            !url.includes("/api/auth/login")
+        ) {
+
+            let detalle =
+                "Tu usuario no tiene permiso para realizar esta operación.";
+
+            try {
+
+                const copia =
+                    response.clone();
+
+                const resultado =
+                    await copia.json();
+
+                detalle =
+                    resultado.mensaje ||
+                    resultado.message ||
+                    detalle;
+
+            } catch (error) {
+
+                // La respuesta no contenía JSON.
+            }
+
+            if (typeof Swal !== "undefined") {
+
+                Swal.fire({
+                    title: "Acceso denegado",
+                    text: detalle,
+                    icon: "error",
+                    confirmButtonColor: "#8a1c24"
+                });
+            }
+
+            console.error(
+                `[Auth] Error 403 en ${url}:`,
+                detalle
+            );
         }
 
         return response;
+
     } catch (error) {
+
+        console.error(
+            "[Fetch] Error en la petición:",
+            error
+        );
+
         throw error;
     }
 };
