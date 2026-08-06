@@ -88,7 +88,10 @@ const getSolicitudActiva = async (req, res) => {
                     mi.nombre AS modalidadNombre,
                     ep.nombre AS etapaNombre,
                     me.orden AS etapaOrden,
-                    re.calificacion, re.aprobado AS resultadoAprobado, re.observaciones AS resultadoObservaciones, re.fechaCaptura
+                    COALESCE(re.calificacion, rc.calificacion) AS calificacion, 
+                    COALESCE(re.aprobado, rc.aprobado) AS resultadoAprobado, 
+                    COALESCE(re.observaciones, rc.observaciones) AS resultadoObservaciones, 
+                    COALESCE(re.fechaCaptura, rc.fechaCaptura) AS fechaCaptura
              FROM solicitud s
              JOIN convocatorias c ON s.idConvocatoria = c.id
              LEFT JOIN posgrado p ON c.posgrado_id = p.id
@@ -97,7 +100,8 @@ const getSolicitudActiva = async (req, res) => {
              LEFT JOIN modalidad_ingreso mi ON s.idModalidad = mi.id
              LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
              LEFT JOIN modalidad_etapa me ON s.idModalidad = me.modalidad_id AND s.idEtapaActual = me.etapa_id
-             LEFT JOIN resultado_examen re ON s.id = re.idSolicitud
+             LEFT JOIN resultado_examen re ON s.id = re.idSolicitud AND s.idModalidad = 1
+             LEFT JOIN resultado_curso rc ON s.id = rc.idSolicitud AND s.idModalidad = 2
              WHERE s.idAspi = ? AND s.estado != 'CANCELADO'
              ORDER BY s.creadoEn DESC LIMIT 1`,
             [idAspi]

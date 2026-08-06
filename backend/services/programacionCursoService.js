@@ -20,15 +20,15 @@ class ProgramacionCursoService {
             await this.actualizarProgramacion(idSolicitud, datosProgramacion);
             return { success: true, mensaje: 'Programación de curso propedéutico actualizada correctamente.' };
         } else {
-            // Primera programación: crea registro, avanza de etapa y genera temas
+            // Primera programación: crea registro y genera temas. 
+            // (No avanza etapa aquí porque la captura de calificación se realiza en esta misma etapa)
             const conn = await db.getConnection();
             await conn.beginTransaction();
             try {
                 await this.crearProgramacion(idSolicitud, datosProgramacion, conn);
-                await WorkflowService.avanzarEtapa(idSolicitud, conn);
                 await SolicitudTemaService.generarTemasSiNoExisten(idSolicitud, conn);
                 await conn.commit();
-                return { success: true, mensaje: 'Curso propedéutico programado, etapa avanzada y temas de evaluación generados correctamente.' };
+                return { success: true, mensaje: 'Curso propedéutico programado y temas de evaluación generados correctamente.' };
             } catch (error) {
                 await conn.rollback();
                 throw error;

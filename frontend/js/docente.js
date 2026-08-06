@@ -913,9 +913,9 @@ function abrirNotificacion(remitenteKey, element) {
 
             chatHtml += `
                 <div style="background: var(--color-card-bg); border: 1px solid var(--color-border); padding: 12px 15px; border-radius: 18px 18px 18px 4px; box-shadow: var(--shadow-sm); font-size: 14px; color: var(--color-text); max-width: 90%; margin-bottom: 10px; word-wrap: break-word; align-self: flex-start;">
-                    <div style="font-weight: bold; color: var(--color-primary); margin-bottom: 5px; font-size: 12px;">${notif.nombre}</div>
-                    ${notif.mensaje}
-                    <div style="font-size: 10px; color: var(--color-text-muted); margin-top: 5px; text-align: right;">${timeStr} ${editadoHtml}</div>
+                    <div style="font-weight: bold; color: var(--color-primary); margin-bottom: 5px; font-size: 12px;">${escaparHTML(notif.nombre)}</div>
+                    <div style="white-space: pre-wrap;">${escaparHTML(notif.mensaje)}</div>
+                    <div style="font-size: 10px; color: var(--color-text-muted); margin-top: 5px; text-align: right;">${escaparHTML(timeStr)} ${editadoHtml}</div>
                 </div>
             `;
         });
@@ -1183,10 +1183,10 @@ async function cargarNotificaciones() {
                         </div>
                         <div class="chat-details" style="flex: 1; overflow: hidden;">
                             <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
-                                <div style="font-weight: bold; font-size: 13px; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${grupo.remitente}</div>
-                                <div style="font-size: 11px; color: var(--color-text-muted); flex-shrink: 0;">${formattedDate}</div>
+                                <div style="font-weight: bold; font-size: 13px; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escaparHTML(grupo.remitente)}</div>
+                                <div style="font-size: 11px; color: var(--color-text-muted); flex-shrink: 0;">${escaparHTML(formattedDate)}</div>
                             </div>
-                            <div style="font-size: 12px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><strong>${ultMsg.nombre}</strong> - ${ultMsg.mensaje}</div>
+                            <div style="font-size: 12px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><strong>${escaparHTML(ultMsg.nombre)}</strong> - ${escaparHTML(ultMsg.mensaje)}</div>
                         </div>
                     </div>`;
                 });

@@ -1014,19 +1014,27 @@ async function avanzarEstacion(nuevaEstacion) {
         if (nivelAcademicoSeleccionado !== 'Doctorado') {
             const contenedorMaestria = document.getElementById('opciones-admision-maestria');
             const inputModalidad = contenedorMaestria ? contenedorMaestria.querySelector('input[name="modalidad"]:checked') : null;
-            if (inputModalidad) {
-                try {
-                    const res = await fetch(`/api/solicitud/modalidad/${currentSolicitudId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ tipoAdmision: inputModalidad.value }) // Por retrocompatibilidad de nombre de var en frontend, enviamos el ID en value
-                    });
-                    if (!res.ok) {
-                        console.error("Error al guardar la modalidad en la base de datos.");
-                    }
-                } catch (e) {
-                    console.error("Error de conexión al guardar modalidad:", e);
+            if (!inputModalidad) {
+                if (boton) boton.disabled = false;
+                Swal.fire({
+                    title: 'Modalidad requerida',
+                    text: 'Debes seleccionar una modalidad de admisión para continuar.',
+                    icon: 'warning',
+                    confirmButtonColor: '#8a1c24'
+                });
+                return;
+            }
+            try {
+                const res = await fetch(`/api/solicitud/modalidad/${currentSolicitudId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tipoAdmision: inputModalidad.value }) // Por retrocompatibilidad de nombre de var en frontend, enviamos el ID en value
+                });
+                if (!res.ok) {
+                    console.error("Error al guardar la modalidad en la base de datos.");
                 }
+            } catch (e) {
+                console.error("Error de conexión al guardar modalidad:", e);
             }
         }
     }
@@ -1108,6 +1116,8 @@ function actualizarCostosAdmision() {
     if (detallesBox) {
         detallesBox.style.display = 'block';
     }
+
+    verificarArchivosEstacion(0);
 }
 
 
@@ -1116,9 +1126,17 @@ function actualizarCostosAdmision() {
  */
 function verificarArchivosEstacion(estacion) {
     if (estacion === 0) {
+        const btn = document.getElementById('btn-next-0');
+        if (!btn) return;
+
         if (nivelAcademicoSeleccionado === "Doctorado") {
-            const grado = document.getElementById('file-grado-maestria').files.length > 0;
-            document.getElementById('btn-next-0').disabled = !grado;
+            const gradoEl = document.getElementById('file-grado-maestria');
+            const grado = gradoEl && gradoEl.files && gradoEl.files.length > 0;
+            btn.disabled = !grado;
+        } else {
+            const contenedorMaestria = document.getElementById('opciones-admision-maestria');
+            const inputModalidad = contenedorMaestria ? contenedorMaestria.querySelector('input[name="modalidad"]:checked') : null;
+            btn.disabled = !inputModalidad;
         }
         return;
     }
@@ -2315,17 +2333,19 @@ function hidratarUI(soliData) {
                 </div>
 
                 <h4 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 800; color: var(--color-text); display: flex; align-items: center; gap: 10px;">
-                    <i class="fa-solid fa-trophy" style="color: #f59e0b;"></i> ${typeof t === 'function' ? t('exam_felicidades_calif') : '¡Felicidades, tu calificación ha sido registrada!'}
+                    <i class="fa-solid fa-trophy" style="color: #f59e0b;"></i> ${soliData.idModalidad === 2 ? '¡Tu curso propedéutico ha finalizado!' : (typeof t === 'function' ? t('exam_felicidades_calif') : '¡Felicidades, tu calificación ha sido registrada!')}
                 </h4>
-                <p style="margin-bottom: 20px; color: var(--color-text-muted); font-size: 14px; line-height: 1.5;">${typeof t === 'function' ? t('exam_evaluado_desc') : 'Tu examen de admisión ha sido evaluado y los resultados ya se integraron a tu proceso.'}</p>
+                <p style="margin-bottom: 20px; color: var(--color-text-muted); font-size: 14px; line-height: 1.5;">${soliData.idModalidad === 2 ? 'Tu curso propedéutico ha sido evaluado y los resultados ya se integraron a tu proceso.' : (typeof t === 'function' ? t('exam_evaluado_desc') : 'Tu examen de admisión ha sido evaluado y los resultados ya se integraron a tu proceso.')}</p>
                 
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    ${soliData.idModalidad !== 2 ? `
                     <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 16px 20px; border-radius: 12px; flex: 1; min-width: 160px;">
                         <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; color: var(--color-text-muted); margin-bottom: 6px;">${typeof t === 'function' ? t('exam_calif_obtenida') : 'Calificación Obtenida'}</span>
                         <strong style="font-size: 32px; font-weight: 800; color: var(--color-text); line-height: 1;">${soliData.calificacion}</strong>
                     </div>
+                    ` : ''}
                     <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 16px 20px; border-radius: 12px; flex: 1; min-width: 160px;">
-                        <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; color: var(--color-text-muted); margin-bottom: 6px;">${typeof t === 'function' ? t('exam_resultado') : 'Resultado'}</span>
+                        <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; color: var(--color-text-muted); margin-bottom: 6px;">${typeof t === 'function' ? t('exam_resultado') : 'Resultado Final'}</span>
                         <div style="font-size: 20px; font-weight: 800; color: ${soliData.resultadoAprobado ? '#10b981' : '#ef4444'}; display: flex; align-items: center; gap: 8px;">
                             <i class="fa-solid ${soliData.resultadoAprobado ? 'fa-circle-check' : 'fa-circle-xmark'}"></i> ${soliData.resultadoAprobado ? (typeof t === 'function' ? t('exam_aprobado') : 'Aprobado') : (typeof t === 'function' ? t('exam_no_aprobado') : 'No Aprobado')}
                         </div>
@@ -2441,8 +2461,8 @@ function configurarPanelesNivel(nivel, idConvocatoria, documentosSubidos = []) {
         if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'none';
         if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'flex';
 
-        if (document.getElementById('btn-next-0')) document.getElementById('btn-next-0').disabled = false;
         actualizarCostosAdmision();
+        verificarArchivosEstacion(0);
     }
 
     if (idConvocatoria) cargarRequisitosDocumentales(idConvocatoria, documentosSubidos);
