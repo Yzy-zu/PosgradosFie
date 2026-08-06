@@ -539,10 +539,6 @@ guardarEntrevista: async (req, res) => {
                 ]
             );
 
-            // Avanzar etapa solamente al crearla por primera vez
-            await WorkflowService.avanzarEtapa(
-                parseInt(id)
-            );
         }
 
         // ==========================================
