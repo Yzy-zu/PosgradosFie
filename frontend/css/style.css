@@ -6362,5 +6362,213 @@ body.dark-mode .status-banner.status-aprobado .status-banner-badge {
     text-decoration: underline;
 }
 
+.sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            color: #fff;
+        }
+        .sidebar-brand img {
+            width: 38px;
+            height: 38px;
+            object-fit: contain;
+        }
+        .view-section {
+            display: none;
+        }
+        .view-section.active {
+            display: block;
+        }
 
 
+/* Fondo semitransparente que cubre la pantalla */
+.modal-perfil-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro con transparencia */
+    z-index: 1000; /* Asegura que esté por encima de todo */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px); /* Efecto de desenfoque de fondo */
+    transition: opacity 0.3s ease;
+}
+
+/* Contenedor de la Tarjeta */
+.modal-card-perfil {
+    background-color: var(--color-card-bg, #ffffff);
+    width: 600px; /* Ancho similar al de la Imagen 1 */
+    max-width: 90%; /* Adaptable a pantallas pequeñas */
+    border-radius: 20px; /* Bordes muy redondeados */
+    padding: 30px;
+    position: relative;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3); /* Sombra suave pero profunda */
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+    overflow: hidden; /* Para recortar la marca de agua si sobresale */
+}
+
+/* Botón de cierre X */
+.modal-close-x {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: var(--color-text-muted, #64748b);
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 10; /* Por encima de la marca de agua */
+    transition: color 0.2s;
+}
+
+.modal-close-x:hover {
+    color: #ef4444; /* Rojo al pasar el ratón */
+}
+
+/* SECCIÓN DEL ENCABEZADO */
+.card-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* Círculo del Avatar Grande con Iniciales */
+.avatar-circle-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--color-primary, #1e293b); /* Color oscuro por defecto */
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    font-weight: bold;
+    text-transform: uppercase;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+/* Detalles del texto en el encabezado */
+.header-details .profile-name-large {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 0 5px 0;
+    color: var(--color-text, #1e293b);
+}
+
+.header-details .profile-email-sub {
+    font-size: 0.95rem;
+    color: var(--color-text-muted, #64748b);
+    margin: 0 0 12px 0;
+}
+
+/* Badge de Rol */
+.role-badge {
+    display: inline-block;
+    padding: 6px 15px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-secretario {
+    background-color: rgba(30, 41, 59, 0.1); /* Fondo oscuro muy suave */
+    color: var(--color-primary, #1e293b);
+    border: 1px solid rgba(30, 41, 59, 0.2);
+}
+
+/* Divisor */
+.card-divider {
+    border: 0;
+    border-top: 1px solid var(--color-border, #e2e8f0);
+    margin: 20px 0;
+}
+
+/* SECCIONES DE INFORMACIÓN */
+.profile-info-section {
+    margin-bottom: 25px;
+}
+
+.profile-info-section h3 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-text-muted, #64748b);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-info-section h3 i {
+    color: var(--color-primary, #1e293b);
+    font-size: 0.9rem;
+}
+
+/* Cuadrícula de Información */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Dos columnas por defecto */
+    gap: 20px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-text-muted, #64748b);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.info-value {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--color-text, #1e293b);
+}
+
+/* Escudo de marca de agua */
+.watermark-shield {
+    position: absolute;
+    bottom: -50px;
+    right: -30px;
+    width: 250px;
+    opacity: 0.05; /* Muy transparente */
+    z-index: 1;
+    pointer-events: none; /* No interfiere con los clics */
+    transform: rotate(-10deg);
+}
+
+/* Adaptabilidad a dispositivos móviles */
+@media (max-width: 600px) {
+    .modal-card-perfil {
+        padding: 20px;
+    }
+    .card-profile-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    .header-details .profile-name-large {
+        font-size: 1.4rem;
+    }
+    .info-grid {
+        grid-template-columns: 1fr; /* Una columna en móvil */
+        gap: 15px;
+    }
+}

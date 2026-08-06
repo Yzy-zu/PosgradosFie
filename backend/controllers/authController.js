@@ -13,7 +13,7 @@ exports.login = async (req, res) => {
             return res.status(400).json({ success: false, mensaje: 'Correo y contraseña son obligatorios.' });
         }
 
-        // Solo buscar por correo — la comparación de contraseña se hace con bcrypt en Node
+        // 1. Buscar usuario
         const [resultado] = await db.query(
             'SELECT id, correo, contraseña, rol, activo FROM usuario WHERE correo = ?',
             [usuario]
@@ -26,13 +26,33 @@ exports.login = async (req, res) => {
         const usuarioDB = resultado[0];
 
         if (!usuarioDB.activo) {
-            return res.status(403).json({ success: false, mensaje: 'La cuenta está desactivada. Contacta al administrador.' });
+            return res.status(403).json({ success: false, mensaje: 'La cuenta está desactivada.' });
         }
 
-        // Comparar contraseña con el hash almacenado
+        // 2. Comparar contraseña
         const passwordValida = await bcrypt.compare(password, usuarioDB.contraseña);
         if (!passwordValida) {
             return res.status(401).json({ success: false, mensaje: 'Correo o contraseña incorrectos.' });
+        }
+
+        // 3. Obtener datos de la tabla secretario detectando la columna FK
+        let datosExtra = {};
+        if (usuarioDB.rol === 'SECRETARIO') {
+            try {
+                const [columns] = await db.query('SHOW COLUMNS FROM secretario');
+                const fieldNames = columns.map(c => c.Field);
+
+                let fkCol = fieldNames.find(f => ['idUsuario', 'idUsua', 'id_usuario', 'usuario_id'].includes(f)) || 'id';
+
+                const sqlQuery = 'SELECT * FROM secretario WHERE ' + fkCol + ' = ? LIMIT 1';
+                const [secResult] = await db.query(sqlQuery, [usuarioDB.id]);
+
+                if (secResult.length > 0) {
+                    datosExtra = secResult[0];
+                }
+            } catch (errSec) {
+                console.error("Error al consultar la tabla secretario:", errSec);
+            }
         }
 
         const token = jwt.sign(
@@ -48,7 +68,10 @@ exports.login = async (req, res) => {
             usuario: {
                 id: usuarioDB.id,
                 correo: usuarioDB.correo,
-                rol: usuarioDB.rol
+                rol: usuarioDB.rol,
+                ...datosExtra,
+                SECRE_AREA: datosExtra.area || datosExtra.secre_area || datosExtra.SECRE_AREA || 'Sin área asignada',
+                SECRE_EXTENSION: datosExtra.extension || datosExtra.secre_extension || datosExtra.SECRE_EXTENSION || 'Sin extensión'
             }
         });
     } catch (error) {
@@ -57,7 +80,7 @@ exports.login = async (req, res) => {
     }
 };
 
-// Registrar usuario (usado solo internamente; el registro público de aspirantes usa aspiranteController)
+// Registrar usuario
 exports.register = async (req, res) => {
     try {
         const { correo, password, rol } = req.body;
