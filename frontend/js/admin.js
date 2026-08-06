@@ -856,24 +856,17 @@ function renderizarOpcionesPorPosgrado(posgradoId, opcionesSeleccionadasPrevias 
         return;
     }
 
-    let html = '<div class="d-flex flex-column gap-2">';
+    let html = '<div class="d-flex flex-column gap-1.5">';
     opcionesPosgrado.forEach(op => {
         const prev = opcionesSeleccionadasPrevias.find(s => s.idOpcionPosgrado == op.id || s.opcion_posgrado_id == op.id);
         const estaChecked = esEdicion ? !!prev : true;
-        const cuposVal = prev && prev.cupos !== undefined && prev.cupos !== null ? prev.cupos : '';
 
         html += `
-            <div class="d-flex justify-content-between align-items-center p-2 rounded border" style="background: var(--color-card-bg); border-color: var(--color-border) !important;">
-                <div class="form-check mb-0">
-                    <input class="form-check-input opc-checkbox" type="checkbox" value="${op.id}" id="opc_${op.id}" ${estaChecked ? 'checked' : ''}>
-                    <label class="form-check-label fw-semibold text-wrap" for="opc_${op.id}" style="cursor:pointer; color: var(--color-text); font-size: 0.9rem;">
-                        ${op.nombre}
-                    </label>
-                </div>
-                <div class="d-flex align-items-center gap-2" style="width: 140px;">
-                    <span class="small text-muted" style="font-size: 0.75rem;">Cupos:</span>
-                    <input type="number" min="0" class="form-control form-control-sm cupo-input text-center" id="cupos_opc_${op.id}" placeholder="Ilimitado" value="${cuposVal}" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border);">
-                </div>
+            <div class="form-check m-0 py-1.5 px-3 rounded border d-flex align-items-center gap-2 custom-option-item" style="background: var(--color-card-bg); border-color: var(--color-border) !important;">
+                <input class="form-check-input opc-checkbox mt-0" type="checkbox" value="${op.id}" id="opc_${op.id}" ${estaChecked ? 'checked' : ''} style="cursor:pointer;">
+                <label class="form-check-label fw-semibold text-wrap mb-0" for="opc_${op.id}" style="cursor:pointer; color: var(--color-text); font-size: 0.85rem; user-select: none;">
+                    ${op.nombre}
+                </label>
             </div>
         `;
     });
@@ -920,7 +913,8 @@ function limpiarFormularioConvocatoria() {
     document.getElementById("idConvocatoriaForm").value = "";
     document.getElementById("convocatoria_posgrado").value = "";
     document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-bullhorn"></i> Nueva Convocatoria';
-    document.getElementById("btnEliminarConvocatoria").style.display = "none";
+    const btnEliminar = document.getElementById("btnEliminarConvocatoria");
+    if (btnEliminar) btnEliminar.style.display = "none";
     toggleCamposPorTipo();
 
     const container = document.getElementById("contenedorOpcionesPosgrado");
@@ -1059,6 +1053,12 @@ async function cargarCatalogoRequisitosUI() {
                 </div>
             `;
 
+            const reqCb = div.querySelector(`.req-checkbox`);
+            const oblCb = div.querySelector(`.req-obligatorio`);
+            reqCb?.addEventListener("change", (e) => {
+                if (oblCb) oblCb.checked = e.target.checked;
+            });
+
             contenedor.appendChild(div);
         });
 
@@ -1132,8 +1132,7 @@ async function editarConvocatoria(id) {
 
         const btnEliminar = document.getElementById("btnEliminarConvocatoria");
         if (btnEliminar) {
-            btnEliminar.style.display = "inline-block";
-            btnEliminar.onclick = () => eliminarConvocatoria(conv.id);
+            btnEliminar.style.display = "none";
         }
 
         const modalElement = document.getElementById("modalConvocatoria");
@@ -1472,8 +1471,8 @@ async function verExpedienteAspirante(id) {
         if (solicitudes.length === 0) {
             contSolicitudes.innerHTML = `
                 <div class="text-center py-4">
-                    <i class="fa-solid fa-inbox text-muted fs-1 mb-2"></i>
-                    <p class="text-muted">El aspirante aún no ha iniciado ningún proceso de admisión.</p>
+                    <img src="css/umsnhLogo.png" alt="Logo UMSNH" style="width: 130px; max-width: 80%; opacity: 0.45;" class="mb-3 d-block mx-auto">
+                    <p class="text-muted fw-medium">El aspirante aún no ha iniciado ningún proceso de admisión.</p>
                 </div>
             `;
         } else {
@@ -3362,6 +3361,8 @@ async function cargarYRenderizarFileManager(fmPath) {
                 // Generamos ruta completa del item para usar en el explorador
                 let itemPathFull = currentFileManagerPath.endsWith('/') ? currentFileManagerPath + item.name : currentFileManagerPath + '/' + item.name;
 
+                const isVideo = !isDir && ['mp4', 'webm', 'ogg', 'mov'].includes(ext);
+
                 // Elemento visual (Icono o Miniatura)
                 let visualElement = '';
                 if (isDir) {
@@ -3375,13 +3376,22 @@ async function cargarYRenderizarFileManager(fmPath) {
                             <img src="${imgUrl}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-image fa-2x text-secondary\\'></i>'">
                         </div>
                     `;
+                } else if (isVideo) {
+                    const token = sessionStorage.getItem('token') || '';
+                    const cleanRelPath = itemPathFull.startsWith('/') ? itemPathFull.substring(1) : itemPathFull;
+                    const videoUrl = `/api/files/admin/${cleanRelPath}?token=${token}`;
+                    visualElement = `
+                        <div class="mb-2 d-flex align-items-center justify-content-center shadow-sm position-relative" style="width: 65px; height: 65px; border-radius: 10px; overflow: hidden; background: #0f172a; border: 1px solid #e2e8f0;">
+                            <video src="${videoUrl}#t=0.5" style="width: 100%; height: 100%; object-fit: cover;" muted preload="metadata" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-file-video fa-2x text-purple\\'></i>'"></video>
+                            <i class="fa-solid fa-circle-play text-white position-absolute fs-5" style="opacity: 0.9; drop-shadow: 0 2px 4px rgba(0,0,0,0.5);"></i>
+                        </div>
+                    `;
                 } else {
                     let iconClass = 'fa-file';
                     let iconColor = '#4ade80';
                     if (['pdf'].includes(ext)) { iconClass = 'fa-file-pdf'; iconColor = '#ef4444'; }
                     else if (['doc', 'docx'].includes(ext)) { iconClass = 'fa-file-word'; iconColor = '#3b82f6'; }
                     else if (['xls', 'xlsx'].includes(ext)) { iconClass = 'fa-file-excel'; iconColor = '#10b981'; }
-                    else if (['mp4', 'webm', 'avi', 'mov'].includes(ext)) { iconClass = 'fa-file-video'; iconColor = '#8b5cf6'; }
                     
                     visualElement = `<i class="fa-solid ${iconClass} fa-3x mb-2" style="color: ${iconColor};"></i>`;
                 }

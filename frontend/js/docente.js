@@ -2302,8 +2302,8 @@ async function verExpedienteAspirante(id) {
         if (solicitudes.length === 0) {
             contSolicitudes.innerHTML = `
                 <div class="text-center py-4">
-                    <i class="fa-solid fa-inbox text-muted fs-1 mb-2"></i>
-                    <p class="text-muted">El aspirante aún no ha iniciado ningún proceso de admisión.</p>
+                    <img src="css/umsnhLogo.png" alt="Logo UMSNH" style="width: 130px; max-width: 80%; opacity: 0.45;" class="mb-3 d-block mx-auto">
+                    <p class="text-muted fw-medium">El aspirante aún no ha iniciado ningún proceso de admisión.</p>
                 </div>
             `;
         } else {
