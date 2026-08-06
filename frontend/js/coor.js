@@ -2,8 +2,8 @@ let listaAspirantes = [];
 let textoBusquedaAspirante = "";
 let filtroEstadoAspirante = "TODOS";
 let listaEntrevistas = [];
-let textoBusquedaEntrevista = "";
-let filtroEstadoEntrevista = "TODAS";
+
+
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Inicializar enrutador
@@ -784,94 +784,96 @@ async function cargarEntrevistas() {
             return;
         }
 
-        entrevistas.forEach(ent => {
-            const tr = document.createElement('tr');
-            
-            // 1. Manejo de IDs
-            const idSolicitud = ent.idSoli || ent.id_solicitud || ent.id;
-            const idDocente = ent.idUsua || ent.id_docente || ent.id_usuario || '';
+            entrevistas.forEach(ent => {
+                const tr = document.createElement('tr');
+                
+                // 1. Manejo de IDs
+                const idSolicitud = ent.idSoli || ent.id_solicitud || ent.id;
+                const idDocente = ent.idUsua || ent.id_docente || ent.id_usuario || '';
 
-            // 2. Nombres y datos
-            const nombreAspirante = ent.nombre_completo || 
-                `${ent.nombre || ''} ${ent.primerApellido || ''} ${ent.segundoApellido || ''}`.trim() || 
-                'Aspirante';
+                // 2. Nombres y datos
+                const nombreAspirante = ent.nombre_completo || 
+                    `${ent.nombre || ''} ${ent.primerApellido || ''} ${ent.segundoApellido || ''}`.trim() || 
+                    'Aspirante';
 
-            const nombreDocente = ent.docente || "Sin docente";  
-            const folioCurp = ent.curp || ent.folio || 'Sin CURP';
-            const programa = ent.programa || ent.opcion_posgrado || ent.posgrado_nombre || 'Sin asignación';
+                const nombreDocente = ent.docente || "Sin docente";  
+                const folioCurp = ent.curp || ent.folio || 'Sin CURP';
+                const programa = ent.programa || ent.opcion_posgrado || ent.posgrado_nombre || 'Sin asignación';
 
-            // 3. Fecha y Hora
-            const fechaRaw = ent.fecha || '';
-            const horaRaw = ent.hora || '';
-            const lugarRaw = ent.lugar || ent.lugar_link || '';
+                // 3. Fecha y Hora
+                const fechaRaw = ent.fecha || '';
+                const horaRaw = ent.hora || '';
+                const lugarRaw = ent.lugar || ent.lugar_link || '';
 
-            // Limpiamos la fecha si viene en formato ISO (e.g. 2026-08-04T06:00:00.000Z)
-            const fechaLimpia = fechaRaw.includes('T') ? fechaRaw.split('T')[0] : fechaRaw;
+                // Limpiamos la fecha si viene en formato ISO (e.g. 2026-08-04T06:00:00.000Z)
+                const fechaLimpia = fechaRaw.includes('T') ? fechaRaw.split('T')[0] : fechaRaw;
 
-            let fechaStr = 'Sin agendar';
-            if (fechaLimpia) {
-                const horaLimpia = horaRaw ? horaRaw.substring(0, 5) : '';
-                fechaStr = `${fechaLimpia} ${horaLimpia}`.trim();
-            }
+                let fechaStr = 'Sin agendar';
+                if (fechaLimpia) {
+                    const horaLimpia = horaRaw ? horaRaw.substring(0, 5) : '';
+                    fechaStr = `${fechaLimpia} ${horaLimpia}`.trim();
+                }
 
-            const fechaValida = !!fechaLimpia;
-            const badgeEstado = fechaValida 
-                ? `<span class="badge bg-success">Programada</span>` 
-                : `<span class="badge bg-warning text-dark">Pendiente</span>`;
+                const fechaValida = !!fechaLimpia;
+                const badgeEstado = fechaValida 
+                    ? `<span class="badge bg-success">Programada</span>` 
+                    : `<span class="badge bg-warning text-dark">Pendiente</span>`;
 
-            // 4. Formatear Lugar / Ubicación para su celda independiente
-            const esLink = lugarRaw.startsWith('http://') || lugarRaw.startsWith('https://');
-            const lugarTexto = lugarRaw.trim() ? lugarRaw.trim() : 'Sin especificar';
+                // 4. Formatear Lugar / Ubicación para su celda independiente
+                const esLink = lugarRaw.startsWith('http://') || lugarRaw.startsWith('https://');
+                const lugarTexto = lugarRaw.trim() ? lugarRaw.trim() : 'Sin especificar';
 
-            const htmlLugar = esLink 
-                ? `<a href="${lugarRaw}" target="_blank" class="btn btn-sm btn-outline-primary fw-medium">
-                     <i class="fa-solid fa-video me-1"></i> Abrir Enlace
-                   </a>`
-                : `<span class="text-secondary fw-medium">
-                     <i class="fa-solid fa-location-dot me-1 text-muted"></i>${lugarTexto}
-                   </span>`;
+                const htmlLugar = esLink 
+                    ? `<a href="${lugarRaw}" target="_blank" class="btn btn-sm btn-outline-primary fw-medium">
+                        <i class="fa-solid fa-video me-1"></i> Abrir Enlace
+                    </a>`
+                    : `<span class="text-secondary fw-medium">
+                        <i class="fa-solid fa-location-dot me-1 text-muted"></i>${lugarTexto}
+                    </span>`;
 
-            // 5. Estructura HTML de las 6 celdas
-            tr.innerHTML = `
-                <td class="py-3 align-middle">
-                    <div class="fw-bold text-dark"></div>
-                    <small class="text-muted font-monospace">${folioCurp}</small>
-                </td>
-                <td class="align-middle"><span class="fw-medium text-secondary">${programa}</span></td>
-                <td class="align-middle"><span class="fw-bold text-dark">${nombreDocente}</span></td>
-                <td class="align-middle">
-                    ${badgeEstado}
-                    <small class="d-block text-muted mt-1 font-monospace">${fechaStr}</small>
-                </td>
-                <td class="align-middle">
-                    ${htmlLugar}
-                </td>
-                <td class="text-end align-middle action-cell"></td>
-            `;
+                // 5. Estructura HTML de las 6 celdas
+                tr.innerHTML = `
+                    <td class="py-3 align-middle">
+                        <div class="fw-bold text-dark"></div>
+                        <small class="text-muted font-monospace">${folioCurp}</small>
+                    </td>
+                    <td class="align-middle"><span class="fw-medium text-secondary">${programa}</span></td>
+                    <td class="align-middle"><span class="fw-bold text-dark">${nombreDocente}</span></td>
+                    <td class="align-middle">
+                        ${badgeEstado}
+                        <small class="d-block text-muted mt-1 font-monospace">${fechaStr}</small>
+                    </td>
+                    <td class="align-middle">
+                        ${htmlLugar}
+                    </td>
+                    <td class="text-end align-middle action-cell"></td>
+                `;
 
-            // Insertar el nombre del aspirante de manera segura
-            tr.querySelector('.fw-bold.text-dark').textContent = nombreAspirante;
+                // Insertar el nombre del aspirante de manera segura
+                tr.querySelector('.fw-bold.text-dark').textContent = nombreAspirante;
 
-            // Crear el botón de acción mediante el DOM
-            const btn = document.createElement('button');
-            btn.className = 'btn btn-sm btn-outline-primary fw-medium';
-            btn.innerHTML = `<i class="fa-solid fa-calendar-plus me-1"></i> ${fechaValida ? 'Editar' : 'Programar'}`;
-            
-            // Asignar evento click pasando fechaLimpia para que el input date funcione correctamente
-            btn.addEventListener('click', () => {
-                abrirModalEntrevista(idSolicitud, nombreAspirante, fechaLimpia, horaRaw, idDocente, lugarRaw);
+                // Crear el botón de acción mediante el DOM
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-sm btn-outline-primary fw-medium';
+                btn.innerHTML = `<i class="fa-solid fa-calendar-plus me-1"></i> ${fechaValida ? 'Editar' : 'Programar'}`;
+                
+                // Asignar evento click pasando fechaLimpia para que el input date funcione correctamente
+                btn.addEventListener('click', () => {
+                    abrirModalEntrevista(idSolicitud, nombreAspirante, fechaLimpia, horaRaw, idDocente, lugarRaw);
+                });
+
+                tr.querySelector('.action-cell').appendChild(btn);
+                tbody.appendChild(tr);
             });
 
-            tr.querySelector('.action-cell').appendChild(btn);
-            tbody.appendChild(tr);
-        });
+            configurarBuscadorEntrevistas();
 
-    } catch (err) {
-        console.error('Error al cargar entrevistas:', err);
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">
-            <i class="fa-solid fa-triangle-exclamation me-1"></i> Error al conectar con el módulo de entrevistas.
-        </td></tr>`;
-    }
+        } catch (err) {
+            console.error('Error al cargar entrevistas:', err);
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i> Error al conectar con el módulo de entrevistas.
+            </td></tr>`;
+        }
 }
 
 // B. Llenar el select de docentes
@@ -1111,6 +1113,54 @@ async function guardarEntrevista(event) {
             `;
         }
     }
+}
+
+/* ==========================================================
+   BUSCADOR DE ENTREVISTAS
+========================================================== */
+function configurarBuscadorEntrevistas() {
+
+    const input =
+        document.getElementById(
+            "buscarEntrevista"
+        );
+
+    if (!input) return;
+
+    if (input.dataset.listenerBusqueda === "true") {
+        return;
+    }
+
+    input.addEventListener("input", function () {
+
+        const texto =
+            this.value
+                .trim()
+                .toLowerCase();
+
+        const filas =
+            document.querySelectorAll(
+                "#tablaEntrevistasBody tr"
+            );
+
+        filas.forEach(fila => {
+
+            const nombre =
+                fila.querySelector(
+                    "td:first-child .fw-bold"
+                )?.textContent
+                .toLowerCase() || "";
+
+            fila.style.display =
+                nombre.includes(texto)
+                    ? ""
+                    : "none";
+
+        });
+
+    });
+
+    input.dataset.listenerBusqueda = "true";
 }
 
 /* ==========================================================
@@ -1770,6 +1820,35 @@ function abrirModalProgramar(idSolicitud) {
         modal.show();
     }
 }
+
+function configurarBuscadorEntrevistas() {
+
+    const buscador = document.getElementById("buscarEntrevista");
+
+    if (!buscador) return;
+
+    buscador.onkeyup = function () {
+
+        const texto = this.value.toLowerCase().trim();
+
+        const filas = document.querySelectorAll("#tablaEntrevistasBody tr");
+
+        filas.forEach(fila => {
+
+            const nombre = fila.cells[0]?.innerText.toLowerCase() || "";
+
+            if (nombre.includes(texto)) {
+                fila.style.display = "";
+            } else {
+                fila.style.display = "none";
+            }
+
+        });
+
+    };
+
+}
+
 
 // Expuestos al Scope Global para listeners en el DOM
 window.abrirModalEntrevista =
