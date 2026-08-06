@@ -1,5 +1,6 @@
 const db = require('../database/db');
 const WorkflowService = require('../services/workflowService');
+const emit = require('../utils/socketEmit');
 
 /**
  * GET /api/entrevista/solicitud/:idSolicitud
@@ -59,7 +60,11 @@ const programarEntrevista = async (req, res) => {
                   WHERE idSolicitud = ?`,
                 [fecha, hora, lugar || null, enlace || null, idDocente || null, idSolicitud]
             );
-            req.app.get('io').emit('actualizacionGlobal');
+            req.app.get('io') && (async () => {
+                const [solE1] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [idSolicitud]);
+                if (solE1.length > 0) emit.aAspiranteEspecifico(req, solE1[0].idUsuario);
+                else emit.aAdmin(req);
+            })();
             return res.json({ success: true, mensaje: 'Entrevista actualizada correctamente.' });
         } else {
             // Primera vez: insertar y avanzar etapa
@@ -72,7 +77,11 @@ const programarEntrevista = async (req, res) => {
             // Avanzar etapa en el workflow
             await WorkflowService.avanzarEtapa(parseInt(idSolicitud));
 
-            req.app.get('io').emit('actualizacionGlobal');
+            req.app.get('io') && (async () => {
+                const [solE2] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [idSolicitud]);
+                if (solE2.length > 0) emit.aAspiranteEspecifico(req, solE2[0].idUsuario);
+                else emit.aAdmin(req);
+            })();
             return res.json({ success: true, mensaje: 'Entrevista programada y etapa avanzada correctamente.' });
         }
     } catch (error) {

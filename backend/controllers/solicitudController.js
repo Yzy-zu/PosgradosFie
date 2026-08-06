@@ -1,5 +1,6 @@
 const db = require('../database/db');
 const WorkflowService = require('../services/workflowService');
+const emit = require('../utils/socketEmit');
 // Crear una solicitud
 const crearSolicitud = async (req, res) => {
     try {
@@ -57,8 +58,8 @@ const crearSolicitud = async (req, res) => {
             await WorkflowService.asignarModalidad(idNuevaSolicitud, idEntrevista);
         }
 
-        // Emitir evento global
-        req.app.get('io').emit('actualizacionGlobal');
+        // Notificar a ADMIN y DOCENTE (aspirante creó una nueva solicitud)
+        emit.aAdminYDocente(req);
 
         return res.status(201).json({
             mensaje: 'Solicitud creada correctamente.',
@@ -149,9 +150,10 @@ const cancelarSolicitud = async (req, res) => {
     try {
         const { id } = req.params;
         await db.query("UPDATE solicitud SET estado = 'CANCELADO' WHERE id = ?", [id]);
-        if (req.app.get('io')) {
-            req.app.get('io').emit('actualizacionGlobal');
-        }
+        // Obtener aspirante para notificación dirigida
+        const [solCancel] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [id]);
+        if (solCancel.length > 0) emit.aAspiranteEspecifico(req, solCancel[0].idUsuario);
+        else emit.aAdmin(req);
         return res.status(200).json({ mensaje: 'Solicitud cancelada exitosamente.' });
     } catch (error) {
         console.error('Error en cancelarSolicitud:', error);
@@ -170,10 +172,10 @@ const actualizarEstadoSolicitud = async (req, res) => {
         }
 
         await db.query("UPDATE solicitud SET estado = ? WHERE id = ?", [estado, id]);
-        
-        // Emitir evento global de actualización
-        req.app.get('io').emit('actualizacionGlobal');
-        
+        // Notificar al aspirante específico + ADMIN
+        const [solEst] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [id]);
+        if (solEst.length > 0) emit.aAspiranteEspecifico(req, solEst[0].idUsuario);
+        else emit.aAdmin(req);
         return res.status(200).json({ success: true, mensaje: `Solicitud marcada como ${estado} exitosamente.` });
     } catch (error) {
         console.error('Error en actualizarEstadoSolicitud:', error);
@@ -201,9 +203,9 @@ const actualizarModalidad = async (req, res) => {
             const [modEntrevista] = await db.query("SELECT id FROM modalidad_ingreso WHERE codigo = 'ENTREVISTA' LIMIT 1");
             const idEntrevista = modEntrevista.length > 0 ? modEntrevista[0].id : 6;
             await WorkflowService.asignarModalidad(id, idEntrevista);
-            if (req.app.get('io')) {
-                req.app.get('io').emit('actualizacionGlobal');
-            }
+            const [solDoct] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [id]);
+            if (solDoct.length > 0) emit.aAspiranteEspecifico(req, solDoct[0].idUsuario);
+            else emit.aAdmin(req);
             return res.status(200).json({ mensaje: 'Modalidad de Doctorado (Entrevista) asignada correctamente.' });
         }
 
@@ -218,11 +220,9 @@ const actualizarModalidad = async (req, res) => {
         }
 
         await WorkflowService.asignarModalidad(id, idModalidad);
-
-        if (req.app.get('io')) {
-            req.app.get('io').emit('actualizacionGlobal');
-        }
-
+        const [solMod] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [id]);
+        if (solMod.length > 0) emit.aAspiranteEspecifico(req, solMod[0].idUsuario);
+        else emit.aAdmin(req);
         return res.status(200).json({ mensaje: 'Modalidad actualizada correctamente.' });
     } catch (error) {
         console.error('Error en actualizarModalidad:', error);
@@ -274,10 +274,8 @@ const enviarExpediente = async (req, res) => {
         // Todos los documentos obligatorios están presentes — cambiar estado a revisión, SIN avanzar etapa
         // La etapa se avanzará automáticamente cuando el evaluador apruebe todos los documentos
         await db.query("UPDATE solicitud SET estado = 'EN_REVISION' WHERE id = ?", [id]);
-
-        // Emitir evento global de actualización
-        req.app.get('io').emit('actualizacionGlobal');
-
+        // Notificar a ADMIN y DOCENTE (aspirante envíó su expediente)
+        emit.aAdminYDocente(req);
         return res.status(200).json({ mensaje: 'Expediente enviado a revisión exitosamente.' });
     } catch (error) {
         console.error('Error en enviarExpediente:', error);

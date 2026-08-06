@@ -21,7 +21,23 @@ app.set('io', io);
 
 io.on('connection', (socket) => {
     console.log('Nuevo cliente conectado vía Socket.io:', socket.id);
-    
+
+    /**
+     * El cliente envía { rol: 'ADMIN'|'DOCENTE'|'ASPIRANTE', idUsuario: N }
+     * y el servidor lo une a:
+     *   - la room de su rol   (ej. 'ADMIN')
+     *   - su room personal    (ej. 'usuario_42')
+     */
+    socket.on('registrarSala', ({ rol, idUsuario }) => {
+        if (rol) {
+            socket.join(rol);
+        }
+        if (idUsuario) {
+            socket.join(`usuario_${idUsuario}`);
+        }
+        console.log(`Socket ${socket.id} → sala '${rol}' + 'usuario_${idUsuario}'`);
+    });
+
     socket.on('disconnect', () => {
         console.log('Cliente desconectado:', socket.id);
     });

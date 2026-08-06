@@ -4,8 +4,12 @@ let estacionActual = 0;
 let aspiranteData = null; // Almacenará los datos de la BD del aspirante
 let currentSolicitudId = null;
 
-// Conexión Socket.io
+// Conexión Socket.io — registrar sala al conectar
 const socket = io();
+socket.on('connect', () => {
+    const usr = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+    socket.emit('registrarSala', { rol: 'ASPIRANTE', idUsuario: usr.id });
+});
 socket.on('actualizacionGlobal', () => {
     // Recargar vista actual si hay un cambio en el sistema (ej. evaluación de docente)
     const currentHash = window.location.hash;

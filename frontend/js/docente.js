@@ -98,8 +98,12 @@ async function abrirModalReprogramarExamen(idAspi) {
     }
 }
 
-// Conexión Socket.io
+// Conexión Socket.io — registrar sala al conectar
 const socket = io();
+socket.on('connect', () => {
+    const usr = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+    socket.emit('registrarSala', { rol: 'DOCENTE', idUsuario: usr.id });
+});
 socket.on('actualizacionGlobal', () => {
     // Recargar vista actual según el hash (evita recargas innecesarias)
     const currentHash = window.location.hash.replace('#', '');

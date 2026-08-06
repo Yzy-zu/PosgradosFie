@@ -1,6 +1,7 @@
 const db = require('../database/db');
 const WorkflowService = require('../services/workflowService');
 const { ETAPAS } = require('../constants');
+const emit = require('../utils/socketEmit');
 
 /**
  * Obtiene el estado del pago de una solicitud.
@@ -80,9 +81,8 @@ const subirComprobante = async (req, res) => {
         // Bug 1 & 2: marcar EN_REVISION para que el coordinador vea que hay comprobante esperando revisión.
         // Esto cubre tanto el primer upload como la re-subida después de un rechazo.
         await db.query("UPDATE solicitud SET estado = 'EN_REVISION' WHERE id = ?", [idSolicitud]);
-
-        req.app.get('io').emit('actualizacionGlobal');
-
+        // Notificar a ADMIN y DOCENTE (aspirante subió comprobante)
+        emit.aAdminYDocente(req);
         return res.json({ success: true, mensaje: 'Comprobante subido correctamente. En espera de verificación.' });
     } catch (error) {
         console.error('Error en subirComprobante:', error);
@@ -132,7 +132,10 @@ const verificarPago = async (req, res) => {
             await db.query("UPDATE solicitud SET estado = 'RECHAZADO' WHERE id = ?", [idSolicitud]);
         }
 
-        req.app.get('io').emit('actualizacionGlobal');
+        // Notificar al aspirante específico + ADMIN (pago verificado)
+        const [solPago] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [idSolicitud]);
+        if (solPago.length > 0) emit.aAspiranteEspecifico(req, solPago[0].idUsuario);
+        else emit.aAdmin(req);
 
         return res.json({
             success: true,

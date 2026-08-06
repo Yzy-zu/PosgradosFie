@@ -1,4 +1,5 @@
 const db = require('../database/db');
+const emit = require('../utils/socketEmit');
 
 // Obtener todas las convocatorias
 const obtenerConvocatorias = async (req, res) => {
@@ -95,8 +96,8 @@ const crearConvocatorias = async (req, res) => {
 
         await connection.commit();
 
-        // Emitir evento global a todos los clientes (Admin, Docentes, Aspirantes)
-        req.app.get('io').emit('actualizacionGlobal');
+        // Notificar a ADMIN y ASPIRANTE (nueva convocatoria disponible)
+        emit.aAdminYAspirantes(req);
         return res.json({ success: true, mensaje: 'Convocatoria creada correctamente' });
     } catch (error) {
         if (connection) await connection.rollback();
@@ -181,8 +182,8 @@ const actualizarConvocatorias = async (req, res) => {
 
         await connection.commit();
 
-        // Emitir evento global a todos los clientes
-        req.app.get('io').emit('actualizacionGlobal');
+        // Notificar a ADMIN y ASPIRANTE (convocatoria actualizada)
+        emit.aAdminYAspirantes(req);
         return res.json({ success: true, mensaje: 'Convocatoria actualizada correctamente' });
     } catch (error) {
         if (connection) await connection.rollback();
@@ -199,8 +200,8 @@ const eliminarConvocatorias = async (req, res) => {
         const { id } = req.params;
         await db.query('DELETE FROM convocatorias WHERE id=?', [id]);
         
-        // Emitir evento global a todos los clientes
-        req.app.get('io').emit('actualizacionGlobal');
+        // Notificar a ADMIN y ASPIRANTE (convocatoria eliminada)
+        emit.aAdminYAspirantes(req);
         return res.json({ success: true, mensaje: 'Convocatoria eliminada correctamente' });
     } catch (error) {
         console.error('Error en eliminarConvocatorias:', error);

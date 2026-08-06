@@ -1,4 +1,6 @@
 const ValidacionPromedioService = require('../services/validacionPromedioService');
+const db = require('../database/db');
+const emit = require('../utils/socketEmit');
 
 const getValidacionPromedio = async (req, res) => {
     try {
@@ -31,9 +33,11 @@ const guardarValidacionPromedio = async (req, res) => {
             observaciones
         });
 
-        // Emitir evento global por Socket.io para actualización en tiempo real
+        // Notificar al aspirante específico + ADMIN
         if (req.app.get('io')) {
-            req.app.get('io').emit('actualizacionGlobal');
+            const [solV] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [idSolicitud]);
+            if (solV.length > 0) emit.aAspiranteEspecifico(req, solV[0].idUsuario);
+            else emit.aAdmin(req);
         }
 
         return res.status(200).json({
