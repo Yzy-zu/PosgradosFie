@@ -657,18 +657,8 @@ Lugar: ${lugar || "Por definir"}
 
         await connection.commit();
 
-        const io =
-            req.app.get("io");
-
-        if (io) {
-
-            io.emit(
-                "actualizacionGlobal"
-            );
-
-            io.emit(
-                "actualizacionSolicitudes"
-            );
+        if (req.app.get("io")) {
+            emit.aAspiranteEspecifico(req, aspirante.idUsuario);
         }
 
         return res.json({

@@ -387,7 +387,45 @@ const translations = {
         "Inscripción": "Inscripción",
         "Dictamen": "Dictamen",
         "Curso Propedéutico": "Curso Propedéutico",
-        "Validación de Promedio": "Validación de Promedio"
+        "Validación de Promedio": "Validación de Promedio",
+
+        // Modulo Pago
+        "pago_verificacion_titulo": "Verificación de Pago",
+        "pago_verificacion_desc": "Sube el comprobante del pago de tu modalidad de admision para continuar tu proceso.",
+        "pago_estado_pendiente": "En espera de verificación",
+        "pago_estado_aprobado": "Pago verificado y aprobado",
+        "pago_estado_rechazado": "Comprobante rechazado",
+        "pago_comentarios_label": "Comentarios / Notas adicionales (opcional)",
+        "pago_comentarios_ph": "Ingresa alguna observación o nota sobre tu pago...",
+        "pago_comprobante_label": "Comprobante de pago",
+        "pago_archivo_reglas": "PDF, JPG o PNG — máx. 5 MB",
+        "pago_btn_enviar": "Enviar comprobante de pago",
+        "pago_btn_reenviar": "Volver a enviar comprobante",
+        "pago_msg_revisando": "Tu comprobante está siendo revisado por el coordinador.",
+        "pago_msg_notificacion": "Recibirás una notificación cuando sea verificado.",
+        "pago_archivo_seleccionado": "Archivo seleccionado:",
+        "pago_alerta_requerido_titulo": "Archivo requerido",
+        "pago_alerta_requerido_msg": "Debes adjuntar el comprobante de pago antes de enviar.",
+        "pago_alerta_exito_titulo": "¡Comprobante enviado!",
+        "pago_alerta_error_titulo": "Error",
+        "pago_alerta_error_msg": "No se pudo enviar el comprobante.",
+        "pago_txt_comentarios": "Comentarios:",
+
+        // Modulo Entrevista
+        "entrevista_lbl_entrevistador": "Entrevistador",
+        "entrevista_lbl_fecha": "Fecha",
+        "entrevista_lbl_hora": "Hora",
+        "entrevista_val_confirmar": "Por confirmar",
+        "entrevista_lbl_lugar": "Lugar",
+        "entrevista_lbl_enlace": "Enlace",
+        "entrevista_btn_unirse": "Unirse a la videollamada",
+        "entrevista_tit_detalles": "Detalles de tu Entrevista de Admisión",
+        "entrevista_msg_instrucciones": "Preséntate puntualmente en el lugar indicado o conéctate al enlace. Lleva una identificación oficial.",
+        "entrevista_tit_agendando": "Agendando tu Entrevista",
+        "entrevista_msg_agendando_desc": "Tus documentos de admisión han sido aprobados por el comité académico. El coordinador del programa está agendando la fecha, hora y evaluador para tu entrevista de admisión. <strong>Serás notificado en este panel en cuanto quede registrada.</strong>",
+        "entrevista_banner_titulo": "Proceso de Admisión — Doctorado",
+        "entrevista_banner_etapa": "Etapa actual:",
+        "entrevista_etapa_defecto": "Entrevista de Admisión"
     },
     en: {
         // Sidebar
@@ -776,7 +814,45 @@ const translations = {
         "Inscripción": "Enrollment",
         "Dictamen": "Verdict",
         "Curso Propedéutico": "Preparatory Course",
-        "Validación de Promedio": "GPA Validation"
+        "Validación de Promedio": "GPA Validation",
+
+        // Modulo Pago
+        "pago_verificacion_titulo": "Payment Verification",
+        "pago_verificacion_desc": "Upload your admission payment receipt to continue your process.",
+        "pago_estado_pendiente": "Awaiting verification",
+        "pago_estado_aprobado": "Payment verified and approved",
+        "pago_estado_rechazado": "Receipt rejected",
+        "pago_comentarios_label": "Comments / Additional Notes (optional)",
+        "pago_comentarios_ph": "Enter any observation or note about your payment...",
+        "pago_comprobante_label": "Payment Receipt",
+        "pago_archivo_reglas": "PDF, JPG, or PNG — max 5 MB",
+        "pago_btn_enviar": "Submit payment receipt",
+        "pago_btn_reenviar": "Resubmit receipt",
+        "pago_msg_revisando": "Your receipt is being reviewed by the coordinator.",
+        "pago_msg_notificacion": "You will receive a notification when it's verified.",
+        "pago_archivo_seleccionado": "Selected file:",
+        "pago_alerta_requerido_titulo": "File required",
+        "pago_alerta_requerido_msg": "You must attach the payment receipt before submitting.",
+        "pago_alerta_exito_titulo": "Receipt submitted!",
+        "pago_alerta_error_titulo": "Error",
+        "pago_alerta_error_msg": "Could not submit the receipt.",
+        "pago_txt_comentarios": "Comments:",
+
+        // Modulo Entrevista
+        "entrevista_lbl_entrevistador": "Interviewer",
+        "entrevista_lbl_fecha": "Date",
+        "entrevista_lbl_hora": "Time",
+        "entrevista_val_confirmar": "To be confirmed",
+        "entrevista_lbl_lugar": "Location",
+        "entrevista_lbl_enlace": "Link",
+        "entrevista_btn_unirse": "Join video call",
+        "entrevista_tit_detalles": "Admission Interview Details",
+        "entrevista_msg_instrucciones": "Arrive on time at the indicated location or join the link. Bring an official ID.",
+        "entrevista_tit_agendando": "Scheduling your Interview",
+        "entrevista_msg_agendando_desc": "Your admission documents have been approved by the academic committee. The program coordinator is scheduling the date, time, and evaluator for your admission interview. <strong>You will be notified in this panel once it is registered.</strong>",
+        "entrevista_banner_titulo": "Admission Process — Doctorate",
+        "entrevista_banner_etapa": "Current stage:",
+        "entrevista_etapa_defecto": "Admission Interview"
     }
 };
 
