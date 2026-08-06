@@ -43,6 +43,7 @@ const crearOpcionPosgrado = async (req, res) => {
             'INSERT INTO opcion_posgrado (posgrado_id, nombre, descripcion, activo) VALUES (?, ?, ?, ?)',
             [posgrado_id, nombre, descripcion, estadoActivo]
         );
+        if (req.app.get('io')) req.app.get('io').emit('actualizacionGlobal');
         return res.status(201).json({ success: true, id: resultado.insertId, mensaje: 'Especialidad creada correctamente' });
     } catch (error) {
         console.error('Error en crearOpcionPosgrado:', error);
@@ -59,6 +60,7 @@ const actualizarOpcionPosgrado = async (req, res) => {
             'UPDATE opcion_posgrado SET nombre = ?, descripcion = ?, activo = ? WHERE id = ?',
             [nombre, descripcion, activo, id]
         );
+        if (req.app.get('io')) req.app.get('io').emit('actualizacionGlobal');
         return res.json({ success: true, mensaje: 'Especialidad actualizada correctamente' });
     } catch (error) {
         console.error('Error en actualizarOpcionPosgrado:', error);

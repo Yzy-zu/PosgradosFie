@@ -101,8 +101,25 @@ async function abrirModalReprogramarExamen(idAspi) {
 // Conexión Socket.io
 const socket = io();
 socket.on('actualizacionGlobal', () => {
-    // Recargar vista actual si hay un cambio (ej. aspirante sube nuevo documento)
-    cargarAspirantesAPI();
+    // Recargar vista actual según el hash (evita recargas innecesarias)
+    const currentHash = window.location.hash.replace('#', '');
+    // Notificaciones se actualizan siempre (badge visible en toda la app)
+    if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
+    if (currentHash === 'inicio' || currentHash === '') {
+        // inicio no tiene datos dinámicos adicionales para el docente
+    } else if (currentHash === 'expedientes' || currentHash === '') {
+        if (typeof cargarAspirantesAPI === 'function') cargarAspirantesAPI();
+    } else if (currentHash === 'aspirantes') {
+        if (typeof cargarAspirantes === 'function') cargarAspirantes();
+    } else if (window.modalidadesActivas) {
+        // Módulos dinámicos: exámenes, propedeutico, promedio, etc.
+        window.modalidadesActivas.forEach(mod => {
+            const reg = window.ModulosRegistro && window.ModulosRegistro[mod.codigo];
+            if (reg && currentHash === reg.vistaId) {
+                reg.renderFn(mod.codigo);
+            }
+        });
+    }
 });
 
 // Inicialización de la Aplicación

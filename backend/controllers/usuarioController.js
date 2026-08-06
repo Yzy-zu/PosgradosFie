@@ -87,6 +87,7 @@ const crearUsuario = async (req, res) => {
         }
 
         await conexion.commit();
+        if (req.app.get('io')) req.app.get('io').emit('actualizacionGlobal');
         return res.json({ success: true, mensaje: 'Usuario creado correctamente' });
     } catch (error) {
         await conexion.rollback();
@@ -147,6 +148,7 @@ const actualizarUsuario = async (req, res) => {
             }
         }
 
+        if (req.app.get('io')) req.app.get('io').emit('actualizacionGlobal');
         return res.json({ success: true, mensaje: 'Usuario actualizado correctamente' });
     } catch (error) {
         console.error('Error en actualizarUsuario:', error);
@@ -159,6 +161,7 @@ const eliminarUsuario = async (req, res) => {
     try {
         const { id } = req.params;
         await db.query('DELETE FROM usuario WHERE id = ?', [id]);
+        if (req.app.get('io')) req.app.get('io').emit('actualizacionGlobal');
         return res.json({ success: true, mensaje: 'Usuario eliminado correctamente' });
     } catch (error) {
         console.error('Error en eliminarUsuario:', error);

@@ -77,7 +77,7 @@ const registrarAspirante = async (req, res) => {
         );
 
         await connection.commit();
-
+        if (req.app.get('io')) req.app.get('io').emit('actualizacionGlobal');
         return res.status(201).json({ mensaje: 'Aspirante registrado correctamente.' });
     } catch (error) {
         if (connection) await connection.rollback();

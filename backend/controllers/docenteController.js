@@ -42,7 +42,7 @@ const crearDocente = async (req, res) => {
             'INSERT INTO docente (idUsua, nombre, primerApellido, segundoApellido, cargo, especialidad, cubiculo) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [idUsua, nombre, primerApellido, segundoApellido || '', cargo || '', especialidad || '', cubiculo || null]
         );
-
+        if (req.app.get('io')) req.app.get('io').emit('actualizacionGlobal');
         return res.json({ success: true, mensaje: 'Docente creado correctamente' });
     } catch (error) {
         console.error('Error en crearDocente:', error);
@@ -61,7 +61,7 @@ const actualizarDocente = async (req, res) => {
             'UPDATE docente SET nombre = ?, primerApellido = ?, segundoApellido = ?, cargo = ?, especialidad = ?, cubiculo = ? WHERE idUsua = ?',
             [nombre, primerApellido, segundoApellido || '', cargo || '', especialidad || '', cubiculo || null, id]
         );
-
+        if (req.app.get('io')) req.app.get('io').emit('actualizacionGlobal');
         return res.json({ success: true, mensaje: 'Docente actualizado correctamente' });
     } catch (error) {
         console.error('Error en actualizarDocente:', error);
@@ -75,6 +75,7 @@ const eliminarDocente = async (req, res) => {
     try {
         const { id } = req.params; // idUsua
         await db.query('DELETE FROM docente WHERE idUsua = ?', [id]);
+        if (req.app.get('io')) req.app.get('io').emit('actualizacionGlobal');
         return res.json({ success: true, mensaje: 'Docente eliminado correctamente' });
     } catch (error) {
         console.error('Error en eliminarDocente:', error);

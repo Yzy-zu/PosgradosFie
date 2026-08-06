@@ -7,6 +7,9 @@ socket.on('actualizacionGlobal', () => {
         if (typeof cargarDashboard === 'function') cargarDashboard();
     } else if (currentHash === 'usuarios') {
         if (typeof cargarUsuarios === 'function') cargarUsuarios();
+    } else if (currentHash === 'posgrados') {
+        if (typeof cargarPosgradosAdmin === 'function') cargarPosgradosAdmin();
+        if (typeof cargarOpcionesPosgradoGlobal === 'function') cargarOpcionesPosgradoGlobal();
     } else if (currentHash === 'convocatorias') {
         if (typeof cargarConvocatorias === 'function') cargarConvocatorias();
     } else if (currentHash === 'aspirantes') {
@@ -15,6 +18,10 @@ socket.on('actualizacionGlobal', () => {
         if (typeof cargarSolicitudesAdmin === 'function') cargarSolicitudesAdmin();
     } else if (currentHash === 'documentos') {
         if (typeof cargarExploradorDocumentos === 'function') cargarExploradorDocumentos();
+    } else if (currentHash === 'notificaciones') {
+        if (typeof cargarNotificacionesAdmin === 'function') cargarNotificacionesAdmin();
+    } else if (currentHash === 'avisos') {
+        if (typeof cargarYRenderizarAvisos === 'function') cargarYRenderizarAvisos();
     }
 });
 

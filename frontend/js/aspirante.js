@@ -11,6 +11,7 @@ socket.on('actualizacionGlobal', () => {
     const currentHash = window.location.hash;
     if (currentHash === '#inicio' || currentHash === '') {
         if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
+        if (typeof cargarStatsInicio === 'function') cargarStatsInicio();
         if (aspiranteData && aspiranteData.id) {
             fetch(`/api/solicitud/activa/${aspiranteData.id}`)
                 .then(res => res.json())
@@ -21,6 +22,8 @@ socket.on('actualizacionGlobal', () => {
                 })
                 .catch(e => console.error("Error actualizando inicio:", e));
         }
+    } else if (currentHash === '#proceso') {
+        if (typeof cargarDatosProceso === 'function') cargarDatosProceso();
     } else if (currentHash === '#documentos' || currentHash === '#admision') {
         if (aspiranteData && aspiranteData.id) {
             fetch(`/api/solicitud/activa/${aspiranteData.id}`)
