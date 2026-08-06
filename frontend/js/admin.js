@@ -1496,7 +1496,7 @@ async function verExpedienteAspirante(id) {
                         else if (doc.estadoValidacion === "RECHAZADO") { classBadge = "soft-badge-danger"; }
 
                         htmlDocs += `
-                            <div class="doc-row-premium" onclick="window.open('/api/files/${doc.rutaArchivo}?token=' + (sessionStorage.getItem('token') || localStorage.getItem('token')), '_blank')">
+                            <div class="doc-row-premium" onclick="abrirArchivoSeguro('${doc.rutaArchivo}')">
                                 <div style="display: flex; align-items: center;">
                                     <i class="fa-solid fa-file-pdf doc-icon"></i>
                                     <span style="font-weight: 500; color: var(--color-text);">${doc.requisitoNombre}</span>
@@ -1784,9 +1784,6 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
 
                 if (doc.estadoValidacion === "APROBADO") { badgeClass = "success"; textStatus = "Aprobado"; iconStatus = "fa-check-circle"; }
                 else if (doc.estadoValidacion === "RECHAZADO") { badgeClass = "danger"; textStatus = "Rechazado"; iconStatus = "fa-times-circle"; }
-                
-                const urlCompleta = doc.rutaArchivo.startsWith('http') ? doc.rutaArchivo : `/api/files/${doc.rutaArchivo.split('/').pop()}?token=${sessionStorage.getItem('token')}`;
-
                 docsHtml += `
                     <div class="list-group-item d-flex justify-content-between align-items-center" style="background: transparent; border-color: var(--color-border); padding: 15px 20px;">
                         <div class="d-flex align-items-center gap-3">
@@ -1808,9 +1805,9 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
                             <button onclick="evaluarDocumentoAdmin(${doc.idDocumento || doc.id}, 'RECHAZADO', ${idSolicitud}, ${idAspi})" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Rechazar Documento">
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
-                            <a href="${urlCompleta}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Ver Documento">
+                            <button onclick="abrirArchivoSeguro('${doc.rutaArchivo}')" class="btn btn-sm btn-outline-primary rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Ver Documento">
                                 <i class="fa-solid fa-eye"></i>
-                            </a>
+                            </button>
                         </div>
                     </div>
                 `;
@@ -1853,7 +1850,6 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
                     const estadoIcono = { PENDIENTE: 'fa-clock', APROBADO: 'fa-circle-check', RECHAZADO: 'fa-circle-xmark' };
                     const est = pagoData.estado || 'PENDIENTE';
                     const token = sessionStorage.getItem('token');
-                    const urlComp = `/api/files/${pagoData.comprobante}?token=${token}`;
 
                     const botonesAccion = est === 'PENDIENTE' ? `
                         <div style="display:flex;gap:8px;margin-top:14px;">
@@ -1883,9 +1879,9 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
                                     <span class="badge bg-${estadoColor[est]} rounded-pill px-3 py-2 fw-semibold shadow-sm d-flex align-items-center gap-1 me-1">
                                         <i class="fa-solid ${estadoIcono[est]}"></i> ${est}
                                     </span>
-                                    <a href="${urlComp}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;" title="Ver comprobante">
+                                    <button onclick="abrirArchivoSeguro('${pagoData.comprobante}')" class="btn btn-sm btn-outline-primary rounded-circle" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;" title="Ver comprobante">
                                         <i class="fa-solid fa-eye"></i>
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
                             ${pagoData.observaciones ? `<div style="padding:0 20px 14px;font-size:13px;color:#ef4444;"><i class="fa-solid fa-triangle-exclamation me-1"></i>${pagoData.observaciones}</div>` : ''}
@@ -1990,8 +1986,11 @@ async function descargarDocumentosZipAdmin(nombreAspirante, documentos) {
 
         for (const doc of documentos) {
             try {
-                const urlCompleta = doc.rutaArchivo.startsWith('http') ? doc.rutaArchivo : `/api/files/${doc.rutaArchivo.split('/').pop()}?token=${sessionStorage.getItem('token')}`;
-                const resp = await fetch(urlCompleta);
+                const cleanPath = doc.rutaArchivo.split('/').pop();
+                const urlCompleta = doc.rutaArchivo.startsWith('http') ? doc.rutaArchivo : `/api/files/${cleanPath}`;
+                const resp = await fetch(urlCompleta, {
+                    headers: { 'Authorization': `Bearer ${sessionStorage.getItem('token') || localStorage.getItem('token')}` }
+                });
                 if (!resp.ok) continue;
 
                 const blob = await resp.blob();

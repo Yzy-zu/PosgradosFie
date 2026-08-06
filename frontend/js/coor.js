@@ -25,11 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const hash = window.location.hash;
             if (hash === '#aspirantes') cargarAspirantes();
             if (
-    typeof window.cargarConvocatorias ===
-    "function"
-) {
-    window.cargarConvocatorias();
-}
+                typeof window.cargarConvocatorias ===
+                "function"
+            ) {
+                window.cargarConvocatorias();
+            }
             if (hash === '#entrevistas') cargarEntrevistas();
         });
     }
@@ -89,14 +89,14 @@ function navegar() {
             break;
         case "#convocatorias":
 
-    if (
-        typeof window.cargarConvocatorias ===
-        "function"
-    ) {
-        window.cargarConvocatorias();
-    }
+            if (
+                typeof window.cargarConvocatorias ===
+                "function"
+            ) {
+                window.cargarConvocatorias();
+            }
 
-    break;
+            break;
         case '#aspirantes':
             cargarAspirantes();
             break;
@@ -234,9 +234,9 @@ async function cargarConvocatoriasViejas() {
             const hoy = new Date().toISOString().substring(0, 10);
 
             const esActiva = (estatusTexto === 'ACTIVA' || c.activa === 1 || c.activa === true) &&
-                             (!fFinStr || fFin >= hoy);
+                (!fFinStr || fFin >= hoy);
 
-            const badgeEstado = esActiva 
+            const badgeEstado = esActiva
                 ? `<span class="badge bg-success px-3 py-1">Activa</span>`
                 : `<span class="badge bg-secondary px-3 py-1">Cerrada</span>`;
 
@@ -470,16 +470,16 @@ function renderizarAspirantesFiltrados() {
 
                     <div class="fw-bold text-dark">
                         ${escaparHTML(
-                            asp.nombre_completo ||
-                            "Sin nombre"
-                        )}
+                asp.nombre_completo ||
+                "Sin nombre"
+            )}
                     </div>
 
                     <small class="text-muted font-monospace">
                         ${escaparHTML(
-                            asp.curp ||
-                            "Sin CURP"
-                        )}
+                asp.curp ||
+                "Sin CURP"
+            )}
                     </small>
 
                 </td>
@@ -488,18 +488,18 @@ function renderizarAspirantesFiltrados() {
 
                     <span class="fw-medium text-secondary">
                         ${escaparHTML(
-                            asp.programa ||
-                            "Sin asignación"
-                        )}
+                asp.programa ||
+                "Sin asignación"
+            )}
                     </span>
 
                 </td>
 
                 <td>
                     ${getBadgeDictamen(
-                        asp.estado ||
-                        asp.dictamen
-                    )}
+                asp.estado ||
+                asp.dictamen
+            )}
                 </td>
 
                 <td class="text-end">
@@ -540,9 +540,9 @@ function renderizarAspirantesFiltrados() {
 
                                     <span class="badge bg-dark text-wrap">
                                         ${escaparHTML(
-                                            asp.tipo_admision ||
-                                            "N/A"
-                                        )}
+                asp.tipo_admision ||
+                "N/A"
+            )}
                                     </span>
 
                                 </div>
@@ -555,9 +555,9 @@ function renderizarAspirantesFiltrados() {
 
                                     <span class="badge bg-secondary">
                                         ${escaparHTML(
-                                            asp.etapa_actual ||
-                                            "Sin etapa"
-                                        )}
+                asp.etapa_actual ||
+                "Sin etapa"
+            )}
                                     </span>
 
                                 </div>
@@ -570,9 +570,9 @@ function renderizarAspirantesFiltrados() {
 
                                     <span class="badge bg-info text-white">
                                         ${escaparHTML(
-                                            asp.convocatoria ||
-                                            "General"
-                                        )}
+                asp.convocatoria ||
+                "General"
+            )}
                                     </span>
 
                                 </div>
@@ -587,8 +587,8 @@ function renderizarAspirantesFiltrados() {
                                         type="button"
                                         class="btn btn-sm btn-info text-white me-1"
                                         onclick="verExpediente(${Number(
-                                            asp.id_aspirante
-                                        )})">
+                asp.id_aspirante
+            )})">
 
                                         <i class="fa-solid fa-folder me-1"></i>
                                         Expediente
@@ -598,8 +598,8 @@ function renderizarAspirantesFiltrados() {
                                     <select
                                         class="form-select form-select-sm d-inline-block w-auto mt-1 mt-md-0"
                                         onchange="cambiarDictamen(${Number(
-                                            asp.id_solicitud
-                                        )}, this.value)">
+                asp.id_solicitud
+            )}, this.value)">
 
                                         <option value="" disabled selected>
                                             Dictamen...
@@ -786,55 +786,55 @@ async function cargarEntrevistas() {
             return;
         }
 
-            entrevistas.forEach(ent => {
-                const tr = document.createElement('tr');
-                
-                // 1. Manejo de IDs
-                const idSolicitud = ent.idSoli || ent.id_solicitud || ent.id;
-                const idDocente = ent.idUsua || ent.id_docente || ent.id_usuario || '';
+        entrevistas.forEach(ent => {
+            const tr = document.createElement('tr');
 
-                // 2. Nombres y datos
-                const nombreAspirante = ent.nombre_completo || 
-                    `${ent.nombre || ''} ${ent.primerApellido || ''} ${ent.segundoApellido || ''}`.trim() || 
-                    'Aspirante';
+            // 1. Manejo de IDs
+            const idSolicitud = ent.idSoli || ent.id_solicitud || ent.id;
+            const idDocente = ent.idUsua || ent.id_docente || ent.id_usuario || '';
 
-                const nombreDocente = ent.docente || "Sin docente";  
-                const folioCurp = ent.curp || ent.folio || 'Sin CURP';
-                const programa = ent.programa || ent.opcion_posgrado || ent.posgrado_nombre || 'Sin asignación';
+            // 2. Nombres y datos
+            const nombreAspirante = ent.nombre_completo ||
+                `${ent.nombre || ''} ${ent.primerApellido || ''} ${ent.segundoApellido || ''}`.trim() ||
+                'Aspirante';
 
-                // 3. Fecha y Hora
-                const fechaRaw = ent.fecha || '';
-                const horaRaw = ent.hora || '';
-                const lugarRaw = ent.lugar || ent.lugar_link || '';
+            const nombreDocente = ent.docente || "Sin docente";
+            const folioCurp = ent.curp || ent.folio || 'Sin CURP';
+            const programa = ent.programa || ent.opcion_posgrado || ent.posgrado_nombre || 'Sin asignación';
 
-                // Limpiamos la fecha si viene en formato ISO (e.g. 2026-08-04T06:00:00.000Z)
-                const fechaLimpia = fechaRaw.includes('T') ? fechaRaw.split('T')[0] : fechaRaw;
+            // 3. Fecha y Hora
+            const fechaRaw = ent.fecha || '';
+            const horaRaw = ent.hora || '';
+            const lugarRaw = ent.lugar || ent.lugar_link || '';
 
-                let fechaStr = 'Sin agendar';
-                if (fechaLimpia) {
-                    const horaLimpia = horaRaw ? horaRaw.substring(0, 5) : '';
-                    fechaStr = `${fechaLimpia} ${horaLimpia}`.trim();
-                }
+            // Limpiamos la fecha si viene en formato ISO (e.g. 2026-08-04T06:00:00.000Z)
+            const fechaLimpia = fechaRaw.includes('T') ? fechaRaw.split('T')[0] : fechaRaw;
 
-                const fechaValida = !!fechaLimpia;
-                const badgeEstado = fechaValida 
-                    ? `<span class="badge bg-success">Programada</span>` 
-                    : `<span class="badge bg-warning text-dark">Pendiente</span>`;
+            let fechaStr = 'Sin agendar';
+            if (fechaLimpia) {
+                const horaLimpia = horaRaw ? horaRaw.substring(0, 5) : '';
+                fechaStr = `${fechaLimpia} ${horaLimpia}`.trim();
+            }
 
-                // 4. Formatear Lugar / Ubicación para su celda independiente
-                const esLink = lugarRaw.startsWith('http://') || lugarRaw.startsWith('https://');
-                const lugarTexto = lugarRaw.trim() ? lugarRaw.trim() : 'Sin especificar';
+            const fechaValida = !!fechaLimpia;
+            const badgeEstado = fechaValida
+                ? `<span class="badge bg-success">Programada</span>`
+                : `<span class="badge bg-warning text-dark">Pendiente</span>`;
 
-                const htmlLugar = esLink 
-                    ? `<a href="${lugarRaw}" target="_blank" class="btn btn-sm btn-outline-primary fw-medium">
+            // 4. Formatear Lugar / Ubicación para su celda independiente
+            const esLink = lugarRaw.startsWith('http://') || lugarRaw.startsWith('https://');
+            const lugarTexto = lugarRaw.trim() ? lugarRaw.trim() : 'Sin especificar';
+
+            const htmlLugar = esLink
+                ? `<a href="${lugarRaw}" target="_blank" class="btn btn-sm btn-outline-primary fw-medium">
                         <i class="fa-solid fa-video me-1"></i> Abrir Enlace
                     </a>`
-                    : `<span class="text-secondary fw-medium">
+                : `<span class="text-secondary fw-medium">
                         <i class="fa-solid fa-location-dot me-1 text-muted"></i>${lugarTexto}
                     </span>`;
 
-                // 5. Estructura HTML de las 6 celdas
-                tr.innerHTML = `
+            // 5. Estructura HTML de las 6 celdas
+            tr.innerHTML = `
                     <td class="py-3 align-middle">
                         <div class="fw-bold text-dark"></div>
                         <small class="text-muted font-monospace">${folioCurp}</small>
@@ -851,31 +851,31 @@ async function cargarEntrevistas() {
                     <td class="text-end align-middle action-cell"></td>
                 `;
 
-                // Insertar el nombre del aspirante de manera segura
-                tr.querySelector('.fw-bold.text-dark').textContent = nombreAspirante;
+            // Insertar el nombre del aspirante de manera segura
+            tr.querySelector('.fw-bold.text-dark').textContent = nombreAspirante;
 
-                // Crear el botón de acción mediante el DOM
-                const btn = document.createElement('button');
-                btn.className = 'btn btn-sm btn-outline-primary fw-medium';
-                btn.innerHTML = `<i class="fa-solid fa-calendar-plus me-1"></i> ${fechaValida ? 'Editar' : 'Programar'}`;
-                
-                // Asignar evento click pasando fechaLimpia para que el input date funcione correctamente
-                btn.addEventListener('click', () => {
-                    abrirModalEntrevista(idSolicitud, nombreAspirante, fechaLimpia, horaRaw, idDocente, lugarRaw);
-                });
+            // Crear el botón de acción mediante el DOM
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-sm btn-outline-primary fw-medium';
+            btn.innerHTML = `<i class="fa-solid fa-calendar-plus me-1"></i> ${fechaValida ? 'Editar' : 'Programar'}`;
 
-                tr.querySelector('.action-cell').appendChild(btn);
-                tbody.appendChild(tr);
+            // Asignar evento click pasando fechaLimpia para que el input date funcione correctamente
+            btn.addEventListener('click', () => {
+                abrirModalEntrevista(idSolicitud, nombreAspirante, fechaLimpia, horaRaw, idDocente, lugarRaw);
             });
 
-            configurarBuscadorEntrevistas();
+            tr.querySelector('.action-cell').appendChild(btn);
+            tbody.appendChild(tr);
+        });
 
-        } catch (err) {
-            console.error('Error al cargar entrevistas:', err);
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">
+        configurarBuscadorEntrevistas();
+
+    } catch (err) {
+        console.error('Error al cargar entrevistas:', err);
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">
                 <i class="fa-solid fa-triangle-exclamation me-1"></i> Error al conectar con el módulo de entrevistas.
             </td></tr>`;
-        }
+    }
 }
 
 // B. Llenar el select de docentes
@@ -899,7 +899,7 @@ async function cargarDocentesSelect() {
         }
 
         let htmlOptions = '<option value="" disabled selected>Seleccione un docente...</option>';
-        
+
         listaDocentesCache.forEach(d => {
             const idDoc = d.id_docente ?? d.id_usuario ?? d.id_docente_asignado ?? d.id;
             const nombreDoc = d.nombre_completo ?? d.nombre_docente ?? `${d.nombre || ''} ${d.primerApellido || d.apellidos || ''}`.trim();
@@ -1151,7 +1151,7 @@ function configurarBuscadorEntrevistas() {
                 fila.querySelector(
                     "td:first-child .fw-bold"
                 )?.textContent
-                .toLowerCase() || "";
+                    .toLowerCase() || "";
 
             fila.style.display =
                 nombre.includes(texto)
@@ -1656,7 +1656,7 @@ function configurarFiltrosDictamenes() {
 // ==========================================
 // 11. Abrir Modal Dictamen
 // ==========================================
-function abrirModalDictamen(idSolicitud){
+function abrirModalDictamen(idSolicitud) {
 
     document.getElementById("dictamenSolicitud").value = idSolicitud;
 
@@ -1776,7 +1776,7 @@ async function cambiarDictamen(
 // ==========================================
 // 13. Guardar Dictamen
 // ==========================================
-async function guardarDictamen(){
+async function guardarDictamen() {
 
     const id = document.getElementById("dictamenSolicitud").value;
 
@@ -1784,19 +1784,19 @@ async function guardarDictamen(){
 
     const motivo = document.getElementById("dictamenMotivo").value;
 
-    try{
+    try {
 
-        const res = await fetch(`/api/coordinador/dictamen/${id}`,{
+        const res = await fetch(`/api/coordinador/dictamen/${id}`, {
 
-            method:"POST",
+            method: "POST",
 
-            headers:{
+            headers: {
 
-                "Content-Type":"application/json"
+                "Content-Type": "application/json"
 
             },
 
-            body:JSON.stringify({
+            body: JSON.stringify({
 
                 resultado,
 
@@ -1808,19 +1808,19 @@ async function guardarDictamen(){
 
         const data = await res.json();
 
-        if(res.ok){
+        if (res.ok) {
 
             Swal.fire({
 
-                icon:"success",
+                icon: "success",
 
-                title:"Correcto",
+                title: "Correcto",
 
-                text:data.mensaje,
+                text: data.mensaje,
 
-                timer:1500,
+                timer: 1500,
 
-                showConfirmButton:false
+                showConfirmButton: false
 
             });
 
@@ -1832,7 +1832,7 @@ async function guardarDictamen(){
 
             cargarDictamenes();
 
-        }else{
+        } else {
 
             Swal.fire(
 
@@ -1846,7 +1846,7 @@ async function guardarDictamen(){
 
         }
 
-    }catch(error){
+    } catch (error) {
 
         console.error(error);
 
@@ -1857,8 +1857,8 @@ async function guardarDictamen(){
 /* ==========================================================
    14. NOTIFICACIONES (Header Dropdown)
 ========================================================== */
-async function cargarNotificaciones() { 
-    console.log('Cargando notificaciones del header...'); 
+async function cargarNotificaciones() {
+    console.log('Cargando notificaciones del header...');
     const contenedor = document.getElementById("listaNotificacionesContainer");
     const badge = document.getElementById("badgeNotificaciones");
     const cantTexto = document.getElementById("cantNotifTexto");
@@ -1870,9 +1870,9 @@ async function cargarNotificaciones() {
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
 
         const notificaciones = await respuesta.json();
-        
+
         // 1. Filtrar solo las notificaciones activas para el dropdown
-        const notifsActivas = (notificaciones || []).filter(n => 
+        const notifsActivas = (notificaciones || []).filter(n =>
             n.activa == 1 || n.activa === 'true' || n.activa === true || n.estatus === 'Activa'
         );
 
@@ -1902,7 +1902,7 @@ async function cargarNotificaciones() {
         notifsActivas.forEach(notif => {
             const tituloTexto = notif.titulo || notif.nombre || 'Sin título';
             let destinoText = (notif.destino || 'todos').toLowerCase();
-            
+
             let destinoIcon = 'fa-users';
             if (destinoText === 'aspirantes') destinoIcon = 'fa-graduation-cap';
             if (destinoText === 'docentes') destinoIcon = 'fa-chalkboard-user';
@@ -1934,7 +1934,7 @@ async function cargarNotificaciones() {
                     <i class="fa-solid ${destinoIcon} me-1"></i>Para: <span class="text-capitalize">${destinoText}</span>
                 </small>
             `;
-            
+
             contenedor.appendChild(item);
         });
 
@@ -1953,7 +1953,7 @@ async function cargarNotificaciones() {
 // ==========================================
 function abrirModalProgramar(idSolicitud) {
     console.log("Abriendo modal para la solicitud ID:", idSolicitud);
-    
+
     // 1. Asignamos el idSolicitud al input oculto (para no perder el ID)
     const inputSolicitud = document.getElementById('idSolicitud');
     if (inputSolicitud) {

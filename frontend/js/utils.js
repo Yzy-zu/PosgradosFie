@@ -286,3 +286,63 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
     }
 });
 
+// ==== PREVENCIÓN DE XSS (SANITIZACIÓN DE HTML) ====
+function escaparHTML(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// ==== VISUALIZACIÓN SEGURA DE ARCHIVOS SIN TOKEN EN URL ====
+async function abrirArchivoSeguro(rutaArchivo) {
+    if (!rutaArchivo) return;
+    const token = sessionStorage.getItem('token') || localStorage.getItem('token') || '';
+    
+    // Quitar cualquier query string previo si existe
+    let cleanPath = String(rutaArchivo).split('?')[0];
+
+    // Si la ruta ya es un data URI o blob URI
+    if (cleanPath.startsWith('data:') || cleanPath.startsWith('blob:')) {
+        window.open(cleanPath, '_blank');
+        return;
+    }
+
+    // Asegurar prefijo /api/files/
+    let fetchUrl = cleanPath;
+    if (!fetchUrl.startsWith('http://') && !fetchUrl.startsWith('https://') && !fetchUrl.startsWith('/api/files/')) {
+        fetchUrl = `/api/files/${cleanPath}`;
+    }
+
+    try {
+        mostrarLoader();
+        const res = await fetch(fetchUrl, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error('Error al obtener el archivo');
+
+        const blob = await res.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        window.open(objectUrl, '_blank');
+
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 15000);
+    } catch (error) {
+        console.error("Error al abrir archivo seguro:", error);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo abrir el documento.',
+                confirmButtonColor: '#ef4444'
+            });
+        }
+    } finally {
+        ocultarLoader();
+    }
+}
+
+
