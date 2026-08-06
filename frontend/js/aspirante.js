@@ -2576,24 +2576,64 @@ function resetAutoSlide() {
 }
 
 // Iniciar carrusel después de que el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     carouselTrack = document.getElementById('inicio-carousel-track');
-    carouselIndicators = Array.from(document.querySelectorAll('#inicio-carousel-indicators .indicator'));
-    totalSlides = document.querySelectorAll('.carousel-slide').length;
+    const indicatorsContainer = document.getElementById('inicio-carousel-indicators');
+    
+    if (carouselTrack && indicatorsContainer) {
+        try {
+            const token = sessionStorage.getItem('token');
+            const res = await fetch('/api/avisos/activos', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const avisos = await res.json();
+                
+                if (avisos.length === 0) {
+                    // Si no hay avisos, ocultar el carrusel completo
+                    const container = document.getElementById('inicio-carousel');
+                    if (container) container.style.display = 'none';
+                    return;
+                }
 
-    if (carouselTrack && totalSlides > 0) {
-        // Asegurarse de que el primer slide asigne la altura inicial correctamente
-        const firstImg = document.querySelector('.carousel-slide img');
-        if (firstImg) {
-            if (firstImg.complete) {
-                updateCarousel();
-            } else {
-                firstImg.onload = () => updateCarousel();
+                let trackHTML = '';
+                let indicatorsHTML = '';
+
+                avisos.forEach((aviso, index) => {
+                    trackHTML += `
+                        <div class="carousel-slide">
+                            <img src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" alt="${aviso.titulo}" style="object-fit: cover; width: 100%; height: 100%;">
+                        </div>
+                    `;
+                    indicatorsHTML += `
+                        <span class="indicator ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>
+                    `;
+                });
+
+                carouselTrack.innerHTML = trackHTML;
+                indicatorsContainer.innerHTML = indicatorsHTML;
             }
-        } else {
-            updateCarousel();
+        } catch (e) {
+            console.error('Error al cargar avisos:', e);
         }
-        startAutoSlide();
+
+        carouselIndicators = Array.from(document.querySelectorAll('#inicio-carousel-indicators .indicator'));
+        totalSlides = document.querySelectorAll('.carousel-slide').length;
+
+        if (totalSlides > 0) {
+            // Asegurarse de que el primer slide asigne la altura inicial correctamente
+            const firstImg = document.querySelector('.carousel-slide img');
+            if (firstImg) {
+                if (firstImg.complete) {
+                    updateCarousel();
+                } else {
+                    firstImg.onload = () => updateCarousel();
+                }
+            } else {
+                updateCarousel();
+            }
+            startAutoSlide();
+        }
     }
 });
 

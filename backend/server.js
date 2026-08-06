@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const http = require('http'); // Agregado para Socket.io
 const { Server } = require('socket.io'); // Agregado para Socket.io
 require('dotenv').config();
@@ -57,30 +58,42 @@ app.use('/api/pagos', require('./routes/pagos.routes'));
 app.use('/api/entrevista', require('./routes/entrevista.routes'));
 app.use('/api/requisitos', require('./routes/requisitos.routes'));
 app.use('/api/solicitud-temas', require('./routes/solicitudTema.routes'));
+app.use('/api/avisos', require('./routes/avisos.routes'));
+app.use('/api/filemanager', require('./routes/fileManager.routes'));
 
 // -------------------------------------------------------------------
 // Ruta protegida para servir archivos de solicitud (Bug 10 Fix)
 // Acepta el JWT como query param ?token= para links directos en nueva pestaña
 // -------------------------------------------------------------------
 const jwt = require('jsonwebtoken');
-app.get('/api/files/:filename', (req, res) => {
-    const token = req.query.token || (req.headers['authorization'] && req.headers['authorization'].split(' ')[1]);
-    if (!token) {
-        return res.status(401).json({ mensaje: 'Acceso denegado. Token no proporcionado.' });
+app.get('/api/files/{*path}', (req, res) => {
+    // En Express 5 con path-to-regexp v8, {*path} devuelve un array
+    const filename = Array.isArray(req.params.path) ? req.params.path.join('/') : req.params.path;
+    
+    // Las imágenes del carrusel de Avisos deben ser públicas
+    const isPublic = filename && filename.startsWith('admin/Avisos/');
+    
+    if (!isPublic) {
+        const token = req.query.token || (req.headers['authorization'] && req.headers['authorization'].split(' ')[1]);
+        if (!token) {
+            return res.status(401).json({ mensaje: 'Acceso denegado. Token no proporcionado.' });
+        }
+        try {
+            jwt.verify(token, process.env.JWT_SECRET);
+        } catch (error) {
+            console.error('Error in /api/files/:', error);
+            return res.status(403).json({ mensaje: 'Token inválido o expirado.', details: error.message });
+        }
     }
-    try {
-        jwt.verify(token, process.env.JWT_SECRET);
-        const filename = req.params.filename;
-        // Sanear el nombre para evitar path traversal
-        const safeFilename = path.basename(filename);
-        const filePath = path.join(__dirname, 'uploads', safeFilename);
-        res.sendFile(filePath, (err) => {
-            if (err) {
-                return res.status(404).json({ mensaje: 'Archivo no encontrado.' });
-            }
-        });
-    } catch (e) {
-        return res.status(403).json({ mensaje: 'Token inválido o expirado.' });
+
+    if (!filename || filename.includes('..')) {
+        return res.status(403).json({ mensaje: 'Ruta de archivo inválida.' });
+    }
+    const filePath = path.join(__dirname, 'uploads', filename);
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        res.status(404).json({ mensaje: 'Archivo no encontrado' });
     }
 });
 

@@ -3071,6 +3071,15 @@ function renderExplorador() {
         if(programas.length === 0) {
             itemsHTML = `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay documentos disponibles en el sistema.</p></div>`;
         }
+        
+        // Agregar carpeta fija del Gestor de Archivos Físico (Linux style)
+        itemsHTML += `
+            <div class="explorer-folder" onclick="exploradorEntrarDirectorio('filemanager', '/', 'Archivos Internos')">
+                <i class="fa-solid fa-hard-drive explorer-icon" style="color: #ef476f;"></i>
+                <span class="explorer-name">Archivos Internos</span>
+            </div>
+        `;
+        
         programas.forEach(prog => {
             itemsHTML += `
                 <div class="explorer-folder" onclick="exploradorEntrarDirectorio('programa', '${prog}', '${prog}')">
@@ -3079,7 +3088,24 @@ function renderExplorador() {
                 </div>
             `;
         });
-    } else if (exploradorCurrentPath.length === 1) {
+    } else if (exploradorCurrentPath.length >= 1) {
+        if (exploradorCurrentPath[0].tipo === 'avisos') {
+            // Nivel Avisos
+            cargarYRenderizarAvisos();
+            return; // Exit here, HTML is populated by async function
+        }
+
+        if (exploradorCurrentPath[0].tipo === 'filemanager') {
+            // Nivel Gestor Físico
+            // Construimos la ruta actual desde el breadcrumb
+            let fmPath = '/';
+            if (exploradorCurrentPath.length > 1) {
+                fmPath = exploradorCurrentPath[exploradorCurrentPath.length - 1].valor;
+            }
+            cargarYRenderizarFileManager(fmPath);
+            return;
+        }
+
         // Nivel 1: Agrupar por Aspirante dentro del programa
         const programaSeleccionado = exploradorCurrentPath[0].valor;
         const docsPrograma = exploradorDatos.filter(d => d.programa === programaSeleccionado);
@@ -3144,3 +3170,474 @@ window.verDocumentoExplorer = function(ruta) {
         window.open(url, '_blank');
     }
 };
+
+// ==========================================
+// MÓDULO DE AVISOS (CARRUSEL)
+// ==========================================
+async function cargarYRenderizarAvisos() {
+    const grid = document.getElementById('exploradorGrid');
+    if (!grid) return;
+
+    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
+
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch('/api/avisos', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error('Error al obtener avisos');
+        const avisos = await res.json();
+
+        let itemsHTML = `
+            <div style="grid-column: 1/-1; display: flex; justify-content: flex-end; margin-bottom: 15px;">
+                <button class="btn btn-primary" onclick="document.getElementById('inputAvisoFile').click()" style="border-radius: 20px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-cloud-arrow-up me-2"></i>Subir Nuevo Aviso
+                </button>
+                <input type="file" id="inputAvisoFile" style="display: none;" accept="image/jpeg, image/png, image/webp" onchange="subirNuevoAviso(this)">
+            </div>
+        `;
+
+        if (avisos.length === 0) {
+            itemsHTML += `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay avisos registrados.</p></div>`;
+        } else {
+            avisos.forEach(aviso => {
+                const checked = aviso.activo ? 'checked' : '';
+                itemsHTML += `
+                    <div class="explorer-file d-flex flex-column" style="position: relative; overflow: hidden; padding: 0;">
+                        <img src="/api/files/${aviso.rutaArchivo}?token=${token}" style="width: 100%; height: 120px; object-fit: cover; border-bottom: 1px solid var(--color-border);" onclick="verDocumentoExplorer('${aviso.rutaArchivo}')">
+                        <div style="padding: 10px; display: flex; align-items: center; justify-content: space-between; width: 100%; background: var(--color-surface);">
+                            <div class="form-check form-switch m-0" style="font-size: 1.1rem;" title="Activar/Desactivar">
+                                <input class="form-check-input" type="checkbox" role="switch" ${checked} onchange="toggleAviso(${aviso.id}, this)">
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="eliminarAviso(${aviso.id})" style="border: none; padding: 2px 6px;" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        grid.innerHTML = itemsHTML;
+
+    } catch (error) {
+        console.error(error);
+        grid.innerHTML = `<div class="text-center w-100 py-5 text-danger" style="grid-column: 1 / -1;"><p>Ocurrió un error al cargar los avisos.</p></div>`;
+    }
+}
+
+async function subirNuevoAviso(input) {
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    
+    const formData = new FormData();
+    formData.append('archivo', file);
+    formData.append('titulo', file.name);
+
+    mostrarLoader();
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch('/api/avisos', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+                // No setear Content-Type, fetch lo pone solo con el boundary del FormData
+            },
+            body: formData
+        });
+
+        if (res.ok) {
+            Swal.fire('¡Éxito!', 'Aviso subido correctamente.', 'success');
+            cargarYRenderizarAvisos(); // Recargar el grid
+        } else {
+            throw new Error('Error al subir');
+        }
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error', 'No se pudo subir el archivo.', 'error');
+    } finally {
+        ocultarLoader();
+        input.value = ""; // Limpiar input
+    }
+}
+
+async function toggleAviso(id, checkbox) {
+    const originalState = !checkbox.checked;
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch(`/api/avisos/${id}/estado`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Fallo al cambiar estado');
+    } catch (e) {
+        console.error(e);
+        checkbox.checked = originalState; // Revertir
+        Swal.fire('Error', 'No se pudo cambiar el estado.', 'error');
+    }
+}
+
+async function eliminarAviso(id) {
+    const confirm = await Swal.fire({
+        title: '¿Eliminar aviso?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    mostrarLoader();
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch(`/api/avisos/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            Swal.fire('Eliminado', 'Aviso eliminado correctamente.', 'success');
+            cargarYRenderizarAvisos();
+        } else {
+            throw new Error('Error');
+        }
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error', 'No se pudo eliminar el aviso.', 'error');
+    } finally {
+        ocultarLoader();
+    }
+}
+
+// ==========================================
+// GESTOR DE ARCHIVOS FÍSICO (FILE MANAGER)
+// ==========================================
+let currentFileManagerPath = '/';
+
+async function cargarYRenderizarFileManager(fmPath) {
+    const grid = document.getElementById('exploradorGrid');
+    if (!grid) return;
+    
+    currentFileManagerPath = fmPath || '/';
+    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
+
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch(`/api/filemanager/list?path=${encodeURIComponent(currentFileManagerPath)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error('Error al listar directorio');
+        const items = await res.json();
+
+        let itemsHTML = `
+            <div style="grid-column: 1/-1; display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px;">
+                <button class="btn btn-secondary" onclick="fmCrearCarpeta()" style="border-radius: 20px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-folder-plus me-2"></i>Nueva Carpeta
+                </button>
+                <button class="btn btn-primary" onclick="document.getElementById('inputFMFile').click()" style="border-radius: 20px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-cloud-arrow-up me-2"></i>Subir Archivo
+                </button>
+                <input type="file" id="inputFMFile" style="display: none;" onchange="fmSubirArchivo(this)">
+            </div>
+        `;
+
+        if (items.length === 0) {
+            itemsHTML += `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>Carpeta vacía.</p></div>`;
+        } else {
+            items.forEach(item => {
+                const isDir = item.isDirectory;
+                const ext = item.name.split('.').pop().toLowerCase();
+                const isImage = !isDir && ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext);
+
+                // Formatear tamaño
+                let sizeStr = '';
+                if (!isDir) {
+                    const kb = item.size / 1024;
+                    sizeStr = kb > 1024 ? (kb/1024).toFixed(2) + ' MB' : kb.toFixed(1) + ' KB';
+                }
+
+                // Generamos ruta completa del item para usar en el explorador
+                let itemPathFull = currentFileManagerPath.endsWith('/') ? currentFileManagerPath + item.name : currentFileManagerPath + '/' + item.name;
+
+                // Elemento visual (Icono o Miniatura)
+                let visualElement = '';
+                if (isDir) {
+                    visualElement = `<i class="fa-solid fa-folder fa-3x mb-2" style="color: #4cc9f0;"></i>`;
+                } else if (isImage) {
+                    const token = sessionStorage.getItem('token') || '';
+                    const cleanRelPath = itemPathFull.startsWith('/') ? itemPathFull.substring(1) : itemPathFull;
+                    const imgUrl = `/api/files/admin/${cleanRelPath}?token=${token}`;
+                    visualElement = `
+                        <div class="mb-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 65px; height: 65px; border-radius: 10px; overflow: hidden; background: #f8fafc; border: 1px solid #e2e8f0;">
+                            <img src="${imgUrl}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-image fa-2x text-secondary\\'></i>'">
+                        </div>
+                    `;
+                } else {
+                    let iconClass = 'fa-file';
+                    let iconColor = '#4ade80';
+                    if (['pdf'].includes(ext)) { iconClass = 'fa-file-pdf'; iconColor = '#ef4444'; }
+                    else if (['doc', 'docx'].includes(ext)) { iconClass = 'fa-file-word'; iconColor = '#3b82f6'; }
+                    else if (['xls', 'xlsx'].includes(ext)) { iconClass = 'fa-file-excel'; iconColor = '#10b981'; }
+                    else if (['mp4', 'webm', 'avi', 'mov'].includes(ext)) { iconClass = 'fa-file-video'; iconColor = '#8b5cf6'; }
+                    
+                    visualElement = `<i class="fa-solid ${iconClass} fa-3x mb-2" style="color: ${iconColor};"></i>`;
+                }
+
+                let toggleHTML = '';
+                if (!isDir && currentFileManagerPath.includes('Avisos')) {
+                    // Extract relative path to store in DB (e.g. Avisos/2026/foto.jpg)
+                    let relativeForDB = itemPathFull;
+                    if (relativeForDB.startsWith('/')) relativeForDB = relativeForDB.substring(1);
+                    
+                    const isChecked = item.activo == 1 ? 'checked' : '';
+                    toggleHTML = `
+                        <div class="form-check form-switch mt-2" title="Visibilidad en Carrusel">
+                            <input class="form-check-input" type="checkbox" onchange="fmToggleAviso('${relativeForDB}', this)" ${isChecked}>
+                        </div>
+                    `;
+                }
+
+                itemsHTML += `
+                    <div class="explorer-file d-flex flex-column align-items-center justify-content-between position-relative" style="padding: 15px;">
+                        <!-- Icono/Miniatura y nombre cliqueable -->
+                        <div class="text-center d-flex flex-column align-items-center" style="cursor: pointer; width: 100%;" onclick="${isDir ? `exploradorEntrarDirectorio('filemanager', '${itemPathFull}', '${item.name}')` : `fmVerArchivo('${itemPathFull}')`}">
+                            ${visualElement}
+                            <div class="text-truncate" style="font-weight: 500; font-size: 0.9rem; max-width: 100%;" title="${item.name}">${item.name}</div>
+                            ${!isDir ? `<div style="font-size: 0.75rem; color: #64748b;">${sizeStr}</div>` : ''}
+                        </div>
+                        
+                        ${toggleHTML}
+
+                        <!-- Acciones -->
+                        <div class="d-flex gap-2 mt-3 w-100 justify-content-center">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="fmRenombrar('${item.name}')" title="Renombrar"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="fmEliminar('${itemPathFull}', ${isDir})" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        grid.innerHTML = itemsHTML;
+
+    } catch (error) {
+        console.error(error);
+        grid.innerHTML = `<div class="text-center w-100 py-5 text-danger" style="grid-column: 1 / -1;"><p>Ocurrió un error al cargar la carpeta.</p></div>`;
+    }
+}
+
+async function fmCrearCarpeta() {
+    const { value: folderName } = await Swal.fire({
+        title: 'Nueva Carpeta',
+        input: 'text',
+        inputLabel: 'Nombre de la carpeta',
+        inputPlaceholder: 'Ingresa el nombre...',
+        showCancelButton: true,
+        confirmButtonColor: '#4cc9f0',
+        inputValidator: (value) => {
+            if (!value) return 'El nombre no puede estar vacío';
+            if (value.includes('/') || value.includes('\\')) return 'El nombre contiene caracteres inválidos';
+        }
+    });
+
+    if (folderName) {
+        mostrarLoader();
+        try {
+            const token = sessionStorage.getItem('token');
+            const res = await fetch('/api/filemanager/folder', {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ currentPath: currentFileManagerPath, folderName })
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.mensaje || 'Error al crear carpeta');
+            }
+            
+            cargarYRenderizarFileManager(currentFileManagerPath);
+        } catch (e) {
+            Swal.fire('Error', e.message, 'error');
+        } finally {
+            ocultarLoader();
+        }
+    }
+}
+
+async function fmSubirArchivo(input) {
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    
+    const formData = new FormData();
+    formData.append('archivo', file);
+    formData.append('currentPath', currentFileManagerPath);
+
+    mostrarLoader();
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch('/api/filemanager/upload', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+
+        if (res.ok) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Archivo subido',
+                showConfirmButton: false,
+                timer: 2000
+            });
+            cargarYRenderizarFileManager(currentFileManagerPath);
+        } else {
+            const data = await res.json();
+            throw new Error(data.mensaje || 'Error al subir');
+        }
+    } catch (e) {
+        Swal.fire('Error', e.message, 'error');
+    } finally {
+        ocultarLoader();
+        input.value = ""; 
+    }
+}
+
+async function fmEliminar(itemPathFull, isDir) {
+    const confirm = await Swal.fire({
+        title: `¿Eliminar ${isDir ? 'carpeta' : 'archivo'}?`,
+        text: isDir ? 'Se borrará la carpeta y todo su contenido. ¡No se puede deshacer!' : '¡Esta acción no se puede deshacer!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Sí, eliminar'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    mostrarLoader();
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch(`/api/filemanager/delete`, {
+            method: 'DELETE',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ itemPath: itemPathFull })
+        });
+
+        if (res.ok) {
+            cargarYRenderizarFileManager(currentFileManagerPath);
+        } else {
+            const data = await res.json();
+            throw new Error(data.mensaje || 'Error al eliminar');
+        }
+    } catch (e) {
+        Swal.fire('Error', e.message, 'error');
+    } finally {
+        ocultarLoader();
+    }
+}
+
+async function fmRenombrar(oldName) {
+    const { value: newName } = await Swal.fire({
+        title: 'Renombrar',
+        input: 'text',
+        inputValue: oldName,
+        showCancelButton: true,
+        confirmButtonColor: '#4cc9f0',
+        inputValidator: (value) => {
+            if (!value) return 'El nombre no puede estar vacío';
+            if (value === oldName) return 'El nombre es igual al original';
+            if (value.includes('/') || value.includes('\\')) return 'El nombre contiene caracteres inválidos';
+        }
+    });
+
+    if (newName) {
+        mostrarLoader();
+        try {
+            const token = sessionStorage.getItem('token');
+            const res = await fetch('/api/filemanager/rename', {
+                method: 'PUT',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ currentPath: currentFileManagerPath, oldName, newName })
+            });
+
+            if (res.ok) {
+                cargarYRenderizarFileManager(currentFileManagerPath);
+            } else {
+                const data = await res.json();
+                throw new Error(data.mensaje || 'Error al renombrar');
+            }
+        } catch (e) {
+            Swal.fire('Error', e.message, 'error');
+        } finally {
+            ocultarLoader();
+        }
+    }
+}
+
+function fmVerArchivo(itemPathFull) {
+    // Si queremos verlo de forma segura, el servidor podría servirlo 
+    // a través de otra ruta estática o usar api/files. 
+    // Pero api/files asume /uploads/. 
+    // Dado que estamos en /uploads/admin/, la ruta relativa al uploads es 'admin' + itemPathFull
+    
+    // Remover slash inicial si lo tiene
+    let relativePath = itemPathFull;
+    if (relativePath.startsWith('/')) {
+        relativePath = relativePath.substring(1);
+    }
+    
+    // La ruta relativa que api/files entiende es:
+    const safePathForApiFiles = `admin/${relativePath}`;
+    
+    if (typeof abrirArchivoSeguro === 'function') {
+        abrirArchivoSeguro(safePathForApiFiles);
+    } else {
+        const token = sessionStorage.getItem('token');
+        window.open(`/api/files/${safePathForApiFiles}?token=${token}`, '_blank');
+    }
+}
+
+async function fmToggleAviso(rutaArchivo, checkbox) {
+    const originalState = !checkbox.checked;
+    
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch('/api/filemanager/toggle-aviso', {
+            method: 'POST',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ rutaArchivo })
+        });
+
+        if (!res.ok) {
+            throw new Error('Error al cambiar el estado del aviso');
+        }
+        // Estado guardado en DB (no necesitamos recargar toda la carpeta)
+    } catch (error) {
+        console.error(error);
+        checkbox.checked = originalState; // Revertir visualmente si falla
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: 'No se pudo guardar el estado',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+}
