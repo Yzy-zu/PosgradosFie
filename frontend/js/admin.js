@@ -3116,56 +3116,58 @@ function renderExplorador() {
             return;
         }
 
-        // Nivel 1: Agrupar por Aspirante dentro del programa
-        const programaSeleccionado = exploradorCurrentPath[0].valor;
-        const docsPrograma = exploradorDatos.filter(d => d.programa === programaSeleccionado);
-        
-        const aspirantesMap = new Map();
-        docsPrograma.forEach(d => {
-            if(!aspirantesMap.has(d.aspiranteId)) {
-                aspirantesMap.set(d.aspiranteId, { id: d.aspiranteId, nombre: d.aspiranteNombreCompleto });
+        if (exploradorCurrentPath.length === 1) {
+            // Nivel 1: Agrupar por Aspirante dentro del programa
+            const programaSeleccionado = exploradorCurrentPath[0].valor;
+            const docsPrograma = exploradorDatos.filter(d => d.programa === programaSeleccionado);
+            
+            const aspirantesMap = new Map();
+            docsPrograma.forEach(d => {
+                if(!aspirantesMap.has(d.aspiranteId)) {
+                    aspirantesMap.set(d.aspiranteId, { id: d.aspiranteId, nombre: d.aspiranteNombreCompleto });
+                }
+            });
+
+            if(aspirantesMap.size === 0) {
+                itemsHTML = `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay aspirantes en este programa.</p></div>`;
             }
-        });
 
-        if(aspirantesMap.size === 0) {
-            itemsHTML = `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay aspirantes en este programa.</p></div>`;
+            aspirantesMap.forEach(aspi => {
+                itemsHTML += `
+                    <div class="explorer-folder" onclick="exploradorEntrarDirectorio('aspirante', ${aspi.id}, '${aspi.nombre}')">
+                        <i class="fa-solid fa-user-graduate explorer-icon" style="color: #4cc9f0;"></i>
+                        <span class="explorer-name">${aspi.nombre}</span>
+                    </div>
+                `;
+            });
+        } else if (exploradorCurrentPath.length === 2) {
+            // Nivel 2: Mostrar Documentos del aspirante
+            const programaSeleccionado = exploradorCurrentPath[0].valor;
+            const aspiranteSeleccionado = exploradorCurrentPath[1].valor;
+            const documentos = exploradorDatos.filter(d => d.programa === programaSeleccionado && d.aspiranteId === aspiranteSeleccionado);
+
+            if(documentos.length === 0) {
+                itemsHTML = `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay documentos para este aspirante.</p></div>`;
+            }
+
+            documentos.forEach(doc => {
+                let badgeHtml = '';
+                let bgClass = 'bg-secondary';
+                if(doc.estadoValidacion === 'PENDIENTE') bgClass = 'bg-warning text-dark';
+                else if(doc.estadoValidacion === 'APROBADO') bgClass = 'bg-success';
+                else if(doc.estadoValidacion === 'RECHAZADO') bgClass = 'bg-danger';
+
+                badgeHtml = `<span class="badge ${bgClass} mt-2" style="font-size:0.7rem">${doc.estadoValidacion}</span>`;
+
+                itemsHTML += `
+                    <div class="explorer-file" onclick="verDocumentoExplorer('${doc.rutaArchivo}')">
+                        <i class="fa-solid fa-file-pdf explorer-icon"></i>
+                        <span class="explorer-name" title="${doc.requisitoNombre}">${doc.requisitoNombre}</span>
+                        ${badgeHtml}
+                    </div>
+                `;
+            });
         }
-
-        aspirantesMap.forEach(aspi => {
-            itemsHTML += `
-                <div class="explorer-folder" onclick="exploradorEntrarDirectorio('aspirante', ${aspi.id}, '${aspi.nombre}')">
-                    <i class="fa-solid fa-user-graduate explorer-icon" style="color: #4cc9f0;"></i>
-                    <span class="explorer-name">${aspi.nombre}</span>
-                </div>
-            `;
-        });
-    } else if (exploradorCurrentPath.length === 2) {
-        // Nivel 2: Mostrar Documentos del aspirante
-        const programaSeleccionado = exploradorCurrentPath[0].valor;
-        const aspiranteSeleccionado = exploradorCurrentPath[1].valor;
-        const documentos = exploradorDatos.filter(d => d.programa === programaSeleccionado && d.aspiranteId === aspiranteSeleccionado);
-
-        if(documentos.length === 0) {
-            itemsHTML = `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay documentos para este aspirante.</p></div>`;
-        }
-
-        documentos.forEach(doc => {
-            let badgeHtml = '';
-            let bgClass = 'bg-secondary';
-            if(doc.estadoValidacion === 'PENDIENTE') bgClass = 'bg-warning text-dark';
-            else if(doc.estadoValidacion === 'APROBADO') bgClass = 'bg-success';
-            else if(doc.estadoValidacion === 'RECHAZADO') bgClass = 'bg-danger';
-
-            badgeHtml = `<span class="badge ${bgClass} mt-2" style="font-size:0.7rem">${doc.estadoValidacion}</span>`;
-
-            itemsHTML += `
-                <div class="explorer-file" onclick="verDocumentoExplorer('${doc.rutaArchivo}')">
-                    <i class="fa-solid fa-file-pdf explorer-icon"></i>
-                    <span class="explorer-name" title="${doc.requisitoNombre}">${doc.requisitoNombre}</span>
-                    ${badgeHtml}
-                </div>
-            `;
-        });
     }
 
     grid.innerHTML = itemsHTML;
