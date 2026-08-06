@@ -1,4 +1,6 @@
 const ProgramacionCursoService = require('../services/programacionCursoService');
+const db = require('../database/db');
+const emit = require('../utils/socketEmit');
 
 const programarCurso = async (req, res) => {
     try {
@@ -12,9 +14,18 @@ const programarCurso = async (req, res) => {
             observaciones
         });
 
+        if (req.app.get('io')) {
+            const [solC] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [idSolicitud]);
+            if (solC.length > 0) emit.aAspiranteEspecifico(req, solC[0].idUsuario);
+            else emit.aAdmin(req);
+        }
+
         return res.status(200).json(resultado);
     } catch (error) {
         console.error('Error al programar curso propedéutico:', error);
+        if (error.message && error.message.includes('Error de configuración')) {
+            return res.status(400).json({ success: false, mensaje: error.message });
+        }
         return res.status(500).json({ success: false, mensaje: 'Error interno al programar el curso propedéutico.' });
     }
 };
@@ -50,9 +61,22 @@ const capturarResultado = async (req, res) => {
             observaciones
         });
 
+        if (resultado.bloqueo) {
+            return res.status(422).json(resultado);
+        }
+
+        if (req.app.get('io')) {
+            const [solCC] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [idSolicitud]);
+            if (solCC.length > 0) emit.aAspiranteEspecifico(req, solCC[0].idUsuario);
+            else emit.aAdmin(req);
+        }
+
         return res.status(200).json(resultado);
     } catch (error) {
         console.error('Error al capturar resultado de curso propedéutico:', error);
+        if (error.message && error.message.includes('Regresión de workflow impedida')) {
+            return res.status(400).json({ success: false, mensaje: error.message });
+        }
         return res.status(500).json({ success: false, mensaje: 'Error interno al capturar resultado del curso propedéutico.' });
     }
 };

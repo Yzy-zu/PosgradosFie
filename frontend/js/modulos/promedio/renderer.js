@@ -208,9 +208,9 @@ const moduloPromedioRenderer = {
                             </div>
                         </div>
                         ${certificado ? `
-                            <a href="/api/files/${certificado.rutaArchivo}?token=${token}" target="_blank" class="btn-secondary btn-sm" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; text-decoration: none;">
+                            <button type="button" onclick="abrirArchivoSeguro('${certificado.rutaArchivo}')" class="btn-secondary btn-sm" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--color-border); background: var(--color-card-bg); color: var(--color-text); cursor: pointer;">
                                 <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Ver Certificado
-                            </a>
+                            </button>
                         ` : '<span style="font-size: 12px; color: #ef4444; font-weight: 600;">Faltante</span>'}
                     </div>
 
@@ -224,9 +224,9 @@ const moduloPromedioRenderer = {
                             </div>
                         </div>
                         ${titulo ? `
-                            <a href="/api/files/${titulo.rutaArchivo}?token=${token}" target="_blank" class="btn-secondary btn-sm" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; text-decoration: none;">
+                            <button type="button" onclick="abrirArchivoSeguro('${titulo.rutaArchivo}')" class="btn-secondary btn-sm" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--color-border); background: var(--color-card-bg); color: var(--color-text); cursor: pointer;">
                                 <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Ver Título
-                            </a>
+                            </button>
                         ` : '<span style="font-size: 12px; color: var(--color-text-muted);">No disponible</span>'}
                     </div>
 
@@ -240,9 +240,9 @@ const moduloPromedioRenderer = {
                                 <div style="font-size: 11px; color: var(--color-text-muted);">Estado: ${cedula.estadoValidacion}</div>
                             </div>
                         </div>
-                        <a href="/api/files/${cedula.rutaArchivo}?token=${token}" target="_blank" class="btn-secondary btn-sm" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; text-decoration: none;">
+                        <button type="button" onclick="abrirArchivoSeguro('${cedula.rutaArchivo}')" class="btn-secondary btn-sm" style="padding: 5px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--color-border); background: var(--color-card-bg); color: var(--color-text); cursor: pointer;">
                             <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Ver Cédula
-                        </a>
+                        </button>
                     </div>
                     ` : ''}
                 </div>

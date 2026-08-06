@@ -4,8 +4,8 @@ class WorkflowService {
     /**
      * Obtiene la primera etapa de una modalidad
      */
-    static async getPrimeraEtapa(idModalidad) {
-        const [resultados] = await db.query(
+    static async getPrimeraEtapa(idModalidad, conn = db) {
+        const [resultados] = await conn.query(
             `SELECT etapa_id FROM modalidad_etapa 
              WHERE modalidad_id = ? 
              ORDER BY orden ASC 
@@ -23,9 +23,9 @@ class WorkflowService {
     /**
      * Obtiene la etapa actual de una solicitud y la siguiente etapa según el workflow
      */
-    static async getSiguienteEtapa(idModalidad, idEtapaActual) {
+    static async getSiguienteEtapa(idModalidad, idEtapaActual, conn = db) {
         // 1. Obtener el orden de la etapa actual
-        const [actual] = await db.query(
+        const [actual] = await conn.query(
             `SELECT orden FROM modalidad_etapa 
              WHERE modalidad_id = ? AND etapa_id = ?`,
             [idModalidad, idEtapaActual]
@@ -38,7 +38,7 @@ class WorkflowService {
         const ordenActual = actual[0].orden;
 
         // 2. Obtener la siguiente etapa
-        const [siguiente] = await db.query(
+        const [siguiente] = await conn.query(
             `SELECT etapa_id FROM modalidad_etapa 
              WHERE modalidad_id = ? AND orden > ? 
              ORDER BY orden ASC 
@@ -56,9 +56,9 @@ class WorkflowService {
     /**
      * Avanza una solicitud a la siguiente etapa de su modalidad
      */
-    static async avanzarEtapa(idSolicitud) {
+    static async avanzarEtapa(idSolicitud, conn = db) {
         // 1. Obtener la solicitud actual
-        const [solicitudes] = await db.query(
+        const [solicitudes] = await conn.query(
             'SELECT idModalidad, idEtapaActual FROM solicitud WHERE id = ?',
             [idSolicitud]
         );
@@ -70,7 +70,7 @@ class WorkflowService {
         const { idModalidad, idEtapaActual } = solicitudes[0];
 
         // 2. Obtener la siguiente etapa
-        const idSiguienteEtapa = await this.getSiguienteEtapa(idModalidad, idEtapaActual);
+        const idSiguienteEtapa = await this.getSiguienteEtapa(idModalidad, idEtapaActual, conn);
 
         if (!idSiguienteEtapa) {
             return {
@@ -80,7 +80,7 @@ class WorkflowService {
         }
 
         // 3. Actualizar la solicitud
-        await db.query(
+        await conn.query(
             'UPDATE solicitud SET idEtapaActual = ? WHERE id = ?',
             [idSiguienteEtapa, idSolicitud]
         );

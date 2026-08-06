@@ -4,13 +4,30 @@ let estacionActual = 0;
 let aspiranteData = null; // Almacenará los datos de la BD del aspirante
 let currentSolicitudId = null;
 
-// Conexión Socket.io
+// Conexión Socket.io — registrar sala al conectar
 const socket = io();
+socket.on('connect', () => {
+    const usr = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+    socket.emit('registrarSala', { rol: 'ASPIRANTE', idUsuario: usr.id });
+});
 socket.on('actualizacionGlobal', () => {
     // Recargar vista actual si hay un cambio en el sistema (ej. evaluación de docente)
     const currentHash = window.location.hash;
     if (currentHash === '#inicio' || currentHash === '') {
         if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
+        if (typeof cargarStatsInicio === 'function') cargarStatsInicio();
+        if (aspiranteData && aspiranteData.id) {
+            fetch(`/api/solicitud/activa/${aspiranteData.id}`)
+                .then(res => res.json())
+                .then(soliData => {
+                    if (soliData && soliData.existe) {
+                        hidratarUI(soliData);
+                    }
+                })
+                .catch(e => console.error("Error actualizando inicio:", e));
+        }
+    } else if (currentHash === '#proceso') {
+        if (typeof cargarDatosProceso === 'function') cargarDatosProceso();
     } else if (currentHash === '#documentos' || currentHash === '#admision') {
         if (aspiranteData && aspiranteData.id) {
             fetch(`/api/solicitud/activa/${aspiranteData.id}`)
@@ -1004,19 +1021,27 @@ async function avanzarEstacion(nuevaEstacion) {
         if (nivelAcademicoSeleccionado !== 'Doctorado') {
             const contenedorMaestria = document.getElementById('opciones-admision-maestria');
             const inputModalidad = contenedorMaestria ? contenedorMaestria.querySelector('input[name="modalidad"]:checked') : null;
-            if (inputModalidad) {
-                try {
-                    const res = await fetch(`/api/solicitud/modalidad/${currentSolicitudId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ tipoAdmision: inputModalidad.value }) // Por retrocompatibilidad de nombre de var en frontend, enviamos el ID en value
-                    });
-                    if (!res.ok) {
-                        console.error("Error al guardar la modalidad en la base de datos.");
-                    }
-                } catch (e) {
-                    console.error("Error de conexión al guardar modalidad:", e);
+            if (!inputModalidad) {
+                if (boton) boton.disabled = false;
+                Swal.fire({
+                    title: 'Modalidad requerida',
+                    text: 'Debes seleccionar una modalidad de admisión para continuar.',
+                    icon: 'warning',
+                    confirmButtonColor: '#8a1c24'
+                });
+                return;
+            }
+            try {
+                const res = await fetch(`/api/solicitud/modalidad/${currentSolicitudId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tipoAdmision: inputModalidad.value }) // Por retrocompatibilidad de nombre de var en frontend, enviamos el ID en value
+                });
+                if (!res.ok) {
+                    console.error("Error al guardar la modalidad en la base de datos.");
                 }
+            } catch (e) {
+                console.error("Error de conexión al guardar modalidad:", e);
             }
         }
     }
@@ -1098,6 +1123,8 @@ function actualizarCostosAdmision() {
     if (detallesBox) {
         detallesBox.style.display = 'block';
     }
+
+    verificarArchivosEstacion(0);
 }
 
 
@@ -1106,9 +1133,17 @@ function actualizarCostosAdmision() {
  */
 function verificarArchivosEstacion(estacion) {
     if (estacion === 0) {
+        const btn = document.getElementById('btn-next-0');
+        if (!btn) return;
+
         if (nivelAcademicoSeleccionado === "Doctorado") {
-            const grado = document.getElementById('file-grado-maestria').files.length > 0;
-            document.getElementById('btn-next-0').disabled = !grado;
+            const gradoEl = document.getElementById('file-grado-maestria');
+            const grado = gradoEl && gradoEl.files && gradoEl.files.length > 0;
+            btn.disabled = !grado;
+        } else {
+            const contenedorMaestria = document.getElementById('opciones-admision-maestria');
+            const inputModalidad = contenedorMaestria ? contenedorMaestria.querySelector('input[name="modalidad"]:checked') : null;
+            btn.disabled = !inputModalidad;
         }
         return;
     }
@@ -2305,17 +2340,19 @@ function hidratarUI(soliData) {
                 </div>
 
                 <h4 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 800; color: var(--color-text); display: flex; align-items: center; gap: 10px;">
-                    <i class="fa-solid fa-trophy" style="color: #f59e0b;"></i> ${typeof t === 'function' ? t('exam_felicidades_calif') : '¡Felicidades, tu calificación ha sido registrada!'}
+                    <i class="fa-solid fa-trophy" style="color: #f59e0b;"></i> ${soliData.idModalidad === 2 ? '¡Tu curso propedéutico ha finalizado!' : (typeof t === 'function' ? t('exam_felicidades_calif') : '¡Felicidades, tu calificación ha sido registrada!')}
                 </h4>
-                <p style="margin-bottom: 20px; color: var(--color-text-muted); font-size: 14px; line-height: 1.5;">${typeof t === 'function' ? t('exam_evaluado_desc') : 'Tu examen de admisión ha sido evaluado y los resultados ya se integraron a tu proceso.'}</p>
+                <p style="margin-bottom: 20px; color: var(--color-text-muted); font-size: 14px; line-height: 1.5;">${soliData.idModalidad === 2 ? 'Tu curso propedéutico ha sido evaluado y los resultados ya se integraron a tu proceso.' : (typeof t === 'function' ? t('exam_evaluado_desc') : 'Tu examen de admisión ha sido evaluado y los resultados ya se integraron a tu proceso.')}</p>
                 
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    ${soliData.idModalidad !== 2 ? `
                     <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 16px 20px; border-radius: 12px; flex: 1; min-width: 160px;">
                         <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; color: var(--color-text-muted); margin-bottom: 6px;">${typeof t === 'function' ? t('exam_calif_obtenida') : 'Calificación Obtenida'}</span>
                         <strong style="font-size: 32px; font-weight: 800; color: var(--color-text); line-height: 1;">${soliData.calificacion}</strong>
                     </div>
+                    ` : ''}
                     <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 16px 20px; border-radius: 12px; flex: 1; min-width: 160px;">
-                        <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; color: var(--color-text-muted); margin-bottom: 6px;">${typeof t === 'function' ? t('exam_resultado') : 'Resultado'}</span>
+                        <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; color: var(--color-text-muted); margin-bottom: 6px;">${typeof t === 'function' ? t('exam_resultado') : 'Resultado Final'}</span>
                         <div style="font-size: 20px; font-weight: 800; color: ${soliData.resultadoAprobado ? '#10b981' : '#ef4444'}; display: flex; align-items: center; gap: 8px;">
                             <i class="fa-solid ${soliData.resultadoAprobado ? 'fa-circle-check' : 'fa-circle-xmark'}"></i> ${soliData.resultadoAprobado ? (typeof t === 'function' ? t('exam_aprobado') : 'Aprobado') : (typeof t === 'function' ? t('exam_no_aprobado') : 'No Aprobado')}
                         </div>
@@ -2395,7 +2432,7 @@ async function cargarDocsLecturaAspirante(soliData) {
                                 ${badgeDoc}
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top" style="border-color: var(--color-border) !important;">
-                                <a href="javascript:void(0)" onclick="window.open('/api/files/${doc.rutaArchivo}?token=' + (sessionStorage.getItem('token') || localStorage.getItem('token')), '_blank')" class="btn-ver-doc">
+                                <a href="javascript:void(0)" onclick="abrirArchivoSeguro('${doc.rutaArchivo}')" class="btn-ver-doc">
                                     <i class="fa-solid fa-file-pdf me-1"></i> Ver PDF
                                 </a>
                             </div>
@@ -2431,8 +2468,8 @@ function configurarPanelesNivel(nivel, idConvocatoria, documentosSubidos = []) {
         if (document.getElementById('opciones-admision-doctorado')) document.getElementById('opciones-admision-doctorado').style.display = 'none';
         if (document.getElementById('opciones-admision-maestria')) document.getElementById('opciones-admision-maestria').style.display = 'flex';
 
-        if (document.getElementById('btn-next-0')) document.getElementById('btn-next-0').disabled = false;
         actualizarCostosAdmision();
+        verificarArchivosEstacion(0);
     }
 
     if (idConvocatoria) cargarRequisitosDocumentales(idConvocatoria, documentosSubidos);
@@ -2546,24 +2583,59 @@ function resetAutoSlide() {
 }
 
 // Iniciar carrusel después de que el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     carouselTrack = document.getElementById('inicio-carousel-track');
-    carouselIndicators = Array.from(document.querySelectorAll('#inicio-carousel-indicators .indicator'));
-    totalSlides = document.querySelectorAll('.carousel-slide').length;
+    const indicatorsContainer = document.getElementById('inicio-carousel-indicators');
+    
+    if (carouselTrack && indicatorsContainer) {
+        try {
+            const token = sessionStorage.getItem('token');
+            const res = await fetch('/api/avisos/activos', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const avisos = await res.json();
+                
+                if (avisos.length === 0) {
+                    // Si no hay avisos, ocultar el carrusel completo
+                    const container = document.getElementById('inicio-carousel');
+                    if (container) container.style.display = 'none';
+                    return;
+                }
 
-    if (carouselTrack && totalSlides > 0) {
-        // Asegurarse de que el primer slide asigne la altura inicial correctamente
-        const firstImg = document.querySelector('.carousel-slide img');
-        if (firstImg) {
-            if (firstImg.complete) {
+                let trackHTML = '';
+                let indicatorsHTML = '';
+
+                avisos.forEach((aviso, index) => {
+                    const ext = aviso.rutaArchivo.split('.').pop().toLowerCase();
+                    const isVideo = aviso.tipo === 'video' || ['mp4', 'webm', 'ogg', 'mov'].includes(ext);
+
+                    const mediaHTML = isVideo 
+                        ? `<video src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" autoplay muted loop playsinline style="object-fit: cover; width: 100%; height: 100%;"></video>`
+                        : `<img src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" alt="${aviso.titulo}" style="object-fit: cover; width: 100%; height: 100%;">`;
+
+                    trackHTML += `
+                        <div class="carousel-slide">
+                            ${mediaHTML}
+                        </div>
+                    `;
+                    indicatorsHTML += `
+                        <span class="indicator ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>
+                    `;
+                });
+
+                carouselTrack.innerHTML = trackHTML;
+                indicatorsContainer.innerHTML = indicatorsHTML;
+
+                carouselIndicators = Array.from(indicatorsContainer.querySelectorAll('.indicator'));
+                totalSlides = avisos.length;
+                currentSlide = 0;
                 updateCarousel();
-            } else {
-                firstImg.onload = () => updateCarousel();
+                startAutoSlide();
             }
-        } else {
-            updateCarousel();
+        } catch (e) {
+            console.error('Error al cargar avisos:', e);
         }
-        startAutoSlide();
     }
 });
 

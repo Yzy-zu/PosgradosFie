@@ -4,41 +4,183 @@ let todasLasOpcionesPosgrado = [];
 let pasoActualConvocatoria = 1;
 const totalPasosConvocatoria = 4;
 
+let listaConvocatorias = [];
+let textoBusquedaConvocatoria = "";
+let filtroEstadoConvocatoria = "TODAS";
 
 /* ==========================================================
    1. INICIALIZACIÓN
 ========================================================== */
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
 
-    const modalConvocatoria =
-        document.getElementById("modalConvocatoria");
+        const modalConvocatoria =
+            document.getElementById(
+                "modalConvocatoria"
+            );
 
-    const contenedorConvocatorias =
-        document.getElementById("contenedorConvocatorias");
+        const contenedorConvocatorias =
+            document.getElementById(
+                "contenedorConvocatorias"
+            );
 
-    if (!modalConvocatoria && !contenedorConvocatorias) {
+        if (
+            !modalConvocatoria &&
+            !contenedorConvocatorias
+        ) {
+            return;
+        }
+
+        await cargarPosgradosEnSelect();
+        await cargarOpcionesPosgradoGlobal();
+        await cargarCatalogoRequisitosUI();
+
+        inicializarFlatpickr();
+        configurarFormularioConvocatoria();
+        configurarSelectorPosgrado();
+        actualizarWizard(1);
+
+        if (modalConvocatoria) {
+
+            modalConvocatoria.addEventListener(
+                "shown.bs.modal",
+                () => {
+                    inicializarFlatpickr();
+                }
+            );
+        }
+
+        /* ==========================================
+           BUSCADOR
+        ========================================== */
+
+        const buscarConvocatoria =
+            document.getElementById(
+                "buscarConvocatoria"
+            );
+
+        if (buscarConvocatoria) {
+
+            buscarConvocatoria.addEventListener(
+                "input",
+                event => {
+
+                    textoBusquedaConvocatoria =
+                        String(
+                            event.target.value || ""
+                        )
+                            .trim()
+                            .toLowerCase();
+
+                    renderizarConvocatoriasFiltradas();
+                }
+            );
+        }
+
+        /* ==========================================
+           BOTONES DE FILTRO
+        ========================================== */
+
+        const botonesFiltro =
+            document.querySelectorAll(
+                ".filtro-convocatoria"
+            );
+
+        botonesFiltro.forEach(
+            boton => {
+
+                boton.addEventListener(
+                    "click",
+                    () => {
+
+                        filtroEstadoConvocatoria =
+                            String(
+                                boton.dataset.estado ||
+                                "TODAS"
+                            )
+                                .trim()
+                                .toUpperCase();
+
+                        botonesFiltro.forEach(
+                            elemento => {
+
+                                elemento.classList.remove(
+                                    "active"
+                                );
+                            }
+                        );
+
+                        boton.classList.add(
+                            "active"
+                        );
+
+                        renderizarConvocatoriasFiltradas();
+                    }
+                );
+            }
+        );
+
+        /* ==========================================
+           CARGAR DATOS
+        ========================================== */
+
+        await cargarConvocatorias();
+    }
+);
+
+
+/* ==========================================================
+   2. CONFIGURAR SELECTOR DE POSGRADO
+========================================================== */
+
+function configurarSelectorPosgrado() {
+
+    const select =
+        document.getElementById(
+            "convocatoria_posgrado"
+        );
+
+    if (!select) {
+        console.warn(
+            "No se encontró el select convocatoria_posgrado."
+        );
+
         return;
     }
 
-    await cargarPosgradosEnSelect();
-    await cargarOpcionesPosgradoGlobal();
-    await cargarCatalogoRequisitosUI();
-
-    inicializarFlatpickr();
-    configurarFormularioConvocatoria();
-    configurarSelectorPosgrado();
-    actualizarWizard(1);
-
-    if (modalConvocatoria) {
-        modalConvocatoria.addEventListener(
-            "shown.bs.modal",
-            () => {
-                inicializarFlatpickr();
-            }
-        );
+    if (
+        select.dataset.listenerOpciones ===
+        "true"
+    ) {
+        return;
     }
-});
+
+    select.addEventListener(
+        "change",
+        event => {
+
+            const posgradoId =
+                event.target.value;
+
+            if (
+                typeof renderizarOpcionesPorPosgrado ===
+                "function"
+            ) {
+
+                renderizarOpcionesPorPosgrado(
+                    posgradoId,
+                    [],
+                    false
+                );
+            }
+        }
+    );
+
+    select.dataset.listenerOpciones =
+        "true";
+}
 
 
 /* ==========================================================
@@ -48,51 +190,63 @@ document.addEventListener("DOMContentLoaded", async () => {
 function configurarFormularioConvocatoria() {
 
     const formulario =
-        document.getElementById("formConvocatoria");
+        document.getElementById(
+            "formConvocatoria"
+        );
 
-    if (!formulario) return;
+    const botonActual =
+        document.getElementById(
+            "btnSaveConvocatoria"
+        );
+
+    if (!formulario || !botonActual) {
+        return;
+    }
 
     /*
-     * Evita agregar dos listeners si admin.js o coor.js
-     * intentan inicializar nuevamente el formulario.
+     * Bloquea por completo el envío normal del formulario,
+     * para evitar que la página se recargue.
      */
-    if (formulario.dataset.listenerGuardado === "true") {
+    formulario.onsubmit = event => {
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+
+        return false;
+    };
+
+    /*
+     * Si ya fue configurado, no agregamos otro evento.
+     */
+    if (
+        botonActual.dataset.listenerGuardado ===
+        "true"
+    ) {
         return;
     }
 
-    formulario.addEventListener(
-        "submit",
-        guardarConvocatoria
+    /*
+     * Asegurar que el botón nunca sea submit.
+     */
+    botonActual.type = "button";
+
+    botonActual.addEventListener(
+        "click",
+        async event => {
+
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+
+            await guardarConvocatoria();
+
+            return false;
+        }
     );
 
-    formulario.dataset.listenerGuardado = "true";
-}
-
-
-function configurarSelectorPosgrado() {
-
-    const select =
-        document.getElementById(
-            "convocatoria_posgrado"
-        );
-
-    if (!select) return;
-
-    if (select.dataset.listenerOpciones === "true") {
-        return;
-    }
-
-    select.addEventListener("change", event => {
-
-        renderizarOpcionesPorPosgrado(
-            event.target.value,
-            [],
-            false
-        );
-
-    });
-
-    select.dataset.listenerOpciones = "true";
+    botonActual.dataset.listenerGuardado =
+        "true";
 }
 
 
@@ -112,63 +266,81 @@ async function cargarConvocatorias() {
             "totalConvocatorias"
         );
 
-    if (!contenedor) return;
+    if (!contenedor) {
+        return;
+    }
 
     contenedor.innerHTML = `
         <div class="col-12 text-center py-5 text-muted">
-            <div class="spinner-border spinner-border-sm me-2"
-                 style="color: #8a1c24;"></div>
+
+            <div
+                class="spinner-border spinner-border-sm me-2"
+                style="color: #8a1c24;">
+            </div>
+
             Cargando convocatorias...
+
         </div>
     `;
 
     try {
 
         const respuesta =
-            await fetch("/api/convocatorias");
+            await fetch(
+                "/api/convocatorias"
+            );
 
         if (!respuesta.ok) {
+
             throw new Error(
                 `Error HTTP ${respuesta.status}`
             );
         }
 
-        const convocatorias =
+        const resultado =
             await respuesta.json();
 
+        /*
+         * Guardamos todas las convocatorias
+         * para poder buscarlas y filtrarlas.
+         */
+        listaConvocatorias =
+            Array.isArray(resultado)
+                ? resultado
+                : [];
+
         if (totalConvocatorias) {
+
             totalConvocatorias.textContent =
-                Array.isArray(convocatorias)
-                    ? convocatorias.length
-                    : 0;
+                listaConvocatorias.length;
         }
 
         contenedor.innerHTML = "";
 
         if (
-            !Array.isArray(convocatorias) ||
-            convocatorias.length === 0
+            listaConvocatorias.length === 0
         ) {
 
             contenedor.innerHTML = `
                 <div class="col-12 text-center py-5 text-muted">
-                    <i class="fa-solid fa-folder-open fa-2x mb-3 d-block opacity-50"></i>
+
+                    <i
+                        class="fa-solid fa-folder-open fa-2x mb-3 d-block opacity-50">
+                    </i>
+
                     No hay convocatorias registradas.
+
                 </div>
             `;
 
             return;
         }
 
-        convocatorias.forEach(convocatoria => {
-
-            const columna =
-                crearTarjetaConvocatoria(
-                    convocatoria
-                );
-
-            contenedor.appendChild(columna);
-        });
+        /*
+         * Mostrar las convocatorias aplicando
+         * el buscador y los filtros activos.
+         */
+        renderizarConvocatoriasFiltradas();
 
     } catch (error) {
 
@@ -177,15 +349,111 @@ async function cargarConvocatorias() {
             error
         );
 
+        listaConvocatorias = [];
+
         contenedor.innerHTML = `
             <div class="col-12 text-center py-5 text-danger">
-                <i class="fa-solid fa-circle-exclamation fa-2x mb-3 d-block"></i>
+
+                <i
+                    class="fa-solid fa-circle-exclamation fa-2x mb-3 d-block">
+                </i>
+
                 No se pudieron cargar las convocatorias.
+
             </div>
         `;
     }
 }
 
+/* ==========================================================
+   FILTRAR Y MOSTRAR CONVOCATORIAS
+========================================================== */
+
+function renderizarConvocatoriasFiltradas() {
+
+    const contenedor =
+        document.getElementById(
+            "contenedorConvocatorias"
+        );
+
+    if (!contenedor) {
+        return;
+    }
+
+    const convocatoriasFiltradas =
+        listaConvocatorias.filter(
+            convocatoria => {
+
+                const textoConvocatoria = [
+                    convocatoria.nombre,
+                    convocatoria.titulo,
+                    convocatoria.descripcion,
+                    convocatoria.modalidad,
+                    convocatoria.tipo
+                ]
+                    .map(valor =>
+                        String(valor || "")
+                            .trim()
+                            .toLowerCase()
+                    )
+                    .join(" ");
+
+                const estado =
+                    String(
+                        convocatoria.estado ||
+                        convocatoria.estatus ||
+                        "Borrador"
+                    )
+                        .trim()
+                        .toUpperCase();
+
+                const coincideBusqueda =
+                    textoConvocatoria.includes(
+                        textoBusquedaConvocatoria
+                    );
+
+                const coincideEstado =
+                    filtroEstadoConvocatoria === "TODAS" ||
+                    estado === filtroEstadoConvocatoria;
+
+                return (
+                    coincideBusqueda &&
+                    coincideEstado
+                );
+            }
+        );
+
+    contenedor.innerHTML = "";
+
+    if (convocatoriasFiltradas.length === 0) {
+
+        contenedor.innerHTML = `
+            <div class="col-12 text-center py-5 text-muted">
+
+                <i class="fa-solid fa-magnifying-glass fa-2x mb-3 d-block opacity-50"></i>
+
+                No se encontraron convocatorias con los filtros seleccionados.
+
+            </div>
+        `;
+
+        return;
+    }
+
+    convocatoriasFiltradas.forEach(
+        convocatoria => {
+
+            const columna =
+                crearTarjetaConvocatoria(
+                    convocatoria
+                );
+
+            contenedor.appendChild(
+                columna
+            );
+        }
+    );
+}
 
 function crearTarjetaConvocatoria(convocatoria) {
 
@@ -322,35 +590,54 @@ function crearTarjetaConvocatoria(convocatoria) {
         </div>
     `;
 
-    const tarjeta =
-        columna.querySelector(".card");
+   const tarjeta =
+    columna.querySelector(".card");
 
-    tarjeta.addEventListener("mouseenter", () => {
-        tarjeta.style.transform =
-            "translateY(-3px)";
-
-        tarjeta.style.boxShadow =
-            "0 14px 35px rgba(15, 23, 42, 0.12)";
-    });
-
-    tarjeta.addEventListener("mouseleave", () => {
-        tarjeta.style.transform =
-            "translateY(0)";
-
-        tarjeta.style.boxShadow = "";
-    });
-
-    tarjeta.addEventListener("click", () => {
-
-        if (convocatoria.id) {
-            editarConvocatoria(
-                convocatoria.id
-            );
-        }
-
-    });
-
+if (!tarjeta) {
     return columna;
+}
+
+tarjeta.addEventListener("mouseenter", () => {
+
+    tarjeta.style.transform =
+        "translateY(-3px)";
+
+    tarjeta.style.boxShadow =
+        "0 14px 35px rgba(15, 23, 42, 0.12)";
+});
+
+tarjeta.addEventListener("mouseleave", () => {
+
+    tarjeta.style.transform =
+        "translateY(0)";
+
+    tarjeta.style.boxShadow = "";
+});
+
+tarjeta.addEventListener("click", () => {
+
+    console.log(
+        "Click en convocatoria:",
+        convocatoria.id
+    );
+
+    if (!convocatoria.id) {
+
+        console.error(
+            "La convocatoria no tiene ID."
+        );
+
+        return;
+    }
+
+    editarConvocatoria(
+        convocatoria.id
+    );
+
+});
+
+return columna;
+
 }
 
 
@@ -609,55 +896,12 @@ function renderizarOpcionesPorPosgrado(
                 ? Boolean(seleccionPrevia)
                 : true;
 
-        const cupos =
-            seleccionPrevia?.cupos ?? "";
-
         html += `
-            <div
-                class="d-flex justify-content-between align-items-center p-2 rounded border"
-                style="
-                    background: var(--color-card-bg, #fff);
-                    border-color: var(--color-border, #dee2e6) !important;
-                ">
-
-                <div class="form-check mb-0">
-
-                    <input
-                        class="form-check-input opc-checkbox"
-                        type="checkbox"
-                        value="${opcion.id}"
-                        id="opc_${opcion.id}"
-                        ${seleccionada ? "checked" : ""}>
-
-                    <label
-                        class="form-check-label fw-semibold"
-                        for="opc_${opcion.id}"
-                        style="cursor: pointer;">
-
-                        ${escaparHTML(opcion.nombre)}
-
-                    </label>
-
-                </div>
-
-                <div
-                    class="d-flex align-items-center gap-2"
-                    style="width: 145px;">
-
-                    <small class="text-muted">
-                        Cupos:
-                    </small>
-
-                    <input
-                        type="number"
-                        min="0"
-                        class="form-control form-control-sm text-center cupo-input"
-                        id="cupos_opc_${opcion.id}"
-                        placeholder="Ilimitado"
-                        value="${cupos}">
-
-                </div>
-
+            <div class="form-check m-0 py-1.5 px-3 rounded border d-flex align-items-center gap-2 custom-option-item" style="background: var(--color-card-bg, #fff); border-color: var(--color-border, #dee2e6) !important;">
+                <input class="form-check-input opc-checkbox mt-0" type="checkbox" value="${opcion.id}" id="opc_${opcion.id}" ${seleccionada ? "checked" : ""} style="cursor:pointer;">
+                <label class="form-check-label fw-semibold text-wrap mb-0" for="opc_${opcion.id}" style="cursor:pointer; color: var(--color-text); font-size: 0.85rem; user-select: none;">
+                    ${escaparHTML(opcion.nombre)}
+                </label>
             </div>
         `;
     });
@@ -943,6 +1187,21 @@ function validarPasoActual() {
 
 function validarFechasPaso() {
 
+    const fechaEsAnterior = (inicio, fin) => {
+
+        if (!inicio || !fin) {
+            return false;
+        }
+
+        const fechaInicio =
+            new Date(`${inicio}T00:00:00`);
+
+        const fechaFin =
+            new Date(`${fin}T00:00:00`);
+
+        return fechaFin < fechaInicio;
+    };
+
     if (pasoActualConvocatoria === 2) {
 
         const inicio =
@@ -965,7 +1224,12 @@ function validarFechasPaso() {
                 "convocatoria_fechaFinDocumentos"
             );
 
-        if (fin < inicio) {
+        if (
+            fechaEsAnterior(
+                inicio,
+                fin
+            )
+        ) {
 
             mostrarAlertaFechas(
                 "La fecha final de la convocatoria no puede ser anterior al inicio."
@@ -975,8 +1239,10 @@ function validarFechasPaso() {
         }
 
         if (
-            finDocumentos <
-            inicioDocumentos
+            fechaEsAnterior(
+                inicioDocumentos,
+                finDocumentos
+            )
         ) {
 
             mostrarAlertaFechas(
@@ -994,17 +1260,22 @@ function validarFechasPaso() {
 
         if (tipo === "DOCTORADO") {
 
-            const inicio =
+            const inicioEntrevista =
                 obtenerValorCampo(
                     "convocatoria_fechaEntrevistaInicio"
                 );
 
-            const fin =
+            const finEntrevista =
                 obtenerValorCampo(
                     "convocatoria_fechaEntrevistaFin"
                 );
 
-            if (fin < inicio) {
+            if (
+                fechaEsAnterior(
+                    inicioEntrevista,
+                    finEntrevista
+                )
+            ) {
 
                 mostrarAlertaFechas(
                     "El fin de entrevistas no puede ser anterior al inicio."
@@ -1036,7 +1307,12 @@ function validarFechasPaso() {
                     "convocatoria_finExamen"
                 );
 
-            if (finCurso < inicioCurso) {
+            if (
+                fechaEsAnterior(
+                    inicioCurso,
+                    finCurso
+                )
+            ) {
 
                 mostrarAlertaFechas(
                     "El fin del curso no puede ser anterior al inicio."
@@ -1046,8 +1322,10 @@ function validarFechasPaso() {
             }
 
             if (
-                finExamen <
-                inicioExamen
+                fechaEsAnterior(
+                    inicioExamen,
+                    finExamen
+                )
             ) {
 
                 mostrarAlertaFechas(
@@ -1230,6 +1508,12 @@ async function cargarCatalogoRequisitosUI() {
 
                 </div>
             `;
+
+            const reqCb = fila.querySelector(`.req-checkbox`);
+            const oblCb = fila.querySelector(`.req-obligatorio`);
+            reqCb?.addEventListener("change", (e) => {
+                if (oblCb) oblCb.checked = e.target.checked;
+            });
 
             contenedor.appendChild(fila);
         });
@@ -1552,20 +1836,57 @@ function obtenerValorCampo(id) {
         ?.value || "";
 }
 
-
 /* ==========================================================
    12. GUARDAR O ACTUALIZAR
 ========================================================== */
 
 async function guardarConvocatoria(event) {
 
-    event.preventDefault();
+    // Evitar envío tradicional y recarga de página
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+    }
 
     const datos =
         obtenerDatosFormularioConvocatoria();
 
-    if (!validarDatosConvocatoria(datos)) {
-        return;
+    /*
+     * Ejecutar la validación solamente si la función existe.
+     * Esto evita el error:
+     * validarDatosConvocatoria is not defined
+     */
+    if (
+        typeof validarDatosConvocatoria ===
+        "function"
+    ) {
+
+        if (!validarDatosConvocatoria(datos)) {
+            return false;
+        }
+
+    } else {
+
+        console.warn(
+            "La función validarDatosConvocatoria no existe. Se aplicará una validación básica."
+        );
+
+        if (
+            !datos.nombre ||
+            !datos.posgrado_id ||
+            !datos.fecha_inicio ||
+            !datos.fecha_fin
+        ) {
+
+            await Swal.fire(
+                "Campos incompletos",
+                "Completa al menos el nombre, posgrado y las fechas principales.",
+                "warning"
+            );
+
+            return false;
+        }
     }
 
     const id =
@@ -1574,7 +1895,9 @@ async function guardarConvocatoria(event) {
         );
 
     const esEdicion =
-        Boolean(id.trim());
+        Boolean(
+            String(id || "").trim()
+        );
 
     const url =
         esEdicion
@@ -1604,26 +1927,28 @@ async function guardarConvocatoria(event) {
 
             btnGuardar.innerHTML = `
                 <span class="spinner-border spinner-border-sm me-2"></span>
-                Guardando...
+                ${esEdicion ? "Actualizando..." : "Guardando..."}
             `;
         }
 
         const respuesta =
-            await fetch(url, {
+            await fetch(
+                url,
+                {
+                    method: metodo,
 
-                method: metodo,
+                    headers: {
+                        "Content-Type":
+                            "application/json",
 
-                headers: {
-                    "Content-Type":
-                        "application/json",
+                        "Authorization":
+                            `Bearer ${token}`
+                    },
 
-                    "Authorization":
-                        `Bearer ${token}`
-                },
-
-                body:
-                    JSON.stringify(datos)
-            });
+                    body:
+                        JSON.stringify(datos)
+                }
+            );
 
         const resultado =
             await respuesta
@@ -1638,11 +1963,15 @@ async function guardarConvocatoria(event) {
             throw new Error(
                 resultado.mensaje ||
                 resultado.error ||
-                "No se pudo guardar la convocatoria."
+                (
+                    esEdicion
+                        ? "No se pudo actualizar la convocatoria."
+                        : "No se pudo crear la convocatoria."
+                )
             );
         }
 
-        Swal.fire({
+        await Swal.fire({
             icon: "success",
 
             title:
@@ -1664,12 +1993,48 @@ async function guardarConvocatoria(event) {
                 "modalConvocatoria"
             );
 
-        bootstrap.Modal
-            .getInstance(modalElement)
-            ?.hide();
+        if (modalElement) {
 
-        limpiarFormularioConvocatoria();
-        await cargarConvocatorias();
+            const instanciaModal =
+                bootstrap.Modal.getInstance(
+                    modalElement
+                );
+
+            instanciaModal?.hide();
+        }
+
+        if (
+            typeof limpiarFormularioConvocatoria ===
+            "function"
+        ) {
+
+            limpiarFormularioConvocatoria();
+        }
+
+        /*
+         * Mantener la vista de convocatorias.
+         */
+        if (
+            window.location.hash !==
+            "#convocatorias"
+        ) {
+
+            history.replaceState(
+                null,
+                "",
+                "#convocatorias"
+            );
+        }
+
+        if (
+            typeof cargarConvocatorias ===
+            "function"
+        ) {
+
+            await cargarConvocatorias();
+        }
+
+        return true;
 
     } catch (error) {
 
@@ -1678,11 +2043,13 @@ async function guardarConvocatoria(event) {
             error
         );
 
-        Swal.fire(
+        await Swal.fire(
             "Error",
             error.message,
             "error"
         );
+
+        return false;
 
     } finally {
 
@@ -1692,104 +2059,15 @@ async function guardarConvocatoria(event) {
 
             btnGuardar.innerHTML = `
                 <i class="fa-solid fa-floppy-disk me-1"></i>
-                Guardar Convocatoria
+                ${
+                    esEdicion
+                        ? "Actualizar Convocatoria"
+                        : "Guardar Convocatoria"
+                }
             `;
         }
     }
 }
-
-
-function validarDatosConvocatoria(datos) {
-
-    const camposGenerales = [
-        datos.nombre,
-        datos.posgrado_id,
-        datos.tipo,
-        datos.estado,
-        datos.modalidad,
-        datos.duracion,
-        datos.fecha_inicio,
-        datos.fecha_fin,
-        datos.fechaInicioDocumentos,
-        datos.fechaFinDocumentos,
-        datos.fechaInicioEscolar,
-        datos.fechaResultados
-    ];
-
-    if (
-        camposGenerales.some(
-            valor => !valor
-        )
-    ) {
-
-        Swal.fire(
-            "Campos incompletos",
-            "Revisa los datos obligatorios de la convocatoria.",
-            "warning"
-        );
-
-        return false;
-    }
-
-    if (
-        datos.fecha_fin <
-        datos.fecha_inicio
-    ) {
-
-        Swal.fire(
-            "Fechas inválidas",
-            "La fecha final no puede ser anterior al inicio.",
-            "warning"
-        );
-
-        actualizarWizard(2);
-
-        return false;
-    }
-
-    if (datos.tipo === "DOCTORADO") {
-
-        if (
-            !datos.fechaEntrevistaInicio ||
-            !datos.fechaEntrevistaFin
-        ) {
-
-            Swal.fire(
-                "Fechas incompletas",
-                "Completa el periodo de entrevistas.",
-                "warning"
-            );
-
-            actualizarWizard(3);
-
-            return false;
-        }
-    }
-
-    if (datos.tipo === "MAESTRIA") {
-
-        if (
-            !datos.inicioCurso ||
-            !datos.finCurso ||
-            !datos.inicioExamen ||
-            !datos.finExamen
-        ) {
-
-            Swal.fire(
-                "Fechas incompletas",
-                "Completa las fechas del curso y del examen.",
-                "warning"
-            );
-
-            actualizarWizard(3);
-
-            return false;
-        }
-    }
-
-    return true;
-}
-
 
 /* ==========================================================
    13. EDITAR CONVOCATORIA
@@ -1941,13 +2219,7 @@ async function editarConvocatoria(id) {
             );
 
         if (btnEliminar) {
-
-            btnEliminar.style.display =
-                "inline-block";
-
-            btnEliminar.onclick = () => {
-                eliminarConvocatoria(id);
-            };
+            btnEliminar.style.display = "none";
         }
 
         actualizarWizard(1);

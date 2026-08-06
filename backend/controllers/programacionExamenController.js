@@ -1,4 +1,6 @@
 const ProgramacionExamenService = require('../services/programacionExamenService');
+const db = require('../database/db');
+const emit = require('../utils/socketEmit');
 
 const programarExamen = async (req, res) => {
     try {
@@ -15,10 +17,16 @@ const programarExamen = async (req, res) => {
             lugar,
             observaciones
         });
-
+        // Notificar al aspirante específico + ADMIN
+        const [solEx] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [idSolicitud]);
+        if (solEx.length > 0) emit.aAspiranteEspecifico(req, solEx[0].idUsuario);
+        else emit.aAdmin(req);
         return res.status(200).json(resultado);
     } catch (error) {
         console.error('Error al programar examen:', error);
+        if (error.message && error.message.includes('Error de configuración')) {
+            return res.status(400).json({ success: false, mensaje: error.message });
+        }
         return res.status(500).json({ success: false, mensaje: 'Error interno al programar el examen.' });
     }
 };
@@ -43,6 +51,9 @@ const confirmarExamen = async (req, res) => {
     try {
         const { idSolicitud } = req.params;
         const resultado = await ProgramacionExamenService.confirmarExamen(idSolicitud);
+        const [solCon] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [idSolicitud]);
+        if (solCon.length > 0) emit.aAspiranteEspecifico(req, solCon[0].idUsuario);
+        else emit.aAdmin(req);
         return res.status(200).json(resultado);
     } catch (error) {
         console.error('Error al confirmar aplicación de examen:', error);
@@ -65,9 +76,18 @@ const capturarResultado = async (req, res) => {
             observaciones
         });
 
+        if (resultado.bloqueo) {
+            return res.status(422).json(resultado);
+        }
+        const [solRes] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [idSolicitud]);
+        if (solRes.length > 0) emit.aAspiranteEspecifico(req, solRes[0].idUsuario);
+        else emit.aAdmin(req);
         return res.status(200).json(resultado);
     } catch (error) {
         console.error('Error al capturar resultado de examen:', error);
+        if (error.message && error.message.includes('Regresión de workflow impedida')) {
+            return res.status(400).json({ success: false, mensaje: error.message });
+        }
         return res.status(500).json({ success: false, mensaje: 'Error interno al capturar resultado.' });
     }
 };

@@ -2,6 +2,15 @@
 <html lang="es">
 
 <head>
+    <script>
+        // Protección de ruta: se ejecuta ANTES de renderizar el body
+        (function () {
+            if (!sessionStorage.getItem('token') || !sessionStorage.getItem('usuario')) {
+                document.documentElement.style.visibility = 'hidden';
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
     <script src="js/authInterceptor.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/i18n.js"></script>
@@ -1079,8 +1088,8 @@
                             <div class="step-pane active" id="step-pane-1">
                                 <h6 class="fw-bold mb-3" style="color: var(--color-primary); font-size: 1rem;"><i
                                         class="fa-solid fa-circle-info me-2"></i> Información General</h6>
-                                <div class="row mb-3">
-                                    <div class="col-md-12">
+                                <div class="row mb-3 align-items-start">
+                                    <div class="col-md-5 col-12 mb-3 mb-md-0">
                                         <label class="form-label fw-bold small"
                                             style="color: var(--color-text-muted);">Posgrado</label>
                                         <select id="convocatoria_posgrado" class="form-select form-select-sm" required
@@ -1088,15 +1097,13 @@
                                             <option value="">Seleccione un posgrado...</option>
                                         </select>
                                     </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col-12">
+                                    <div class="col-md-7 col-12">
                                         <label class="form-label fw-bold small"
                                             style="color: var(--color-text-muted);"><i
                                                 class="fa-solid fa-layer-group text-primary me-1"></i> Especialidades /
                                             Líneas de Investigación Asignadas:</label>
-                                        <div id="contenedorOpcionesPosgrado" class="p-3 border rounded"
-                                            style="background: var(--color-bg); border-color: var(--color-border) !important; border-radius: 8px;">
+                                        <div id="contenedorOpcionesPosgrado" class="p-2 border rounded custom-scroll"
+                                            style="background: var(--color-bg); border-color: var(--color-border) !important; border-radius: 8px; max-height: 160px; overflow-y: auto;">
                                             <p class="text-muted small mb-0"><i
                                                     class="fa-solid fa-circle-info me-1"></i> Selecciona un posgrado
                                                 para ver y gestionar sus especialidades.</p>
@@ -1295,11 +1302,6 @@
                             <div class="d-flex justify-content-between align-items-center mt-4"
                                 style="background: var(--color-card-bg); border-top: 1px solid var(--color-border); border-radius: 0 0 16px 16px; margin: 20px -25px 0 -25px; padding: 16px 25px;">
                                 <div>
-                                    <button type="button" class="btn btn-danger btn-sm px-3"
-                                        id="btnEliminarConvocatoria" style="display:none;"
-                                        onclick="eliminarConvocatoria()">
-                                        <i class="fa-solid fa-trash me-1"></i> Eliminar
-                                    </button>
                                     <button type="button" class="btn btn-secondary px-4" id="btnPrevStep"
                                         style="display:none; border-radius: 8px;" onclick="pasoAnterior()">
                                         <i class="fa-solid fa-chevron-left me-1"></i> Atrás

@@ -80,34 +80,79 @@ exports.login = async (req, res) => {
     }
 };
 
-// Registrar usuario
+// Registrar usuario (usado solo internamente; el registro público de aspirantes usa aspiranteController)
 exports.register = async (req, res) => {
+    let connection;
     try {
-        const { correo, password, rol } = req.body;
-
-        if (!correo || !password) {
-            return res.status(400).json({ success: false, mensaje: 'Correo y contraseña son obligatorios.' });
+        const data = req.body;
+        
+        // Validación básica
+        if (!data.correo || !data.password || !data.nombre || !data.primerApellido || !data.curp || !data.telefono || !data.fechaNacimiento || !data.estadoCivil || !data.licenciatura || !data.institucionLicenciatura || !data.fechaEgreso || !data.fechaTitulacion || !data.promedio) {
+            return res.status(400).json({ success: false, mensaje: 'Faltan campos obligatorios.' });
         }
 
-        const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+        connection = await db.getConnection();
+        await connection.beginTransaction();
 
-        const [resultado] = await db.query(
+        const passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS);
+
+        // 1. Crear Usuario
+        const [userResult] = await connection.query(
             'INSERT INTO usuario (correo, contraseña, rol) VALUES (?, ?, ?)',
-            [correo, passwordHash, rol || 'ASPIRANTE']
+            [data.correo, passwordHash, 'ASPIRANTE']
         );
+        const userId = userResult.insertId;
+
+        // 2. Crear Aspirante
+        await connection.query(
+            `INSERT INTO aspirante (
+                nombre, primerApellido, segundoApellido, curp, rfc, telefono, 
+                fechaNacimiento, direccion, estadoCivil, licenciatura, 
+                institucionLicenciatura, fechaEgreso, fechaTitulacion, 
+                promedio, otrosEstudios, ocupacion, direccionPostal, 
+                ciudadOcupacion, estadoOcupacion, telefonoOcupacion, idUsuario
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                data.nombre,
+                data.primerApellido,
+                data.segundoApellido || null,
+                data.curp,
+                data.rfc || null,
+                data.telefono,
+                data.fechaNacimiento,
+                data.direccion || null,
+                data.estadoCivil,
+                data.licenciatura,
+                data.institucionLicenciatura,
+                data.fechaEgreso,
+                data.fechaTitulacion,
+                data.promedio,
+                data.otrosEstudios || null,
+                data.ocupacion || null,
+                data.direccionPostal || null,
+                data.ciudadOcupacion || null,
+                data.estadoOcupacion || null,
+                data.telefonoOcupacion || null,
+                userId
+            ]
+        );
+
+        await connection.commit();
 
         return res.status(201).json({
             success: true,
-            mensaje: 'Usuario registrado correctamente',
-            usuarioId: resultado.insertId
+            mensaje: 'Registro de aspirante completado exitosamente.'
         });
     } catch (error) {
+        if (connection) await connection.rollback();
         console.error('Error en register:', error);
 
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ success: false, mensaje: 'El correo electrónico ya se encuentra registrado.' });
+            return res.status(400).json({ success: false, mensaje: 'El correo, CURP o RFC ya se encuentra registrado.' });
         }
 
-        return res.status(500).json({ success: false, mensaje: 'Error interno del servidor al registrar usuario.' });
+        return res.status(500).json({ success: false, mensaje: 'Error interno del servidor al registrar aspirante.' });
+    } finally {
+        if (connection) connection.release();
     }
 };

@@ -11,40 +11,67 @@ const {
     actualizarConvocatorias,
     eliminarConvocatorias,
     obtenerRequisitosConvocatoria
-
 } = require('../controllers/convocatoriasController');
 
-// Todos los usuarios autenticados pueden ver las convocatorias
+
+// ==============================================
+// CONSULTAR CONVOCATORIAS
+// ==============================================
+
+// Todos los usuarios autenticados pueden consultar
 router.get(
     '/',
     auth,
     obtenerConvocatorias
 );
 
-// Todos los usuarios autenticados pueden ver una convocatoria
+// Consultar una convocatoria
 router.get(
     '/:id',
     auth,
     obtenerConvocatoria
 );
 
-router.get('/:id/requisitos', obtenerRequisitosConvocatoria);
+// Consultar requisitos
+router.get(
+    '/:id/requisitos',
+    auth,
+    obtenerRequisitosConvocatoria
+);
 
-router.post('/', crearConvocatorias);
 
-// Solo el ADMIN puede actualizar convocatorias
+// ==============================================
+// CREAR CONVOCATORIA
+// ==============================================
+
+router.post(
+    '/',
+    auth,
+    validarRol('ADMIN', 'COORDINADOR'),
+    crearConvocatorias
+);
+
+
+// ==============================================
+// ACTUALIZAR CONVOCATORIA
+// ==============================================
+
 router.put(
     '/:id',
     auth,
-    validarRol('ADMIN'),
+    validarRol('ADMIN', 'COORDINADOR'),
     actualizarConvocatorias
 );
 
-// Solo el ADMIN puede eliminar convocatorias
+
+// ==============================================
+// ELIMINAR CONVOCATORIA
+// ==============================================
+
 router.delete(
     '/:id',
     auth,
-    validarRol('ADMIN'),
+    validarRol('ADMIN', 'COORDINADOR'),
     eliminarConvocatorias
 );
 

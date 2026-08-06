@@ -1,5 +1,6 @@
 const db = require('../database/db');
 const WorkflowService = require('../services/workflowService');
+const emit = require('../utils/socketEmit');
 
 // Obtener todos los documentos para el explorador
 const getExploradorDocumentos = async (req, res) => {
@@ -68,8 +69,8 @@ const subirDocumento = async (req, res) => {
                  VALUES (?, ?, ?, 'PENDIENTE')`,
                 [idSoli, idRequisito, req.file.filename]
             );
-            // Emitir evento global de actualización
-            req.app.get('io').emit('actualizacionGlobal');
+            // Notificar a ADMIN y DOCENTE (aspirante subió un documento)
+            emit.aAdminYDocente(req);
             return res.status(201).json({ mensaje: 'Documento registrado correctamente.', idDocumento: resultado.insertId });
         } else {
             // Flujo viejo (compatibilidad): tabla documento
@@ -113,8 +114,16 @@ const evaluarDocumento = async (req, res) => {
         // Lógica delegada al WorkflowService para evaluar transición
         const nuevoEstadoSolicitud = await WorkflowService.evaluarTransicionDocumentacion(idSolicitud);
 
-        // Emitir evento global de actualización
-        req.app.get('io').emit('actualizacionGlobal');
+        // Notificar al aspirante específico + ADMIN (docente evaluó un documento)
+        const [solInfo] = await db.query(
+            'SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?',
+            [idSolicitud]
+        );
+        if (solInfo.length > 0) {
+            emit.aAspiranteEspecifico(req, solInfo[0].idUsuario);
+        } else {
+            emit.aAdmin(req);
+        }
         return res.json({ success: true, mensaje: 'Documento evaluado correctamente.', nuevoEstadoSolicitud });
     } catch (error) {
         console.error('Error en evaluarDocumento:', error);
@@ -167,8 +176,8 @@ const reemplazarDocumento = async (req, res) => {
         // Recalcular estado de la solicitud basándose únicamente en los ÚLTIMOS intentos de cada requisito
         await WorkflowService.evaluarTransicionDocumentacion(documentData.idSolicitud);
 
-        // Emitir evento global de actualización
-        req.app.get('io').emit('actualizacionGlobal');
+        // Notificar a ADMIN y DOCENTE (aspirante reemplazó un documento)
+        emit.aAdminYDocente(req);
 
         return res.json({ 
             success: true, 

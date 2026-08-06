@@ -1,5 +1,6 @@
 const db = require('../database/db');
 const bcrypt = require('bcrypt');
+const emit = require('../utils/socketEmit');
 
 // Registrar aspirante (con usuario asociado)
 const registrarAspirante = async (req, res) => {
@@ -77,7 +78,7 @@ const registrarAspirante = async (req, res) => {
         );
 
         await connection.commit();
-
+        if (req.app.get('io')) emit.aAdmin(req);
         return res.status(201).json({ mensaje: 'Aspirante registrado correctamente.' });
     } catch (error) {
         if (connection) await connection.rollback();
@@ -235,9 +236,18 @@ const obtenerExpediente = async (req, res) => {
             `;
             const [documentos] = await db.query(queryDocs, [idsSolicitudes]);
 
+            const queryPagos = `
+                SELECT id, idSolicitud, comprobante, estado, observaciones, monto, referencia
+                FROM pago_solicitud
+                WHERE idSolicitud IN (?)
+            `;
+            const [pagos] = await db.query(queryPagos, [idsSolicitudes]);
+
             expediente.solicitudes = solicitudes.map(sol => {
                 const docsDeEstaSoli = documentos.filter(doc => doc.idSolicitud === sol.idSolicitud);
+                const pagoDeEstaSoli = pagos.find(p => p.idSolicitud === sol.idSolicitud) || null;
                 sol.documentos = agruparDocumentosPorRequisito(docsDeEstaSoli);
+                sol.pago = pagoDeEstaSoli;
                 return sol;
             });
         }
@@ -285,6 +295,7 @@ const obtenerTodosLosExpedientes = async (req, res) => {
         const [solicitudes] = await db.query(querySolicitudes, [idsAspirantes]);
 
         let documentos = [];
+        let pagos = [];
         if (solicitudes.length > 0) {
             const idsSolicitudes = solicitudes.map(s => s.idSolicitud);
             const queryDocs = `
@@ -296,14 +307,24 @@ const obtenerTodosLosExpedientes = async (req, res) => {
             `;
             const [docs] = await db.query(queryDocs, [idsSolicitudes]);
             documentos = docs;
+
+            const queryPagos = `
+                SELECT id, idSolicitud, comprobante, estado, observaciones, monto, referencia
+                FROM pago_solicitud
+                WHERE idSolicitud IN (?)
+            `;
+            const [pgs] = await db.query(queryPagos, [idsSolicitudes]);
+            pagos = pgs;
         }
 
         const expedientes = aspirantes.map(asp => {
             const solsAsp = solicitudes.filter(s => s.idAspi === asp.id).map(sol => {
                 const docsDeEstaSoli = documentos.filter(doc => doc.idSolicitud === sol.idSolicitud);
+                const pagoDeEstaSoli = pagos.find(p => p.idSolicitud === sol.idSolicitud) || null;
                 return {
                     ...sol,
-                    documentos: agruparDocumentosPorRequisito(docsDeEstaSoli)
+                    documentos: agruparDocumentosPorRequisito(docsDeEstaSoli),
+                    pago: pagoDeEstaSoli
                 };
             });
             return {

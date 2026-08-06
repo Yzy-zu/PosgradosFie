@@ -98,11 +98,32 @@ async function abrirModalReprogramarExamen(idAspi) {
     }
 }
 
-// Conexión Socket.io
+// Conexión Socket.io — registrar sala al conectar
 const socket = io();
+socket.on('connect', () => {
+    const usr = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+    socket.emit('registrarSala', { rol: 'DOCENTE', idUsuario: usr.id });
+});
 socket.on('actualizacionGlobal', () => {
-    // Recargar vista actual si hay un cambio (ej. aspirante sube nuevo documento)
-    cargarAspirantesAPI();
+    // Recargar vista actual según el hash (evita recargas innecesarias)
+    const currentHash = window.location.hash.replace('#', '');
+    // Notificaciones se actualizan siempre (badge visible en toda la app)
+    if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
+    if (currentHash === 'inicio' || currentHash === '') {
+        // inicio no tiene datos dinámicos adicionales para el docente
+    } else if (currentHash === 'expedientes' || currentHash === '') {
+        if (typeof cargarAspirantesAPI === 'function') cargarAspirantesAPI();
+    } else if (currentHash === 'aspirantes') {
+        if (typeof cargarAspirantes === 'function') cargarAspirantes();
+    } else if (window.modalidadesActivas) {
+        // Módulos dinámicos: exámenes, propedeutico, promedio, etc.
+        window.modalidadesActivas.forEach(mod => {
+            const reg = window.ModulosRegistro && window.ModulosRegistro[mod.codigo];
+            if (reg && currentHash === reg.vistaId) {
+                reg.renderFn(mod.codigo);
+            }
+        });
+    }
 });
 
 // Inicialización de la Aplicación
@@ -244,11 +265,27 @@ async function cargarAspirantesAPI() {
                     docList = sol.documentos.map(d => ({
                         id: d.idDocumento,
                         nombre: d.requisitoNombre,
-                        url: `/api/files/${d.rutaArchivo}?token=${sessionStorage.getItem('token') || localStorage.getItem('token')}`,
+                        rutaArchivo: d.rutaArchivo,
+                        url: `/api/files/${d.rutaArchivo}`,
                         estado: d.estadoValidacion.toLowerCase(),
                         note: d.comentarios || "",
                         historial: d.historial || []
                     }));
+                }
+
+                if (sol && sol.pago && sol.pago.comprobante) {
+                    docList.push({
+                        id: `pago_${sol.idSolicitud}`,
+                        nombre: 'Comprobante de Pago',
+                        rutaArchivo: sol.pago.comprobante,
+                        url: `/api/files/${sol.pago.comprobante}`,
+                        estado: sol.pago.estado.toLowerCase(),
+                        note: sol.pago.observaciones || "",
+                        esPago: true,
+                        idSolicitud: sol.idSolicitud,
+                        monto: sol.pago.monto,
+                        referencia: sol.pago.referencia
+                    });
                 }
 
                 return {
@@ -267,6 +304,9 @@ async function cargarAspirantesAPI() {
             actualizarEstadisticas();
             filtrarYMostrarAspirantes();
             renderizarVistasAdicionalesDocente();
+            if (idAspiranteActivo) {
+                seleccionarAspirante(idAspiranteActivo);
+            }
         } else {
             console.error("Error al obtener aspirantes de la API");
         }
@@ -349,15 +389,15 @@ function actualizarTituloTopbar(viewId) {
             topbarTitle.innerText = typeof t === 'function' ? t('docente_revisor') : 'Docente / Revisor';
         }
     } else if (viewId === 'expedientes') {
-        topbarTitle.innerHTML = `<i class="fa-solid fa-folder-open me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('docente_revision_expedientes') : 'Revisión y Expedientes'}`;
+        topbarTitle.innerText = typeof t === 'function' ? t('docente_revision_expedientes') : 'Revisión y Expedientes';
     } else if (viewId === 'aspirantes') {
-        topbarTitle.innerHTML = `<i class="fa-solid fa-users me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_aspirantes') : 'Aspirantes'}`;
+        topbarTitle.innerText = typeof t === 'function' ? t('sb_aspirantes') : 'Aspirantes';
     } else if (viewId === 'examenes') {
-        topbarTitle.innerHTML = `<i class="fa-solid fa-file-pen me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_examenes') : 'Exámenes'}`;
+        topbarTitle.innerText = typeof t === 'function' ? t('sb_examenes') : 'Exámenes';
     } else if (viewId === 'curso-propedeutico') {
-        topbarTitle.innerHTML = `<i class="fa-solid fa-book-open-reader me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_curso_propedeutico') : 'Curso Propedéutico'}`;
+        topbarTitle.innerText = typeof t === 'function' ? t('sb_curso_propedeutico') : 'Curso Propedéutico';
     } else if (viewId === 'promedio') {
-        topbarTitle.innerHTML = `<i class="fa-solid fa-calculator me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_promedio') : 'Promedio'}`;
+        topbarTitle.innerText = typeof t === 'function' ? t('sb_promedio') : 'Promedio';
     }
 }
 
@@ -430,7 +470,9 @@ function filtrarYMostrarAspirantes() {
         const tieneRechazados = asp.documentos.some(d => d.estado === 'rechazado');
         const tienePendientes = asp.documentos.some(d => d.estado === 'pendiente');
 
-        if (tieneRechazados) {
+        if (asp.documentos.length === 0) {
+            estadoGeneral = 'sin_documentos';
+        } else if (tieneRechazados) {
             estadoGeneral = 'incompleto';
         } else if (!tienePendientes) {
             estadoGeneral = 'revisado';
@@ -462,7 +504,9 @@ function renderizarListaAspirantes(lista) {
         const tienePendientes = asp.documentos.some(d => d.estado === 'pendiente');
 
         let badgeHtml = "";
-        if (tieneRechazados) {
+        if (asp.documentos.length === 0) {
+            badgeHtml = `<span class="badge" style="background-color: var(--color-surface); color: var(--color-text-muted); border: 1px solid var(--color-border);">${typeof t === 'function' ? t('docente_sin_documentos') : 'Sin Documentos'}</span>`;
+        } else if (tieneRechazados) {
             badgeHtml = `<span class="badge badge-rechazado">${typeof t === 'function' ? t('docente_estado_incompletos') : 'Rechazado / Inc.'}</span>`;
         } else if (tienePendientes) {
             badgeHtml = `<span class="badge badge-pendiente">${typeof t === 'function' ? t('docente_estado_pendientes') : 'Pendiente'} (${asp.documentos.filter(d => d.estado === 'pendiente').length})</span>`;
@@ -514,7 +558,16 @@ async function seleccionarAspirante(id) {
     const tienePendientes = asp.documentos.some(d => d.estado === 'pendiente');
 
     badgeEstado.className = "badge";
-    if (tieneRechazados) {
+    badgeEstado.style.backgroundColor = '';
+    badgeEstado.style.color = '';
+    badgeEstado.style.border = '';
+
+    if (asp.documentos.length === 0) {
+        badgeEstado.style.backgroundColor = 'var(--color-surface)';
+        badgeEstado.style.color = 'var(--color-text-muted)';
+        badgeEstado.style.border = '1px solid var(--color-border)';
+        badgeEstado.innerText = typeof t === 'function' ? t('docente_sin_documentos') : "Sin Documentos";
+    } else if (tieneRechazados) {
         badgeEstado.classList.add('badge-rechazado');
         badgeEstado.innerText = typeof t === 'function' ? t('docente_estado_incompletos') : "Rechazado / Incompleto";
     } else if (tienePendientes) {
@@ -530,6 +583,34 @@ async function seleccionarAspirante(id) {
     let html = '';
 
     asp.documentos.forEach(doc => {
+        if (doc.esPago) {
+            let pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-clock" style="color: #f59e0b;"></i></span>`;
+            if (doc.estado === 'aprobado') {
+                pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-circle-check" style="color: #10b981;"></i></span>`;
+            } else if (doc.estado === 'rechazado') {
+                pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-circle-xmark" style="color: #ef4444;"></i></span>`;
+            }
+
+            html += `
+                <div class="doc-card-v2" onclick="abrirModalEvaluacionPago(${doc.idSolicitud})" style="cursor: pointer; border-left: 4px solid #f59e0b;">
+                    <div class="doc-card-v2-header">
+                        <div class="doc-card-v2-icon" style="background: rgba(245,158,11,0.15); color: #f59e0b;">
+                            <i class="fa-solid fa-receipt"></i>
+                            ${pagoStatusIcon}
+                        </div>
+                        <div>
+                            <div class="doc-card-v2-title">Comprobante de Pago</div>
+                            <div class="doc-card-v2-date">${doc.estado === 'aprobado' ? 'Pago Aprobado' : (doc.estado === 'rechazado' ? 'Pago Rechazado' : 'Revisar Pago')}</div>
+                        </div>
+                    </div>
+                    <div class="doc-card-v2-footer">
+                        <span class="doc-action-ver">Ver Comprobante</span>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
         let iconClass = 'fa-file-lines';
         let iconBg = '#e0e7ff';
         let iconColor = '#4338ca';
@@ -597,48 +678,6 @@ async function seleccionarAspirante(id) {
         `;
     });
 
-    // Consultar si hay comprobante de pago subido
-    if (asp.idSolicitud) {
-        try {
-            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
-            const resPago = await fetch(`/api/pagos/${asp.idSolicitud}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (resPago.ok) {
-                const pagoData = await resPago.json();
-                if (pagoData && pagoData.existe) {
-                    const est = pagoData.estado || 'PENDIENTE';
-                    let pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-clock" style="color: #f59e0b;"></i></span>`;
-                    if (est === 'APROBADO') {
-                        pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-circle-check" style="color: #10b981;"></i></span>`;
-                    } else if (est === 'RECHAZADO') {
-                        pagoStatusIcon = `<span class="doc-icon-status"><i class="fa-solid fa-circle-xmark" style="color: #ef4444;"></i></span>`;
-                    }
-
-                    html += `
-                        <div class="doc-card-v2" onclick="abrirModalEvaluacionPago(${asp.idSolicitud})" style="cursor: pointer; border-left: 4px solid #f59e0b;">
-                            <div class="doc-card-v2-header">
-                                <div class="doc-card-v2-icon" style="background: rgba(245,158,11,0.15); color: #f59e0b;">
-                                    <i class="fa-solid fa-receipt"></i>
-                                    ${pagoStatusIcon}
-                                </div>
-                                <div>
-                                    <div class="doc-card-v2-title">Comprobante de Pago</div>
-                                    <div class="doc-card-v2-date">${est === 'APROBADO' ? 'Pago Aprobado' : (est === 'RECHAZADO' ? 'Pago Rechazado' : 'Revisar Pago')}</div>
-                                </div>
-                            </div>
-                            <div class="doc-card-v2-footer">
-                                <span class="doc-action-ver">Ver Comprobante</span>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-        } catch (e) {
-            console.error("Error cargando pago en seleccionarAspirante:", e);
-        }
-    }
-
     container.innerHTML = html;
 }
 
@@ -662,16 +701,27 @@ async function abrirModalEvaluacionPago(idSolicitud) {
             return;
         }
 
-        const urlCompleta = `/api/files/${pagoData.comprobante}?token=${token}`;
+        let objectUrl = '';
+        try {
+            const fileRes = await fetch(`/api/files/${pagoData.comprobante}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (fileRes.ok) {
+                const blob = await fileRes.blob();
+                objectUrl = URL.createObjectURL(blob);
+            }
+        } catch (e) { }
+
+        const fileSrc = objectUrl || `/api/files/${pagoData.comprobante}`;
         const est = pagoData.estado || 'PENDIENTE';
         const estadoColor = { PENDIENTE: '#f59e0b', APROBADO: '#10b981', RECHAZADO: '#ef4444' };
 
         const ext = (pagoData.comprobante || '').split('.').pop().toLowerCase();
         let previewHtml = '';
         if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
-            previewHtml = `<img src="${urlCompleta}" style="max-width:100%;max-height:350px;display:block;margin:0 auto;border-radius:8px;object-fit:contain;">`;
+            previewHtml = `<img src="${fileSrc}" style="max-width:100%;max-height:350px;display:block;margin:0 auto;border-radius:8px;object-fit:contain;">`;
         } else {
-            previewHtml = `<iframe src="${urlCompleta}" width="100%" height="320px" style="border:none;border-radius:8px;"></iframe>`;
+            previewHtml = `<iframe src="${fileSrc}" width="100%" height="320px" style="border:none;border-radius:8px;"></iframe>`;
         }
 
         const modalHtml = `
@@ -680,11 +730,10 @@ async function abrirModalEvaluacionPago(idSolicitud) {
                     <span style="background:${estadoColor[est]}20;color:${estadoColor[est]};font-weight:bold;padding:4px 12px;border-radius:12px;font-size:12px;text-transform:uppercase;">
                         Estado: ${est}
                     </span>
-                    ${pagoData.monto ? `<span style="font-weight:bold;color:var(--color-text);">Monto: $${pagoData.monto}</span>` : ''}
                 </div>
-                ${pagoData.referencia ? `<div style="font-size:13px;color:var(--color-text-muted);margin-bottom:10px;">Referencia: <strong>${pagoData.referencia}</strong></div>` : ''}
+                ${pagoData.referencia ? `<div style="font-size:13px;color:var(--color-text-muted);margin-bottom:10px;"><i class="fa-solid fa-comment-dots" style="margin-right:4px;"></i> Comentarios del aspirante: <strong>${pagoData.referencia}</strong></div>` : ''}
                 ${previewHtml}
-                ${pagoData.observaciones ? `<div style="margin-top:12px;padding:10px;background:rgba(239,68,68,0.1);border-left:3px solid #ef4444;font-size:13px;color:#ef4444;"><strong>Observaciones:</strong> ${pagoData.observaciones}</div>` : ''}
+                ${pagoData.observaciones ? `<div style="margin-top:12px;padding:10px;background:rgba(239,68,68,0.1);border-left:3px solid #ef4444;font-size:13px;color:#ef4444;"><strong>Observaciones del evaluador:</strong> ${pagoData.observaciones}</div>` : ''}
             </div>
         `;
 
@@ -752,6 +801,7 @@ async function verificarPagoDocente(idSolicitud, estado) {
                 timer: 2000,
                 showConfirmButton: false
             });
+            await cargarAspirantesAPI();
             if (idAspiranteActivo) {
                 seleccionarAspirante(idAspiranteActivo);
             }
@@ -784,13 +834,34 @@ function abrirModalEvaluacion(docId) {
     const tabComentarios = document.getElementById('eval-tab-comentarios');
     const tabHistorial = document.getElementById('eval-tab-historial');
 
-    // Generar visor
-    const extension = doc.url.split('.').pop().toLowerCase();
-    if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
-        visor.innerHTML = `<img src="${doc.url}" alt="${doc.nombre}" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain;">`;
-    } else {
-        visor.innerHTML = `<iframe src="${doc.url}" width="100%" height="100%" style="border: none;"></iframe>`;
-    }
+    // Generar visor de forma segura con cabecera Authorization
+    visor.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--color-text-muted);"><i class="fa-solid fa-spinner fa-spin fa-2x mb-2"></i><br>Cargando vista previa...</div>';
+    
+    const rawPath = doc.rutaArchivo || doc.url || '';
+    const cleanPath = rawPath.split('?')[0];
+    const fetchUrl = cleanPath.startsWith('http') || cleanPath.startsWith('/api/') ? cleanPath : `/api/files/${cleanPath}`;
+    const authToken = sessionStorage.getItem('token') || localStorage.getItem('token') || '';
+
+    fetch(fetchUrl, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Error al cargar archivo');
+        return res.blob();
+    })
+    .then(blob => {
+        const objectUrl = URL.createObjectURL(blob);
+        const extension = cleanPath.split('.').pop().toLowerCase();
+        if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
+            visor.innerHTML = `<img src="${objectUrl}" alt="${escaparHTML(doc.nombre)}" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain;">`;
+        } else {
+            visor.innerHTML = `<iframe src="${objectUrl}" width="100%" height="100%" style="border: none;"></iframe>`;
+        }
+    })
+    .catch(err => {
+        console.error("Error al cargar documento en visor:", err);
+        visor.innerHTML = '<div style="text-align: center; padding: 40px; color: #ef4444;"><i class="fa-solid fa-triangle-exclamation fa-2x mb-2"></i><br>No se pudo cargar la vista previa del documento.</div>';
+    });
 
     // Comentarios
     if (doc.note && doc.note.trim() !== '') {
@@ -910,9 +981,9 @@ function abrirNotificacion(remitenteKey, element) {
 
             chatHtml += `
                 <div style="background: var(--color-card-bg); border: 1px solid var(--color-border); padding: 12px 15px; border-radius: 18px 18px 18px 4px; box-shadow: var(--shadow-sm); font-size: 14px; color: var(--color-text); max-width: 90%; margin-bottom: 10px; word-wrap: break-word; align-self: flex-start;">
-                    <div style="font-weight: bold; color: var(--color-primary); margin-bottom: 5px; font-size: 12px;">${notif.nombre}</div>
-                    ${notif.mensaje}
-                    <div style="font-size: 10px; color: var(--color-text-muted); margin-top: 5px; text-align: right;">${timeStr} ${editadoHtml}</div>
+                    <div style="font-weight: bold; color: var(--color-primary); margin-bottom: 5px; font-size: 12px;">${escaparHTML(notif.nombre)}</div>
+                    <div style="white-space: pre-wrap;">${escaparHTML(notif.mensaje)}</div>
+                    <div style="font-size: 10px; color: var(--color-text-muted); margin-top: 5px; text-align: right;">${escaparHTML(timeStr)} ${editadoHtml}</div>
                 </div>
             `;
         });
@@ -932,8 +1003,17 @@ function abrirNotificacion(remitenteKey, element) {
 // Confirmación con temporizador de 3s para Aprobar Documento
 let timerConfirmacionAprobar = null;
 let enConfirmacionAprobar = false;
+let evaluacionEnCurso = false;
+
+function setEstadoControlesEvaluacion(disabled) {
+    const wrapper = document.getElementById('eval-controles-wrapper');
+    if (wrapper) {
+        wrapper.querySelectorAll('button, textarea').forEach(el => el.disabled = disabled);
+    }
+}
 
 function clickAprobarDocumentoModal(btn) {
+    if (evaluacionEnCurso) return;
     if (!btn) btn = document.getElementById('btn-eval-aprobar-modal');
 
     if (enConfirmacionAprobar) {
@@ -979,6 +1059,8 @@ function resetearBotonAprobar(btn) {
 
 function cerrarModalEvaluacion() {
     resetearBotonAprobar();
+    evaluacionEnCurso = false;
+    setEstadoControlesEvaluacion(false);
     document.getElementById('modal-evaluacion-doc').style.display = 'none';
     document.getElementById('eval-tab-documento').innerHTML = '';
     documentoAEvaluar = null;
@@ -998,7 +1080,7 @@ function ocultarOpcionesRechazo() {
 }
 
 async function aprobarDocumentoModal() {
-    if (!documentoAEvaluar) return;
+    if (!documentoAEvaluar || evaluacionEnCurso) return;
 
     const aspIndex = aspirantes.findIndex(a => a.id === idAspiranteActivo);
     if (aspIndex === -1) return;
@@ -1006,6 +1088,8 @@ async function aprobarDocumentoModal() {
     const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id == documentoAEvaluar);
     if (docIndex === -1) return;
 
+    evaluacionEnCurso = true;
+    setEstadoControlesEvaluacion(true);
     mostrarLoader();
     try {
         const token = sessionStorage.getItem("token") || "";
@@ -1041,12 +1125,14 @@ async function aprobarDocumentoModal() {
         console.error("Error al aprobar documento:", e);
         Swal.fire({ icon: 'error', title: 'Error de conexión', text: typeof t === 'function' ? t('docente_err_servidor') : 'Ocurrió un error al comunicarse con el servidor.', confirmButtonColor: '#ef4444' });
     } finally {
+        evaluacionEnCurso = false;
+        setEstadoControlesEvaluacion(false);
         ocultarLoader();
     }
 }
 
 async function rechazarDocumentoModal() {
-    if (!documentoAEvaluar) return;
+    if (!documentoAEvaluar || evaluacionEnCurso) return;
     const noteText = document.getElementById('eval-modal-nota').value.trim();
 
     if (noteText === "") {
@@ -1060,6 +1146,8 @@ async function rechazarDocumentoModal() {
     const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id == documentoAEvaluar);
     if (docIndex === -1) return;
 
+    evaluacionEnCurso = true;
+    setEstadoControlesEvaluacion(true);
     mostrarLoader();
     try {
         const token = sessionStorage.getItem("token") || "";
@@ -1095,6 +1183,8 @@ async function rechazarDocumentoModal() {
         console.error("Error al rechazar documento:", e);
         Swal.fire({ icon: 'error', title: 'Error de conexión', text: typeof t === 'function' ? t('docente_err_servidor') : 'Ocurrió un error al comunicarse con el servidor.', confirmButtonColor: '#ef4444' });
     } finally {
+        evaluacionEnCurso = false;
+        setEstadoControlesEvaluacion(false);
         ocultarLoader();
     }
 }
@@ -1180,10 +1270,10 @@ async function cargarNotificaciones() {
                         </div>
                         <div class="chat-details" style="flex: 1; overflow: hidden;">
                             <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
-                                <div style="font-weight: bold; font-size: 13px; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${grupo.remitente}</div>
-                                <div style="font-size: 11px; color: var(--color-text-muted); flex-shrink: 0;">${formattedDate}</div>
+                                <div style="font-weight: bold; font-size: 13px; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escaparHTML(grupo.remitente)}</div>
+                                <div style="font-size: 11px; color: var(--color-text-muted); flex-shrink: 0;">${escaparHTML(formattedDate)}</div>
                             </div>
-                            <div style="font-size: 12px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><strong>${ultMsg.nombre}</strong> - ${ultMsg.mensaje}</div>
+                            <div style="font-size: 12px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><strong>${escaparHTML(ultMsg.nombre)}</strong> - ${escaparHTML(ultMsg.mensaje)}</div>
                         </div>
                     </div>`;
                 });
@@ -1443,7 +1533,11 @@ function renderExamenesCards(dataList) {
     const hoyStr = new Date().toISOString().split('T')[0];
 
     if (dataList.length === 0) {
-        contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">No hay aspirantes en proceso de examen que coincidan con los filtros.</div>`;
+        contenedor.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                <img src="css/umsnhLogo.png" alt="Logo UMSNH" style="width: 100px; opacity: 0.3;">
+                <p style="font-size: 1.1rem; margin: 0;">Aún no hay solicitudes que revisar...</p>
+            </div>`;
     }
 
     dataList.forEach(item => {
@@ -1645,14 +1739,19 @@ function renderCursosCards(dataList) {
     if (!contenedor) return;
     contenedor.innerHTML = '';
 
+    if (dataList.length === 0) {
+        contenedor.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                <img src="css/umsnhLogo.png" alt="Logo UMSNH" style="width: 100px; opacity: 0.3;">
+                <p style="font-size: 1.1rem; margin: 0;">Aún no hay solicitudes que revisar...</p>
+            </div>`;
+        return;
+    }
+
     let contPendientes = 0;
     let contProgramados = 0;
     let contEsperando = 0;
     let contFinalizados = 0;
-
-    if (dataList.length === 0) {
-        contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">No hay aspirantes en proceso de propedéutico que coincidan con los filtros.</div>`;
-    }
 
     dataList.forEach(item => {
         const tieneProgramacion = !!item.idProgramacion || !!item.fecha;
@@ -1826,9 +1925,15 @@ function abrirProgramacionCurso(idSolicitud, aspiranteNombre) {
     body.innerHTML = '';
     modal.style.display = 'flex';
 
+    const item = (typeof cursosActivos !== 'undefined' && Array.isArray(cursosActivos)) 
+        ? cursosActivos.find(c => (c.idSolicitud || c.id) === idSolicitud) 
+        : null;
+
     moduloCurso.ejecutar({
         idSolicitud,
-        aspiranteNombre,
+        aspiranteNombre: (item && item.aspiranteNombre) || aspiranteNombre,
+        posgradoNombre: item ? item.posgradoNombre : null,
+        opcionNombre: item ? (item.opcionNombre || item.opcionElegida) : null,
         esDocente: true,
         accionActiva: 'PROGRAMAR_CURSO',
         modoReprogramar: false
@@ -1842,9 +1947,15 @@ function abrirReprogramacionCurso(idSolicitud, aspiranteNombre) {
     body.innerHTML = '';
     modal.style.display = 'flex';
 
+    const item = (typeof cursosActivos !== 'undefined' && Array.isArray(cursosActivos)) 
+        ? cursosActivos.find(c => (c.idSolicitud || c.id) === idSolicitud) 
+        : null;
+
     moduloCurso.ejecutar({
         idSolicitud,
-        aspiranteNombre,
+        aspiranteNombre: (item && item.aspiranteNombre) || aspiranteNombre,
+        posgradoNombre: item ? item.posgradoNombre : null,
+        opcionNombre: item ? (item.opcionNombre || item.opcionElegida) : null,
         esDocente: true,
         accionActiva: 'PROGRAMAR_CURSO',
         modoReprogramar: true
@@ -1858,9 +1969,15 @@ function abrirCapturaCurso(idSolicitud, aspiranteNombre) {
     body.innerHTML = '';
     modal.style.display = 'flex';
 
+    const item = (typeof cursosActivos !== 'undefined' && Array.isArray(cursosActivos)) 
+        ? cursosActivos.find(c => (c.idSolicitud || c.id) === idSolicitud) 
+        : null;
+
     moduloCurso.ejecutar({
         idSolicitud,
-        aspiranteNombre,
+        aspiranteNombre: (item && item.aspiranteNombre) || aspiranteNombre,
+        posgradoNombre: item ? item.posgradoNombre : null,
+        opcionNombre: item ? (item.opcionNombre || item.opcionElegida) : null,
         esDocente: true,
         accionActiva: 'CAPTURAR_RESULTADO_CURSO',
         modoCapturar: true
@@ -1896,7 +2013,11 @@ function renderPromediosCards(dataList) {
     let contRechazados = 0;
 
     if (!dataList || dataList.length === 0) {
-        contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">No hay aspirantes registrados por promedio FIE.</div>`;
+        contenedor.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                <img src="css/umsnhLogo.png" alt="Logo UMSNH" style="width: 100px; opacity: 0.3;">
+                <p style="font-size: 1.1rem; margin: 0;">Aún no hay solicitudes que revisar...</p>
+            </div>`;
         return;
     }
 
@@ -2202,8 +2323,8 @@ async function verExpedienteAspirante(id) {
         if (solicitudes.length === 0) {
             contSolicitudes.innerHTML = `
                 <div class="text-center py-4">
-                    <i class="fa-solid fa-inbox text-muted fs-1 mb-2"></i>
-                    <p class="text-muted">El aspirante aún no ha iniciado ningún proceso de admisión.</p>
+                    <img src="css/umsnhLogo.png" alt="Logo UMSNH" style="width: 130px; max-width: 80%; opacity: 0.45;" class="mb-3 d-block mx-auto">
+                    <p class="text-muted fw-medium">El aspirante aún no ha iniciado ningún proceso de admisión.</p>
                 </div>
             `;
         } else {
@@ -2226,7 +2347,7 @@ async function verExpedienteAspirante(id) {
                         else if (doc.estadoValidacion === "RECHAZADO") { classBadge = "soft-badge-danger"; }
 
                         htmlDocs += `
-                            <div class="doc-row-premium" onclick="window.open('/api/files/${doc.rutaArchivo}?token=' + (sessionStorage.getItem('token') || localStorage.getItem('token')), '_blank')">
+                            <div class="doc-row-premium" onclick="abrirArchivoSeguro('${doc.rutaArchivo}')">
                                 <div style="display: flex; align-items: center;">
                                     <i class="fa-solid fa-file-pdf doc-icon"></i>
                                     <span style="font-weight: 500; color: var(--color-text);">${doc.requisitoNombre}</span>
@@ -2371,22 +2492,273 @@ function resetAutoSlide() {
     startAutoSlide();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     carouselTrack = document.getElementById('inicio-carousel-track');
-    carouselIndicators = Array.from(document.querySelectorAll('#inicio-carousel-indicators .indicator'));
-    totalSlides = document.querySelectorAll('.carousel-slide').length;
+    const indicatorsContainer = document.getElementById('inicio-carousel-indicators');
 
-    if (carouselTrack && totalSlides > 0) {
-        const firstImg = document.querySelector('.carousel-slide img');
-        if (firstImg) {
-            if (firstImg.complete) {
+    if (carouselTrack && indicatorsContainer) {
+        try {
+            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+            const res = await fetch('/api/avisos/activos', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const avisos = await res.json();
+                
+                if (avisos.length === 0) {
+                    const container = document.getElementById('inicio-carousel');
+                    if (container) container.style.display = 'none';
+                    return;
+                }
+
+                let trackHTML = '';
+                let indicatorsHTML = '';
+
+                avisos.forEach((aviso, index) => {
+                    const ext = aviso.rutaArchivo.split('.').pop().toLowerCase();
+                    const isVideo = aviso.tipo === 'video' || ['mp4', 'webm', 'ogg', 'mov'].includes(ext);
+
+                    const mediaHTML = isVideo 
+                        ? `<video src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" autoplay muted loop playsinline style="object-fit: cover; width: 100%; height: 100%;"></video>`
+                        : `<img src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" alt="${aviso.titulo}" style="object-fit: cover; width: 100%; height: 100%;">`;
+
+                    trackHTML += `
+                        <div class="carousel-slide">
+                            ${mediaHTML}
+                        </div>
+                    `;
+                    indicatorsHTML += `
+                        <span class="indicator ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>
+                    `;
+                });
+
+                carouselTrack.innerHTML = trackHTML;
+                indicatorsContainer.innerHTML = indicatorsHTML;
+
+                carouselIndicators = Array.from(indicatorsContainer.querySelectorAll('.indicator'));
+                totalSlides = avisos.length;
+                currentSlide = 0;
                 updateCarousel();
-            } else {
-                firstImg.onload = () => updateCarousel();
+                startAutoSlide();
             }
-        } else {
-            updateCarousel();
+        } catch (e) {
+            console.error('Error al cargar avisos:', e);
         }
-        startAutoSlide();
     }
 });
+
+// --- EVALUACION POR TEMAS HELPER ---
+const EvaluacionTemasHelper = {
+    async renderizar(idSolicitud, contenedor) {
+        contenedor.innerHTML = '<p class="text-muted"><i class="fa-solid fa-spinner fa-spin"></i> Cargando temas...</p>';
+        
+        try {
+            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+            const res = await fetch(`/api/solicitud-temas/${idSolicitud}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!res.ok) {
+                throw new Error("HTTP Status " + res.status);
+            }
+
+            const temas = await res.json();
+
+            this.errorCarga = this.errorCarga || {};
+            this.errorCarga[idSolicitud] = false;
+
+            if (!temas || temas.length === 0) {
+                contenedor.innerHTML = '';
+                return;
+            }
+
+            // Guardar temas para la validación posterior
+            this.temasCache = this.temasCache || {};
+            this.temasCache[idSolicitud] = temas;
+
+            let html = `
+                <div style="margin-bottom: 20px; border: 1px solid var(--color-border); padding: 15px; border-radius: 8px; background: var(--color-bg);">
+                    <h6 style="margin-bottom: 12px; font-weight: 600; color: var(--color-text);">Evaluación por Temas</h6>
+                    <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 15px;">Guarde cada tema individualmente antes de finalizar la captura general.</p>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 custom-premium-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tema</th>
+                                    <th style="width: 130px;">Calificación</th>
+                                    <th>Observaciones</th>
+                                    <th style="width: 110px;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="temas-tbody-${idSolicitud}">
+            `;
+
+            temas.forEach(tema => {
+                const calif = (tema.calificacion !== null && tema.calificacion !== undefined) ? tema.calificacion : '';
+                const obs = tema.observaciones || '';
+                const btnClase = (tema.calificacion !== null && tema.calificacion !== undefined) ? 'btn-success' : 'btn-primary';
+                const btnIcon = (tema.calificacion !== null && tema.calificacion !== undefined) ? 'fa-check' : 'fa-save';
+                const btnText = (tema.calificacion !== null && tema.calificacion !== undefined) ? 'Guardado' : 'Guardar';
+                
+                html += `
+                    <tr data-tema-id="${tema.id}">
+                        <td style="font-size: 0.9rem; color: var(--color-text);">${tema.nombreTema || 'Tema'}</td>
+                        <td>
+                            <input type="number" class="form-control form-control-sm tema-calif" step="1" min="1" max="10" value="${calif}" placeholder="1-10" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px;">
+                        </td>
+                        <td>
+                            <input type="text" class="form-control form-control-sm tema-obs" value="${obs}" placeholder="Opcional" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px;">
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm ${btnClase} btn-guardar-tema" onclick="EvaluacionTemasHelper.guardarTema(this, ${tema.id}, ${idSolicitud})" title="Guardar">
+                                <i class="fa-solid ${btnIcon}"></i> <span class="btn-text">${btnText}</span>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            contenedor.innerHTML = html;
+            this.recalcularPromedio(idSolicitud);
+        } catch (error) {
+            console.error("Error al cargar temas:", error);
+            this.errorCarga = this.errorCarga || {};
+            this.errorCarga[idSolicitud] = true;
+            
+            contenedor.innerHTML = `
+                <div class="alert alert-danger" style="margin-bottom: 20px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Error al cargar los temas de evaluación. No podrá finalizar la captura hasta que se resuelva.
+                    <button class="btn btn-sm btn-outline-danger ms-2" onclick="EvaluacionTemasHelper.renderizar(${idSolicitud}, document.getElementById('${contenedor.id}'))">
+                        <i class="fa-solid fa-rotate-right"></i> Reintentar
+                    </button>
+                </div>
+            `;
+        }
+    },
+
+    async guardarTema(btn, idSolicitudTema, idSolicitud) {
+        const tr = btn.closest('tr');
+        const calificacionVal = tr.querySelector('.tema-calif').value;
+        const observaciones = tr.querySelector('.tema-obs').value;
+
+        if (calificacionVal === '') {
+            Swal.fire({ icon: 'warning', title: 'Calificación Requerida', text: 'Debes ingresar una calificación para este tema.', timer: 2000 });
+            return;
+        }
+
+        try {
+            btn.disabled = true;
+            const btnTextSpan = btn.querySelector('.btn-text');
+            if (btnTextSpan) btnTextSpan.innerText = 'Guardando...';
+
+            const calificacion = parseInt(calificacionVal, 10);
+            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+            const res = await fetch(`/api/solicitud-temas/${idSolicitudTema}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ calificacion, observaciones })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.mensaje || 'Error al guardar');
+
+            btn.className = 'btn btn-sm btn-success btn-guardar-tema';
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> <span class="btn-text">Guardado</span>';
+            
+            // Actualizar caché
+            if (this.temasCache && this.temasCache[idSolicitud]) {
+                const tema = this.temasCache[idSolicitud].find(t => t.id === idSolicitudTema);
+                if (tema) {
+                    tema.calificacion = calificacion;
+                }
+            }
+
+            this.recalcularPromedio(idSolicitud);
+
+        } catch (error) {
+            console.error("Error al guardar tema:", error);
+            Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+            btn.className = 'btn btn-sm btn-danger btn-guardar-tema';
+            btn.innerHTML = '<i class="fa-solid fa-times"></i> <span class="btn-text">Reintentar</span>';
+        } finally {
+            btn.disabled = false;
+        }
+    },
+
+    marcarComoModificado(input, idSolicitud) {
+        if (input.classList.contains('tema-calif')) {
+            // Regex y sanitización: solo enteros del 1 al 10, sin decimales
+            let valStr = input.value.replace(/[^0-9]/g, '');
+            if (valStr !== '') {
+                let num = parseInt(valStr, 10);
+                if (num > 10) num = 10;
+                if (num < 1) num = 1;
+                input.value = num;
+            } else {
+                input.value = '';
+            }
+        }
+
+        const tr = input.closest('tr');
+        const btn = tr.querySelector('.btn-guardar-tema');
+        if (btn && !btn.className.includes('btn-primary')) {
+            btn.className = 'btn btn-sm btn-primary btn-guardar-tema';
+            btn.innerHTML = '<i class="fa-solid fa-save"></i> <span class="btn-text">Guardar</span>';
+        }
+        if (idSolicitud) {
+            this.recalcularPromedio(idSolicitud);
+        }
+    },
+
+    recalcularPromedio(idSolicitud) {
+        const tbody = document.getElementById(`temas-tbody-${idSolicitud}`);
+        if (!tbody) return;
+
+        const inputs = tbody.querySelectorAll('.tema-calif');
+        let suma = 0;
+        let contador = 0;
+
+        inputs.forEach(inp => {
+            const val = parseFloat(inp.value);
+            if (!isNaN(val)) {
+                suma += val;
+                contador++;
+            }
+        });
+
+        const promedioStr = contador > 0 ? Math.round(suma / contador).toString() : '';
+
+        const campoCalifCurso = document.getElementById('cap-curso-calificacion');
+        const campoCalifExamen = document.getElementById('cap-examen-calificacion');
+
+        if (campoCalifCurso) campoCalifCurso.value = promedioStr;
+        if (campoCalifExamen) campoCalifExamen.value = promedioStr;
+    },
+
+    validarTodosEvaluados(idSolicitud) {
+        // Bloquear si hubo error en la carga de temas
+        if (this.errorCarga && this.errorCarga[idSolicitud]) return false;
+
+        const tbody = document.getElementById(`temas-tbody-${idSolicitud}`);
+        
+        // Si no hay tbody, pero la caché indica que debería haber temas, es una inconsistencia
+        if (!tbody) {
+            if (this.temasCache && this.temasCache[idSolicitud] && this.temasCache[idSolicitud].length > 0) return false;
+            return true; 
+        }
+
+        // Bloquear si hay algún botón en estado primario (lo que significa que hay temas sin guardar o modificados)
+        const unsavedButtons = tbody.querySelectorAll('.btn-primary.btn-guardar-tema');
+        return unsavedButtons.length === 0;
+    }
+};

@@ -1,5 +1,9 @@
-// Conexión Socket.io
+// Conexión Socket.io — registrar sala al conectar
 const socket = io();
+socket.on('connect', () => {
+    const usr = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+    socket.emit('registrarSala', { rol: 'ADMIN', idUsuario: usr.id });
+});
 socket.on('actualizacionGlobal', () => {
     // Recargar vista actual si hay un cambio en el sistema
     const currentHash = window.location.hash.replace("#", "");
@@ -7,6 +11,9 @@ socket.on('actualizacionGlobal', () => {
         if (typeof cargarDashboard === 'function') cargarDashboard();
     } else if (currentHash === 'usuarios') {
         if (typeof cargarUsuarios === 'function') cargarUsuarios();
+    } else if (currentHash === 'posgrados') {
+        if (typeof cargarPosgradosAdmin === 'function') cargarPosgradosAdmin();
+        if (typeof cargarOpcionesPosgradoGlobal === 'function') cargarOpcionesPosgradoGlobal();
     } else if (currentHash === 'convocatorias') {
         if (typeof cargarConvocatorias === 'function') cargarConvocatorias();
     } else if (currentHash === 'aspirantes') {
@@ -15,6 +22,10 @@ socket.on('actualizacionGlobal', () => {
         if (typeof cargarSolicitudesAdmin === 'function') cargarSolicitudesAdmin();
     } else if (currentHash === 'documentos') {
         if (typeof cargarExploradorDocumentos === 'function') cargarExploradorDocumentos();
+    } else if (currentHash === 'notificaciones') {
+        if (typeof cargarNotificacionesAdmin === 'function') cargarNotificacionesAdmin();
+    } else if (currentHash === 'avisos') {
+        if (typeof cargarYRenderizarAvisos === 'function') cargarYRenderizarAvisos();
     }
 });
 
@@ -856,24 +867,17 @@ function renderizarOpcionesPorPosgrado(posgradoId, opcionesSeleccionadasPrevias 
         return;
     }
 
-    let html = '<div class="d-flex flex-column gap-2">';
+    let html = '<div class="d-flex flex-column gap-1.5">';
     opcionesPosgrado.forEach(op => {
         const prev = opcionesSeleccionadasPrevias.find(s => s.idOpcionPosgrado == op.id || s.opcion_posgrado_id == op.id);
         const estaChecked = esEdicion ? !!prev : true;
-        const cuposVal = prev && prev.cupos !== undefined && prev.cupos !== null ? prev.cupos : '';
 
         html += `
-            <div class="d-flex justify-content-between align-items-center p-2 rounded border" style="background: var(--color-card-bg); border-color: var(--color-border) !important;">
-                <div class="form-check mb-0">
-                    <input class="form-check-input opc-checkbox" type="checkbox" value="${op.id}" id="opc_${op.id}" ${estaChecked ? 'checked' : ''}>
-                    <label class="form-check-label fw-semibold text-wrap" for="opc_${op.id}" style="cursor:pointer; color: var(--color-text); font-size: 0.9rem;">
-                        ${op.nombre}
-                    </label>
-                </div>
-                <div class="d-flex align-items-center gap-2" style="width: 140px;">
-                    <span class="small text-muted" style="font-size: 0.75rem;">Cupos:</span>
-                    <input type="number" min="0" class="form-control form-control-sm cupo-input text-center" id="cupos_opc_${op.id}" placeholder="Ilimitado" value="${cuposVal}" style="background: var(--color-input-bg); color: var(--color-text); border: 1px solid var(--color-border);">
-                </div>
+            <div class="form-check m-0 py-1.5 px-3 rounded border d-flex align-items-center gap-2 custom-option-item" style="background: var(--color-card-bg); border-color: var(--color-border) !important;">
+                <input class="form-check-input opc-checkbox mt-0" type="checkbox" value="${op.id}" id="opc_${op.id}" ${estaChecked ? 'checked' : ''} style="cursor:pointer;">
+                <label class="form-check-label fw-semibold text-wrap mb-0" for="opc_${op.id}" style="cursor:pointer; color: var(--color-text); font-size: 0.85rem; user-select: none;">
+                    ${op.nombre}
+                </label>
             </div>
         `;
     });
@@ -920,7 +924,8 @@ function limpiarFormularioConvocatoria() {
     document.getElementById("idConvocatoriaForm").value = "";
     document.getElementById("convocatoria_posgrado").value = "";
     document.getElementById("tituloModalConvocatoria").innerHTML = '<i class="fa-solid fa-bullhorn"></i> Nueva Convocatoria';
-    document.getElementById("btnEliminarConvocatoria").style.display = "none";
+    const btnEliminar = document.getElementById("btnEliminarConvocatoria");
+    if (btnEliminar) btnEliminar.style.display = "none";
     toggleCamposPorTipo();
 
     const container = document.getElementById("contenedorOpcionesPosgrado");
@@ -1059,6 +1064,12 @@ async function cargarCatalogoRequisitosUI() {
                 </div>
             `;
 
+            const reqCb = div.querySelector(`.req-checkbox`);
+            const oblCb = div.querySelector(`.req-obligatorio`);
+            reqCb?.addEventListener("change", (e) => {
+                if (oblCb) oblCb.checked = e.target.checked;
+            });
+
             contenedor.appendChild(div);
         });
 
@@ -1132,8 +1143,7 @@ async function editarConvocatoria(id) {
 
         const btnEliminar = document.getElementById("btnEliminarConvocatoria");
         if (btnEliminar) {
-            btnEliminar.style.display = "inline-block";
-            btnEliminar.onclick = () => eliminarConvocatoria(conv.id);
+            btnEliminar.style.display = "none";
         }
 
         const modalElement = document.getElementById("modalConvocatoria");
@@ -1472,8 +1482,8 @@ async function verExpedienteAspirante(id) {
         if (solicitudes.length === 0) {
             contSolicitudes.innerHTML = `
                 <div class="text-center py-4">
-                    <i class="fa-solid fa-inbox text-muted fs-1 mb-2"></i>
-                    <p class="text-muted">El aspirante aún no ha iniciado ningún proceso de admisión.</p>
+                    <img src="css/umsnhLogo.png" alt="Logo UMSNH" style="width: 130px; max-width: 80%; opacity: 0.45;" class="mb-3 d-block mx-auto">
+                    <p class="text-muted fw-medium">El aspirante aún no ha iniciado ningún proceso de admisión.</p>
                 </div>
             `;
         } else {
@@ -1496,7 +1506,7 @@ async function verExpedienteAspirante(id) {
                         else if (doc.estadoValidacion === "RECHAZADO") { classBadge = "soft-badge-danger"; }
 
                         htmlDocs += `
-                            <div class="doc-row-premium" onclick="window.open('/api/files/${doc.rutaArchivo}?token=' + (sessionStorage.getItem('token') || localStorage.getItem('token')), '_blank')">
+                            <div class="doc-row-premium" onclick="abrirArchivoSeguro('${doc.rutaArchivo}')">
                                 <div style="display: flex; align-items: center;">
                                     <i class="fa-solid fa-file-pdf doc-icon"></i>
                                     <span style="font-weight: 500; color: var(--color-text);">${doc.requisitoNombre}</span>
@@ -1784,9 +1794,6 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
 
                 if (doc.estadoValidacion === "APROBADO") { badgeClass = "success"; textStatus = "Aprobado"; iconStatus = "fa-check-circle"; }
                 else if (doc.estadoValidacion === "RECHAZADO") { badgeClass = "danger"; textStatus = "Rechazado"; iconStatus = "fa-times-circle"; }
-                
-                const urlCompleta = doc.rutaArchivo.startsWith('http') ? doc.rutaArchivo : `/api/files/${doc.rutaArchivo.split('/').pop()}?token=${sessionStorage.getItem('token')}`;
-
                 docsHtml += `
                     <div class="list-group-item d-flex justify-content-between align-items-center" style="background: transparent; border-color: var(--color-border); padding: 15px 20px;">
                         <div class="d-flex align-items-center gap-3">
@@ -1808,9 +1815,9 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
                             <button onclick="evaluarDocumentoAdmin(${doc.idDocumento || doc.id}, 'RECHAZADO', ${idSolicitud}, ${idAspi})" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Rechazar Documento">
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
-                            <a href="${urlCompleta}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Ver Documento">
+                            <button onclick="abrirArchivoSeguro('${doc.rutaArchivo}')" class="btn btn-sm btn-outline-primary rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Ver Documento">
                                 <i class="fa-solid fa-eye"></i>
-                            </a>
+                            </button>
                         </div>
                     </div>
                 `;
@@ -1853,7 +1860,6 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
                     const estadoIcono = { PENDIENTE: 'fa-clock', APROBADO: 'fa-circle-check', RECHAZADO: 'fa-circle-xmark' };
                     const est = pagoData.estado || 'PENDIENTE';
                     const token = sessionStorage.getItem('token');
-                    const urlComp = `/api/files/${pagoData.comprobante}?token=${token}`;
 
                     const botonesAccion = est === 'PENDIENTE' ? `
                         <div style="display:flex;gap:8px;margin-top:14px;">
@@ -1876,18 +1882,16 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
                                         <i class="fa-solid fa-receipt"></i>
                                     </div>
                                     <div>
-                                        <h6 class="mb-0 fw-bold" style="color:var(--color-text);font-size:0.95rem;">Comprobante de pago</h6>
-                                        ${pagoData.referencia ? `<small class="text-muted">Ref: ${pagoData.referencia}</small>` : ''}
-                                        ${pagoData.monto ? `<small class="text-muted"> · $${pagoData.monto}</small>` : ''}
+                                        ${pagoData.referencia ? `<small class="text-muted"><i class="fa-solid fa-comment-dots me-1"></i>Comentarios: ${pagoData.referencia}</small>` : ''}
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="badge bg-${estadoColor[est]} rounded-pill px-3 py-2 fw-semibold shadow-sm d-flex align-items-center gap-1 me-1">
                                         <i class="fa-solid ${estadoIcono[est]}"></i> ${est}
                                     </span>
-                                    <a href="${urlComp}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;" title="Ver comprobante">
+                                    <button onclick="abrirArchivoSeguro('${pagoData.comprobante}')" class="btn btn-sm btn-outline-primary rounded-circle" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;" title="Ver comprobante">
                                         <i class="fa-solid fa-eye"></i>
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
                             ${pagoData.observaciones ? `<div style="padding:0 20px 14px;font-size:13px;color:#ef4444;"><i class="fa-solid fa-triangle-exclamation me-1"></i>${pagoData.observaciones}</div>` : ''}
@@ -1992,8 +1996,11 @@ async function descargarDocumentosZipAdmin(nombreAspirante, documentos) {
 
         for (const doc of documentos) {
             try {
-                const urlCompleta = doc.rutaArchivo.startsWith('http') ? doc.rutaArchivo : `/api/files/${doc.rutaArchivo.split('/').pop()}?token=${sessionStorage.getItem('token')}`;
-                const resp = await fetch(urlCompleta);
+                const cleanPath = doc.rutaArchivo.split('/').pop();
+                const urlCompleta = doc.rutaArchivo.startsWith('http') ? doc.rutaArchivo : `/api/files/${cleanPath}`;
+                const resp = await fetch(urlCompleta, {
+                    headers: { 'Authorization': `Bearer ${sessionStorage.getItem('token') || localStorage.getItem('token')}` }
+                });
                 if (!resp.ok) continue;
 
                 const blob = await resp.blob();
@@ -3074,6 +3081,15 @@ function renderExplorador() {
         if(programas.length === 0) {
             itemsHTML = `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay documentos disponibles en el sistema.</p></div>`;
         }
+        
+        // Agregar carpeta fija del Gestor de Archivos Físico (Linux style)
+        itemsHTML += `
+            <div class="explorer-folder" onclick="exploradorEntrarDirectorio('filemanager', '/', 'Archivos Internos')">
+                <i class="fa-solid fa-hard-drive explorer-icon" style="color: #ef476f;"></i>
+                <span class="explorer-name">Archivos Internos</span>
+            </div>
+        `;
+        
         programas.forEach(prog => {
             itemsHTML += `
                 <div class="explorer-folder" onclick="exploradorEntrarDirectorio('programa', '${prog}', '${prog}')">
@@ -3082,63 +3098,569 @@ function renderExplorador() {
                 </div>
             `;
         });
-    } else if (exploradorCurrentPath.length === 1) {
-        // Nivel 1: Agrupar por Aspirante dentro del programa
-        const programaSeleccionado = exploradorCurrentPath[0].valor;
-        const docsPrograma = exploradorDatos.filter(d => d.programa === programaSeleccionado);
-        
-        const aspirantesMap = new Map();
-        docsPrograma.forEach(d => {
-            if(!aspirantesMap.has(d.aspiranteId)) {
-                aspirantesMap.set(d.aspiranteId, { id: d.aspiranteId, nombre: d.aspiranteNombreCompleto });
+    } else if (exploradorCurrentPath.length >= 1) {
+        if (exploradorCurrentPath[0].tipo === 'avisos') {
+            // Nivel Avisos
+            cargarYRenderizarAvisos();
+            return; // Exit here, HTML is populated by async function
+        }
+
+        if (exploradorCurrentPath[0].tipo === 'filemanager') {
+            // Nivel Gestor Físico
+            // Construimos la ruta actual desde el breadcrumb
+            let fmPath = '/';
+            if (exploradorCurrentPath.length > 1) {
+                fmPath = exploradorCurrentPath[exploradorCurrentPath.length - 1].valor;
             }
-        });
-
-        if(aspirantesMap.size === 0) {
-            itemsHTML = `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay aspirantes en este programa.</p></div>`;
+            cargarYRenderizarFileManager(fmPath);
+            return;
         }
 
-        aspirantesMap.forEach(aspi => {
-            itemsHTML += `
-                <div class="explorer-folder" onclick="exploradorEntrarDirectorio('aspirante', ${aspi.id}, '${aspi.nombre}')">
-                    <i class="fa-solid fa-user-graduate explorer-icon" style="color: #4cc9f0;"></i>
-                    <span class="explorer-name">${aspi.nombre}</span>
-                </div>
-            `;
-        });
-    } else if (exploradorCurrentPath.length === 2) {
-        // Nivel 2: Mostrar Documentos del aspirante
-        const programaSeleccionado = exploradorCurrentPath[0].valor;
-        const aspiranteSeleccionado = exploradorCurrentPath[1].valor;
-        const documentos = exploradorDatos.filter(d => d.programa === programaSeleccionado && d.aspiranteId === aspiranteSeleccionado);
+        if (exploradorCurrentPath.length === 1) {
+            // Nivel 1: Agrupar por Aspirante dentro del programa
+            const programaSeleccionado = exploradorCurrentPath[0].valor;
+            const docsPrograma = exploradorDatos.filter(d => d.programa === programaSeleccionado);
+            
+            const aspirantesMap = new Map();
+            docsPrograma.forEach(d => {
+                if(!aspirantesMap.has(d.aspiranteId)) {
+                    aspirantesMap.set(d.aspiranteId, { id: d.aspiranteId, nombre: d.aspiranteNombreCompleto });
+                }
+            });
 
-        if(documentos.length === 0) {
-            itemsHTML = `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay documentos para este aspirante.</p></div>`;
+            if(aspirantesMap.size === 0) {
+                itemsHTML = `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay aspirantes en este programa.</p></div>`;
+            }
+
+            aspirantesMap.forEach(aspi => {
+                itemsHTML += `
+                    <div class="explorer-folder" onclick="exploradorEntrarDirectorio('aspirante', ${aspi.id}, '${aspi.nombre}')">
+                        <i class="fa-solid fa-user-graduate explorer-icon" style="color: #4cc9f0;"></i>
+                        <span class="explorer-name">${aspi.nombre}</span>
+                    </div>
+                `;
+            });
+        } else if (exploradorCurrentPath.length === 2) {
+            // Nivel 2: Mostrar Documentos del aspirante
+            const programaSeleccionado = exploradorCurrentPath[0].valor;
+            const aspiranteSeleccionado = exploradorCurrentPath[1].valor;
+            const documentos = exploradorDatos.filter(d => d.programa === programaSeleccionado && d.aspiranteId === aspiranteSeleccionado);
+
+            if(documentos.length === 0) {
+                itemsHTML = `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay documentos para este aspirante.</p></div>`;
+            }
+
+            documentos.forEach(doc => {
+                let badgeHtml = '';
+                let bgClass = 'bg-secondary';
+                if(doc.estadoValidacion === 'PENDIENTE') bgClass = 'bg-warning text-dark';
+                else if(doc.estadoValidacion === 'APROBADO') bgClass = 'bg-success';
+                else if(doc.estadoValidacion === 'RECHAZADO') bgClass = 'bg-danger';
+
+                badgeHtml = `<span class="badge ${bgClass} mt-2" style="font-size:0.7rem">${doc.estadoValidacion}</span>`;
+
+                itemsHTML += `
+                    <div class="explorer-file" onclick="verDocumentoExplorer('${doc.rutaArchivo}')">
+                        <i class="fa-solid fa-file-pdf explorer-icon"></i>
+                        <span class="explorer-name" title="${doc.requisitoNombre}">${doc.requisitoNombre}</span>
+                        ${badgeHtml}
+                    </div>
+                `;
+            });
         }
-
-        documentos.forEach(doc => {
-            let badgeHtml = '';
-            let bgClass = 'bg-secondary';
-            if(doc.estadoValidacion === 'PENDIENTE') bgClass = 'bg-warning text-dark';
-            else if(doc.estadoValidacion === 'APROBADO') bgClass = 'bg-success';
-            else if(doc.estadoValidacion === 'RECHAZADO') bgClass = 'bg-danger';
-
-            badgeHtml = `<span class="badge ${bgClass} mt-2" style="font-size:0.7rem">${doc.estadoValidacion}</span>`;
-
-            itemsHTML += `
-                <div class="explorer-file" onclick="verDocumentoExplorer('${doc.rutaArchivo}')">
-                    <i class="fa-solid fa-file-pdf explorer-icon"></i>
-                    <span class="explorer-name" title="${doc.requisitoNombre}">${doc.requisitoNombre}</span>
-                    ${badgeHtml}
-                </div>
-            `;
-        });
     }
 
     grid.innerHTML = itemsHTML;
 }
 
 window.verDocumentoExplorer = function(ruta) {
-    const url = `/uploads/${ruta}`;
-    window.open(url, '_blank');
+    if (typeof abrirArchivoSeguro === 'function') {
+        abrirArchivoSeguro(ruta);
+    } else {
+        const token = sessionStorage.getItem('token');
+        const url = `/api/files/${ruta}?token=${token}`;
+        window.open(url, '_blank');
+    }
 };
+
+// ==========================================
+// MÓDULO DE AVISOS (CARRUSEL)
+// ==========================================
+async function cargarYRenderizarAvisos() {
+    const grid = document.getElementById('exploradorGrid');
+    if (!grid) return;
+
+    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
+
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch('/api/avisos', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error('Error al obtener avisos');
+        const avisos = await res.json();
+
+        let itemsHTML = `
+            <div style="grid-column: 1/-1; display: flex; justify-content: flex-end; margin-bottom: 15px;">
+                <button class="btn btn-primary" onclick="document.getElementById('inputAvisoFile').click()" style="border-radius: 20px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-cloud-arrow-up me-2"></i>Subir Nuevo Aviso
+                </button>
+                <input type="file" id="inputAvisoFile" style="display: none;" accept="image/jpeg, image/png, image/webp" onchange="subirNuevoAviso(this)">
+            </div>
+        `;
+
+        if (avisos.length === 0) {
+            itemsHTML += `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay avisos registrados.</p></div>`;
+        } else {
+            avisos.forEach(aviso => {
+                const checked = aviso.activo ? 'checked' : '';
+                itemsHTML += `
+                    <div class="explorer-file d-flex flex-column" style="position: relative; overflow: hidden; padding: 0;">
+                        <img src="/api/files/${aviso.rutaArchivo}?token=${token}" style="width: 100%; height: 120px; object-fit: cover; border-bottom: 1px solid var(--color-border);" onclick="verDocumentoExplorer('${aviso.rutaArchivo}')">
+                        <div style="padding: 10px; display: flex; align-items: center; justify-content: space-between; width: 100%; background: var(--color-surface);">
+                            <div class="form-check form-switch m-0" style="font-size: 1.1rem;" title="Activar/Desactivar">
+                                <input class="form-check-input" type="checkbox" role="switch" ${checked} onchange="toggleAviso(${aviso.id}, this)">
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="eliminarAviso(${aviso.id})" style="border: none; padding: 2px 6px;" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        grid.innerHTML = itemsHTML;
+
+    } catch (error) {
+        console.error(error);
+        grid.innerHTML = `<div class="text-center w-100 py-5 text-danger" style="grid-column: 1 / -1;"><p>Ocurrió un error al cargar los avisos.</p></div>`;
+    }
+}
+
+async function subirNuevoAviso(input) {
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    
+    const formData = new FormData();
+    formData.append('archivo', file);
+    formData.append('titulo', file.name);
+
+    mostrarLoader();
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch('/api/avisos', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+                // No setear Content-Type, fetch lo pone solo con el boundary del FormData
+            },
+            body: formData
+        });
+
+        if (res.ok) {
+            Swal.fire('¡Éxito!', 'Aviso subido correctamente.', 'success');
+            cargarYRenderizarAvisos(); // Recargar el grid
+        } else {
+            throw new Error('Error al subir');
+        }
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error', 'No se pudo subir el archivo.', 'error');
+    } finally {
+        ocultarLoader();
+        input.value = ""; // Limpiar input
+    }
+}
+
+async function toggleAviso(id, checkbox) {
+    const originalState = !checkbox.checked;
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch(`/api/avisos/${id}/estado`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Fallo al cambiar estado');
+    } catch (e) {
+        console.error(e);
+        checkbox.checked = originalState; // Revertir
+        Swal.fire('Error', 'No se pudo cambiar el estado.', 'error');
+    }
+}
+
+async function eliminarAviso(id) {
+    const confirm = await Swal.fire({
+        title: '¿Eliminar aviso?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    mostrarLoader();
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch(`/api/avisos/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            Swal.fire('Eliminado', 'Aviso eliminado correctamente.', 'success');
+            cargarYRenderizarAvisos();
+        } else {
+            throw new Error('Error');
+        }
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error', 'No se pudo eliminar el aviso.', 'error');
+    } finally {
+        ocultarLoader();
+    }
+}
+
+// ==========================================
+// GESTOR DE ARCHIVOS FÍSICO (FILE MANAGER)
+// ==========================================
+let currentFileManagerPath = '/';
+
+async function cargarYRenderizarFileManager(fmPath) {
+    const grid = document.getElementById('exploradorGrid');
+    if (!grid) return;
+    
+    currentFileManagerPath = fmPath || '/';
+    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
+
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch(`/api/filemanager/list?path=${encodeURIComponent(currentFileManagerPath)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error('Error al listar directorio');
+        const items = await res.json();
+
+        let itemsHTML = `
+            <div style="grid-column: 1/-1; display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px;">
+                <button class="btn btn-secondary" onclick="fmCrearCarpeta()" style="border-radius: 20px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-folder-plus me-2"></i>Nueva Carpeta
+                </button>
+                <button class="btn btn-primary" onclick="document.getElementById('inputFMFile').click()" style="border-radius: 20px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-cloud-arrow-up me-2"></i>Subir Archivo
+                </button>
+                <input type="file" id="inputFMFile" style="display: none;" onchange="fmSubirArchivo(this)">
+            </div>
+        `;
+
+        if (items.length === 0) {
+            itemsHTML += `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>Carpeta vacía.</p></div>`;
+        } else {
+            items.forEach(item => {
+                const isDir = item.isDirectory;
+                const ext = item.name.split('.').pop().toLowerCase();
+                const isImage = !isDir && ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext);
+
+                // Formatear tamaño
+                let sizeStr = '';
+                if (!isDir) {
+                    const kb = item.size / 1024;
+                    sizeStr = kb > 1024 ? (kb/1024).toFixed(2) + ' MB' : kb.toFixed(1) + ' KB';
+                }
+
+                // Generamos ruta completa del item para usar en el explorador
+                let itemPathFull = currentFileManagerPath.endsWith('/') ? currentFileManagerPath + item.name : currentFileManagerPath + '/' + item.name;
+
+                const isVideo = !isDir && ['mp4', 'webm', 'ogg', 'mov'].includes(ext);
+
+                // Elemento visual (Icono o Miniatura)
+                let visualElement = '';
+                if (isDir) {
+                    visualElement = `<i class="fa-solid fa-folder fa-3x mb-2" style="color: #4cc9f0;"></i>`;
+                } else if (isImage) {
+                    const token = sessionStorage.getItem('token') || '';
+                    const cleanRelPath = itemPathFull.startsWith('/') ? itemPathFull.substring(1) : itemPathFull;
+                    const imgUrl = `/api/files/admin/${cleanRelPath}?token=${token}`;
+                    visualElement = `
+                        <div class="mb-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 65px; height: 65px; border-radius: 10px; overflow: hidden; background: #f8fafc; border: 1px solid #e2e8f0;">
+                            <img src="${imgUrl}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-image fa-2x text-secondary\\'></i>'">
+                        </div>
+                    `;
+                } else if (isVideo) {
+                    const token = sessionStorage.getItem('token') || '';
+                    const cleanRelPath = itemPathFull.startsWith('/') ? itemPathFull.substring(1) : itemPathFull;
+                    const videoUrl = `/api/files/admin/${cleanRelPath}?token=${token}`;
+                    visualElement = `
+                        <div class="mb-2 d-flex align-items-center justify-content-center shadow-sm position-relative" style="width: 65px; height: 65px; border-radius: 10px; overflow: hidden; background: #0f172a; border: 1px solid #e2e8f0;">
+                            <video src="${videoUrl}#t=0.5" style="width: 100%; height: 100%; object-fit: cover;" muted preload="metadata" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-file-video fa-2x text-purple\\'></i>'"></video>
+                            <i class="fa-solid fa-circle-play text-white position-absolute fs-5" style="opacity: 0.9; drop-shadow: 0 2px 4px rgba(0,0,0,0.5);"></i>
+                        </div>
+                    `;
+                } else {
+                    let iconClass = 'fa-file';
+                    let iconColor = '#4ade80';
+                    if (['pdf'].includes(ext)) { iconClass = 'fa-file-pdf'; iconColor = '#ef4444'; }
+                    else if (['doc', 'docx'].includes(ext)) { iconClass = 'fa-file-word'; iconColor = '#3b82f6'; }
+                    else if (['xls', 'xlsx'].includes(ext)) { iconClass = 'fa-file-excel'; iconColor = '#10b981'; }
+                    
+                    visualElement = `<i class="fa-solid ${iconClass} fa-3x mb-2" style="color: ${iconColor};"></i>`;
+                }
+
+                let toggleHTML = '';
+                if (!isDir && currentFileManagerPath.includes('Avisos')) {
+                    // Extract relative path to store in DB (e.g. Avisos/2026/foto.jpg)
+                    let relativeForDB = itemPathFull;
+                    if (relativeForDB.startsWith('/')) relativeForDB = relativeForDB.substring(1);
+                    
+                    const isChecked = item.activo == 1 ? 'checked' : '';
+                    toggleHTML = `
+                        <div class="form-check form-switch mt-2" title="Visibilidad en Carrusel">
+                            <input class="form-check-input" type="checkbox" onchange="fmToggleAviso('${relativeForDB}', this)" ${isChecked}>
+                        </div>
+                    `;
+                }
+
+                itemsHTML += `
+                    <div class="explorer-file d-flex flex-column align-items-center justify-content-between position-relative" style="padding: 15px;">
+                        <!-- Icono/Miniatura y nombre cliqueable -->
+                        <div class="text-center d-flex flex-column align-items-center" style="cursor: pointer; width: 100%;" onclick="${isDir ? `exploradorEntrarDirectorio('filemanager', '${itemPathFull}', '${item.name}')` : `fmVerArchivo('${itemPathFull}')`}">
+                            ${visualElement}
+                            <div class="text-truncate" style="font-weight: 500; font-size: 0.9rem; max-width: 100%;" title="${item.name}">${item.name}</div>
+                            ${!isDir ? `<div style="font-size: 0.75rem; color: #64748b;">${sizeStr}</div>` : ''}
+                        </div>
+                        
+                        ${toggleHTML}
+
+                        <!-- Acciones -->
+                        <div class="d-flex gap-2 mt-3 w-100 justify-content-center">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="fmRenombrar('${item.name}')" title="Renombrar"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="fmEliminar('${itemPathFull}', ${isDir})" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        grid.innerHTML = itemsHTML;
+
+    } catch (error) {
+        console.error(error);
+        grid.innerHTML = `<div class="text-center w-100 py-5 text-danger" style="grid-column: 1 / -1;"><p>Ocurrió un error al cargar la carpeta.</p></div>`;
+    }
+}
+
+async function fmCrearCarpeta() {
+    const { value: folderName } = await Swal.fire({
+        title: 'Nueva Carpeta',
+        input: 'text',
+        inputLabel: 'Nombre de la carpeta',
+        inputPlaceholder: 'Ingresa el nombre...',
+        showCancelButton: true,
+        confirmButtonColor: '#4cc9f0',
+        inputValidator: (value) => {
+            if (!value) return 'El nombre no puede estar vacío';
+            if (value.includes('/') || value.includes('\\')) return 'El nombre contiene caracteres inválidos';
+        }
+    });
+
+    if (folderName) {
+        mostrarLoader();
+        try {
+            const token = sessionStorage.getItem('token');
+            const res = await fetch('/api/filemanager/folder', {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ currentPath: currentFileManagerPath, folderName })
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.mensaje || 'Error al crear carpeta');
+            }
+            
+            cargarYRenderizarFileManager(currentFileManagerPath);
+        } catch (e) {
+            Swal.fire('Error', e.message, 'error');
+        } finally {
+            ocultarLoader();
+        }
+    }
+}
+
+async function fmSubirArchivo(input) {
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    
+    const formData = new FormData();
+    formData.append('archivo', file);
+    formData.append('currentPath', currentFileManagerPath);
+
+    mostrarLoader();
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch('/api/filemanager/upload', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+
+        if (res.ok) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Archivo subido',
+                showConfirmButton: false,
+                timer: 2000
+            });
+            cargarYRenderizarFileManager(currentFileManagerPath);
+        } else {
+            const data = await res.json();
+            throw new Error(data.mensaje || 'Error al subir');
+        }
+    } catch (e) {
+        Swal.fire('Error', e.message, 'error');
+    } finally {
+        ocultarLoader();
+        input.value = ""; 
+    }
+}
+
+async function fmEliminar(itemPathFull, isDir) {
+    const confirm = await Swal.fire({
+        title: `¿Eliminar ${isDir ? 'carpeta' : 'archivo'}?`,
+        text: isDir ? 'Se borrará la carpeta y todo su contenido. ¡No se puede deshacer!' : '¡Esta acción no se puede deshacer!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Sí, eliminar'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    mostrarLoader();
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch(`/api/filemanager/delete`, {
+            method: 'DELETE',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ itemPath: itemPathFull })
+        });
+
+        if (res.ok) {
+            cargarYRenderizarFileManager(currentFileManagerPath);
+        } else {
+            const data = await res.json();
+            throw new Error(data.mensaje || 'Error al eliminar');
+        }
+    } catch (e) {
+        Swal.fire('Error', e.message, 'error');
+    } finally {
+        ocultarLoader();
+    }
+}
+
+async function fmRenombrar(oldName) {
+    const { value: newName } = await Swal.fire({
+        title: 'Renombrar',
+        input: 'text',
+        inputValue: oldName,
+        showCancelButton: true,
+        confirmButtonColor: '#4cc9f0',
+        inputValidator: (value) => {
+            if (!value) return 'El nombre no puede estar vacío';
+            if (value === oldName) return 'El nombre es igual al original';
+            if (value.includes('/') || value.includes('\\')) return 'El nombre contiene caracteres inválidos';
+        }
+    });
+
+    if (newName) {
+        mostrarLoader();
+        try {
+            const token = sessionStorage.getItem('token');
+            const res = await fetch('/api/filemanager/rename', {
+                method: 'PUT',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ currentPath: currentFileManagerPath, oldName, newName })
+            });
+
+            if (res.ok) {
+                cargarYRenderizarFileManager(currentFileManagerPath);
+            } else {
+                const data = await res.json();
+                throw new Error(data.mensaje || 'Error al renombrar');
+            }
+        } catch (e) {
+            Swal.fire('Error', e.message, 'error');
+        } finally {
+            ocultarLoader();
+        }
+    }
+}
+
+function fmVerArchivo(itemPathFull) {
+    // Si queremos verlo de forma segura, el servidor podría servirlo 
+    // a través de otra ruta estática o usar api/files. 
+    // Pero api/files asume /uploads/. 
+    // Dado que estamos en /uploads/admin/, la ruta relativa al uploads es 'admin' + itemPathFull
+    
+    // Remover slash inicial si lo tiene
+    let relativePath = itemPathFull;
+    if (relativePath.startsWith('/')) {
+        relativePath = relativePath.substring(1);
+    }
+    
+    // La ruta relativa que api/files entiende es:
+    const safePathForApiFiles = `admin/${relativePath}`;
+    
+    if (typeof abrirArchivoSeguro === 'function') {
+        abrirArchivoSeguro(safePathForApiFiles);
+    } else {
+        const token = sessionStorage.getItem('token');
+        window.open(`/api/files/${safePathForApiFiles}?token=${token}`, '_blank');
+    }
+}
+
+async function fmToggleAviso(rutaArchivo, checkbox) {
+    const originalState = !checkbox.checked;
+    
+    try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch('/api/filemanager/toggle-aviso', {
+            method: 'POST',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ rutaArchivo })
+        });
+
+        if (!res.ok) {
+            throw new Error('Error al cambiar el estado del aviso');
+        }
+        // Estado guardado en DB (no necesitamos recargar toda la carpeta)
+    } catch (error) {
+        console.error(error);
+        checkbox.checked = originalState; // Revertir visualmente si falla
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: 'No se pudo guardar el estado',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }
+}

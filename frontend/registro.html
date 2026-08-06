@@ -4,98 +4,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UMSNH - Registro de Aspirante</title>
-    <!-- Enlazamos tus mismos estilos del Login -->
+    <link rel="shortcut icon" href="css/favico.png">
+    <title>FIE Registro</title>
+
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
-<body>
+<body class="split-body">
 
-    <div class="login-container">
-        <div class="login-card">
-            <!-- Escudo institucional centrado superior -->
-            <img src="css/Escudo UMSNH.webp" alt="Escudo UMSNH">
+    <div class="split-layout" id="mainLayout">
 
-            <h2 style="color: #1a1f2c; margin-bottom: 5px; font-size: 20px; font-weight: 700;">Registro de Aspirante
-            </h2>
-            <p style="color: #666; font-size: 13px; margin-bottom: 25px;">Crea tu cuenta para el ingreso al Posgrado FIE
-            </p>
+        <!-- Logos: uno a cada extremo -->
+        <div class="brand-logos">
+            <img src="css/fie_logo.png" alt="Logo FIE" class="brand-logo">
+            <img src="css/posgradofie.png" alt="Posgrados FIE" class="brand-logo">
+        </div>
 
-            <!-- Formulario de captura -->
-            <form id="formularioRegistro" onsubmit="enviarRegistro(event)">
+        <!-- Tarjeta de formulario centrada ancha -->
+        <div class="split-form-panel">
+            <div class="form-container">
 
-                <div class="form-group">
-                    <label for="reg-correo">Correo electrónico institucional</label>
-                    <input type="email" id="reg-correo" placeholder="usuario@umich.mx" required>
-                    <small style="display: block; margin-top: 4px; font-size: 11px; color: #777; text-align: left;">
-                        Debe terminar estrictamente en <strong style="color: #8a1c24;">@umich.mx</strong>
-                    </small>
+                <div class="wizard-header">
+                    <div class="wizard-progress-bar">
+                        <div class="wizard-progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="wizard-step-indicator active" id="ind-1">1</div>
+                    <div class="wizard-step-indicator" id="ind-2">2</div>
+                    <div class="wizard-step-indicator" id="ind-3">3</div>
+                    <div class="wizard-step-indicator" id="ind-4">4</div>
                 </div>
 
-                <div class="form-group">
-                    <label for="reg-password">Contraseña</label>
-                    <input type="password" id="reg-password" placeholder="Crea una contraseña segura" required>
+                <form id="formularioRegistro" class="premium-form" onsubmit="enviarRegistro(event)" autocomplete="off">
+
+                    <!-- PASO 1: CUENTA -->
+                    <div class="wizard-step active" id="step-1">
+                        <h2 class="form-title">Crea tu cuenta</h2>
+                        <p class="form-subtitle">Ingresa tu correo y crea una contraseña</p>
+
+                        <div class="input-group">
+                            <label for="correo">Correo</label>
+                            <div class="input-wrapper">
+                                <i class="fa-regular fa-envelope input-icon"></i>
+                                <input type="email" id="correo" placeholder="tucorreo@dominio.com" required
+                                    autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="password">Contraseña nueva</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="password" placeholder="Contraseña nueva" required
+                                    autocomplete="new-password">
+                                <i class="fa-solid fa-eye toggle-pwd" onclick="togglePwd('password', this)"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PASO 2: DATOS PERSONALES -->
+                    <div class="wizard-step" id="step-2">
+                        <h2 class="form-title">Datos personales</h2>
+                        <p class="form-subtitle">Escribe tus datos tal como aparecen en tus documentos oficiales</p>
+
+                        <div class="form-grid-3">
+                            <div class="input-group">
+                                <label>Nombre(s)</label>
+                                <div class="input-wrapper">
+                                    <input type="text" id="nombre" placeholder="Nombre(s)" required autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Primer apellido</label>
+                                <div class="input-wrapper">
+                                    <input type="text" id="primerApellido" placeholder="Primer apellido" required
+                                        autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Segundo apellido</label>
+                                <div class="input-wrapper">
+                                    <input type="text" id="segundoApellido" placeholder="Segundo apellido (opcional)"
+                                        autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid-4">
+                            <div class="input-group">
+                                <label>CURP</label>
+                                <div class="input-wrapper"><input type="text" id="curp" placeholder="CURP" required
+                                        maxlength="18" autocomplete="off"></div>
+                            </div>
+                            <div class="input-group">
+                                <label>RFC (opcional)</label>
+                                <div class="input-wrapper"><input type="text" id="rfc" placeholder="RFC" maxlength="13"
+                                        autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Fecha nacimiento</label>
+                                <div class="input-wrapper"><input type="date" id="fechaNacimiento" required
+                                        autocomplete="off"></div>
+                            </div>
+                            <div class="input-group">
+                                <label>Estado civil</label>
+                                <div class="input-wrapper">
+                                    <select id="estadoCivil" autocomplete="off">
+                                        <option value="SOLTERO">Soltero(a)</option>
+                                        <option value="CASADO">Casado(a)</option>
+                                        <option value="UNION_LIBRE">Unión Libre</option>
+                                        <option value="DIVORCIADO">Divorciado(a)</option>
+                                        <option value="SEPARADO">Separado(a)</option>
+                                        <option value="VIUDO">Viudo(a)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid-3">
+                            <div class="input-group">
+                                <label>Teléfono celular</label>
+                                <div class="input-wrapper"><input type="tel" id="telefono" placeholder="Celular"
+                                        required autocomplete="off"></div>
+                            </div>
+                            <div class="input-group">
+                                <label>Código postal</label>
+                                <div class="input-wrapper"><input type="number" id="direccionPostal" placeholder="C.P."
+                                        autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Dirección (opcional)</label>
+                                <div class="input-wrapper"><input type="text" id="direccion"
+                                        placeholder="Calle, no., col., ciudad" autocomplete="off"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PASO 3: ACADÉMICOS -->
+                    <div class="wizard-step" id="step-3">
+                        <h2 class="form-title">Estudios previos</h2>
+                        <p class="form-subtitle">Ingresa la información de tu licenciatura o grado previo</p>
+
+                        <div class="form-grid-2">
+                            <div class="input-group">
+                                <label>Licenciatura o carrera</label>
+                                <div class="input-wrapper"><input type="text" id="licenciatura"
+                                        placeholder="Nombre de tu carrera" required autocomplete="off"></div>
+                            </div>
+                            <div class="input-group">
+                                <label>Universidad / Institución de egreso</label>
+                                <div class="input-wrapper"><input type="text" id="institucionLicenciatura"
+                                        placeholder="Nombre de la universidad" required autocomplete="off"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid-3">
+                            <div class="input-group">
+                                <label>Fecha de egreso</label>
+                                <div class="input-wrapper"><input type="date" id="fechaEgreso" required
+                                        autocomplete="off"></div>
+                            </div>
+                            <div class="input-group">
+                                <label>Fecha de titulación</label>
+                                <div class="input-wrapper"><input type="date" id="fechaTitulacion" required
+                                        autocomplete="off"></div>
+                            </div>
+                            <div class="input-group">
+                                <label>Promedio general</label>
+                                <div class="input-wrapper"><input type="number" step="0.01" id="promedio"
+                                        placeholder="Ej. 8.5" required autocomplete="off"></div>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Otros estudios (opcional)</label>
+                            <div class="input-wrapper"><input type="text" id="otrosEstudios"
+                                    placeholder="Diplomados, cursos o especialidades" autocomplete="off"></div>
+                        </div>
+                    </div>
+
+                    <!-- PASO 4: OCUPACIÓN -->
+                    <div class="wizard-step" id="step-4">
+                        <h2 class="form-title">Trabajo u ocupación</h2>
+                        <p class="form-subtitle">Platícanos sobre tu trabajo actual (opcional)</p>
+
+                        <div class="form-grid-2">
+                            <div class="input-group">
+                                <label>Puesto u ocupación</label>
+                                <div class="input-wrapper"><input type="text" id="ocupacion"
+                                        placeholder="¿En qué trabajas actualmente?" autocomplete="off"></div>
+                            </div>
+                            <div class="input-group">
+                                <label>Teléfono de trabajo</label>
+                                <div class="input-wrapper"><input type="tel" id="telefonoOcupacion"
+                                        placeholder="Teléfono laboral" autocomplete="off"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="input-group">
+                                <label>Ciudad donde trabajas</label>
+                                <div class="input-wrapper"><input type="text" id="ciudadOcupacion" placeholder="Ciudad"
+                                        autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Estado</label>
+                                <div class="input-wrapper"><input type="text" id="estadoOcupacion" placeholder="Estado"
+                                        autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navegación del Wizard -->
+                    <div class="wizard-navigation">
+                        <button type="button" class="btn-wizard-prev" id="btnPrev" style="display: none;"
+                            onclick="prevStep()">
+                            Atrás
+                        </button>
+                        <button type="button" class="btn-wizard-next" id="btnNext" onclick="nextStep()">
+                            Siguiente
+                        </button>
+                        <button type="submit" class="btn-wizard-next" id="btnSubmit"
+                            style="display: none; background: #003366;">
+                            Registrarte
+                        </button>
+                    </div>
+
+                </form>
+
+                <div class="split-divider">
+                    <span>o</span>
                 </div>
 
-                <!-- Botón de acción principal solicitado -->
-                <button type="submit" class="btn-primary">
-                    Registrarse y Continuar
-                </button>
-            </form>
-
-            <!-- Opción solicitada para usuarios que ya poseen una cuenta activa -->
-            <div class="link-container">
-                ¿Ya tienes una cuenta? <a href="login.html">Inicia sesión aquí</a>
+                <a href="login.html" class="btn-secondary-split">
+                    ¿Ya tienes una cuenta? Inicia sesión
+                </a>
             </div>
         </div>
     </div>
 
-    <!-- Script de control de lógica independiente -->
-    <script>
-        async function enviarRegistro(event) {
-            event.preventDefault();
-            // 1. OBTENER LOS TRES VALORES DESDE EL HTML (Te faltaba el nombre)
-            const correo = document.getElementById('reg-correo').value.trim().toLowerCase();
-            const password = document.getElementById('reg-password').value.trim();
+    <!-- Zorro watermark: centrado debajo de la tarjeta, marca de agua -->
+    <div class="zorro-watermark">
+        <img src="css/zorro.png" alt="Zorro FIE">
+    </div>
 
-            // Validación del dominio institucional
-            if (!correo.endsWith('@umich.mx')) {
-                alert("⚠️ Registro Restringido:\nDebes utilizar obligatoriamente un correo institucional @umich.mx");
-                return;
-            }
-
-            try {
-                // Envío de parámetros estructurados a tu API en Node.js
-                const respuesta = await fetch("/api/auth/register", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ // Ahora sí tiene valor real
-                        correo,
-                        password,
-                        rol: "ASPIRANTE"
-                    })
-                });
-
-                const datos = await respuesta.json();
-
-                if (datos.success) {
-                    alert("¡Registro exitoso! Por favor, inicia sesión con tu nueva cuenta.");
-
-                    // Redirigir directamente al panel de aspirante
-                    window.location.href = `login.html?correo=${encodeURIComponent(correo)}`;
-                } else {
-                    // Esto te mostrará el error exacto que te arroje el backend en el alert
-                    alert(datos.mensaje || "Error al procesar el registro del aspirante.");
-                }
-
-            } catch (error) {
-                console.error("Error en la petición:", error);
-                alert("Error de red o el servidor está caído.");
-            }
-        }
-    </script>
+    <script src="js/registro.js"></script>
 </body>
 
 </html>

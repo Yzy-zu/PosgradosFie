@@ -1,4 +1,5 @@
 const db = require('../database/db');
+const emit = require('../utils/socketEmit');
 
 // Obtener todas las notificaciones
 const obtenerNotificaciones = async (req, res) => {
@@ -72,6 +73,15 @@ const crearNotificacion = async (req, res) => {
             [nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino || null]
         );
 
+        if (req.app.get('io')) {
+            // Si es individual, notificar solo al destinatario + ADMIN; si es masiva, a todos los aspirantes + ADMIN
+            if (destino === 'individual' && idDestino) {
+                emit.aAspiranteEspecifico(req, idDestino);
+            } else {
+                emit.aAdminYAspirantes(req);
+            }
+        }
+
         return res.json({
             success: true,
             mensaje: 'Notificación creada correctamente',
@@ -116,6 +126,14 @@ const actualizarNotificacion = async (req, res) => {
             [nombre, mensaje, destino, activa, rolRemitente, nombreRemitente, idDestino || null, id]
         );
 
+        if (req.app.get('io')) {
+            if (destino === 'individual' && idDestino) {
+                emit.aAspiranteEspecifico(req, idDestino);
+            } else {
+                emit.aAdminYAspirantes(req);
+            }
+        }
+
         return res.json({ success: true, mensaje: 'Notificación actualizada correctamente' });
     } catch (error) {
         console.error('Error en actualizarNotificacion:', error);
@@ -128,6 +146,11 @@ const eliminarNotificacion = async (req, res) => {
     try {
         const { id } = req.params;
         await db.query('DELETE FROM notificaciones WHERE id = ?', [id]);
+
+        if (req.app.get('io')) {
+            emit.aAdmin(req);
+        }
+
         return res.json({ success: true, mensaje: 'Notificación eliminada correctamente' });
     } catch (error) {
         console.error('Error en eliminarNotificacion:', error);

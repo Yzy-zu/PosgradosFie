@@ -4,56 +4,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UMSNH Sistema de Gestión - Posgrado</title>
+    <link rel="shortcut icon" href="css/favico.png">
+    <title>UMSNH - Posgrados FIE | Iniciar Sesión</title>
+
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
-<body>
+<body class="split-body">
 
-    <div class="login-container">
+    <div class="split-layout">
 
-        <div class="login-card">
+        <!-- Logos: uno a cada extremo -->
+        <div class="brand-logos">
+            <img src="css/fie_logo.png" alt="Logo FIE" class="brand-logo">
+            <img src="css/posgradofie.png" alt="Posgrados FIE" class="brand-logo">
+        </div>
 
-            <img src="css/Escudo UMSNH.webp" alt="Escudo UMSNH">
+        <!-- Tarjeta de formulario centrada -->
+        <div class="split-form-panel">
+            <div class="form-container">
+                <h2 class="form-title">Inicia sesión</h2>
+                <p class="form-subtitle">Ingresa a tu cuenta de Posgrados FIE UMSNH</p>
 
-            <form id="loginForm">
+                <form id="loginForm" class="premium-form">
+                    <div class="input-group">
+                        <label for="usuario">Correo</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-envelope input-icon"></i>
+                            <input type="email" id="usuario" placeholder="usuario@umich.mx" required
+                                autocomplete="email">
+                        </div>
+                    </div>
 
-                <div class="form-group">
+                    <div class="input-group">
+                        <label for="password">Contraseña</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="password" placeholder="Contraseña" required
+                                autocomplete="current-password">
+                            <i class="fa-solid fa-eye toggle-pwd" id="togglePassword" title="Mostrar contraseña"></i>
+                        </div>
+                    </div>
 
-                    <label for="usuario">Correo electrónico</label>
+                    <button type="submit" class="btn-primary-split">
+                        Iniciar sesión
+                    </button>
+                </form>
 
-                    <input
-                        type="email"
-                        id="usuario"
-                        placeholder="Ingresa tu correo"
-                        required>
-
+                <div class="split-divider">
+                    <span>o</span>
                 </div>
 
-                <div class="form-group">
-
-                    <label for="password">Contraseña</label>
-
-                    <input
-                        type="password"
-                        id="password"
-                        placeholder="Ingresa tu contraseña"
-                        required>
-
-                </div>
-
-                <button type="submit" class="btn-primary">
-                    Iniciar Sesión
-                </button>
-
-            </form>
-
+                <a href="registro.html" class="btn-secondary-split">
+                    Crear cuenta nueva
+                </a>
+            </div>
         </div>
 
     </div>
 
-    <!-- Aquí se carga toda la lógica del login -->
+    <!-- Zorro watermark: centrado debajo de la tarjeta, marca de agua -->
+    <div class="zorro-watermark">
+        <img src="css/zorro.png" alt="Zorro FIE">
+    </div>
+
     <script src="js/login.js"></script>
 
 </body>

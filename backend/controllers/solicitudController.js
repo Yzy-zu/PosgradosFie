@@ -1,5 +1,6 @@
 const db = require('../database/db');
 const WorkflowService = require('../services/workflowService');
+const emit = require('../utils/socketEmit');
 // Crear una solicitud
 const crearSolicitud = async (req, res) => {
     try {
@@ -57,8 +58,8 @@ const crearSolicitud = async (req, res) => {
             await WorkflowService.asignarModalidad(idNuevaSolicitud, idEntrevista);
         }
 
-        // Emitir evento global
-        req.app.get('io').emit('actualizacionGlobal');
+        // Notificar a ADMIN y DOCENTE (aspirante creó una nueva solicitud)
+        emit.aAdminYDocente(req);
 
         return res.status(201).json({
             mensaje: 'Solicitud creada correctamente.',
@@ -84,18 +85,24 @@ const getSolicitudActiva = async (req, res) => {
                     c.inicioCurso, c.finCurso,
                     c.fechaInicioEscolar, c.modalidad, c.duracion,
                     op.nombre AS opcionElegida,
+                    p.nombre AS posgradoNombre,
                     mi.nombre AS modalidadNombre,
                     ep.nombre AS etapaNombre,
                     me.orden AS etapaOrden,
-                    re.calificacion, re.aprobado AS resultadoAprobado, re.observaciones AS resultadoObservaciones, re.fechaCaptura
+                    COALESCE(re.calificacion, rc.calificacion) AS calificacion, 
+                    COALESCE(re.aprobado, rc.aprobado) AS resultadoAprobado, 
+                    COALESCE(re.observaciones, rc.observaciones) AS resultadoObservaciones, 
+                    COALESCE(re.fechaCaptura, rc.fechaCaptura) AS fechaCaptura
              FROM solicitud s
              JOIN convocatorias c ON s.idConvocatoria = c.id
+             LEFT JOIN posgrado p ON c.posgrado_id = p.id
              LEFT JOIN convocatoria_opcion co ON s.idConvocatoriaOpcion = co.id
              LEFT JOIN opcion_posgrado op ON co.opcion_posgrado_id = op.id
              LEFT JOIN modalidad_ingreso mi ON s.idModalidad = mi.id
              LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
              LEFT JOIN modalidad_etapa me ON s.idModalidad = me.modalidad_id AND s.idEtapaActual = me.etapa_id
-             LEFT JOIN resultado_examen re ON s.id = re.idSolicitud
+             LEFT JOIN resultado_examen re ON s.id = re.idSolicitud AND s.idModalidad = 1
+             LEFT JOIN resultado_curso rc ON s.id = rc.idSolicitud AND s.idModalidad = 2
              WHERE s.idAspi = ? AND s.estado != 'CANCELADO'
              ORDER BY s.creadoEn DESC LIMIT 1`,
             [idAspi]
@@ -143,6 +150,10 @@ const cancelarSolicitud = async (req, res) => {
     try {
         const { id } = req.params;
         await db.query("UPDATE solicitud SET estado = 'CANCELADO' WHERE id = ?", [id]);
+        // Obtener aspirante para notificación dirigida
+        const [solCancel] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [id]);
+        if (solCancel.length > 0) emit.aAspiranteEspecifico(req, solCancel[0].idUsuario);
+        else emit.aAdmin(req);
         return res.status(200).json({ mensaje: 'Solicitud cancelada exitosamente.' });
     } catch (error) {
         console.error('Error en cancelarSolicitud:', error);
@@ -161,10 +172,10 @@ const actualizarEstadoSolicitud = async (req, res) => {
         }
 
         await db.query("UPDATE solicitud SET estado = ? WHERE id = ?", [estado, id]);
-        
-        // Emitir evento global de actualización
-        req.app.get('io').emit('actualizacionGlobal');
-        
+        // Notificar al aspirante específico + ADMIN
+        const [solEst] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [id]);
+        if (solEst.length > 0) emit.aAspiranteEspecifico(req, solEst[0].idUsuario);
+        else emit.aAdmin(req);
         return res.status(200).json({ success: true, mensaje: `Solicitud marcada como ${estado} exitosamente.` });
     } catch (error) {
         console.error('Error en actualizarEstadoSolicitud:', error);
@@ -192,6 +203,9 @@ const actualizarModalidad = async (req, res) => {
             const [modEntrevista] = await db.query("SELECT id FROM modalidad_ingreso WHERE codigo = 'ENTREVISTA' LIMIT 1");
             const idEntrevista = modEntrevista.length > 0 ? modEntrevista[0].id : 6;
             await WorkflowService.asignarModalidad(id, idEntrevista);
+            const [solDoct] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [id]);
+            if (solDoct.length > 0) emit.aAspiranteEspecifico(req, solDoct[0].idUsuario);
+            else emit.aAdmin(req);
             return res.status(200).json({ mensaje: 'Modalidad de Doctorado (Entrevista) asignada correctamente.' });
         }
 
@@ -206,7 +220,9 @@ const actualizarModalidad = async (req, res) => {
         }
 
         await WorkflowService.asignarModalidad(id, idModalidad);
-
+        const [solMod] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [id]);
+        if (solMod.length > 0) emit.aAspiranteEspecifico(req, solMod[0].idUsuario);
+        else emit.aAdmin(req);
         return res.status(200).json({ mensaje: 'Modalidad actualizada correctamente.' });
     } catch (error) {
         console.error('Error en actualizarModalidad:', error);
@@ -258,10 +274,8 @@ const enviarExpediente = async (req, res) => {
         // Todos los documentos obligatorios están presentes — cambiar estado a revisión, SIN avanzar etapa
         // La etapa se avanzará automáticamente cuando el evaluador apruebe todos los documentos
         await db.query("UPDATE solicitud SET estado = 'EN_REVISION' WHERE id = ?", [id]);
-
-        // Emitir evento global de actualización
-        req.app.get('io').emit('actualizacionGlobal');
-
+        // Notificar a ADMIN y DOCENTE (aspirante envíó su expediente)
+        emit.aAdminYDocente(req);
         return res.status(200).json({ mensaje: 'Expediente enviado a revisión exitosamente.' });
     } catch (error) {
         console.error('Error en enviarExpediente:', error);
@@ -389,6 +403,7 @@ const getSolicitudesPorModalidadCodigo = async (req, res) => {
                 u.correo,
                 c.nombre AS programa,
                 c.posgrado_id,
+                p.nombre AS posgradoNombre,
                 p.tipo AS posgradoTipo,
                 op.nombre AS opcionNombre,
                 mi.id AS idModalidad,
