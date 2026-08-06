@@ -2,7 +2,9 @@ let listaAspirantes = [];
 let textoBusquedaAspirante = "";
 let filtroEstadoAspirante = "TODOS";
 let listaEntrevistas = [];
-
+let listaDictamenes = [];
+let filtroDictamen = "TODOS";
+let textoBusquedaDictamen = "";
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1393,7 +1395,10 @@ async function verExpediente(idAspirante) {
 // ==========================================
 async function cargarDictamenes() {
 
-    const tbody = document.getElementById("tablaDictamenesBody");
+    const tbody =
+        document.getElementById(
+            "tablaDictamenesBody"
+        );
 
     if (!tbody) return;
 
@@ -1408,95 +1413,243 @@ async function cargarDictamenes() {
 
     try {
 
-        const res = await fetch("/api/coordinador/dictamenes");
+        const res =
+            await fetch(
+                "/api/coordinador/dictamenes"
+            );
 
-        const datos = await res.json();
+        listaDictamenes =
+            await res.json();
 
-        tbody.innerHTML = "";
+        renderizarDictamenes();
 
-        if (!datos.length) {
+        configurarBuscadorDictamenes();
 
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="text-center">
-                        No existen registros.
-                    </td>
-                </tr>
-            `;
-
-            return;
-
-        }
-
-        datos.forEach(d => {
-
-            let badge = `
-                <span class="badge bg-secondary">
-                    Pendiente
-                </span>
-            `;
-
-            if (d.resultado === "ACEPTADO") {
-
-                badge = `
-                    <span class="badge bg-success">
-                        ACEPTADO
-                    </span>
-                `;
-
-            }
-
-            if (d.resultado === "RECHAZADO") {
-
-                badge = `
-                    <span class="badge bg-danger">
-                        RECHAZADO
-                    </span>
-                `;
-
-            }
-
-            tbody.innerHTML += `
-
-                <tr>
-
-                    <td>${d.nombre}</td>
-
-                    <td>${d.curp}</td>
-
-                    <td>${d.programa}</td>
-
-                    <td>${badge}</td>
-
-                    <td>
-
-                        ${d.publicado ? "Sí" : "No"}
-
-                    </td>
-
-                    <td class="text-end">
-
-                        <button
-                            class="btn btn-danger btn-sm"
-                            onclick="abrirModalDictamen(${d.idSolicitud})">
-
-                            Emitir
-
-                        </button>
-
-                    </td>
-
-                </tr>
-
-            `;
-
-        });
+        configurarFiltrosDictamenes();
 
     } catch (error) {
 
         console.error(error);
 
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center text-danger">
+                    Error al cargar dictámenes.
+                </td>
+            </tr>
+        `;
+
     }
+
+}
+
+function renderizarDictamenes() {
+
+    const tbody =
+        document.getElementById(
+            "tablaDictamenesBody"
+        );
+
+    tbody.innerHTML = "";
+
+    const datos =
+        listaDictamenes.filter(d => {
+
+            const texto = (
+                `${d.nombre} ${d.curp}`
+            ).toLowerCase();
+
+            const coincideBusqueda =
+                texto.includes(
+                    textoBusquedaDictamen
+                );
+
+            const resultado =
+                (
+                    d.resultado ||
+                    "PENDIENTE"
+                ).toUpperCase();
+
+            const coincideFiltro =
+                filtroDictamen === "TODOS" ||
+                resultado === filtroDictamen;
+
+            return (
+                coincideBusqueda &&
+                coincideFiltro
+            );
+
+        });
+
+    if (!datos.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center">
+                    No existen registros.
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+    datos.forEach(d => {
+
+        let badge = `
+            <span class="badge bg-secondary">
+                Pendiente
+            </span>
+        `;
+
+        if (d.resultado === "ACEPTADO") {
+
+            badge = `
+                <span class="badge bg-success">
+                    ACEPTADO
+                </span>
+            `;
+
+        }
+
+        if (d.resultado === "RECHAZADO") {
+
+            badge = `
+                <span class="badge bg-danger">
+                    RECHAZADO
+                </span>
+            `;
+
+        }
+
+        tbody.innerHTML += `
+
+            <tr>
+
+                <td>${d.nombre}</td>
+
+                <td>${d.curp}</td>
+
+                <td>${d.programa}</td>
+
+                <td>${badge}</td>
+
+                <td>
+
+                    ${d.publicado ? "Sí" : "No"}
+
+                </td>
+
+                <td class="text-end">
+
+                    <button
+                        class="btn btn-danger btn-sm"
+                        onclick="abrirModalDictamen(${d.idSolicitud})">
+
+                        Emitir
+
+                    </button>
+
+                </td>
+
+            </tr>
+
+        `;
+
+    });
+
+}
+
+function configurarBuscadorDictamenes() {
+
+    const input =
+        document.getElementById(
+            "buscarDictamen"
+        );
+
+    if (!input) return;
+
+    if (
+        input.dataset.listener === "true"
+    ) return;
+
+    input.addEventListener(
+        "input",
+        function () {
+
+            textoBusquedaDictamen =
+                this.value
+                    .toLowerCase()
+                    .trim();
+
+            renderizarDictamenes();
+
+        }
+    );
+
+    input.dataset.listener = "true";
+
+}
+
+function configurarBuscadorDictamenes() {
+
+    const input =
+        document.getElementById(
+            "buscarDictamen"
+        );
+
+    if (!input) return;
+
+    if (
+        input.dataset.listener === "true"
+    ) return;
+
+    input.addEventListener(
+        "input",
+        function () {
+
+            textoBusquedaDictamen =
+                this.value
+                    .toLowerCase()
+                    .trim();
+
+            renderizarDictamenes();
+
+        }
+    );
+
+    input.dataset.listener = "true";
+
+}
+
+function configurarFiltrosDictamenes() {
+
+    const botones =
+        document.querySelectorAll(
+            ".filtro-dictamen"
+        );
+
+    botones.forEach(boton => {
+
+        boton.onclick = () => {
+
+            document
+                .querySelectorAll(".filtro-dictamen")
+                .forEach(b =>
+                    b.classList.remove("active")
+                );
+
+            boton.classList.add("active");
+
+            filtroDictamen =
+                boton.dataset.estado;
+
+            renderizarDictamenes();
+
+        };
+
+    });
 
 }
 
