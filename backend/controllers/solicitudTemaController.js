@@ -46,7 +46,7 @@ const actualizarCalificacionTema = async (req, res) => {
         // Notificar al aspirante específico + ADMIN
         if (req.app.get('io')) {
             const [solTema] = await db.query(
-                `SELECT a.idUsuario FROM solicitud_temas st
+                `SELECT a.idUsuario FROM solicitud_tema st
                  JOIN solicitud s ON st.idSolicitud = s.id
                  JOIN aspirante a ON s.idAspi = a.id
                  WHERE st.id = ?`,
