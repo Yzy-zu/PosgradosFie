@@ -4,13 +4,18 @@ let estacionActual = 0;
 let aspiranteData = null; // Almacenará los datos de la BD del aspirante
 let currentSolicitudId = null;
 
-// Conexión Socket.io
+// Conexión Socket.io — registrar sala al conectar
 const socket = io();
+socket.on('connect', () => {
+    const usr = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+    socket.emit('registrarSala', { rol: 'ASPIRANTE', idUsuario: usr.id });
+});
 socket.on('actualizacionGlobal', () => {
     // Recargar vista actual si hay un cambio en el sistema (ej. evaluación de docente)
     const currentHash = window.location.hash;
     if (currentHash === '#inicio' || currentHash === '') {
         if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
+        if (typeof cargarStatsInicio === 'function') cargarStatsInicio();
         if (aspiranteData && aspiranteData.id) {
             fetch(`/api/solicitud/activa/${aspiranteData.id}`)
                 .then(res => res.json())
@@ -21,6 +26,8 @@ socket.on('actualizacionGlobal', () => {
                 })
                 .catch(e => console.error("Error actualizando inicio:", e));
         }
+    } else if (currentHash === '#proceso') {
+        if (typeof cargarDatosProceso === 'function') cargarDatosProceso();
     } else if (currentHash === '#documentos' || currentHash === '#admision') {
         if (aspiranteData && aspiranteData.id) {
             fetch(`/api/solicitud/activa/${aspiranteData.id}`)
@@ -2576,24 +2583,59 @@ function resetAutoSlide() {
 }
 
 // Iniciar carrusel después de que el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     carouselTrack = document.getElementById('inicio-carousel-track');
-    carouselIndicators = Array.from(document.querySelectorAll('#inicio-carousel-indicators .indicator'));
-    totalSlides = document.querySelectorAll('.carousel-slide').length;
+    const indicatorsContainer = document.getElementById('inicio-carousel-indicators');
+    
+    if (carouselTrack && indicatorsContainer) {
+        try {
+            const token = sessionStorage.getItem('token');
+            const res = await fetch('/api/avisos/activos', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const avisos = await res.json();
+                
+                if (avisos.length === 0) {
+                    // Si no hay avisos, ocultar el carrusel completo
+                    const container = document.getElementById('inicio-carousel');
+                    if (container) container.style.display = 'none';
+                    return;
+                }
 
-    if (carouselTrack && totalSlides > 0) {
-        // Asegurarse de que el primer slide asigne la altura inicial correctamente
-        const firstImg = document.querySelector('.carousel-slide img');
-        if (firstImg) {
-            if (firstImg.complete) {
+                let trackHTML = '';
+                let indicatorsHTML = '';
+
+                avisos.forEach((aviso, index) => {
+                    const ext = aviso.rutaArchivo.split('.').pop().toLowerCase();
+                    const isVideo = aviso.tipo === 'video' || ['mp4', 'webm', 'ogg', 'mov'].includes(ext);
+
+                    const mediaHTML = isVideo 
+                        ? `<video src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" autoplay muted loop playsinline style="object-fit: cover; width: 100%; height: 100%;"></video>`
+                        : `<img src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" alt="${aviso.titulo}" style="object-fit: cover; width: 100%; height: 100%;">`;
+
+                    trackHTML += `
+                        <div class="carousel-slide">
+                            ${mediaHTML}
+                        </div>
+                    `;
+                    indicatorsHTML += `
+                        <span class="indicator ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>
+                    `;
+                });
+
+                carouselTrack.innerHTML = trackHTML;
+                indicatorsContainer.innerHTML = indicatorsHTML;
+
+                carouselIndicators = Array.from(indicatorsContainer.querySelectorAll('.indicator'));
+                totalSlides = avisos.length;
+                currentSlide = 0;
                 updateCarousel();
-            } else {
-                firstImg.onload = () => updateCarousel();
+                startAutoSlide();
             }
-        } else {
-            updateCarousel();
+        } catch (e) {
+            console.error('Error al cargar avisos:', e);
         }
-        startAutoSlide();
     }
 });
 

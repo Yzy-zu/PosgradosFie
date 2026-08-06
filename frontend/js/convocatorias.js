@@ -896,55 +896,12 @@ function renderizarOpcionesPorPosgrado(
                 ? Boolean(seleccionPrevia)
                 : true;
 
-        const cupos =
-            seleccionPrevia?.cupos ?? "";
-
         html += `
-            <div
-                class="d-flex justify-content-between align-items-center p-2 rounded border"
-                style="
-                    background: var(--color-card-bg, #fff);
-                    border-color: var(--color-border, #dee2e6) !important;
-                ">
-
-                <div class="form-check mb-0">
-
-                    <input
-                        class="form-check-input opc-checkbox"
-                        type="checkbox"
-                        value="${opcion.id}"
-                        id="opc_${opcion.id}"
-                        ${seleccionada ? "checked" : ""}>
-
-                    <label
-                        class="form-check-label fw-semibold"
-                        for="opc_${opcion.id}"
-                        style="cursor: pointer;">
-
-                        ${escaparHTML(opcion.nombre)}
-
-                    </label>
-
-                </div>
-
-                <div
-                    class="d-flex align-items-center gap-2"
-                    style="width: 145px;">
-
-                    <small class="text-muted">
-                        Cupos:
-                    </small>
-
-                    <input
-                        type="number"
-                        min="0"
-                        class="form-control form-control-sm text-center cupo-input"
-                        id="cupos_opc_${opcion.id}"
-                        placeholder="Ilimitado"
-                        value="${cupos}">
-
-                </div>
-
+            <div class="form-check m-0 py-1.5 px-3 rounded border d-flex align-items-center gap-2 custom-option-item" style="background: var(--color-card-bg, #fff); border-color: var(--color-border, #dee2e6) !important;">
+                <input class="form-check-input opc-checkbox mt-0" type="checkbox" value="${opcion.id}" id="opc_${opcion.id}" ${seleccionada ? "checked" : ""} style="cursor:pointer;">
+                <label class="form-check-label fw-semibold text-wrap mb-0" for="opc_${opcion.id}" style="cursor:pointer; color: var(--color-text); font-size: 0.85rem; user-select: none;">
+                    ${escaparHTML(opcion.nombre)}
+                </label>
             </div>
         `;
     });
@@ -1551,6 +1508,12 @@ async function cargarCatalogoRequisitosUI() {
 
                 </div>
             `;
+
+            const reqCb = fila.querySelector(`.req-checkbox`);
+            const oblCb = fila.querySelector(`.req-obligatorio`);
+            reqCb?.addEventListener("change", (e) => {
+                if (oblCb) oblCb.checked = e.target.checked;
+            });
 
             contenedor.appendChild(fila);
         });
@@ -2256,13 +2219,7 @@ async function editarConvocatoria(id) {
             );
 
         if (btnEliminar) {
-
-            btnEliminar.style.display =
-                "inline-block";
-
-            btnEliminar.onclick = () => {
-                eliminarConvocatoria(id);
-            };
+            btnEliminar.style.display = "none";
         }
 
         actualizarWizard(1);

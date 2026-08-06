@@ -25,13 +25,13 @@ const moduloEntrevistaRenderer = {
 
             const chips = [];
             if (datosEntrevista.docenteNombre && datosEntrevista.docenteNombre.trim()) {
-                chips.push({ icon: 'fa-user-tie', label: 'Entrevistador', value: datosEntrevista.docenteNombre.trim() });
+                chips.push({ icon: 'fa-user-tie', label: typeof t === 'function' ? t('entrevista_lbl_entrevistador') : 'Entrevistador', value: datosEntrevista.docenteNombre.trim() });
             }
-            chips.push({ icon: 'fa-calendar-day', label: 'Fecha', value: fechaFmt });
-            chips.push({ icon: 'fa-clock', label: 'Hora', value: datosEntrevista.hora || 'Por confirmar' });
-            chips.push({ icon: 'fa-location-dot', label: 'Lugar', value: datosEntrevista.lugar || 'Por confirmar' });
+            chips.push({ icon: 'fa-calendar-day', label: typeof t === 'function' ? t('entrevista_lbl_fecha') : 'Fecha', value: fechaFmt });
+            chips.push({ icon: 'fa-clock', label: typeof t === 'function' ? t('entrevista_lbl_hora') : 'Hora', value: datosEntrevista.hora || (typeof t === 'function' ? t('entrevista_val_confirmar') : 'Por confirmar') });
+            chips.push({ icon: 'fa-location-dot', label: typeof t === 'function' ? t('entrevista_lbl_lugar') : 'Lugar', value: datosEntrevista.lugar || (typeof t === 'function' ? t('entrevista_val_confirmar') : 'Por confirmar') });
             if (datosEntrevista.enlace && datosEntrevista.enlace.trim()) {
-                chips.push({ icon: 'fa-video', label: 'Enlace', value: `<a href="${datosEntrevista.enlace}" target="_blank" rel="noopener" style="color:var(--color-primary)">Unirse a la videollamada</a>` });
+                chips.push({ icon: 'fa-video', label: typeof t === 'function' ? t('entrevista_lbl_enlace') : 'Enlace', value: `<a href="${datosEntrevista.enlace}" target="_blank" rel="noopener" style="color:var(--color-primary)">${typeof t === 'function' ? t('entrevista_btn_unirse') : 'Unirse a la videollamada'}</a>` });
             }
 
             const chipsHtml = chips.map(c => `
@@ -47,14 +47,14 @@ const moduloEntrevistaRenderer = {
                 <div style="background:var(--color-card-bg);border:1px solid var(--color-border);border-radius:16px;padding:28px;box-shadow:var(--shadow-sm);">
                     <h4 style="margin:0 0 18px;color:var(--color-text);font-weight:700;display:flex;align-items:center;gap:10px;font-size:17px;">
                         <i class="fa-solid fa-handshake" style="color:var(--color-primary);font-size:22px;"></i>
-                        Detalles de tu Entrevista de Admisión
+                        ${typeof t === 'function' ? t('entrevista_tit_detalles') : 'Detalles de tu Entrevista de Admisión'}
                     </h4>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;">
                         ${chipsHtml}
                     </div>
                     <p style="margin:18px 0 0;font-size:13px;color:var(--color-text-muted);line-height:1.6;border-top:1px solid var(--color-border);padding-top:14px;">
                         <i class="fa-solid fa-circle-info" style="color:#3b82f6;margin-right:6px;"></i>
-                        Preséntate puntualmente en el lugar indicado o conéctate al enlace. Lleva una identificación oficial.
+                        ${typeof t === 'function' ? t('entrevista_msg_instrucciones') : 'Preséntate puntualmente en el lugar indicado o conéctate al enlace. Lleva una identificación oficial.'}
                     </p>
                 </div>`;
         } else {
@@ -62,12 +62,10 @@ const moduloEntrevistaRenderer = {
                 <div style="background:var(--color-card-bg);border:1px solid var(--color-border);border-radius:16px;padding:28px;box-shadow:var(--shadow-sm);">
                     <h4 style="margin:0 0 10px;color:var(--color-text);font-weight:700;display:flex;align-items:center;gap:10px;font-size:17px;">
                         <i class="fa-solid fa-hourglass-half" style="color:#d97706;font-size:22px;"></i>
-                        Agendando tu Entrevista
+                        ${typeof t === 'function' ? t('entrevista_tit_agendando') : 'Agendando tu Entrevista'}
                     </h4>
                     <p style="margin:0;color:var(--color-text-muted);font-size:14px;line-height:1.7;">
-                        Tus documentos de admisión han sido aprobados por el comité académico. 
-                        El coordinador del programa está agendando la fecha, hora y evaluador para tu entrevista de admisión. 
-                        <strong>Serás notificado en este panel en cuanto quede registrada.</strong>
+                        ${typeof t === 'function' ? t('entrevista_msg_agendando_desc') : 'Tus documentos de admisión han sido aprobados por el comité académico. El coordinador del programa está agendando la fecha, hora y evaluador para tu entrevista de admisión. <strong>Serás notificado en este panel en cuanto quede registrada.</strong>'}
                     </p>
                 </div>`;
         }
@@ -77,8 +75,8 @@ const moduloEntrevistaRenderer = {
                 <div style="display:flex;align-items:center;gap:15px;">
                     <div class="status-banner-icon"><i class="fa-solid fa-comments"></i></div>
                     <div>
-                        <div class="status-banner-title">Proceso de Admisión — Doctorado</div>
-                        <div class="status-banner-sub">Etapa actual: <strong>${soliData.etapaNombre || 'Entrevista de Admisión'}</strong></div>
+                        <div class="status-banner-title">${typeof t === 'function' ? t('entrevista_banner_titulo') : 'Proceso de Admisión — Doctorado'}</div>
+                        <div class="status-banner-sub">${typeof t === 'function' ? t('entrevista_banner_etapa') : 'Etapa actual:'} <strong>${soliData.etapaNombre || (typeof t === 'function' ? t('entrevista_etapa_defecto') : 'Entrevista de Admisión')}</strong></div>
                     </div>
                 </div>
             </div>

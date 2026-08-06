@@ -1,4 +1,6 @@
 const ProgramacionCursoService = require('../services/programacionCursoService');
+const db = require('../database/db');
+const emit = require('../utils/socketEmit');
 
 const programarCurso = async (req, res) => {
     try {
@@ -13,7 +15,9 @@ const programarCurso = async (req, res) => {
         });
 
         if (req.app.get('io')) {
-            req.app.get('io').emit('actualizacionGlobal');
+            const [solC] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [idSolicitud]);
+            if (solC.length > 0) emit.aAspiranteEspecifico(req, solC[0].idUsuario);
+            else emit.aAdmin(req);
         }
 
         return res.status(200).json(resultado);
@@ -62,7 +66,9 @@ const capturarResultado = async (req, res) => {
         }
 
         if (req.app.get('io')) {
-            req.app.get('io').emit('actualizacionGlobal');
+            const [solCC] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [idSolicitud]);
+            if (solCC.length > 0) emit.aAspiranteEspecifico(req, solCC[0].idUsuario);
+            else emit.aAdmin(req);
         }
 
         return res.status(200).json(resultado);

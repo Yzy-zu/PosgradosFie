@@ -1,5 +1,6 @@
 const db = require('../database/db');
 const bcrypt = require('bcrypt');
+const emit = require('../utils/socketEmit');
 
 // Registrar aspirante (con usuario asociado)
 const registrarAspirante = async (req, res) => {
@@ -77,7 +78,7 @@ const registrarAspirante = async (req, res) => {
         );
 
         await connection.commit();
-
+        if (req.app.get('io')) emit.aAdmin(req);
         return res.status(201).json({ mensaje: 'Aspirante registrado correctamente.' });
     } catch (error) {
         if (connection) await connection.rollback();

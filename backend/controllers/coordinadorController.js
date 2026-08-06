@@ -1,5 +1,6 @@
 const db = require('../database/db');
 const WorkflowService = require('../services/workflowService');
+const emit = require('../utils/socketEmit');
 
 const coordinadorController = {
 
@@ -152,7 +153,13 @@ actualizarDictamen: async (req, res) => {
         `, [estado, id]);
 
         if (req.app.get('io')) {
-            req.app.get('io').emit('actualizacionGlobal');
+            // Notificar al aspirante específico + ADMIN
+            const [solD] = await db.query(
+                'SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?',
+                [id]
+            );
+            if (solD.length > 0) emit.aAspiranteEspecifico(req, solD[0].idUsuario);
+            else emit.aAdmin(req);
         }
 
         res.json({
@@ -650,18 +657,8 @@ Lugar: ${lugar || "Por definir"}
 
         await connection.commit();
 
-        const io =
-            req.app.get("io");
-
-        if (io) {
-
-            io.emit(
-                "actualizacionGlobal"
-            );
-
-            io.emit(
-                "actualizacionSolicitudes"
-            );
+        if (req.app.get("io")) {
+            emit.aAspiranteEspecifico(req, aspirante.idUsuario);
         }
 
         return res.json({
@@ -916,8 +913,15 @@ ${motivo.trim()}
         ]);
 
         await connection.commit();
-
-        req.app.get('io').emit('actualizacionGlobal');
+        // Notificar al aspirante específico + ADMIN
+        if (req.app.get('io')) {
+            const [solDictamen] = await db.query(
+                'SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?',
+                [id]
+            );
+            if (solDictamen.length > 0) emit.aAspiranteEspecifico(req, solDictamen[0].idUsuario);
+            else emit.aAdmin(req);
+        }
 
         return res.json({
             ok: true,

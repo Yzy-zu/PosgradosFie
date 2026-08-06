@@ -1,5 +1,6 @@
 const SolicitudTemaService = require('../services/solicitudTemaService');
-const db = require('../database/db'); // Added to query the docente table
+const db = require('../database/db');
+const emit = require('../utils/socketEmit');
 
 const getTemasDeSolicitud = async (req, res) => {
     try {
@@ -42,9 +43,17 @@ const actualizarCalificacionTema = async (req, res) => {
             observaciones
         });
 
-        // Opcionalmente emitir un evento socket para refrescar interfaces
+        // Notificar al aspirante específico + ADMIN
         if (req.app.get('io')) {
-            req.app.get('io').emit('actualizacionGlobal');
+            const [solTema] = await db.query(
+                `SELECT a.idUsuario FROM solicitud_tema st
+                 JOIN solicitud s ON st.idSolicitud = s.id
+                 JOIN aspirante a ON s.idAspi = a.id
+                 WHERE st.id = ?`,
+                [idSolicitudTema]
+            );
+            if (solTema.length > 0) emit.aAspiranteEspecifico(req, solTema[0].idUsuario);
+            else emit.aAdmin(req);
         }
 
         return res.status(200).json({ success: true, mensaje: 'Calificación de tema actualizada correctamente.' });

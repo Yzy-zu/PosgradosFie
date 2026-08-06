@@ -98,11 +98,32 @@ async function abrirModalReprogramarExamen(idAspi) {
     }
 }
 
-// Conexión Socket.io
+// Conexión Socket.io — registrar sala al conectar
 const socket = io();
+socket.on('connect', () => {
+    const usr = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+    socket.emit('registrarSala', { rol: 'DOCENTE', idUsuario: usr.id });
+});
 socket.on('actualizacionGlobal', () => {
-    // Recargar vista actual si hay un cambio (ej. aspirante sube nuevo documento)
-    cargarAspirantesAPI();
+    // Recargar vista actual según el hash (evita recargas innecesarias)
+    const currentHash = window.location.hash.replace('#', '');
+    // Notificaciones se actualizan siempre (badge visible en toda la app)
+    if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
+    if (currentHash === 'inicio' || currentHash === '') {
+        // inicio no tiene datos dinámicos adicionales para el docente
+    } else if (currentHash === 'expedientes' || currentHash === '') {
+        if (typeof cargarAspirantesAPI === 'function') cargarAspirantesAPI();
+    } else if (currentHash === 'aspirantes') {
+        if (typeof cargarAspirantes === 'function') cargarAspirantes();
+    } else if (window.modalidadesActivas) {
+        // Módulos dinámicos: exámenes, propedeutico, promedio, etc.
+        window.modalidadesActivas.forEach(mod => {
+            const reg = window.ModulosRegistro && window.ModulosRegistro[mod.codigo];
+            if (reg && currentHash === reg.vistaId) {
+                reg.renderFn(mod.codigo);
+            }
+        });
+    }
 });
 
 // Inicialización de la Aplicación
@@ -368,15 +389,15 @@ function actualizarTituloTopbar(viewId) {
             topbarTitle.innerText = typeof t === 'function' ? t('docente_revisor') : 'Docente / Revisor';
         }
     } else if (viewId === 'expedientes') {
-        topbarTitle.innerHTML = `<i class="fa-solid fa-folder-open me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('docente_revision_expedientes') : 'Revisión y Expedientes'}`;
+        topbarTitle.innerText = typeof t === 'function' ? t('docente_revision_expedientes') : 'Revisión y Expedientes';
     } else if (viewId === 'aspirantes') {
-        topbarTitle.innerHTML = `<i class="fa-solid fa-users me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_aspirantes') : 'Aspirantes'}`;
+        topbarTitle.innerText = typeof t === 'function' ? t('sb_aspirantes') : 'Aspirantes';
     } else if (viewId === 'examenes') {
-        topbarTitle.innerHTML = `<i class="fa-solid fa-file-pen me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_examenes') : 'Exámenes'}`;
+        topbarTitle.innerText = typeof t === 'function' ? t('sb_examenes') : 'Exámenes';
     } else if (viewId === 'curso-propedeutico') {
-        topbarTitle.innerHTML = `<i class="fa-solid fa-book-open-reader me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_curso_propedeutico') : 'Curso Propedéutico'}`;
+        topbarTitle.innerText = typeof t === 'function' ? t('sb_curso_propedeutico') : 'Curso Propedéutico';
     } else if (viewId === 'promedio') {
-        topbarTitle.innerHTML = `<i class="fa-solid fa-calculator me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_promedio') : 'Promedio'}`;
+        topbarTitle.innerText = typeof t === 'function' ? t('sb_promedio') : 'Promedio';
     }
 }
 
@@ -449,7 +470,9 @@ function filtrarYMostrarAspirantes() {
         const tieneRechazados = asp.documentos.some(d => d.estado === 'rechazado');
         const tienePendientes = asp.documentos.some(d => d.estado === 'pendiente');
 
-        if (tieneRechazados) {
+        if (asp.documentos.length === 0) {
+            estadoGeneral = 'sin_documentos';
+        } else if (tieneRechazados) {
             estadoGeneral = 'incompleto';
         } else if (!tienePendientes) {
             estadoGeneral = 'revisado';
@@ -481,7 +504,9 @@ function renderizarListaAspirantes(lista) {
         const tienePendientes = asp.documentos.some(d => d.estado === 'pendiente');
 
         let badgeHtml = "";
-        if (tieneRechazados) {
+        if (asp.documentos.length === 0) {
+            badgeHtml = `<span class="badge" style="background-color: var(--color-surface); color: var(--color-text-muted); border: 1px solid var(--color-border);">${typeof t === 'function' ? t('docente_sin_documentos') : 'Sin Documentos'}</span>`;
+        } else if (tieneRechazados) {
             badgeHtml = `<span class="badge badge-rechazado">${typeof t === 'function' ? t('docente_estado_incompletos') : 'Rechazado / Inc.'}</span>`;
         } else if (tienePendientes) {
             badgeHtml = `<span class="badge badge-pendiente">${typeof t === 'function' ? t('docente_estado_pendientes') : 'Pendiente'} (${asp.documentos.filter(d => d.estado === 'pendiente').length})</span>`;
@@ -533,7 +558,16 @@ async function seleccionarAspirante(id) {
     const tienePendientes = asp.documentos.some(d => d.estado === 'pendiente');
 
     badgeEstado.className = "badge";
-    if (tieneRechazados) {
+    badgeEstado.style.backgroundColor = '';
+    badgeEstado.style.color = '';
+    badgeEstado.style.border = '';
+
+    if (asp.documentos.length === 0) {
+        badgeEstado.style.backgroundColor = 'var(--color-surface)';
+        badgeEstado.style.color = 'var(--color-text-muted)';
+        badgeEstado.style.border = '1px solid var(--color-border)';
+        badgeEstado.innerText = typeof t === 'function' ? t('docente_sin_documentos') : "Sin Documentos";
+    } else if (tieneRechazados) {
         badgeEstado.classList.add('badge-rechazado');
         badgeEstado.innerText = typeof t === 'function' ? t('docente_estado_incompletos') : "Rechazado / Incompleto";
     } else if (tienePendientes) {
@@ -1499,7 +1533,11 @@ function renderExamenesCards(dataList) {
     const hoyStr = new Date().toISOString().split('T')[0];
 
     if (dataList.length === 0) {
-        contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">No hay aspirantes en proceso de examen que coincidan con los filtros.</div>`;
+        contenedor.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                <img src="css/umsnhLogo.png" alt="Logo UMSNH" style="width: 100px; opacity: 0.3;">
+                <p style="font-size: 1.1rem; margin: 0;">Aún no hay solicitudes que revisar...</p>
+            </div>`;
     }
 
     dataList.forEach(item => {
@@ -1701,14 +1739,19 @@ function renderCursosCards(dataList) {
     if (!contenedor) return;
     contenedor.innerHTML = '';
 
+    if (dataList.length === 0) {
+        contenedor.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                <img src="css/umsnhLogo.png" alt="Logo UMSNH" style="width: 100px; opacity: 0.3;">
+                <p style="font-size: 1.1rem; margin: 0;">Aún no hay solicitudes que revisar...</p>
+            </div>`;
+        return;
+    }
+
     let contPendientes = 0;
     let contProgramados = 0;
     let contEsperando = 0;
     let contFinalizados = 0;
-
-    if (dataList.length === 0) {
-        contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">No hay aspirantes en proceso de propedéutico que coincidan con los filtros.</div>`;
-    }
 
     dataList.forEach(item => {
         const tieneProgramacion = !!item.idProgramacion || !!item.fecha;
@@ -1970,7 +2013,11 @@ function renderPromediosCards(dataList) {
     let contRechazados = 0;
 
     if (!dataList || dataList.length === 0) {
-        contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">No hay aspirantes registrados por promedio FIE.</div>`;
+        contenedor.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                <img src="css/umsnhLogo.png" alt="Logo UMSNH" style="width: 100px; opacity: 0.3;">
+                <p style="font-size: 1.1rem; margin: 0;">Aún no hay solicitudes que revisar...</p>
+            </div>`;
         return;
     }
 
@@ -2276,8 +2323,8 @@ async function verExpedienteAspirante(id) {
         if (solicitudes.length === 0) {
             contSolicitudes.innerHTML = `
                 <div class="text-center py-4">
-                    <i class="fa-solid fa-inbox text-muted fs-1 mb-2"></i>
-                    <p class="text-muted">El aspirante aún no ha iniciado ningún proceso de admisión.</p>
+                    <img src="css/umsnhLogo.png" alt="Logo UMSNH" style="width: 130px; max-width: 80%; opacity: 0.45;" class="mb-3 d-block mx-auto">
+                    <p class="text-muted fw-medium">El aspirante aún no ha iniciado ningún proceso de admisión.</p>
                 </div>
             `;
         } else {
@@ -2445,23 +2492,58 @@ function resetAutoSlide() {
     startAutoSlide();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     carouselTrack = document.getElementById('inicio-carousel-track');
-    carouselIndicators = Array.from(document.querySelectorAll('#inicio-carousel-indicators .indicator'));
-    totalSlides = document.querySelectorAll('.carousel-slide').length;
+    const indicatorsContainer = document.getElementById('inicio-carousel-indicators');
 
-    if (carouselTrack && totalSlides > 0) {
-        const firstImg = document.querySelector('.carousel-slide img');
-        if (firstImg) {
-            if (firstImg.complete) {
+    if (carouselTrack && indicatorsContainer) {
+        try {
+            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+            const res = await fetch('/api/avisos/activos', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const avisos = await res.json();
+                
+                if (avisos.length === 0) {
+                    const container = document.getElementById('inicio-carousel');
+                    if (container) container.style.display = 'none';
+                    return;
+                }
+
+                let trackHTML = '';
+                let indicatorsHTML = '';
+
+                avisos.forEach((aviso, index) => {
+                    const ext = aviso.rutaArchivo.split('.').pop().toLowerCase();
+                    const isVideo = aviso.tipo === 'video' || ['mp4', 'webm', 'ogg', 'mov'].includes(ext);
+
+                    const mediaHTML = isVideo 
+                        ? `<video src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" autoplay muted loop playsinline style="object-fit: cover; width: 100%; height: 100%;"></video>`
+                        : `<img src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" alt="${aviso.titulo}" style="object-fit: cover; width: 100%; height: 100%;">`;
+
+                    trackHTML += `
+                        <div class="carousel-slide">
+                            ${mediaHTML}
+                        </div>
+                    `;
+                    indicatorsHTML += `
+                        <span class="indicator ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>
+                    `;
+                });
+
+                carouselTrack.innerHTML = trackHTML;
+                indicatorsContainer.innerHTML = indicatorsHTML;
+
+                carouselIndicators = Array.from(indicatorsContainer.querySelectorAll('.indicator'));
+                totalSlides = avisos.length;
+                currentSlide = 0;
                 updateCarousel();
-            } else {
-                firstImg.onload = () => updateCarousel();
+                startAutoSlide();
             }
-        } else {
-            updateCarousel();
+        } catch (e) {
+            console.error('Error al cargar avisos:', e);
         }
-        startAutoSlide();
     }
 });
 
