@@ -244,7 +244,8 @@ async function cargarAspirantesAPI() {
                     docList = sol.documentos.map(d => ({
                         id: d.idDocumento,
                         nombre: d.requisitoNombre,
-                        url: `/api/files/${d.rutaArchivo}?token=${sessionStorage.getItem('token') || localStorage.getItem('token')}`,
+                        rutaArchivo: d.rutaArchivo,
+                        url: `/api/files/${d.rutaArchivo}`,
                         estado: d.estadoValidacion.toLowerCase(),
                         note: d.comentarios || "",
                         historial: d.historial || []
@@ -255,7 +256,8 @@ async function cargarAspirantesAPI() {
                     docList.push({
                         id: `pago_${sol.idSolicitud}`,
                         nombre: 'Comprobante de Pago',
-                        url: `/api/files/${sol.pago.comprobante}?token=${sessionStorage.getItem('token') || localStorage.getItem('token')}`,
+                        rutaArchivo: sol.pago.comprobante,
+                        url: `/api/files/${sol.pago.comprobante}`,
                         estado: sol.pago.estado.toLowerCase(),
                         note: sol.pago.observaciones || "",
                         esPago: true,
@@ -665,16 +667,27 @@ async function abrirModalEvaluacionPago(idSolicitud) {
             return;
         }
 
-        const urlCompleta = `/api/files/${pagoData.comprobante}?token=${token}`;
+        let objectUrl = '';
+        try {
+            const fileRes = await fetch(`/api/files/${pagoData.comprobante}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (fileRes.ok) {
+                const blob = await fileRes.blob();
+                objectUrl = URL.createObjectURL(blob);
+            }
+        } catch (e) { }
+
+        const fileSrc = objectUrl || `/api/files/${pagoData.comprobante}`;
         const est = pagoData.estado || 'PENDIENTE';
         const estadoColor = { PENDIENTE: '#f59e0b', APROBADO: '#10b981', RECHAZADO: '#ef4444' };
 
         const ext = (pagoData.comprobante || '').split('.').pop().toLowerCase();
         let previewHtml = '';
         if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
-            previewHtml = `<img src="${urlCompleta}" style="max-width:100%;max-height:350px;display:block;margin:0 auto;border-radius:8px;object-fit:contain;">`;
+            previewHtml = `<img src="${fileSrc}" style="max-width:100%;max-height:350px;display:block;margin:0 auto;border-radius:8px;object-fit:contain;">`;
         } else {
-            previewHtml = `<iframe src="${urlCompleta}" width="100%" height="320px" style="border:none;border-radius:8px;"></iframe>`;
+            previewHtml = `<iframe src="${fileSrc}" width="100%" height="320px" style="border:none;border-radius:8px;"></iframe>`;
         }
 
         const modalHtml = `
@@ -787,13 +800,34 @@ function abrirModalEvaluacion(docId) {
     const tabComentarios = document.getElementById('eval-tab-comentarios');
     const tabHistorial = document.getElementById('eval-tab-historial');
 
-    // Generar visor
-    const extension = doc.url.split('.').pop().toLowerCase();
-    if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
-        visor.innerHTML = `<img src="${doc.url}" alt="${doc.nombre}" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain;">`;
-    } else {
-        visor.innerHTML = `<iframe src="${doc.url}" width="100%" height="100%" style="border: none;"></iframe>`;
-    }
+    // Generar visor de forma segura con cabecera Authorization
+    visor.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--color-text-muted);"><i class="fa-solid fa-spinner fa-spin fa-2x mb-2"></i><br>Cargando vista previa...</div>';
+    
+    const rawPath = doc.rutaArchivo || doc.url || '';
+    const cleanPath = rawPath.split('?')[0];
+    const fetchUrl = cleanPath.startsWith('http') || cleanPath.startsWith('/api/') ? cleanPath : `/api/files/${cleanPath}`;
+    const authToken = sessionStorage.getItem('token') || localStorage.getItem('token') || '';
+
+    fetch(fetchUrl, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Error al cargar archivo');
+        return res.blob();
+    })
+    .then(blob => {
+        const objectUrl = URL.createObjectURL(blob);
+        const extension = cleanPath.split('.').pop().toLowerCase();
+        if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
+            visor.innerHTML = `<img src="${objectUrl}" alt="${escaparHTML(doc.nombre)}" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain;">`;
+        } else {
+            visor.innerHTML = `<iframe src="${objectUrl}" width="100%" height="100%" style="border: none;"></iframe>`;
+        }
+    })
+    .catch(err => {
+        console.error("Error al cargar documento en visor:", err);
+        visor.innerHTML = '<div style="text-align: center; padding: 40px; color: #ef4444;"><i class="fa-solid fa-triangle-exclamation fa-2x mb-2"></i><br>No se pudo cargar la vista previa del documento.</div>';
+    });
 
     // Comentarios
     if (doc.note && doc.note.trim() !== '') {
@@ -935,8 +969,17 @@ function abrirNotificacion(remitenteKey, element) {
 // Confirmación con temporizador de 3s para Aprobar Documento
 let timerConfirmacionAprobar = null;
 let enConfirmacionAprobar = false;
+let evaluacionEnCurso = false;
+
+function setEstadoControlesEvaluacion(disabled) {
+    const wrapper = document.getElementById('eval-controles-wrapper');
+    if (wrapper) {
+        wrapper.querySelectorAll('button, textarea').forEach(el => el.disabled = disabled);
+    }
+}
 
 function clickAprobarDocumentoModal(btn) {
+    if (evaluacionEnCurso) return;
     if (!btn) btn = document.getElementById('btn-eval-aprobar-modal');
 
     if (enConfirmacionAprobar) {
@@ -982,6 +1025,8 @@ function resetearBotonAprobar(btn) {
 
 function cerrarModalEvaluacion() {
     resetearBotonAprobar();
+    evaluacionEnCurso = false;
+    setEstadoControlesEvaluacion(false);
     document.getElementById('modal-evaluacion-doc').style.display = 'none';
     document.getElementById('eval-tab-documento').innerHTML = '';
     documentoAEvaluar = null;
@@ -1001,7 +1046,7 @@ function ocultarOpcionesRechazo() {
 }
 
 async function aprobarDocumentoModal() {
-    if (!documentoAEvaluar) return;
+    if (!documentoAEvaluar || evaluacionEnCurso) return;
 
     const aspIndex = aspirantes.findIndex(a => a.id === idAspiranteActivo);
     if (aspIndex === -1) return;
@@ -1009,6 +1054,8 @@ async function aprobarDocumentoModal() {
     const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id == documentoAEvaluar);
     if (docIndex === -1) return;
 
+    evaluacionEnCurso = true;
+    setEstadoControlesEvaluacion(true);
     mostrarLoader();
     try {
         const token = sessionStorage.getItem("token") || "";
@@ -1044,12 +1091,14 @@ async function aprobarDocumentoModal() {
         console.error("Error al aprobar documento:", e);
         Swal.fire({ icon: 'error', title: 'Error de conexión', text: typeof t === 'function' ? t('docente_err_servidor') : 'Ocurrió un error al comunicarse con el servidor.', confirmButtonColor: '#ef4444' });
     } finally {
+        evaluacionEnCurso = false;
+        setEstadoControlesEvaluacion(false);
         ocultarLoader();
     }
 }
 
 async function rechazarDocumentoModal() {
-    if (!documentoAEvaluar) return;
+    if (!documentoAEvaluar || evaluacionEnCurso) return;
     const noteText = document.getElementById('eval-modal-nota').value.trim();
 
     if (noteText === "") {
@@ -1063,6 +1112,8 @@ async function rechazarDocumentoModal() {
     const docIndex = aspirantes[aspIndex].documentos.findIndex(d => d.id == documentoAEvaluar);
     if (docIndex === -1) return;
 
+    evaluacionEnCurso = true;
+    setEstadoControlesEvaluacion(true);
     mostrarLoader();
     try {
         const token = sessionStorage.getItem("token") || "";
@@ -1098,6 +1149,8 @@ async function rechazarDocumentoModal() {
         console.error("Error al rechazar documento:", e);
         Swal.fire({ icon: 'error', title: 'Error de conexión', text: typeof t === 'function' ? t('docente_err_servidor') : 'Ocurrió un error al comunicarse con el servidor.', confirmButtonColor: '#ef4444' });
     } finally {
+        evaluacionEnCurso = false;
+        setEstadoControlesEvaluacion(false);
         ocultarLoader();
     }
 }
@@ -2247,7 +2300,7 @@ async function verExpedienteAspirante(id) {
                         else if (doc.estadoValidacion === "RECHAZADO") { classBadge = "soft-badge-danger"; }
 
                         htmlDocs += `
-                            <div class="doc-row-premium" onclick="window.open('/api/files/${doc.rutaArchivo}?token=' + (sessionStorage.getItem('token') || localStorage.getItem('token')), '_blank')">
+                            <div class="doc-row-premium" onclick="abrirArchivoSeguro('${doc.rutaArchivo}')">
                                 <div style="display: flex; align-items: center;">
                                     <i class="fa-solid fa-file-pdf doc-icon"></i>
                                     <span style="font-weight: 500; color: var(--color-text);">${doc.requisitoNombre}</span>

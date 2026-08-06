@@ -2425,7 +2425,7 @@ async function cargarDocsLecturaAspirante(soliData) {
                                 ${badgeDoc}
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top" style="border-color: var(--color-border) !important;">
-                                <a href="javascript:void(0)" onclick="window.open('/api/files/${doc.rutaArchivo}?token=' + (sessionStorage.getItem('token') || localStorage.getItem('token')), '_blank')" class="btn-ver-doc">
+                                <a href="javascript:void(0)" onclick="abrirArchivoSeguro('${doc.rutaArchivo}')" class="btn-ver-doc">
                                     <i class="fa-solid fa-file-pdf me-1"></i> Ver PDF
                                 </a>
                             </div>
