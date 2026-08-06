@@ -449,7 +449,9 @@ function filtrarYMostrarAspirantes() {
         const tieneRechazados = asp.documentos.some(d => d.estado === 'rechazado');
         const tienePendientes = asp.documentos.some(d => d.estado === 'pendiente');
 
-        if (tieneRechazados) {
+        if (asp.documentos.length === 0) {
+            estadoGeneral = 'sin_documentos';
+        } else if (tieneRechazados) {
             estadoGeneral = 'incompleto';
         } else if (!tienePendientes) {
             estadoGeneral = 'revisado';
@@ -481,7 +483,9 @@ function renderizarListaAspirantes(lista) {
         const tienePendientes = asp.documentos.some(d => d.estado === 'pendiente');
 
         let badgeHtml = "";
-        if (tieneRechazados) {
+        if (asp.documentos.length === 0) {
+            badgeHtml = `<span class="badge" style="background-color: var(--color-surface); color: var(--color-text-muted); border: 1px solid var(--color-border);">${typeof t === 'function' ? t('docente_sin_documentos') : 'Sin Documentos'}</span>`;
+        } else if (tieneRechazados) {
             badgeHtml = `<span class="badge badge-rechazado">${typeof t === 'function' ? t('docente_estado_incompletos') : 'Rechazado / Inc.'}</span>`;
         } else if (tienePendientes) {
             badgeHtml = `<span class="badge badge-pendiente">${typeof t === 'function' ? t('docente_estado_pendientes') : 'Pendiente'} (${asp.documentos.filter(d => d.estado === 'pendiente').length})</span>`;
@@ -533,7 +537,16 @@ async function seleccionarAspirante(id) {
     const tienePendientes = asp.documentos.some(d => d.estado === 'pendiente');
 
     badgeEstado.className = "badge";
-    if (tieneRechazados) {
+    badgeEstado.style.backgroundColor = '';
+    badgeEstado.style.color = '';
+    badgeEstado.style.border = '';
+
+    if (asp.documentos.length === 0) {
+        badgeEstado.style.backgroundColor = 'var(--color-surface)';
+        badgeEstado.style.color = 'var(--color-text-muted)';
+        badgeEstado.style.border = '1px solid var(--color-border)';
+        badgeEstado.innerText = typeof t === 'function' ? t('docente_sin_documentos') : "Sin Documentos";
+    } else if (tieneRechazados) {
         badgeEstado.classList.add('badge-rechazado');
         badgeEstado.innerText = typeof t === 'function' ? t('docente_estado_incompletos') : "Rechazado / Incompleto";
     } else if (tienePendientes) {
