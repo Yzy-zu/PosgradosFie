@@ -3136,6 +3136,11 @@ function renderExplorador() {
 }
 
 window.verDocumentoExplorer = function(ruta) {
-    const url = `/uploads/${ruta}`;
-    window.open(url, '_blank');
+    if (typeof abrirArchivoSeguro === 'function') {
+        abrirArchivoSeguro(ruta);
+    } else {
+        const token = sessionStorage.getItem('token');
+        const url = `/api/files/${ruta}?token=${token}`;
+        window.open(url, '_blank');
+    }
 };

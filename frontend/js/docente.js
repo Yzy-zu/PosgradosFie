@@ -1512,7 +1512,11 @@ function renderExamenesCards(dataList) {
     const hoyStr = new Date().toISOString().split('T')[0];
 
     if (dataList.length === 0) {
-        contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">No hay aspirantes en proceso de examen que coincidan con los filtros.</div>`;
+        contenedor.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                <img src="css/umsnhLogo.png" alt="Logo UMSNH" style="width: 100px; opacity: 0.3;">
+                <p style="font-size: 1.1rem; margin: 0;">Aún no hay solicitudes que revisar...</p>
+            </div>`;
     }
 
     dataList.forEach(item => {
@@ -1714,14 +1718,19 @@ function renderCursosCards(dataList) {
     if (!contenedor) return;
     contenedor.innerHTML = '';
 
+    if (dataList.length === 0) {
+        contenedor.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                <img src="css/umsnhLogo.png" alt="Logo UMSNH" style="width: 100px; opacity: 0.3;">
+                <p style="font-size: 1.1rem; margin: 0;">Aún no hay solicitudes que revisar...</p>
+            </div>`;
+        return;
+    }
+
     let contPendientes = 0;
     let contProgramados = 0;
     let contEsperando = 0;
     let contFinalizados = 0;
-
-    if (dataList.length === 0) {
-        contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">No hay aspirantes en proceso de propedéutico que coincidan con los filtros.</div>`;
-    }
 
     dataList.forEach(item => {
         const tieneProgramacion = !!item.idProgramacion || !!item.fecha;
@@ -1983,7 +1992,11 @@ function renderPromediosCards(dataList) {
     let contRechazados = 0;
 
     if (!dataList || dataList.length === 0) {
-        contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 25px;">No hay aspirantes registrados por promedio FIE.</div>`;
+        contenedor.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; color: var(--color-text-muted); padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                <img src="css/umsnhLogo.png" alt="Logo UMSNH" style="width: 100px; opacity: 0.3;">
+                <p style="font-size: 1.1rem; margin: 0;">Aún no hay solicitudes que revisar...</p>
+            </div>`;
         return;
     }
 
