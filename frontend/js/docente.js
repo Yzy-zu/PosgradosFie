@@ -368,15 +368,15 @@ function actualizarTituloTopbar(viewId) {
             topbarTitle.innerText = typeof t === 'function' ? t('docente_revisor') : 'Docente / Revisor';
         }
     } else if (viewId === 'expedientes') {
-        topbarTitle.innerHTML = `<i class="fa-solid fa-folder-open me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('docente_revision_expedientes') : 'Revisión y Expedientes'}`;
+        topbarTitle.innerText = typeof t === 'function' ? t('docente_revision_expedientes') : 'Revisión y Expedientes';
     } else if (viewId === 'aspirantes') {
-        topbarTitle.innerHTML = `<i class="fa-solid fa-users me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_aspirantes') : 'Aspirantes'}`;
+        topbarTitle.innerText = typeof t === 'function' ? t('sb_aspirantes') : 'Aspirantes';
     } else if (viewId === 'examenes') {
-        topbarTitle.innerHTML = `<i class="fa-solid fa-file-pen me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_examenes') : 'Exámenes'}`;
+        topbarTitle.innerText = typeof t === 'function' ? t('sb_examenes') : 'Exámenes';
     } else if (viewId === 'curso-propedeutico') {
-        topbarTitle.innerHTML = `<i class="fa-solid fa-book-open-reader me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_curso_propedeutico') : 'Curso Propedéutico'}`;
+        topbarTitle.innerText = typeof t === 'function' ? t('sb_curso_propedeutico') : 'Curso Propedéutico';
     } else if (viewId === 'promedio') {
-        topbarTitle.innerHTML = `<i class="fa-solid fa-calculator me-2" style="color: var(--color-primary); font-size: 20px;"></i> ${typeof t === 'function' ? t('sb_promedio') : 'Promedio'}`;
+        topbarTitle.innerText = typeof t === 'function' ? t('sb_promedio') : 'Promedio';
     }
 }
 
@@ -2471,23 +2471,58 @@ function resetAutoSlide() {
     startAutoSlide();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     carouselTrack = document.getElementById('inicio-carousel-track');
-    carouselIndicators = Array.from(document.querySelectorAll('#inicio-carousel-indicators .indicator'));
-    totalSlides = document.querySelectorAll('.carousel-slide').length;
+    const indicatorsContainer = document.getElementById('inicio-carousel-indicators');
 
-    if (carouselTrack && totalSlides > 0) {
-        const firstImg = document.querySelector('.carousel-slide img');
-        if (firstImg) {
-            if (firstImg.complete) {
+    if (carouselTrack && indicatorsContainer) {
+        try {
+            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+            const res = await fetch('/api/avisos/activos', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const avisos = await res.json();
+                
+                if (avisos.length === 0) {
+                    const container = document.getElementById('inicio-carousel');
+                    if (container) container.style.display = 'none';
+                    return;
+                }
+
+                let trackHTML = '';
+                let indicatorsHTML = '';
+
+                avisos.forEach((aviso, index) => {
+                    const ext = aviso.rutaArchivo.split('.').pop().toLowerCase();
+                    const isVideo = aviso.tipo === 'video' || ['mp4', 'webm', 'ogg', 'mov'].includes(ext);
+
+                    const mediaHTML = isVideo 
+                        ? `<video src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" autoplay muted loop playsinline style="object-fit: cover; width: 100%; height: 100%;"></video>`
+                        : `<img src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" alt="${aviso.titulo}" style="object-fit: cover; width: 100%; height: 100%;">`;
+
+                    trackHTML += `
+                        <div class="carousel-slide">
+                            ${mediaHTML}
+                        </div>
+                    `;
+                    indicatorsHTML += `
+                        <span class="indicator ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></span>
+                    `;
+                });
+
+                carouselTrack.innerHTML = trackHTML;
+                indicatorsContainer.innerHTML = indicatorsHTML;
+
+                carouselIndicators = Array.from(indicatorsContainer.querySelectorAll('.indicator'));
+                totalSlides = avisos.length;
+                currentSlide = 0;
                 updateCarousel();
-            } else {
-                firstImg.onload = () => updateCarousel();
+                startAutoSlide();
             }
-        } else {
-            updateCarousel();
+        } catch (e) {
+            console.error('Error al cargar avisos:', e);
         }
-        startAutoSlide();
     }
 });
 

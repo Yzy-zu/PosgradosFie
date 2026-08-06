@@ -2619,27 +2619,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 carouselTrack.innerHTML = trackHTML;
                 indicatorsContainer.innerHTML = indicatorsHTML;
+
+                carouselIndicators = Array.from(indicatorsContainer.querySelectorAll('.indicator'));
+                totalSlides = avisos.length;
+                currentSlide = 0;
+                updateCarousel();
+                startAutoSlide();
             }
         } catch (e) {
             console.error('Error al cargar avisos:', e);
-        }
-
-        carouselIndicators = Array.from(document.querySelectorAll('#inicio-carousel-indicators .indicator'));
-        totalSlides = document.querySelectorAll('.carousel-slide').length;
-
-        if (totalSlides > 0) {
-            // Asegurarse de que el primer slide asigne la altura inicial correctamente
-            const firstImg = document.querySelector('.carousel-slide img');
-            if (firstImg) {
-                if (firstImg.complete) {
-                    updateCarousel();
-                } else {
-                    firstImg.onload = () => updateCarousel();
-                }
-            } else {
-                updateCarousel();
-            }
-            startAutoSlide();
         }
     }
 });
