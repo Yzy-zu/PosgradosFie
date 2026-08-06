@@ -508,7 +508,7 @@ VISTA 2: CONVOCATORIAS
         </div>
 
        <div class="d-flex flex-wrap gap-2">
-        
+
     <button
         type="button"
         class="btn rounded-pill px-4 text-white"
@@ -623,13 +623,21 @@ VISTA 2: CONVOCATORIAS
 </section>
 
 <!-- ==========================================================
-     VISTA 3: ASPIRANTES - NUEVO DISEÑO
+     VISTA 3: ASPIRANTES
 ========================================================== -->
-<section id="vista-aspirantes" class="vista-seccion p-4 d-none">
+<section
+    id="vista-aspirantes"
+    class="vista-seccion p-4 d-none">
 
-    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <!-- ENCABEZADO -->
+    <div
+        class="d-flex flex-column flex-lg-row
+               justify-content-between
+               align-items-lg-center
+               gap-3 mb-4">
 
         <div>
+
             <h4 class="fw-bold text-dark mb-1">
                 Aspirantes
             </h4>
@@ -637,6 +645,7 @@ VISTA 2: CONVOCATORIAS
             <p class="text-muted small mb-0">
                 Consulta solicitudes, expedientes y estados del proceso.
             </p>
+
         </div>
 
         <a
@@ -646,78 +655,116 @@ VISTA 2: CONVOCATORIAS
 
             <i class="fa-solid fa-calendar-plus me-2"></i>
             Programar entrevista
+
         </a>
 
     </div>
 
-    <div class="card border-0 shadow-sm"
-         style="border-radius: 18px;">
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div
+        class="card border-0 shadow-sm"
+        style="border-radius: 18px;">
 
         <div class="card-body p-4">
 
             <!-- BUSCADOR Y FILTROS -->
-            <div class="d-flex flex-column flex-xl-row justify-content-between gap-3 mb-4">
+            <div
+                class="d-flex flex-column flex-xl-row
+                       justify-content-between
+                       align-items-xl-center
+                       gap-3 mb-4">
 
-                <div class="input-group"
-                     style="max-width: 420px;">
+                <!-- BUSCADOR -->
+                <div
+                    class="input-group"
+                    style="max-width: 420px;">
 
-                    <span class="input-group-text bg-white border-end-0">
-                        <i class="fa-solid fa-magnifying-glass text-muted"></i>
+                    <span
+                        class="input-group-text bg-white border-end-0">
+
+                        <i
+                            class="fa-solid fa-magnifying-glass text-muted">
+                        </i>
+
                     </span>
 
                     <input
                         type="text"
                         id="buscarAspirante"
                         class="form-control border-start-0"
-                        placeholder="Buscar por nombre o CURP...">
+                        placeholder="Buscar por nombre o CURP..."
+                        autocomplete="off">
 
                 </div>
 
+
+                <!-- FILTROS -->
                 <div class="d-flex flex-wrap gap-2">
 
                     <button
                         type="button"
-                        class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                        class="btn btn-outline-secondary
+                               btn-sm rounded-pill px-3
+                               filtro-aspirante active"
+                        data-estado="TODOS">
 
+                        <i class="fa-solid fa-users me-1"></i>
                         Todos
+
                     </button>
 
                     <button
                         type="button"
-                        class="btn btn-outline-warning btn-sm rounded-pill px-3">
+                        class="btn btn-outline-warning
+                               btn-sm rounded-pill px-3
+                               filtro-aspirante"
+                        data-estado="EN_REVISION">
 
                         <i class="fa-solid fa-clock me-1"></i>
                         En revisión
+
                     </button>
 
                     <button
                         type="button"
-                        class="btn btn-outline-success btn-sm rounded-pill px-3">
+                        class="btn btn-outline-success
+                               btn-sm rounded-pill px-3
+                               filtro-aspirante"
+                        data-estado="APROBADO">
 
                         <i class="fa-solid fa-circle-check me-1"></i>
                         Aprobados
+
                     </button>
 
                     <button
                         type="button"
-                        class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                        class="btn btn-outline-danger
+                               btn-sm rounded-pill px-3
+                               filtro-aspirante"
+                        data-estado="RECHAZADO">
 
                         <i class="fa-solid fa-circle-xmark me-1"></i>
                         Rechazados
+
                     </button>
 
                 </div>
 
             </div>
 
-            <!-- TABLA -->
+
+            <!-- TABLA DE ASPIRANTES -->
             <div class="table-responsive">
 
-                <table class="table table-hover align-middle mb-0">
+                <table
+                    class="table table-hover align-middle mb-0">
 
                     <thead class="table-light">
 
                         <tr>
+
                             <th style="width: 34%;">
                                 Aspirante / CURP
                             </th>
@@ -730,10 +777,14 @@ VISTA 2: CONVOCATORIAS
                                 Estado
                             </th>
 
-                            <th style="width: 18%;"
+                            <th
+                                style="width: 18%;"
                                 class="text-end">
+
                                 Acciones
+
                             </th>
+
                         </tr>
 
                     </thead>
@@ -741,15 +792,22 @@ VISTA 2: CONVOCATORIAS
                     <tbody id="tablaAspirantesBody">
 
                         <tr>
-                            <td colspan="4"
+
+                            <td
+                                colspan="4"
                                 class="text-center py-5 text-muted">
 
-                                <div class="spinner-border spinner-border-sm me-2"
-                                     style="color: #8a1c24;"></div>
+                                <div
+                                    class="spinner-border
+                                           spinner-border-sm
+                                           me-2"
+                                    style="color: #8a1c24;">
+                                </div>
 
                                 Cargando aspirantes...
 
                             </td>
+
                         </tr>
 
                     </tbody>
@@ -930,11 +988,11 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
                         <i class="fa-solid fa-magnifying-glass text-muted"></i>
                     </span>
 
-                    <input
-                        type="text"
-                        id="buscarEntrevista"
-                        class="form-control border-start-0"
-                        placeholder="Buscar aspirante o docente...">
+                   <input
+    type="text"
+    id="buscarEntrevista"
+    class="form-control"
+    placeholder="Buscar por nombre del aspirante...">
 
                 </div>
 
@@ -1140,115 +1198,132 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
 
     </div>
 
-    <!-- TABLA -->
-    <div class="card border-0 shadow-sm"
-         style="border-radius: 18px;">
+  <!-- TABLA -->
+<div class="card border-0 shadow-sm"
+     style="border-radius: 18px;">
 
-        <div class="card-body p-0">
+    <div class="card-body p-0">
 
-            <div class="p-4 border-bottom">
+        <!-- BUSCADOR Y FILTROS -->
+        <div class="p-4 border-bottom">
 
-                <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
+            <div class="d-flex flex-column flex-xl-row justify-content-between align-items-center gap-3">
 
-                    <div class="input-group"
-                         style="max-width: 420px;">
+                <div class="input-group"
+                     style="max-width: 420px;">
 
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="fa-solid fa-magnifying-glass text-muted"></i>
-                        </span>
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fa-solid fa-magnifying-glass text-muted"></i>
+                    </span>
 
-                        <input
-                            type="text"
-                            id="buscarDictamen"
-                            class="form-control border-start-0"
-                            placeholder="Buscar por aspirante o CURP...">
+                    <input
+                        type="text"
+                        id="buscarDictamen"
+                        class="form-control border-start-0"
+                        placeholder="Buscar por aspirante o CURP...">
 
-                    </div>
+                </div>
 
-                    <div class="d-flex flex-wrap gap-2">
+                <div class="d-flex flex-wrap gap-2">
 
-                        <button
-                            type="button"
-                            class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                            Todos
-                        </button>
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary btn-sm rounded-pill px-3 filtro-dictamen active"
+                        data-estado="TODOS">
 
-                        <button
-                            type="button"
-                            class="btn btn-outline-success btn-sm rounded-pill px-3">
-                            Aceptados
-                        </button>
+                        Todos
 
-                        <button
-                            type="button"
-                            class="btn btn-outline-danger btn-sm rounded-pill px-3">
-                            Rechazados
-                        </button>
+                    </button>
 
-                    </div>
+                    <button
+                        type="button"
+                        class="btn btn-outline-success btn-sm rounded-pill px-3 filtro-dictamen"
+                        data-estado="ACEPTADO">
+
+                        Aceptados
+
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-outline-danger btn-sm rounded-pill px-3 filtro-dictamen"
+                        data-estado="RECHAZADO">
+
+                        Rechazados
+
+                    </button>
 
                 </div>
 
             </div>
 
-            <div class="table-responsive">
+        </div>
 
-                <table class="table table-hover align-middle mb-0">
+        <!-- TABLA -->
+        <div class="table-responsive">
 
-                    <thead class="table-light">
+            <table class="table table-hover align-middle mb-0">
 
-                        <tr>
-                            <th style="min-width: 180px;">
-                                Aspirante
-                            </th>
+                <thead class="table-light">
 
-                            <th style="min-width: 175px;">
-                                CURP
-                            </th>
+                    <tr>
 
-                            <th style="min-width: 190px;">
-                                Programa
-                            </th>
+                        <th style="min-width:180px;">
+                            Aspirante
+                        </th>
 
-                            <th style="min-width: 120px;">
-                                Resultado
-                            </th>
+                        <th style="min-width:170px;">
+                            CURP
+                        </th>
 
-                            <th style="min-width: 100px;">
-                                Publicado
-                            </th>
+                        <th style="min-width:200px;">
+                            Programa
+                        </th>
 
-                            <th style="min-width: 110px;"
-                                class="text-end">
-                                Acción
-                            </th>
-                        </tr>
+                        <th style="min-width:120px;">
+                            Resultado
+                        </th>
 
-                    </thead>
+                        <th style="min-width:100px;">
+                            Publicado
+                        </th>
 
-                    <tbody id="tablaDictamenesBody">
+                        <th style="min-width:120px;"
+                            class="text-end">
 
-                        <tr>
-                            <td colspan="6"
-                                class="text-center py-5 text-muted">
+                            Acción
 
-                                <div class="spinner-border spinner-border-sm me-2"
-                                     style="color: #8a1c24;"></div>
+                        </th>
 
-                                Cargando dictámenes...
+                    </tr>
 
-                            </td>
-                        </tr>
+                </thead>
 
-                    </tbody>
+                <tbody id="tablaDictamenesBody">
 
-                </table>
+                    <tr>
 
-            </div>
+                        <td colspan="6"
+                            class="text-center py-5 text-muted">
+
+                            <div class="spinner-border spinner-border-sm me-2"
+                                 style="color:#8a1c24;"></div>
+
+                            Cargando dictámenes...
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
 
         </div>
 
     </div>
+
+</div>
 
 </section>
 

@@ -1,9 +1,21 @@
+let listaAspirantes = [];
+let textoBusquedaAspirante = "";
+let filtroEstadoAspirante = "TODOS";
+let listaEntrevistas = [];
+let listaDictamenes = [];
+let filtroDictamen = "TODOS";
+let textoBusquedaDictamen = "";
+
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Inicializar enrutador
     initRouter();
 
     // 2. Cargar métricas de inicio
     cargarMetricas();
+    configurarBuscadorAspirantes();
+    configurarFiltrosAspirantes();
+    cargarNotificaciones();
 
     // 3. Socket.io para actualización en tiempo real
     if (typeof io !== 'undefined') {
@@ -13,11 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const hash = window.location.hash;
             if (hash === '#aspirantes') cargarAspirantes();
             if (
-    typeof window.cargarConvocatorias ===
-    "function"
-) {
-    window.cargarConvocatorias();
-}
+                typeof window.cargarConvocatorias ===
+                "function"
+            ) {
+                window.cargarConvocatorias();
+            }
             if (hash === '#entrevistas') cargarEntrevistas();
         });
     }
@@ -28,14 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
             guardarEntrevista(e);
         }
     });
-
-    // Escuchar directamente el clic en el botón del modal por si no hay un elemento <form>
-    const btnGuardarModal = document.getElementById('btnGuardarEntrevista');
-    if (btnGuardarModal) {
-        btnGuardarModal.addEventListener('click', (e) => {
-            guardarEntrevista(e);
-        });
-    }
 
     // 5. Cierre de sesión
     const logoutBtn = document.getElementById('menuLogout');
@@ -83,8 +87,15 @@ function navegar() {
         case '#inicio':
             cargarMetricas();
             break;
-        case '#convocatorias':
-            cargarConvocatorias();
+        case "#convocatorias":
+
+            if (
+                typeof window.cargarConvocatorias ===
+                "function"
+            ) {
+                window.cargarConvocatorias();
+            }
+
             break;
         case '#aspirantes':
             cargarAspirantes();
@@ -102,33 +113,87 @@ function navegar() {
 }
 
 /* ==========================================================
-   2. MÉTRICAS (INICIO)
+   2. MÉTRICAS DEL PANEL
 ========================================================== */
+
 async function cargarMetricas() {
+
     try {
-        const res = await fetch('/api/coordinador/metricas');
-        if (res.ok) {
-            const data = await res.json();
-            
-            const elSolicitudes = document.getElementById('cantSolicitudes');
-            if (elSolicitudes) elSolicitudes.textContent = data.totales || 0;
 
-            const elPendientes = document.getElementById('cantPendientes');
-            if (elPendientes) elPendientes.textContent = data.pendientes || 0;
+        const respuesta =
+            await fetch(
+                "/api/coordinador/metricas"
+            );
 
-            const elEntrevistas = document.getElementById('cantEntrevistas');
-            if (elEntrevistas) elEntrevistas.textContent = data.entrevistas || 0;
+        const datos =
+            await respuesta
+                .json()
+                .catch(() => ({}));
 
-            const elAceptados = document.getElementById('cantAceptados');
-            if (elAceptados) elAceptados.textContent = data.aceptados || 0;
+        if (!respuesta.ok) {
+
+            throw new Error(
+                datos.mensaje ||
+                "No se pudieron cargar las métricas."
+            );
         }
-    } catch (err) {
-        console.error('Error al cargar métricas:', err);
+
+        const solicitudes =
+            document.getElementById(
+                "cantSolicitudes"
+            );
+
+        const pendientes =
+            document.getElementById(
+                "cantPendientes"
+            );
+
+        const entrevistas =
+            document.getElementById(
+                "cantEntrevistas"
+            );
+
+        const aceptados =
+            document.getElementById(
+                "cantAceptados"
+            );
+
+        if (solicitudes) {
+            solicitudes.textContent =
+                Number(datos.totales || 0);
+        }
+
+        if (pendientes) {
+            pendientes.textContent =
+                Number(datos.pendientes || 0);
+        }
+
+        if (entrevistas) {
+            entrevistas.textContent =
+                Number(datos.entrevistas || 0);
+        }
+
+        if (aceptados) {
+            aceptados.textContent =
+                Number(datos.aceptados || 0);
+        }
+
+        console.log(
+            "Métricas cargadas:",
+            datos
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error al cargar métricas:",
+            error
+        );
     }
 }
 
 /* ==========================================================
-   3. CONVOCATORIAS
+   2. CONVOCATORIAS
 ========================================================== */
 async function cargarConvocatoriasViejas() {
     const contenedor = document.getElementById('contenedorConvocatorias');
@@ -169,9 +234,9 @@ async function cargarConvocatoriasViejas() {
             const hoy = new Date().toISOString().substring(0, 10);
 
             const esActiva = (estatusTexto === 'ACTIVA' || c.activa === 1 || c.activa === true) &&
-                             (!fFinStr || fFin >= hoy);
+                (!fFinStr || fFin >= hoy);
 
-            const badgeEstado = esActiva 
+            const badgeEstado = esActiva
                 ? `<span class="badge bg-success px-3 py-1">Activa</span>`
                 : `<span class="badge bg-secondary px-3 py-1">Cerrada</span>`;
 
@@ -210,234 +275,488 @@ async function cargarConvocatoriasViejas() {
 }
 
 /* ==========================================================
-   4. ASPIRANTES (Tabla y Expediente)
+  3. ASPIRANTES
 ========================================================== */
 async function cargarAspirantes() {
-    const tbody = document.getElementById('tablaAspirantesBody');
-    if (!tbody) return;
+
+    const tbody =
+        document.getElementById(
+            "tablaAspirantesBody"
+        );
+
+    if (!tbody) {
+        return;
+    }
 
     tbody.innerHTML = `
         <tr>
-            <td colspan="4" class="text-center py-4 text-muted">
-                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+            <td
+                colspan="4"
+                class="text-center py-4 text-muted">
+
+                <div
+                    class="spinner-border spinner-border-sm text-primary me-2">
+                </div>
+
                 Cargando lista de aspirantes...
+
             </td>
-        </tr>`;
+        </tr>
+    `;
 
     try {
-        const res = await fetch('/api/coordinador/aspirantes');
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
 
-        const aspirantes = await res.json();
-        tbody.innerHTML = '';
+        const respuesta =
+            await fetch(
+                "/api/coordinador/aspirantes"
+            );
 
-        if (!aspirantes || aspirantes.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted">No hay solicitudes registradas.</td></tr>`;
+        if (!respuesta.ok) {
+
+            throw new Error(
+                `Error HTTP ${respuesta.status}`
+            );
+        }
+
+        const resultado =
+            await respuesta.json();
+
+        listaAspirantes =
+            Array.isArray(resultado)
+                ? resultado
+                : Array.isArray(resultado.aspirantes)
+                    ? resultado.aspirantes
+                    : [];
+
+        if (listaAspirantes.length === 0) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td
+                        colspan="4"
+                        class="text-center py-4 text-muted">
+
+                        No hay solicitudes registradas.
+
+                    </td>
+                </tr>
+            `;
+
             return;
         }
 
-        aspirantes.forEach((asp, index) => {
-            const collapseId = `detallesAsp_${asp.id_solicitud || index}`;
-            const trPrincipal = document.createElement('tr');
-            const trDetalle = document.createElement('tr');
+        renderizarAspirantesFiltrados();
 
-        trPrincipal.innerHTML = `
-    <td class="py-3">
-        <div class="fw-bold text-dark">${asp.nombre_completo || 'Sin Nombre'}</div>
-       <small class="text-muted font-monospace">${asp.curp || 'Sin CURP'}</small>
-    </td>
-    <td>
-        <span class="fw-medium text-secondary">
-            ${asp.programa || asp.convocatoria_nombre || 'Sin asignación'}
-        </span>
-    </td>
-    <td>
-        ${getBadgeDictamen(asp.dictamen || asp.estado)}
-    </td>
-    <td class="text-end">
-        <button class="btn btn-sm btn-outline-primary fw-medium"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#${collapseId}"
-                aria-expanded="false"
-                aria-controls="${collapseId}">
-            <i class="fa-solid fa-chevron-down me-1"></i> Detalles
-        </button>
-    </td>
-`;
-            trDetalle.innerHTML = `
-                <td colspan="4" class="p-0 border-0">
-                    <div class="collapse" id="${collapseId}">
-                        <div class="p-3 my-2 bg-light rounded-3 border shadow-sm mx-2">
-                            <div class="row align-items-center g-3">
-                                <div class="col-md-3">
-                                    <small class="text-muted d-block fw-bold mb-1">TIPO DE ADMISIÓN</small>
-                                    <span class="badge bg-dark text-wrap">${asp.modalidadNombre || 'N/A'}</span>
-                                </div>
-                                <div class="col-md-2">
-                                    <small class="text-muted d-block fw-bold mb-1">ETAPA ACTUAL</small>
-                                    <span class="badge bg-secondary">${asp.etapaNombre || 'Sin Etapa'}</span>
-                                </div>
-                                <div class="col-md-3">
-                                    <small class="text-muted d-block fw-bold mb-1">CONVOCATORIA</small>
-                                    <span class="badge bg-info text-white">${asp.convocatoria_nombre || 'General'}</span>
-                                </div>
-                                <div class="col-md-4 text-md-end">
-                                    <small class="text-muted d-block fw-bold mb-1">ACCIONES</small>
-                                    <button class="btn btn-sm btn-info text-white me-1" onclick="verExpediente(${asp.id_aspirante})">
-                                        <i class="fa-solid fa-folder me-1"></i> Expediente
-                                    </button>
-                                    <select class="form-select form-select-sm d-inline-block w-auto mt-1 mt-md-0" onchange="cambiarDictamen(${asp.id_solicitud}, this.value)">
-                                        <option value="" disabled selected>Dictamen...</option>
-                                        <option value="APROBADO">Aprobar</option>
-                                        <option value="RECHAZADO">Rechazar</option>
-                                        <option value="EN_REVISION">En Revisión</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+    } catch (error) {
+
+        console.error(
+            "Error al cargar la tabla de aspirantes:",
+            error
+        );
+
+        listaAspirantes = [];
+
+        tbody.innerHTML = `
+            <tr>
+                <td
+                    colspan="4"
+                    class="text-center py-4 text-danger">
+
+                    <i class="fa-solid fa-circle-exclamation me-1"></i>
+                    Error al cargar aspirantes.
+
+                </td>
+            </tr>
+        `;
+    }
+}
+
+/* ==========================================================
+  4. FILTRAR Y MOSTRAR ASPIRANTES
+========================================================== */
+
+function renderizarAspirantesFiltrados() {
+
+    const tbody =
+        document.getElementById(
+            "tablaAspirantesBody"
+        );
+
+    if (!tbody) {
+        return;
+    }
+
+    const aspirantesFiltrados =
+        listaAspirantes.filter(
+            aspirante => {
+
+                const textoCompleto = [
+                    aspirante.nombre_completo,
+                    aspirante.curp,
+                    aspirante.programa,
+                    aspirante.convocatoria,
+                    aspirante.tipo_admision,
+                    aspirante.etapa_actual
+                ]
+                    .map(valor =>
+                        String(valor || "")
+                            .trim()
+                            .toLowerCase()
+                    )
+                    .join(" ");
+
+                const estado =
+                    String(
+                        aspirante.estado ||
+                        aspirante.dictamen ||
+                        "PENDIENTE"
+                    )
+                        .trim()
+                        .toUpperCase();
+
+                const coincideBusqueda =
+                    textoCompleto.includes(
+                        textoBusquedaAspirante
+                    );
+
+                const coincideEstado =
+                    filtroEstadoAspirante === "TODOS" ||
+                    estado === filtroEstadoAspirante;
+
+                return (
+                    coincideBusqueda &&
+                    coincideEstado
+                );
+            }
+        );
+
+    tbody.innerHTML = "";
+
+    if (aspirantesFiltrados.length === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td
+                    colspan="4"
+                    class="text-center py-5 text-muted">
+
+                    <i
+                        class="fa-solid fa-magnifying-glass fa-2x mb-3 d-block opacity-50">
+                    </i>
+
+                    No se encontraron aspirantes.
+
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    aspirantesFiltrados.forEach(
+        (asp, index) => {
+
+            const collapseId =
+                `detallesAsp_${asp.id_solicitud || index}`;
+
+            const trPrincipal =
+                document.createElement("tr");
+
+            const trDetalle =
+                document.createElement("tr");
+
+            trPrincipal.innerHTML = `
+                <td class="py-3">
+
+                    <div class="fw-bold text-dark">
+                        ${escaparHTML(
+                asp.nombre_completo ||
+                "Sin nombre"
+            )}
                     </div>
+
+                    <small class="text-muted font-monospace">
+                        ${escaparHTML(
+                asp.curp ||
+                "Sin CURP"
+            )}
+                    </small>
+
+                </td>
+
+                <td>
+
+                    <span class="fw-medium text-secondary">
+                        ${escaparHTML(
+                asp.programa ||
+                "Sin asignación"
+            )}
+                    </span>
+
+                </td>
+
+                <td>
+                    ${getBadgeDictamen(
+                asp.estado ||
+                asp.dictamen
+            )}
+                </td>
+
+                <td class="text-end">
+
+                    <button
+                        class="btn btn-sm btn-outline-primary fw-medium"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#${collapseId}"
+                        aria-expanded="false"
+                        aria-controls="${collapseId}">
+
+                        <i class="fa-solid fa-chevron-down me-1"></i>
+                        Detalles
+
+                    </button>
+
                 </td>
             `;
 
-            tbody.appendChild(trPrincipal);
-            tbody.appendChild(trDetalle);
-        });
+            trDetalle.innerHTML = `
+                <td colspan="4" class="p-0 border-0">
 
-    } catch (err) {
-        console.error('Error al cargar la tabla de aspirantes:', err);
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="4" class="text-center py-4 text-danger">
-                    <i class="fa-solid fa-circle-exclamation me-1"></i> Error al cargar aspirantes.
+                    <div
+                        class="collapse"
+                        id="${collapseId}">
+
+                        <div
+                            class="p-3 my-2 bg-light rounded-3 border shadow-sm mx-2">
+
+                            <div class="row align-items-center g-3">
+
+                                <div class="col-md-3">
+
+                                    <small class="text-muted d-block fw-bold mb-1">
+                                        TIPO DE ADMISIÓN
+                                    </small>
+
+                                    <span class="badge bg-dark text-wrap">
+                                        ${escaparHTML(
+                asp.tipo_admision ||
+                "N/A"
+            )}
+                                    </span>
+
+                                </div>
+
+                                <div class="col-md-2">
+
+                                    <small class="text-muted d-block fw-bold mb-1">
+                                        ETAPA ACTUAL
+                                    </small>
+
+                                    <span class="badge bg-secondary">
+                                        ${escaparHTML(
+                asp.etapa_actual ||
+                "Sin etapa"
+            )}
+                                    </span>
+
+                                </div>
+
+                                <div class="col-md-3">
+
+                                    <small class="text-muted d-block fw-bold mb-1">
+                                        CONVOCATORIA
+                                    </small>
+
+                                    <span class="badge bg-info text-white">
+                                        ${escaparHTML(
+                asp.convocatoria ||
+                "General"
+            )}
+                                    </span>
+
+                                </div>
+
+                                <div class="col-md-4 text-md-end">
+
+                                    <small class="text-muted d-block fw-bold mb-1">
+                                        ACCIONES
+                                    </small>
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-info text-white me-1"
+                                        onclick="verExpediente(${Number(
+                asp.id_aspirante
+            )})">
+
+                                        <i class="fa-solid fa-folder me-1"></i>
+                                        Expediente
+
+                                    </button>
+
+                                    <select
+                                        class="form-select form-select-sm d-inline-block w-auto mt-1 mt-md-0"
+                                        onchange="cambiarDictamen(${Number(
+                asp.id_solicitud
+            )}, this.value)">
+
+                                        <option value="" disabled selected>
+                                            Dictamen...
+                                        </option>
+
+                                        <option value="APROBADO">
+                                            Aprobar
+                                        </option>
+
+                                        <option value="RECHAZADO">
+                                            Rechazar
+                                        </option>
+
+                                        <option value="EN_REVISION">
+                                            En revisión
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
                 </td>
-            </tr>`;
-    }
+            `;
+
+            tbody.appendChild(
+                trPrincipal
+            );
+
+            tbody.appendChild(
+                trDetalle
+            );
+        }
+    );
 }
 
 function getBadgeDictamen(dictamen) {
     switch (dictamen) {
         case 'APROBADO':
             return '<span class="badge bg-success">Aprobado</span>';
+
         case 'RECHAZADO':
             return '<span class="badge bg-danger">Rechazado</span>';
+
         case 'EN_REVISION':
             return '<span class="badge bg-warning text-dark">En Revisión</span>';
+
         default:
             return '<span class="badge bg-secondary">Pendiente</span>';
     }
 }
 
-async function cambiarDictamen(idSolicitud, nuevoDictamen) {
-    const idUsuarioCoordinador = localStorage.getItem('idUsuario');
+/* ==========================================================
+ 5.CONFIGURAR BUSCADOR DE ASPIRANTES
+========================================================== */
 
-    if (!idUsuarioCoordinador) {
-        Swal.fire('Sesión no encontrada', 'No se pudo verificar la identidad del coordinador.', 'warning');
+function configurarBuscadorAspirantes() {
+
+    const buscador =
+        document.getElementById(
+            "buscarAspirante"
+        );
+
+    if (!buscador) {
         return;
     }
 
-    try {
-        const res = await fetch(`/api/coordinador/solicitud/${idSolicitud}/dictamen`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                dictamen: nuevoDictamen,
-                idUsuarioCoordinador: idUsuarioCoordinador,
-                observaciones: 'Dictamen emitido desde la plataforma de coordinación.'
-            })
-        });
-
-        if (res.ok) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Dictamen actualizado',
-                text: 'El estado de la solicitud ha sido registrado correctamente.',
-                timer: 1500,
-                showConfirmButton: false
-            });
-            cargarAspirantes();
-            cargarMetricas();
-        } else {
-            const data = await res.json().catch(() => ({}));
-            Swal.fire('Error', data.mensaje || 'No se pudo guardar el dictamen en la base de datos.', 'error');
-        }
-    } catch (err) {
-        console.error('Error al actualizar dictamen:', err);
+    if (
+        buscador.dataset.configurado ===
+        "true"
+    ) {
+        return;
     }
+
+    buscador.addEventListener(
+        "input",
+        event => {
+
+            textoBusquedaAspirante =
+                String(
+                    event.target.value || ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+            renderizarAspirantesFiltrados();
+        }
+    );
+
+    buscador.dataset.configurado =
+        "true";
 }
 
-async function verExpediente(idAspirante) {
-    const modalElement = document.getElementById('modalExpediente');
-    const modalBody = document.getElementById('modalExpedienteBody');
-    if (!modalElement || !modalBody) return;
-    
-    const bsModal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
 
-    modalBody.innerHTML = `
-        <div class="text-center py-4">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2 text-muted">Cargando expediente...</p>
-        </div>
-    `;
-    bsModal.show();
+/* ==========================================================
+ 6. CONFIGURAR FILTROS DE ASPIRANTES
+========================================================== */
 
-    try {
-        const res = await fetch(`/api/coordinador/aspirante/${idAspirante}/expediente`);
-        if (!res.ok) {
-            modalBody.innerHTML = `<div class="alert alert-danger">No se pudo obtener el expediente del aspirante.</div>`;
+function configurarFiltrosAspirantes() {
+
+    const botones =
+        document.querySelectorAll(
+            ".filtro-aspirante"
+        );
+
+    if (!botones.length) {
+        return;
+    }
+
+    botones.forEach(boton => {
+
+        if (
+            boton.dataset.configurado ===
+            "true"
+        ) {
             return;
         }
 
-        const { perfil = {}, documentos = [] } = await res.json();
-        const docsUnicos = Array.isArray(documentos) 
-            ? documentos.filter((doc, index, self) => 
-                index === self.findIndex((d) => (
-                    (d.id && d.id === doc.id) || 
-                    (d.rutaArchivo && d.rutaArchivo === doc.rutaArchivo) ||
-                    (d.nombreRequisito && d.nombreRequisito === doc.nombreRequisito)
-                ))
-              )
-            : [];
+        boton.addEventListener(
+            "click",
+            () => {
 
-        let docsHTML = (docsUnicos.length > 0)
-            ? docsUnicos.map(d => `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>${d.nombreRequisito || 'Requisito'}</strong> 
-                        <span class="badge bg-light text-dark ms-1">${d.categoria || 'GENERAL'}</span>
-                    </div>
-                    <a href="javascript:void(0)" onclick="abrirArchivoSeguro('${d.rutaArchivo}')" class="btn btn-sm btn-outline-primary">
-                        <i class="fa-solid fa-file-pdf me-1"></i> Ver Documento
-                    </a>
-                </li>
-            `).join('')
-            : '<li class="list-group-item text-muted text-center py-3">No se han registrado documentos cargados.</li>';
+                filtroEstadoAspirante =
+                    String(
+                        boton.dataset.estado ||
+                        "TODOS"
+                    )
+                        .trim()
+                        .toUpperCase();
 
-        modalBody.innerHTML = `
-            <div class="mb-3">
-                <h6 class="text-primary fw-bold"><i class="fa-solid fa-user me-2"></i>Información Personal</h6>
-                <div class="row g-2 mt-1">
-                    <div class="col-md-6"><strong>Nombre:</strong> ${perfil.nombre || ''} ${perfil.primerApellido || ''} ${perfil.segundoApellido || ''}</div>
-                    <div class="col-md-6"><strong>Correo:</strong> ${perfil.correo || 'N/A'}</div>
-                    <div class="col-md-6"><strong>Teléfono:</strong> ${perfil.telefono || 'N/A'}</div>
-                    <div class="col-md-6"><strong>Promedio:</strong> ${perfil.promedio || 'N/A'}</div>
-                    <div class="col-12"><strong>Licenciatura:</strong> ${perfil.licenciatura || 'N/A'} (${perfil.institucionLicenciatura || 'N/A'})</div>
-                </div>
-            </div>
-            <hr>
-            <div>
-                <h6 class="text-primary fw-bold mb-3"><i class="fa-solid fa-folder me-2"></i>Documentos del Expediente</h6>
-                <ul class="list-group">${docsHTML}</ul>
-            </div>
-        `;
-    } catch (err) {
-        console.error('Error al cargar expediente:', err);
-        modalBody.innerHTML = `<div class="alert alert-danger">Ocurrió un error al cargar la información.</div>`;
-    }
+                botones.forEach(elemento => {
+                    elemento.classList.remove(
+                        "active"
+                    );
+                });
+
+                boton.classList.add(
+                    "active"
+                );
+
+                renderizarAspirantesFiltrados();
+            }
+        );
+
+        boton.dataset.configurado =
+            "true";
+    });
 }
 
+
 /* ==========================================================
-   5. ENTREVISTAS (Carga, Programación y Modal)
+   7. ENTREVISTAS (Carga, Programación y Modal)
 ========================================================== */
 
 let listaDocentesCache = null;
@@ -469,17 +788,17 @@ async function cargarEntrevistas() {
 
         entrevistas.forEach(ent => {
             const tr = document.createElement('tr');
-            
+
             // 1. Manejo de IDs
             const idSolicitud = ent.idSoli || ent.id_solicitud || ent.id;
             const idDocente = ent.idUsua || ent.id_docente || ent.id_usuario || '';
 
             // 2. Nombres y datos
-            const nombreAspirante = ent.nombre_completo || 
-                `${ent.nombre || ''} ${ent.primerApellido || ''} ${ent.segundoApellido || ''}`.trim() || 
+            const nombreAspirante = ent.nombre_completo ||
+                `${ent.nombre || ''} ${ent.primerApellido || ''} ${ent.segundoApellido || ''}`.trim() ||
                 'Aspirante';
 
-            const nombreDocente = ent.docente || "Sin docente";  
+            const nombreDocente = ent.docente || "Sin docente";
             const folioCurp = ent.curp || ent.folio || 'Sin CURP';
             const programa = ent.programa || ent.opcion_posgrado || ent.posgrado_nombre || 'Sin asignación';
 
@@ -498,39 +817,39 @@ async function cargarEntrevistas() {
             }
 
             const fechaValida = !!fechaLimpia;
-            const badgeEstado = fechaValida 
-                ? `<span class="badge bg-success">Programada</span>` 
+            const badgeEstado = fechaValida
+                ? `<span class="badge bg-success">Programada</span>`
                 : `<span class="badge bg-warning text-dark">Pendiente</span>`;
 
             // 4. Formatear Lugar / Ubicación para su celda independiente
             const esLink = lugarRaw.startsWith('http://') || lugarRaw.startsWith('https://');
             const lugarTexto = lugarRaw.trim() ? lugarRaw.trim() : 'Sin especificar';
 
-            const htmlLugar = esLink 
+            const htmlLugar = esLink
                 ? `<a href="${lugarRaw}" target="_blank" class="btn btn-sm btn-outline-primary fw-medium">
-                     <i class="fa-solid fa-video me-1"></i> Abrir Enlace
-                   </a>`
+                        <i class="fa-solid fa-video me-1"></i> Abrir Enlace
+                    </a>`
                 : `<span class="text-secondary fw-medium">
-                     <i class="fa-solid fa-location-dot me-1 text-muted"></i>${lugarTexto}
-                   </span>`;
+                        <i class="fa-solid fa-location-dot me-1 text-muted"></i>${lugarTexto}
+                    </span>`;
 
             // 5. Estructura HTML de las 6 celdas
             tr.innerHTML = `
-                <td class="py-3 align-middle">
-                    <div class="fw-bold text-dark"></div>
-                    <small class="text-muted font-monospace">${folioCurp}</small>
-                </td>
-                <td class="align-middle"><span class="fw-medium text-secondary">${programa}</span></td>
-                <td class="align-middle"><span class="fw-bold text-dark">${nombreDocente}</span></td>
-                <td class="align-middle">
-                    ${badgeEstado}
-                    <small class="d-block text-muted mt-1 font-monospace">${fechaStr}</small>
-                </td>
-                <td class="align-middle">
-                    ${htmlLugar}
-                </td>
-                <td class="text-end align-middle action-cell"></td>
-            `;
+                    <td class="py-3 align-middle">
+                        <div class="fw-bold text-dark"></div>
+                        <small class="text-muted font-monospace">${folioCurp}</small>
+                    </td>
+                    <td class="align-middle"><span class="fw-medium text-secondary">${programa}</span></td>
+                    <td class="align-middle"><span class="fw-bold text-dark">${nombreDocente}</span></td>
+                    <td class="align-middle">
+                        ${badgeEstado}
+                        <small class="d-block text-muted mt-1 font-monospace">${fechaStr}</small>
+                    </td>
+                    <td class="align-middle">
+                        ${htmlLugar}
+                    </td>
+                    <td class="text-end align-middle action-cell"></td>
+                `;
 
             // Insertar el nombre del aspirante de manera segura
             tr.querySelector('.fw-bold.text-dark').textContent = nombreAspirante;
@@ -539,7 +858,7 @@ async function cargarEntrevistas() {
             const btn = document.createElement('button');
             btn.className = 'btn btn-sm btn-outline-primary fw-medium';
             btn.innerHTML = `<i class="fa-solid fa-calendar-plus me-1"></i> ${fechaValida ? 'Editar' : 'Programar'}`;
-            
+
             // Asignar evento click pasando fechaLimpia para que el input date funcione correctamente
             btn.addEventListener('click', () => {
                 abrirModalEntrevista(idSolicitud, nombreAspirante, fechaLimpia, horaRaw, idDocente, lugarRaw);
@@ -549,11 +868,13 @@ async function cargarEntrevistas() {
             tbody.appendChild(tr);
         });
 
+        configurarBuscadorEntrevistas();
+
     } catch (err) {
         console.error('Error al cargar entrevistas:', err);
         tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">
-            <i class="fa-solid fa-triangle-exclamation me-1"></i> Error al conectar con el módulo de entrevistas.
-        </td></tr>`;
+                <i class="fa-solid fa-triangle-exclamation me-1"></i> Error al conectar con el módulo de entrevistas.
+            </td></tr>`;
     }
 }
 
@@ -578,7 +899,7 @@ async function cargarDocentesSelect() {
         }
 
         let htmlOptions = '<option value="" disabled selected>Seleccione un docente...</option>';
-        
+
         listaDocentesCache.forEach(d => {
             const idDoc = d.id_docente ?? d.id_usuario ?? d.id_docente_asignado ?? d.id;
             const nombreDoc = d.nombre_completo ?? d.nombre_docente ?? `${d.nombre || ''} ${d.primerApellido || d.apellidos || ''}`.trim();
@@ -640,80 +961,444 @@ async function abrirModalEntrevista(
 
 // D. Guardar/programar entrevista
 async function guardarEntrevista(event) {
-    if (event) event.preventDefault();
 
-    const idSolicitud = document.getElementById("modalEntrevistaIdSolicitud").value;
-    const fecha = document.getElementById("modalEntrevistaFecha").value;
-    const hora = document.getElementById("modalEntrevistaHora").value;
-    const lugar = document.getElementById("modalEntrevistaLugar").value;
-    const enlace = "";
-    const idDocente = document.getElementById("selectDocente").value;
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
 
-    if (!fecha || !hora || !idDocente) {
-        Swal.fire(
-            "Campos incompletos",
-            "Seleccione docente, fecha y hora.",
-            "warning"
+    const boton =
+        document.getElementById(
+            "btnGuardarEntrevista"
         );
+
+    if (
+        boton &&
+        boton.dataset.guardando === "true"
+    ) {
         return;
     }
 
+    if (boton) {
+        boton.dataset.guardando = "true";
+        boton.disabled = true;
+
+        boton.innerHTML = `
+            <span class="spinner-border spinner-border-sm me-2"></span>
+            Guardando...
+        `;
+    }
+
     try {
-        const res = await fetch(`/api/coordinador/solicitud/${idSolicitud}/entrevista`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                fecha,
-                hora,
-                lugar,
-                enlace,
-                idDocente
-            })
-        });
 
-        const data = await res.json();
+        const idSolicitud =
+            document.getElementById(
+                "modalEntrevistaIdSolicitud"
+            )?.value;
 
-        if (res.ok) {
-            Swal.fire({
-                icon: "success",
-                title: "Entrevista guardada",
-                text: data.mensaje,
-                timer: 1500,
-                showConfirmButton: false
-            });
+        const fecha =
+            document.getElementById(
+                "modalEntrevistaFecha"
+            )?.value;
 
-            bootstrap.Modal.getInstance(
-                document.getElementById("modalEntrevista")
-            )?.hide();
+        const hora =
+            document.getElementById(
+                "modalEntrevistaHora"
+            )?.value;
 
-            cargarEntrevistas();
+        const lugar =
+            document.getElementById(
+                "modalEntrevistaLugar"
+            )?.value;
 
-        } else {
-            Swal.fire(
-                "Error",
-                data.mensaje || "No se pudo guardar.",
-                "error"
+        const idDocente =
+            document.getElementById(
+                "selectDocente"
+            )?.value;
+
+        if (
+            !idSolicitud ||
+            !fecha ||
+            !hora ||
+            !idDocente
+        ) {
+
+            await Swal.fire(
+                "Campos incompletos",
+                "Seleccione docente, fecha y hora.",
+                "warning"
+            );
+
+            return;
+        }
+
+        const respuesta =
+            await fetch(
+                `/api/coordinador/solicitud/${idSolicitud}/entrevista`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        fecha,
+                        hora,
+                        lugar,
+                        enlace: "",
+                        idDocente
+                    })
+                }
+            );
+
+        const resultado =
+            await respuesta
+                .json()
+                .catch(() => ({}));
+
+        if (!respuesta.ok) {
+
+            throw new Error(
+                resultado.mensaje ||
+                "No se pudo guardar la entrevista."
             );
         }
 
-    } catch (err) {
-        console.error(err);
-        Swal.fire(
+        await Swal.fire({
+            icon: "success",
+            title: "Entrevista guardada",
+            text:
+                resultado.mensaje ||
+                "La entrevista se guardó correctamente.",
+            timer: 1500,
+            showConfirmButton: false
+        });
+
+        bootstrap.Modal
+            .getInstance(
+                document.getElementById(
+                    "modalEntrevista"
+                )
+            )
+            ?.hide();
+
+        await cargarEntrevistas();
+
+    } catch (error) {
+
+        console.error(
+            "Error al guardar entrevista:",
+            error
+        );
+
+        await Swal.fire(
             "Error",
-            "No se pudo conectar al servidor.",
+            error.message,
             "error"
         );
+
+    } finally {
+
+        if (boton) {
+
+            boton.dataset.guardando =
+                "false";
+
+            boton.disabled =
+                false;
+
+            boton.innerHTML = `
+                <i class="fa-solid fa-floppy-disk me-1"></i>
+                Guardar entrevista
+            `;
+        }
     }
 }
 
+/* ==========================================================
+   BUSCADOR DE ENTREVISTAS
+========================================================== */
+function configurarBuscadorEntrevistas() {
+
+    const input =
+        document.getElementById(
+            "buscarEntrevista"
+        );
+
+    if (!input) return;
+
+    if (input.dataset.listenerBusqueda === "true") {
+        return;
+    }
+
+    input.addEventListener("input", function () {
+
+        const texto =
+            this.value
+                .trim()
+                .toLowerCase();
+
+        const filas =
+            document.querySelectorAll(
+                "#tablaEntrevistasBody tr"
+            );
+
+        filas.forEach(fila => {
+
+            const nombre =
+                fila.querySelector(
+                    "td:first-child .fw-bold"
+                )?.textContent
+                    .toLowerCase() || "";
+
+            fila.style.display =
+                nombre.includes(texto)
+                    ? ""
+                    : "none";
+
+        });
+
+    });
+
+    input.dataset.listenerBusqueda = "true";
+}
+
+/* ==========================================================
+  8. EXPEDIENTE DEL ASPIRANTE
+========================================================== */
+
+async function verExpediente(idAspirante) {
+
+    const modalElement =
+        document.getElementById("modalExpediente");
+
+    const modalBody =
+        document.getElementById("modalExpedienteBody");
+
+    if (!modalElement || !modalBody) {
+        return;
+    }
+
+    const modal =
+        bootstrap.Modal.getInstance(modalElement) ||
+        new bootstrap.Modal(modalElement);
+
+    modalBody.innerHTML = `
+        <div class="text-center py-5">
+
+            <div class="spinner-border text-primary"></div>
+
+            <p class="mt-3 text-muted">
+                Cargando expediente...
+            </p>
+
+        </div>
+    `;
+
+    modal.show();
+
+    try {
+
+        const respuesta =
+            await fetch(
+                `/api/coordinador/aspirante/${idAspirante}/expediente`
+            );
+
+        const resultado =
+            await respuesta.json();
+
+        if (!respuesta.ok) {
+
+            modalBody.innerHTML = `
+                <div class="alert alert-danger">
+
+                    ${resultado.mensaje || "No fue posible obtener el expediente."}
+
+                </div>
+            `;
+
+            return;
+        }
+
+        const perfil =
+            resultado.aspirante || {};
+
+        const documentos =
+            resultado.documentos || [];
+
+        const nombreCompleto =
+            perfil.nombreCompleto ||
+            "N/A";
+
+        const institucion =
+            perfil.institucion ||
+            perfil.institucionLicenciatura ||
+            "N/A";
+
+        let htmlDocumentos = "";
+
+        if (documentos.length === 0) {
+
+            htmlDocumentos = `
+                <li class="list-group-item text-center text-muted">
+                    No existen documentos registrados.
+                </li>
+            `;
+
+        } else {
+
+            documentos.forEach(doc => {
+
+                const token =
+                    sessionStorage.getItem("token") ||
+                    localStorage.getItem("token") ||
+                    "";
+
+                const archivo =
+                    String(doc.rutaArchivo || "")
+                        .split("/")
+                        .pop();
+
+                htmlDocumentos += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            <strong>
+                                ${doc.requisito || "Documento"}
+                            </strong>
+
+                            <br>
+
+                            <small class="text-muted">
+                                ${doc.estadoValidacion || "Pendiente"}
+                            </small>
+
+                        </div>
+
+                        <a
+                            class="btn btn-sm btn-outline-primary"
+                            target="_blank"
+                            href="/api/files/${encodeURIComponent(archivo)}?token=${encodeURIComponent(token)}">
+
+                            <i class="fa-solid fa-file-pdf me-1"></i>
+
+                            Ver
+
+                        </a>
+
+                    </li>
+                `;
+            });
+
+        }
+
+        modalBody.innerHTML = `
+            <div class="mb-4">
+
+                <h5 class="text-primary fw-bold">
+
+                    <i class="fa-solid fa-user me-2"></i>
+
+                    Información Personal
+
+                </h5>
+
+                <hr>
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <strong>Nombre:</strong><br>
+                        ${nombreCompleto}
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Correo:</strong><br>
+                        ${perfil.correo || "N/A"}
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Teléfono:</strong><br>
+                        ${perfil.telefono || "N/A"}
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Promedio:</strong><br>
+                        ${perfil.promedio || "N/A"}
+                    </div>
+
+                    <div class="col-12">
+                        <strong>Licenciatura:</strong><br>
+                        ${perfil.licenciatura || "N/A"}
+                    </div>
+
+                    <div class="col-12">
+                        <strong>Institución:</strong><br>
+                        ${institucion}
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Convocatoria:</strong><br>
+                        ${perfil.convocatoria || "N/A"}
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Estado:</strong><br>
+                        ${perfil.estado || "N/A"}
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div>
+
+                <h5 class="text-primary fw-bold">
+
+                    <i class="fa-solid fa-folder-open me-2"></i>
+
+                    Documentos
+
+                </h5>
+
+                <hr>
+
+                <ul class="list-group">
+
+                    ${htmlDocumentos}
+
+                </ul>
+
+            </div>
+        `;
+
+    } catch (error) {
+
+        console.error(error);
+
+        modalBody.innerHTML = `
+            <div class="alert alert-danger">
+
+                Error al cargar el expediente.
+
+            </div>
+        `;
+    }
+
+}
+
 // ==========================================
-// Cargar Dictámenes
+// 10. Cargar Dictámenes
 // ==========================================
 async function cargarDictamenes() {
 
-    const tbody = document.getElementById("tablaDictamenesBody");
+    const tbody =
+        document.getElementById(
+            "tablaDictamenesBody"
+        );
 
     if (!tbody) return;
 
@@ -728,102 +1413,250 @@ async function cargarDictamenes() {
 
     try {
 
-        const res = await fetch("/api/coordinador/dictamenes");
+        const res =
+            await fetch(
+                "/api/coordinador/dictamenes"
+            );
 
-        const datos = await res.json();
+        listaDictamenes =
+            await res.json();
 
-        tbody.innerHTML = "";
+        renderizarDictamenes();
 
-        if (!datos.length) {
+        configurarBuscadorDictamenes();
 
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="text-center">
-                        No existen registros.
-                    </td>
-                </tr>
-            `;
-
-            return;
-
-        }
-
-        datos.forEach(d => {
-
-            let badge = `
-                <span class="badge bg-secondary">
-                    Pendiente
-                </span>
-            `;
-
-            if (d.resultado === "ACEPTADO") {
-
-                badge = `
-                    <span class="badge bg-success">
-                        ACEPTADO
-                    </span>
-                `;
-
-            }
-
-            if (d.resultado === "RECHAZADO") {
-
-                badge = `
-                    <span class="badge bg-danger">
-                        RECHAZADO
-                    </span>
-                `;
-
-            }
-
-            tbody.innerHTML += `
-
-                <tr>
-
-                    <td>${d.nombre}</td>
-
-                    <td>${d.curp}</td>
-
-                    <td>${d.programa}</td>
-
-                    <td>${badge}</td>
-
-                    <td>
-
-                        ${d.publicado ? "Sí" : "No"}
-
-                    </td>
-
-                    <td class="text-end">
-
-                        <button
-                            class="btn btn-danger btn-sm"
-                            onclick="abrirModalDictamen(${d.idSolicitud})">
-
-                            Emitir
-
-                        </button>
-
-                    </td>
-
-                </tr>
-
-            `;
-
-        });
+        configurarFiltrosDictamenes();
 
     } catch (error) {
 
         console.error(error);
 
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center text-danger">
+                    Error al cargar dictámenes.
+                </td>
+            </tr>
+        `;
+
     }
 
 }
 
+function renderizarDictamenes() {
+
+    const tbody =
+        document.getElementById(
+            "tablaDictamenesBody"
+        );
+
+    tbody.innerHTML = "";
+
+    const datos =
+        listaDictamenes.filter(d => {
+
+            const texto = (
+                `${d.nombre} ${d.curp}`
+            ).toLowerCase();
+
+            const coincideBusqueda =
+                texto.includes(
+                    textoBusquedaDictamen
+                );
+
+            const resultado =
+                (
+                    d.resultado ||
+                    "PENDIENTE"
+                ).toUpperCase();
+
+            const coincideFiltro =
+                filtroDictamen === "TODOS" ||
+                resultado === filtroDictamen;
+
+            return (
+                coincideBusqueda &&
+                coincideFiltro
+            );
+
+        });
+
+    if (!datos.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center">
+                    No existen registros.
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+    datos.forEach(d => {
+
+        let badge = `
+            <span class="badge bg-secondary">
+                Pendiente
+            </span>
+        `;
+
+        if (d.resultado === "ACEPTADO") {
+
+            badge = `
+                <span class="badge bg-success">
+                    ACEPTADO
+                </span>
+            `;
+
+        }
+
+        if (d.resultado === "RECHAZADO") {
+
+            badge = `
+                <span class="badge bg-danger">
+                    RECHAZADO
+                </span>
+            `;
+
+        }
+
+        tbody.innerHTML += `
+
+            <tr>
+
+                <td>${d.nombre}</td>
+
+                <td>${d.curp}</td>
+
+                <td>${d.programa}</td>
+
+                <td>${badge}</td>
+
+                <td>
+
+                    ${d.publicado ? "Sí" : "No"}
+
+                </td>
+
+                <td class="text-end">
+
+                    <button
+                        class="btn btn-danger btn-sm"
+                        onclick="abrirModalDictamen(${d.idSolicitud})">
+
+                        Emitir
+
+                    </button>
+
+                </td>
+
+            </tr>
+
+        `;
+
+    });
+
+}
+
+function configurarBuscadorDictamenes() {
+
+    const input =
+        document.getElementById(
+            "buscarDictamen"
+        );
+
+    if (!input) return;
+
+    if (
+        input.dataset.listener === "true"
+    ) return;
+
+    input.addEventListener(
+        "input",
+        function () {
+
+            textoBusquedaDictamen =
+                this.value
+                    .toLowerCase()
+                    .trim();
+
+            renderizarDictamenes();
+
+        }
+    );
+
+    input.dataset.listener = "true";
+
+}
+
+function configurarBuscadorDictamenes() {
+
+    const input =
+        document.getElementById(
+            "buscarDictamen"
+        );
+
+    if (!input) return;
+
+    if (
+        input.dataset.listener === "true"
+    ) return;
+
+    input.addEventListener(
+        "input",
+        function () {
+
+            textoBusquedaDictamen =
+                this.value
+                    .toLowerCase()
+                    .trim();
+
+            renderizarDictamenes();
+
+        }
+    );
+
+    input.dataset.listener = "true";
+
+}
+
+function configurarFiltrosDictamenes() {
+
+    const botones =
+        document.querySelectorAll(
+            ".filtro-dictamen"
+        );
+
+    botones.forEach(boton => {
+
+        boton.onclick = () => {
+
+            document
+                .querySelectorAll(".filtro-dictamen")
+                .forEach(b =>
+                    b.classList.remove("active")
+                );
+
+            boton.classList.add("active");
+
+            filtroDictamen =
+                boton.dataset.estado;
+
+            renderizarDictamenes();
+
+        };
+
+    });
+
+}
+
 // ==========================================
-// Abrir Modal Dictamen
+// 11. Abrir Modal Dictamen
 // ==========================================
-function abrirModalDictamen(idSolicitud){
+function abrirModalDictamen(idSolicitud) {
 
     document.getElementById("dictamenSolicitud").value = idSolicitud;
 
@@ -837,10 +1670,113 @@ function abrirModalDictamen(idSolicitud){
 
 }
 
+/* ==========================================================
+ 12. CAMBIAR DICTAMEN DEL ASPIRANTE
+========================================================== */
+
+async function cambiarDictamen(
+    idSolicitud,
+    nuevoDictamen
+) {
+
+    if (!idSolicitud || !nuevoDictamen) {
+
+        Swal.fire(
+            "Datos incompletos",
+            "No se encontró la solicitud o el dictamen seleccionado.",
+            "warning"
+        );
+
+        return;
+    }
+
+    const confirmacion =
+        await Swal.fire({
+            title: "¿Actualizar dictamen?",
+            text: `El estado cambiará a ${nuevoDictamen.replace("_", " ")}.`,
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Sí, actualizar",
+            cancelButtonText: "Cancelar",
+            confirmButtonColor: "#8a1c24"
+        });
+
+    if (!confirmacion.isConfirmed) {
+        return;
+    }
+
+    try {
+
+        const respuesta =
+            await fetch(
+                `/api/coordinador/solicitud/${idSolicitud}/dictamen`,
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            estado: nuevoDictamen
+                        })
+                }
+            );
+
+        const resultado =
+            await respuesta
+                .json()
+                .catch(() => ({}));
+
+        if (!respuesta.ok) {
+
+            throw new Error(
+                resultado.mensaje ||
+                resultado.msg ||
+                "No se pudo actualizar el dictamen."
+            );
+        }
+
+        await Swal.fire({
+            icon: "success",
+            title: "Dictamen actualizado",
+            text:
+                resultado.mensaje ||
+                "El estado fue actualizado correctamente.",
+            timer: 1500,
+            showConfirmButton: false
+        });
+
+        await cargarAspirantes();
+
+        if (
+            typeof cargarMetricas ===
+            "function"
+        ) {
+            await cargarMetricas();
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Error al actualizar dictamen:",
+            error
+        );
+
+        Swal.fire(
+            "Error",
+            error.message,
+            "error"
+        );
+    }
+}
+
 // ==========================================
-// Guardar Dictamen
+// 13. Guardar Dictamen
 // ==========================================
-async function guardarDictamen(){
+async function guardarDictamen() {
 
     const id = document.getElementById("dictamenSolicitud").value;
 
@@ -848,19 +1784,19 @@ async function guardarDictamen(){
 
     const motivo = document.getElementById("dictamenMotivo").value;
 
-    try{
+    try {
 
-        const res = await fetch(`/api/coordinador/dictamen/${id}`,{
+        const res = await fetch(`/api/coordinador/dictamen/${id}`, {
 
-            method:"POST",
+            method: "POST",
 
-            headers:{
+            headers: {
 
-                "Content-Type":"application/json"
+                "Content-Type": "application/json"
 
             },
 
-            body:JSON.stringify({
+            body: JSON.stringify({
 
                 resultado,
 
@@ -872,19 +1808,19 @@ async function guardarDictamen(){
 
         const data = await res.json();
 
-        if(res.ok){
+        if (res.ok) {
 
             Swal.fire({
 
-                icon:"success",
+                icon: "success",
 
-                title:"Correcto",
+                title: "Correcto",
 
-                text:data.mensaje,
+                text: data.mensaje,
 
-                timer:1500,
+                timer: 1500,
 
-                showConfirmButton:false
+                showConfirmButton: false
 
             });
 
@@ -896,7 +1832,7 @@ async function guardarDictamen(){
 
             cargarDictamenes();
 
-        }else{
+        } else {
 
             Swal.fire(
 
@@ -910,7 +1846,7 @@ async function guardarDictamen(){
 
         }
 
-    }catch(error){
+    } catch (error) {
 
         console.error(error);
 
@@ -919,10 +1855,10 @@ async function guardarDictamen(){
 }
 
 /* ==========================================================
-   6. NOTIFICACIONES (Header Dropdown)
+   14. NOTIFICACIONES (Header Dropdown)
 ========================================================== */
-async function cargarNotificaciones() { 
-    console.log('Cargando notificaciones del header...'); 
+async function cargarNotificaciones() {
+    console.log('Cargando notificaciones del header...');
     const contenedor = document.getElementById("listaNotificacionesContainer");
     const badge = document.getElementById("badgeNotificaciones");
     const cantTexto = document.getElementById("cantNotifTexto");
@@ -934,9 +1870,9 @@ async function cargarNotificaciones() {
         if (!respuesta.ok) throw new Error("Endpoint no disponible");
 
         const notificaciones = await respuesta.json();
-        
+
         // 1. Filtrar solo las notificaciones activas para el dropdown
-        const notifsActivas = (notificaciones || []).filter(n => 
+        const notifsActivas = (notificaciones || []).filter(n =>
             n.activa == 1 || n.activa === 'true' || n.activa === true || n.estatus === 'Activa'
         );
 
@@ -966,7 +1902,7 @@ async function cargarNotificaciones() {
         notifsActivas.forEach(notif => {
             const tituloTexto = notif.titulo || notif.nombre || 'Sin título';
             let destinoText = (notif.destino || 'todos').toLowerCase();
-            
+
             let destinoIcon = 'fa-users';
             if (destinoText === 'aspirantes') destinoIcon = 'fa-graduation-cap';
             if (destinoText === 'docentes') destinoIcon = 'fa-chalkboard-user';
@@ -998,7 +1934,7 @@ async function cargarNotificaciones() {
                     <i class="fa-solid ${destinoIcon} me-1"></i>Para: <span class="text-capitalize">${destinoText}</span>
                 </small>
             `;
-            
+
             contenedor.appendChild(item);
         });
 
@@ -1011,15 +1947,13 @@ async function cargarNotificaciones() {
     }
 }
 
-// Ejecutar automáticamente al cargar el documento
-document.addEventListener('DOMContentLoaded', cargarNotificaciones);
 
 // ==========================================
-// FUNCIÓN PARA ABRIR EL MODAL Y ASIGNAR EL ID
+// 15 FUNCIÓN PARA ABRIR EL MODAL Y ASIGNAR EL ID
 // ==========================================
 function abrirModalProgramar(idSolicitud) {
     console.log("Abriendo modal para la solicitud ID:", idSolicitud);
-    
+
     // 1. Asignamos el idSolicitud al input oculto (para no perder el ID)
     const inputSolicitud = document.getElementById('idSolicitud');
     if (inputSolicitud) {
@@ -1040,8 +1974,44 @@ function abrirModalProgramar(idSolicitud) {
     }
 }
 
+function configurarBuscadorEntrevistas() {
+
+    const buscador = document.getElementById("buscarEntrevista");
+
+    if (!buscador) return;
+
+    buscador.onkeyup = function () {
+
+        const texto = this.value.toLowerCase().trim();
+
+        const filas = document.querySelectorAll("#tablaEntrevistasBody tr");
+
+        filas.forEach(fila => {
+
+            const nombre = fila.cells[0]?.innerText.toLowerCase() || "";
+
+            if (nombre.includes(texto)) {
+                fila.style.display = "";
+            } else {
+                fila.style.display = "none";
+            }
+
+        });
+
+    };
+
+}
+
+
 // Expuestos al Scope Global para listeners en el DOM
-window.abrirModalEntrevista = abrirModalEntrevista;
-window.guardarEntrevista = guardarEntrevista;
-window.verExpediente = verExpediente;
-window.cambiarDictamen = cambiarDictamen;
+window.abrirModalEntrevista =
+    abrirModalEntrevista;
+
+window.guardarEntrevista =
+    guardarEntrevista;
+
+window.verExpediente =
+    verExpediente;
+
+window.cambiarDictamen =
+    cambiarDictamen;
