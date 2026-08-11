@@ -6584,20 +6584,16 @@ body.dark-mode .status-banner.status-aprobado .status-banner-badge {
     }
 
     /* 10. Botones de Acción Táctiles */
-    #form-estacion-0 > div,
-    #form-estacion-1 > div,
-    #form-estacion-2 > div,
-    #botones-estacion-3 {
+    [id^="form-estacion-"] > div,
+    [id^="botones-estacion-"] {
         flex-direction: column-reverse !important;
         width: 100% !important;
         gap: 10px !important;
         align-items: stretch !important;
     }
 
-    #form-estacion-0 button,
-    #form-estacion-1 button,
-    #form-estacion-2 button,
-    #botones-estacion-3 button {
+    [id^="form-estacion-"] button,
+    [id^="botones-estacion-"] button {
         width: 100% !important;
         justify-content: center !important;
         padding: 13px 20px !important;

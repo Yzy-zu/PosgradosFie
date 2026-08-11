@@ -62,35 +62,35 @@
 
         <ul class="side-menu top">
             <li>
-                <a href="#inicio" onclick="switchView('inicio', this)" id="nav-inicio" title="Inicio"
+                <a href="#inicio" id="nav-inicio" title="Inicio"
                     data-i18n-title="sb_inicio">
                     <i class="fa-solid fa-house"></i>
                     <span class="text" data-i18n="sb_inicio">Inicio</span>
                 </a>
             </li>
             <li>
-                <a href="#proceso" onclick="switchView('proceso', this)" id="nav-proceso" title="Proceso"
+                <a href="#proceso" id="nav-proceso" title="Proceso"
                     data-i18n-title="sb_proceso">
                     <i class="fa-solid fa-chart-pie"></i>
                     <span class="text" data-i18n="sb_proceso">Proceso</span>
                 </a>
             </li>
             <li>
-                <a href="#convocatorias" onclick="switchView('convocatorias', this)" id="nav-convocatorias"
+                <a href="#convocatorias" id="nav-convocatorias"
                     title="Convocatorias" data-i18n-title="sb_convocatorias">
                     <i class="fa-solid fa-graduation-cap"></i>
                     <span class="text" data-i18n="sb_convocatorias">Convocatorias</span>
                 </a>
             </li>
             <li id="li-nav-documentos" style="display: none;">
-                <a href="#documentos" onclick="switchView('documentos', this)" id="nav-documentos" title="Documentos"
+                <a href="#documentos" id="nav-documentos" title="Documentos"
                     data-i18n-title="sb_documentos">
                     <i class="fa-solid fa-folder-open"></i>
                     <span class="text" data-i18n="sb_documentos">Documentos</span>
                 </a>
             </li>
             <li id="li-nav-admision" style="display: none;">
-                <a href="#admision" onclick="switchView('admision', this)" id="nav-admision" title="Admisión"
+                <a href="#admision" id="nav-admision" title="Admisión"
                     data-i18n-title="sb_admision">
                     <i class="fa-solid fa-clipboard-user"></i>
                     <span class="text" data-i18n="sb_admision">Admisión</span>
@@ -227,9 +227,9 @@
                 </div>
 
                 <!-- Controls -->
-                <button class="carousel-btn prev-btn" onclick="moveCarousel(-1)"><i
+                <button class="carousel-btn prev-btn" onclick="moveCarousel(-1)" aria-label="Anterior"><i
                         class="fa-solid fa-chevron-left"></i></button>
-                <button class="carousel-btn next-btn" onclick="moveCarousel(1)"><i
+                <button class="carousel-btn next-btn" onclick="moveCarousel(1)" aria-label="Siguiente"><i
                         class="fa-solid fa-chevron-right"></i></button>
 
                 <!-- Indicators -->
@@ -387,7 +387,7 @@
             <!-- Contenedor 2: Vista detallada del programa seleccionado -->
             <div id="lista-programas-abiertos" class="lista-convocatorias" style="display: none;">
                 <!-- 🚀 NUEVO BOTÓN DE RETORNO INSTITUCIONAL -->
-                <button onclick="regresarAConvocatorias()" class="btn-custom-return">
+                <button onclick="regresarAConvocatorias()" class="btn-custom-return" aria-label="Regresar a convocatorias">
                     <i class="fa-solid fa-arrow-left"></i> <span data-i18n="conv_cambiar_prog">Cambiar de Programa /
                         Volver</span>
                 </button>
@@ -409,20 +409,14 @@
                 </p>
             </div>
 
-            <div class="stepper-wrapper" style="margin-top: 55px; margin-bottom: 45px; position: relative;">
+            <div class="stepper-wrapper" id="stepper-container" style="margin-top: 55px; margin-bottom: 45px; position: relative;">
                 <!-- Zorro Interactivo -->
                 <img src="css/zorro.png" id="fox-runner" alt="Zorro FIE"
                     style="position: absolute; top: -40px; left: 0; width: 45px; height: auto; z-index: 10; transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transform: translateX(-50%); opacity: 0; pointer-events: none;">
 
                 <div class="step-node active" id="node-0">0<span class="step-label"
                         data-i18n="doc_step_admision">Admisión</span></div>
-                <div class="step-node" id="node-1">1<span class="step-label" id="lbl-step-1"
-                        data-i18n="doc_step_identidad">Identidad y
-                        Generales</span></div>
-                <div class="step-node" id="node-2">2<span class="step-label" id="lbl-step-2"
-                        data-i18n="doc_step_academicos">Académicos</span></div>
-                <div class="step-node" id="node-3">3<span class="step-label" id="lbl-step-3"
-                        data-i18n="doc_step_evaluacion">Evaluación</span></div>
+                <!-- Nodos dinámicos se inyectarán aquí -->
             </div>
 
             <div id="panel-estacion-0" class="station-panel active-panel">
@@ -448,15 +442,15 @@
                         </div>
 
 
-                        <div
+                        <div id="botones-estacion-0"
                             style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; flex-wrap: wrap; gap: 15px;">
                             <button type="button" id="btn-cancelar-solicitud" onclick="cancelarSolicitudActual()"
-                                class="btn-custom-cancel" style="margin: 0;">
+                                class="btn-custom-cancel" style="margin: 0;" aria-label="Cancelar solicitud">
                                 <i class="fa-solid fa-trash icon-anim-trash"></i> <span
                                     data-i18n="doc_btn_cancelar">Cancelar Solicitud</span>
                             </button>
                             <button type="button" class="btn-primary" id="btn-next-0"
-                                style="width: auto; padding: 12px 30px; margin: 0;" onclick="avanzarEstacion(1)"><span
+                                style="width: auto; padding: 12px 30px; margin: 0;" onclick="avanzarEstacion(1)" aria-label="Siguiente paso"><span
                                     data-i18n="doc_est0_btn_confirmar">Confirmar y Continuar</span>
                                 <i class="fa-solid fa-arrow-right icon-anim-next"></i></button>
                         </div>
@@ -464,84 +458,8 @@
                 </div>
             </div>
 
-            <div id="panel-estacion-1" class="station-panel">
-                <div class="premium-panel">
-                    <h3 data-i18n="doc_est1_titulo">Identidad y Datos Generales</h3>
-                    <p style="margin-bottom: 20px; color: var(--color-text-muted);" data-i18n="doc_est1_desc">Sube los
-                        documentos oficiales requeridos. Asegúrate de que sean legibles y en formato PDF.</p>
-                    <form id="form-estacion-1">
-                        <div id="grid-dinamico-identidad" class="file-grid">
-                            <!-- Los requisitos de IDENTIDAD y GENERAL se inyectan aquí -->
-                        </div>
-                        <div style="display:flex; gap:15px; margin-top: 20px;">
-                            <button type="button" class="btn-secondary" onclick="cambiarEstacion(0)"><i
-                                    class="fa-solid fa-arrow-left"></i> <span
-                                    data-i18n="doc_btn_volver">Volver</span></button>
-                            <button type="button" class="btn-primary" id="btn-next-1"
-                                style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(2)"><span
-                                    data-i18n="doc_btn_siguiente">Siguiente
-                                    Estación</span> <i class="fa-solid fa-arrow-right icon-anim-next"></i></button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div id="panel-estacion-2" class="station-panel">
-                <div class="premium-panel">
-                    <h3 data-i18n="doc_est2_titulo">Antecedentes Académicos</h3>
-                    <p style="margin-bottom: 20px; color: var(--color-text-muted);" data-i18n="doc_est2_desc">Carga tus
-                        títulos, certificados e historial académico oficial.</p>
-                    <form id="form-estacion-2">
-                        <div id="grid-dinamico-academico" class="file-grid">
-                            <!-- Los requisitos ACADEMICOS se inyectan aquí -->
-                        </div>
-                        <div style="display:flex; gap:15px; margin-top: 20px;">
-                            <button type="button" class="btn-secondary" onclick="cambiarEstacion(1)"><i
-                                    class="fa-solid fa-arrow-left"></i> <span
-                                    data-i18n="doc_btn_volver">Volver</span></button>
-                            <button type="button" class="btn-primary" id="btn-next-2"
-                                style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(3)"><span
-                                    data-i18n="doc_btn_siguiente">Siguiente
-                                    Estación</span> <i class="fa-solid fa-arrow-right icon-anim-next"></i></button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div id="panel-estacion-3" class="station-panel">
-                <div class="premium-panel">
-                    <h3 data-i18n="doc_est3_titulo">Evaluación y Cartas</h3>
-                    <p style="margin-bottom: 20px; color: var(--color-text-muted);" data-i18n="doc_est3_desc">Sube los
-                        resultados de tus certificaciones, exámenes y
-                        cartas de recomendación.</p>
-                    <form id="form-estacion-3">
-                        <div id="grid-dinamico-evaluacion" class="file-grid">
-                            <!-- Los requisitos de EVALUACION se inyectan aquí -->
-                        </div>
-
-                        <div id="protesta-legal" class="protesta-box">
-                            <label style="display:flex; align-items:start; gap:10px; cursor:pointer;">
-                                <input type="checkbox" id="chk-protesta" style="margin-top:3px;"
-                                    onchange="verificarArchivosEstacion(3)">
-                                <span data-i18n="doc_est3_protesta"><strong>Bajo protesta de decir verdad</strong>,
-                                    declaro que la información y
-                                    documentación proporcionada es auténtica y verídica. Entiendo que al enviar este
-                                    expediente no podré modificarlo después.</span>
-                            </label>
-                        </div>
-                        <div id="botones-estacion-3" style="display:flex; gap:15px; margin-top: 20px;">
-                            <button type="button" class="btn-secondary" onclick="cambiarEstacion(2)"><i
-                                    class="fa-solid fa-arrow-left"></i> <span
-                                    data-i18n="doc_btn_volver">Volver</span></button>
-                            <button type="button" class="btn-primary" id="btn-finalizar"
-                                style="width:auto; padding:12px 30px; background-color: var(--color-success);" disabled
-                                onclick="finalizarProcesoEstaciones()"><span data-i18n="doc_btn_concluir">Concluir y
-                                    Enviar Expediente</span> <i
-                                    class="fa-solid fa-paper-plane icon-anim-send"></i></button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+            <!-- Contenedor para Paneles Dinámicos (Estaciones 1 a N) -->
+            <div id="dynamic-panels-container"></div>
         </section>
 
         <!-- Nueva Sección Dinámica de Admisión (Examen, Curso, etc.) -->
@@ -569,7 +487,7 @@
                     <button onclick="cerrarModalDoc()"
                         style="background: rgba(255,255,255,0.1); border: none; color: white; cursor: pointer; font-size: 16px; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"
                         onmouseover="this.style.background='rgba(255,255,255,0.2)'"
-                        onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                        onmouseout="this.style.background='rgba(255,255,255,0.1)'" aria-label="Cerrar detalles">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
@@ -613,47 +531,48 @@
         <div id="settings-drawer" class="settings-drawer">
             <div class="drawer-header">
                 <h3><i class="fa-solid fa-gear icon-anim-gear"></i> <span data-i18n="st_ajustes">Ajustes</span></h3>
-                <button class="btn-close-drawer" onclick="cerrarDrawerAjustes()"><i
-                        class="fa-solid fa-xmark"></i></button>
+                <button class="btn-close-drawer" onclick="cerrarDrawerAjustes()"
+                    aria-label="Cerrar panel de ajustes" title="Cerrar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
             <div class="drawer-body">
 
+                <!-- Cuenta y Seguridad -->
                 <div class="settings-section">
-                    <h4><i class="fa-solid fa-shield-halved"></i> <span data-i18n="st_cuenta_seguridad">Cuenta y
-                            Seguridad</span></h4>
+                    <h4><i class="fa-solid fa-shield-halved"></i> <span data-i18n="st_cuenta_seguridad">Cuenta y Seguridad</span></h4>
 
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-title" data-i18n="st_cambiar_pass">Cambiar contraseña</span>
-                            <span class="setting-desc" data-i18n="st_actualiza_cred">Actualiza tu credencial de
-                                acceso</span>
+                            <span class="setting-desc" data-i18n="st_actualiza_cred">Actualiza tu credencial de acceso</span>
                         </div>
                         <button class="btn-secondary btn-sm"
                             onclick="abrirModalCambiarPassword(); cerrarDrawerAjustes();"
-                            data-i18n="st_btn_cambiar">Cambiar</button>
+                            data-i18n="st_btn_cambiar" aria-label="Cambiar contraseña">Cambiar</button>
                     </div>
 
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-title" data-i18n="st_cerrar_sesiones">Cerrar otras sesiones</span>
-                            <span class="setting-desc" data-i18n="st_desconecta_otros">Desconecta otros dispositivos
-                                activos</span>
+                            <span class="setting-desc" data-i18n="st_desconecta_otros">Desconecta otros dispositivos activos</span>
                         </div>
                         <button class="btn-outline-danger btn-sm"
                             onclick="Swal.fire('Sesiones', 'Funcionalidad en desarrollo', 'info')"
-                            data-i18n="st_btn_cerrar">Cerrar Sesiones</button>
+                            data-i18n="st_btn_cerrar" aria-label="Cerrar sesiones activas">Cerrar Sesiones</button>
                     </div>
                 </div>
 
+                <!-- Apariencia -->
                 <div class="settings-section">
                     <h4><i class="fa-solid fa-palette"></i> <span data-i18n="st_apariencia">Apariencia</span></h4>
 
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-title" data-i18n="st_tema_visual">Tema Visual</span>
-                            <span class="setting-desc" data-i18n="st_elige_tema">Elige claro, oscuro o del
-                                sistema</span>
+                            <span class="setting-desc" data-i18n="st_elige_tema">Elige claro, oscuro o del sistema</span>
                         </div>
+                        <!-- F-B21 FIX: sincronizado con localStorage en abrirDrawerAjustes() -->
                         <select id="setting-tema" class="form-select setting-select" onchange="cambiarTema(this.value)">
                             <option value="Claro">Claro</option>
                             <option value="Oscuro">Oscuro</option>
@@ -666,13 +585,16 @@
                             <span class="setting-title">Densidad de Interfaz</span>
                             <span class="setting-desc">Espaciado de los elementos</span>
                         </div>
-                        <select class="form-select setting-select">
-                            <option>Cómoda</option>
-                            <option>Compacta</option>
+                        <!-- F-B07 FIX: añadidos id y onchange para persistir y aplicar la preferencia -->
+                        <select id="setting-densidad" class="form-select setting-select"
+                            onchange="aplicarDensidad(this.value)">
+                            <option value="Cómoda">Cómoda</option>
+                            <option value="Compacta">Compacta</option>
                         </select>
                     </div>
                 </div>
 
+                <!-- Regional -->
                 <div class="settings-section">
                     <h4><i class="fa-solid fa-globe"></i> <span data-i18n="st_regional">Regional</span></h4>
 
@@ -689,16 +611,19 @@
                     </div>
                 </div>
 
+                <!-- Notificaciones -->
                 <div class="settings-section">
                     <h4><i class="fa-solid fa-bell"></i> <span data-i18n="st_notificaciones">Notificaciones</span></h4>
 
+                    <!-- F-B08 FIX: checkboxes con id y handler para persistir en localStorage -->
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-title" data-i18n="st_noti_push">Notificaciones Push</span>
                             <span class="setting-desc" data-i18n="st_noti_desc">Avisos dentro de la plataforma</span>
                         </div>
-                        <label class="switch">
-                            <input type="checkbox" checked>
+                        <label class="switch" aria-label="Activar notificaciones push">
+                            <input type="checkbox" id="setting-notif-push" checked
+                                onchange="guardarPreferenciaNotif('setting-notif-push', this.checked)">
                             <span class="slider round"></span>
                         </label>
                     </div>
@@ -708,8 +633,9 @@
                             <span class="setting-title">Alertas por Correo</span>
                             <span class="setting-desc">Actualizaciones de tu expediente</span>
                         </div>
-                        <label class="switch">
-                            <input type="checkbox" checked>
+                        <label class="switch" aria-label="Activar alertas por correo">
+                            <input type="checkbox" id="setting-notif-correo" checked
+                                onchange="guardarPreferenciaNotif('setting-notif-correo', this.checked)">
                             <span class="slider round"></span>
                         </label>
                     </div>
@@ -719,8 +645,9 @@
                             <span class="setting-title">Boletines FIE</span>
                             <span class="setting-desc">Noticias e información relevante</span>
                         </div>
-                        <label class="switch">
-                            <input type="checkbox">
+                        <label class="switch" aria-label="Suscribirse a boletines FIE">
+                            <input type="checkbox" id="setting-notif-boletin"
+                                onchange="guardarPreferenciaNotif('setting-notif-boletin', this.checked)">
                             <span class="slider round"></span>
                         </label>
                     </div>
@@ -729,7 +656,7 @@
             </div>
         </div>
 
-    </main>
+        </main>
 
     <script src="js/authInterceptor.js"></script>
     <script src="js/utils.js"></script>

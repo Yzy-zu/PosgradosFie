@@ -90,7 +90,7 @@
                 <div class="d-flex align-items-center gap-3">
                     <!-- Dropdown de Notificaciones -->
                     <div class="dropdown me-2">
-                        <button class="btn btn-light rounded-circle position-relative border p-2" type="button" id="dropdownNotificaciones" data-bs-toggle="dropdown" aria-expanded="false" style="width: 40px; height: 40px;">
+                        <button class="btn btn-light rounded-circle position-relative border p-2" type="button" id="dropdownNotificaciones" data-bs-toggle="dropdown" aria-expanded="false" style="width: 40px; height: 40px;" aria-label="Alternar menú">
                             <i class="fa-solid fa-bell text-secondary"></i>
                             <span id="badgeNotificaciones" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
                                 0
@@ -514,7 +514,7 @@ VISTA 2: CONVOCATORIAS
         class="btn rounded-pill px-4 text-white"
         id="btnNuevaConvocatoria"
         onclick="crearConvocatoria()"
-        style="background-color: #8a1c24;">
+        style="background-color: #8a1c24;" aria-label="Nueva convocatoria">
 
         <i class="fa-solid fa-plus me-2"></i>
         Nueva convocatoria
@@ -568,7 +568,7 @@ VISTA 2: CONVOCATORIAS
                         type="button"
                         id="btnConvTodas"
                         class="btn btn-outline-secondary rounded-pill px-3 filtro-convocatoria active"
-                        data-estado="TODAS">
+                        data-estado="TODAS" aria-label="Filtrar todas las convocatorias">
 
                         <i class="fa-solid fa-filter me-2"></i>
                         Todas
@@ -578,7 +578,7 @@ VISTA 2: CONVOCATORIAS
                         type="button"
                         id="btnConvActivas"
                         class="btn btn-outline-success rounded-pill px-3 filtro-convocatoria"
-                        data-estado="ACTIVA">
+                        data-estado="ACTIVA" aria-label="Filtrar convocatorias activas">
 
                         <i class="fa-solid fa-circle-check me-2"></i>
                         Activas
@@ -588,7 +588,7 @@ VISTA 2: CONVOCATORIAS
                         type="button"
                         id="btnConvCerradas"
                         class="btn btn-outline-danger rounded-pill px-3 filtro-convocatoria"
-                        data-estado="CERRADA">
+                        data-estado="CERRADA" aria-label="Filtrar convocatorias cerradas">
 
                         <i class="fa-solid fa-lock me-2"></i>
                         Cerradas
@@ -707,7 +707,7 @@ VISTA 2: CONVOCATORIAS
                         class="btn btn-outline-secondary
                                btn-sm rounded-pill px-3
                                filtro-aspirante active"
-                        data-estado="TODOS">
+                        data-estado="TODOS" aria-label="Filtrar todos los aspirantes">
 
                         <i class="fa-solid fa-users me-1"></i>
                         Todos
@@ -719,7 +719,7 @@ VISTA 2: CONVOCATORIAS
                         class="btn btn-outline-warning
                                btn-sm rounded-pill px-3
                                filtro-aspirante"
-                        data-estado="EN_REVISION">
+                        data-estado="EN_REVISION" aria-label="Filtrar aspirantes en revisión">
 
                         <i class="fa-solid fa-clock me-1"></i>
                         En revisión
@@ -731,7 +731,7 @@ VISTA 2: CONVOCATORIAS
                         class="btn btn-outline-success
                                btn-sm rounded-pill px-3
                                filtro-aspirante"
-                        data-estado="APROBADO">
+                        data-estado="APROBADO" aria-label="Filtrar aspirantes aprobados">
 
                         <i class="fa-solid fa-circle-check me-1"></i>
                         Aprobados
@@ -743,7 +743,7 @@ VISTA 2: CONVOCATORIAS
                         class="btn btn-outline-danger
                                btn-sm rounded-pill px-3
                                filtro-aspirante"
-                        data-estado="RECHAZADO">
+                        data-estado="RECHAZADO" aria-label="Filtrar aspirantes rechazados">
 
                         <i class="fa-solid fa-circle-xmark me-1"></i>
                         Rechazados
@@ -844,7 +844,7 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
             <button
                 type="button"
                 class="btn btn-outline-dark rounded-pill px-3"
-                onclick="cargarEntrevistas()">
+                onclick="cargarEntrevistas()" aria-label="Actualizar entrevistas">
 
                 <i class="fa-solid fa-rotate me-2"></i>
                 Actualizar
@@ -890,8 +890,8 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
                             Agenda
                         </small>
 
-                        <strong class="text-dark">
-                            Entrevistas programadas
+                        <strong class="text-dark" id="cnt-entrevistas-programadas">
+                            0 programadas
                         </strong>
                     </div>
 
@@ -925,8 +925,8 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
                             Pendientes
                         </small>
 
-                        <strong class="text-dark">
-                            Sin fecha asignada
+                        <strong class="text-dark" id="cnt-entrevistas-pendientes">
+                            0 sin fecha
                         </strong>
                     </div>
 
@@ -960,8 +960,8 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
                             Docentes
                         </small>
 
-                        <strong class="text-dark">
-                            Evaluadores asignados
+                        <strong class="text-dark" id="cnt-entrevistas-docentes">
+                            0 evaluadores
                         </strong>
                     </div>
 
@@ -1080,7 +1080,7 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
         <button
             type="button"
             class="btn btn-outline-dark rounded-pill px-3"
-            onclick="cargarDictamenes()">
+            onclick="cargarDictamenes()" aria-label="Actualizar dictámenes">
 
             <i class="fa-solid fa-rotate me-2"></i>
             Actualizar resultados
@@ -1229,7 +1229,7 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
                     <button
                         type="button"
                         class="btn btn-outline-secondary btn-sm rounded-pill px-3 filtro-dictamen active"
-                        data-estado="TODOS">
+                        data-estado="TODOS" aria-label="Filtrar todos los dictámenes">
 
                         Todos
 
@@ -1238,7 +1238,7 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
                     <button
                         type="button"
                         class="btn btn-outline-success btn-sm rounded-pill px-3 filtro-dictamen"
-                        data-estado="ACEPTADO">
+                        data-estado="ACEPTADO" aria-label="Filtrar dictámenes aceptados">
 
                         Aceptados
 
@@ -1247,7 +1247,7 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
                     <button
                         type="button"
                         class="btn btn-outline-danger btn-sm rounded-pill px-3 filtro-dictamen"
-                        data-estado="RECHAZADO">
+                        data-estado="RECHAZADO" aria-label="Filtrar dictámenes rechazados">
 
                         Rechazados
 
@@ -1469,12 +1469,12 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
 
                     <div class="modal-header border-0 pb-0">
                         <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-user-clock me-2 text-primary"></i>Agendar Entrevista</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar modal de agendar entrevista"></button>
                     </div>
 
                     <div class="modal-body p-4">
                         <div class="p-3 rounded-3 bg-light mb-3">
-                            <span class="text-muted small d-block">Aspirante seleccionad@:</span>
+                            <span class="text-muted small d-block">Aspirante seleccionado:</span>
                             <strong id="modalEntrevistaNombre" class="fs-6 text-dark">-</strong>
                         </div>
 
@@ -1503,8 +1503,8 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
                     </div>
 
                     <div class="modal-footer border-0 bg-light rounded-bottom-4">
-                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" id="btnGuardarEntrevista" onclick="guardarEntrevista()" class="btn btn-primary btn-sm rounded-pill px-4">
+                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal" aria-label="Cancelar agendar entrevista">Cancelar</button>
+                        <button type="button" id="btnGuardarEntrevista" onclick="guardarEntrevista()" class="btn btn-primary btn-sm rounded-pill px-4" aria-label="Guardar entrevista">
                             <i class="fa-solid fa-floppy-disk me-1"></i> Guardar Entrevista
                         </button>
                     </div>
@@ -1532,7 +1532,7 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
 
                 </h5>
 
-                <button class="btn-close" data-bs-dismiss="modal"></button>
+                <button class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
 
             </div>
 
@@ -1593,7 +1593,7 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
 
                 <button
                     class="btn btn-secondary"
-                    data-bs-dismiss="modal">
+                    data-bs-dismiss="modal" aria-label="Cancelar dictamen">
 
                     Cancelar
 
@@ -1601,7 +1601,7 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
 
                 <button
                     class="btn btn-danger"
-                    onclick="guardarDictamen()">
+                    onclick="guardarDictamen()" aria-label="Guardar dictamen">
 
                     Guardar Dictamen
 
@@ -1621,7 +1621,7 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
             <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
                 <div class="modal-header border-0">
                     <h5 class="modal-title fw-bold"><i class="fa-solid fa-folder-open me-2 text-primary"></i>Expediente del Aspirante</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar expediente"></button>
                 </div>
                 <div class="modal-body p-4" id="modalExpedienteBody">
                     <div class="text-center py-4">
@@ -1630,7 +1630,7 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
                     </div>
                 </div>
                 <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal" aria-label="Cerrar expediente">Cerrar</button>
                 </div>
             </div>
         </div>
@@ -1645,7 +1645,7 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
                         <h5 class="modal-title fw-bold" id="tituloModalConvocatoria" style="color: var(--color-text); font-size: 1.25rem;">
                             <i class="fa-solid fa-bullhorn text-primary me-2"></i> Nueva Convocatoria
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar visor"></button>
                     </div>
                     <div class="modal-body pb-0" style="padding: 25px 25px 0 25px;">
                         <form id="formConvocatoria">
@@ -1819,25 +1819,25 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
     type="button"
     class="btn btn-danger btn-sm px-3"
     id="btnEliminarConvocatoria"
-    style="display: none;">
+    style="display: none;" aria-label="Eliminar convocatoria">
 
     <i class="fa-solid fa-trash me-1"></i>
     Eliminar
 
 </button>
-                                    <button type="button" class="btn btn-secondary px-4" id="btnPrevStep" style="display:none; border-radius: 8px;" onclick="pasoAnterior()">
+                                    <button type="button" class="btn btn-secondary px-4" id="btnPrevStep" style="display:none; border-radius: 8px;" onclick="pasoAnterior()" aria-label="Paso anterior">
                                         <i class="fa-solid fa-chevron-left me-1"></i> Atrás
                                     </button>
                                 </div>
                                 <div>
-                                    <button type="button" class="btn btn-primary px-4" id="btnNextStep" style="border-radius: 8px; font-weight: 600;" onclick="siguientePaso()">
+                                    <button type="button" class="btn btn-primary px-4" id="btnNextStep" style="border-radius: 8px; font-weight: 600;" onclick="siguientePaso()" aria-label="Siguiente paso">
                                         Siguiente <i class="fa-solid fa-chevron-right ms-1"></i>
                                     </button>
                                     <button
     type="button"
     class="btn btn-success px-4"
     id="btnSaveConvocatoria"
-    style="display:none; border-radius: 8px; font-weight: 600;">
+    style="display:none; border-radius: 8px; font-weight: 600;" aria-label="Guardar convocatoria">
 
     <i class="fa-solid fa-floppy-disk me-1"></i>
     Guardar Convocatoria
