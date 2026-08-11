@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const verificarToken = require('../middlewares/auth');
+const validarRol    = require('../middlewares/validarRol');
 
 const {
     obtenerUsuarios,
@@ -11,9 +12,9 @@ const {
     cambiarPassword
 } = require('../controllers/usuarioController');
 
-// PÚBLICAS: No llevan 'verificarToken' para que la tabla cargue libremente
-router.get('/', obtenerUsuarios);
-router.get('/:id', obtenerUsuario);
+// PROTEGIDAS: requieren token. GET / solo para ADMIN; GET /:id para cualquier autenticado.
+router.get('/',    verificarToken, validarRol('ADMIN'), obtenerUsuarios);
+router.get('/:id', verificarToken,                     obtenerUsuario);
 
 // PROTEGIDAS: Estas sí requieren que el frontend mande el token válido
 router.post('/', verificarToken, crearUsuario);

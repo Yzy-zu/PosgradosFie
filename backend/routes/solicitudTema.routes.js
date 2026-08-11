@@ -5,9 +5,9 @@ const auth = require('../middlewares/auth');
 const validarRol = require('../middlewares/validarRol');
 
 // Obtener todos los temas de evaluación de una solicitud
-router.get('/:idSolicitud', auth, validarRol('DOCENTE', 'COORDINADOR', 'ADMINISTRADOR', 'ADMIN'), solicitudTemaController.getTemasDeSolicitud);
+router.get('/:idSolicitud', auth, validarRol('DOCENTE', 'COORDINADOR', 'ADMIN'), solicitudTemaController.getTemasDeSolicitud);
 
 // Actualizar calificación y docente de un tema específico
-router.put('/:idSolicitudTema', auth, validarRol('DOCENTE', 'COORDINADOR', 'ADMINISTRADOR', 'ADMIN'), solicitudTemaController.actualizarCalificacionTema);
+router.put('/:idSolicitudTema', auth, validarRol('DOCENTE', 'COORDINADOR', 'ADMIN'), solicitudTemaController.actualizarCalificacionTema);
 
 module.exports = router;

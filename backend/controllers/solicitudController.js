@@ -149,6 +149,19 @@ const getSolicitudActiva = async (req, res) => {
 const cancelarSolicitud = async (req, res) => {
     try {
         const { id } = req.params;
+
+        // C-11: si el caller es ASPIRANTE, verificar que la solicitud le pertenece
+        if (req.usuario.rol === 'ASPIRANTE') {
+            const [aspirante] = await db.query('SELECT id FROM aspirante WHERE idUsuario = ?', [req.usuario.id]);
+            if (aspirante.length === 0) {
+                return res.status(403).json({ success: false, mensaje: 'Acceso denegado: no se encontró perfil de aspirante.' });
+            }
+            const [ownership] = await db.query('SELECT id FROM solicitud WHERE id = ? AND idAspi = ?', [id, aspirante[0].id]);
+            if (ownership.length === 0) {
+                return res.status(403).json({ success: false, mensaje: 'Acceso denegado: esta solicitud no te pertenece.' });
+            }
+        }
+
         await db.query("UPDATE solicitud SET estado = 'CANCELADO' WHERE id = ?", [id]);
         // Obtener aspirante para notificación dirigida
         const [solCancel] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [id]);
@@ -160,6 +173,7 @@ const cancelarSolicitud = async (req, res) => {
         return res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
     }
 };
+
 
 // Actualizar el estado de la solicitud (Aprobar/Rechazar)
 const actualizarEstadoSolicitud = async (req, res) => {

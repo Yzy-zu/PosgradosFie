@@ -14,7 +14,7 @@ const {
 
 router.get('/explorador', auth, validarRol('ADMIN', 'COORDINADOR', 'SECRETARIO'), getExploradorDocumentos);
 
-router.post('/', upload.single('archivo'), subirDocumento);
+router.post('/', auth, validarRol('ASPIRANTE'), upload.single('archivo'), subirDocumento);
 
 router.put('/reemplazar/:id', auth, validarRol('ASPIRANTE'), upload.single('archivo'), reemplazarDocumento);
 
