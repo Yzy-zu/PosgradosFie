@@ -4,17 +4,19 @@ const emit = require('../utils/socketEmit');
 // Crear una solicitud
 const crearSolicitud = async (req, res) => {
     try {
-        const { idAspi, idC, idConvocatoriaOpcion } = req.body;
+        // M-01: idAspi se deriva del JWT, no del body, para evitar IDOR
+        const { idC, idConvocatoriaOpcion } = req.body;
 
-        if (!idAspi || !idC) {
+        if (!idC) {
             return res.status(400).json({ mensaje: 'Todos los campos son obligatorios.' });
         }
 
-        // Verificar que exista el aspirante
-        const [aspirante] = await db.query('SELECT id FROM aspirante WHERE id = ?', [idAspi]);
-        if (aspirante.length === 0) {
-            return res.status(404).json({ mensaje: 'El aspirante no existe.' });
+        // Resolver el aspirante desde el usuario autenticado
+        const [aspiranteJWT] = await db.query('SELECT id FROM aspirante WHERE idUsuario = ?', [req.usuario.id]);
+        if (aspiranteJWT.length === 0) {
+            return res.status(403).json({ mensaje: 'El usuario autenticado no tiene perfil de aspirante.' });
         }
+        const idAspi = aspiranteJWT[0].id;
 
         // Verificar que exista la convocatoria
         const [convocatoria] = await db.query('SELECT id, tipo FROM convocatorias WHERE id = ?', [idC]);
@@ -70,6 +72,7 @@ const crearSolicitud = async (req, res) => {
         return res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
     }
 };
+
 
 // Obtener la solicitud activa de un aspirante
 const getSolicitudActiva = async (req, res) => {

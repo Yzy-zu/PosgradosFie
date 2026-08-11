@@ -1,6 +1,7 @@
 const db = require('../database/db');
 const WorkflowService = require('../services/workflowService');
 const emit = require('../utils/socketEmit');
+const { ETAPAS } = require('../constants');
 
 const coordinadorController = {
 
@@ -546,7 +547,16 @@ guardarEntrevista: async (req, res) => {
                 ]
             );
 
-        }
+            // M-02: avanzar el workflow solo si la solicitud aún está en la etapa de Entrevista.
+            // Esto sincroniza coordinadorController con entrevistaController (que sí avanzaba la etapa).
+            const [[solicitudEtapa]] = await connection.query(
+                'SELECT idEtapaActual FROM solicitud WHERE id = ?', [id]
+            );
+            if (solicitudEtapa && solicitudEtapa.idEtapaActual === ETAPAS.ENTREVISTA) {
+                await WorkflowService.avanzarEtapa(parseInt(id), connection);
+            }
+
+        } // fin else (nueva entrevista)
 
         // ==========================================
         // Buscar aspirante y usuario
