@@ -1012,9 +1012,17 @@ function actualizarPosicionZorro(salto = true) {
     }
 }
 
-// Actualizar zorro al cambiar el tamaño de la ventana
+// Actualizar mapa al cambiar el tamaño de la ventana con debounce
+let resizeTimer;
 window.addEventListener('resize', () => {
-    actualizarPosicionZorro(false);
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        if (window.mapaProcesoData) {
+            renderizarMapaProceso(window.mapaProcesoData.etapas, window.mapaProcesoData.avance);
+        } else {
+            actualizarPosicionZorro(false);
+        }
+    }, 250);
 });
 
 /**
@@ -1788,6 +1796,9 @@ function renderizarMapaProceso(etapas, avance = 0) {
     const container = document.getElementById('mapa-proceso-container');
     if (!container) return;
 
+    // Guardar para redibujar en resize
+    window.mapaProcesoData = { etapas, avance };
+
     if (!etapas || etapas.length === 0) {
         container.innerHTML = `
             <div style="text-align: center; padding: 40px; color: var(--color-text-muted); margin-top: 100px;">
@@ -2376,13 +2387,21 @@ function hidratarUI(soliData) {
         navAdmision.style.display = 'block';
     }
 
-    // Si ya tiene modalidad, avanzamos a la estación 1 (Identidad) para no empezar desde cero
-    if (soliData.idModalidad && estacionActual === 0) {
-        cambiarEstacion(1);
-    }
-
     // Configurar paneles según el nivel y pasar documentos ya subidos
-    configurarPanelesNivel(nivelAcademicoSeleccionado, soliData.idConvocatoria, soliData.documentosSubidos || []);
+    const promesaPaneles = configurarPanelesNivel(nivelAcademicoSeleccionado, soliData.idConvocatoria, soliData.documentosSubidos || []);
+
+    if (promesaPaneles && typeof promesaPaneles.then === 'function') {
+        promesaPaneles.then(() => {
+            // Si ya tiene modalidad, avanzamos a la estación 1 (Identidad) para no empezar desde cero
+            if (soliData.idModalidad && estacionActual === 0) {
+                cambiarEstacion(1);
+            }
+        });
+    } else {
+        if (soliData.idModalidad && estacionActual === 0) {
+            cambiarEstacion(1);
+        }
+    }
 
     // Siempre hidratar el módulo base de Documentos (Expediente) para garantizar el estado de #view-documentos
     if (typeof moduloDocumentos !== 'undefined') {
@@ -2559,7 +2578,10 @@ function configurarPanelesNivel(nivel, idConvocatoria, documentosSubidos = []) {
         verificarArchivosEstacion(0);
     }
 
-    if (idConvocatoria) cargarRequisitosDocumentales(idConvocatoria, documentosSubidos);
+    if (idConvocatoria) {
+        return cargarRequisitosDocumentales(idConvocatoria, documentosSubidos);
+    }
+    return Promise.resolve();
 }
 
 // ==== MANEJO DE UI PARA INPUTS DE ARCHIVOS ====

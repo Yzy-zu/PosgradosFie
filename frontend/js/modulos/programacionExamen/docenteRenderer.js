@@ -25,12 +25,12 @@ const moduloProgramacionExamenDocenteRenderer = {
             </div>
             
             <form id="form-programar-examen" onsubmit="event.preventDefault();">
-                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                    <div style="flex: 1;">
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <div style="flex: 1 1 200px;">
                         <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--color-text-muted); font-size: 0.9rem;">Fecha del Examen *</label>
                         <input type="date" id="prog-examen-fecha" class="form-control" required style="width: 100%; padding: 10px 12px; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 6px; outline: none; box-sizing: border-box;">
                     </div>
-                    <div style="flex: 1;">
+                    <div style="flex: 1 1 200px;">
                         <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--color-text-muted); font-size: 0.9rem;">Hora del Examen *</label>
                         <input type="time" id="prog-examen-hora" class="form-control" required style="width: 100%; padding: 10px 12px; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 6px; outline: none; box-sizing: border-box;">
                     </div>

@@ -77,14 +77,22 @@
             </div>
         </aside>
 
+        <!-- Overlay móvil para cerrar la barra lateral -->
+        <div id="sidebar-mobile-overlay" class="sidebar-overlay" onclick="toggleSidebarMobile()"></div>
+
         <!-- Área de Contenido Principal -->
         <main class="main-content flex-grow-1 d-flex flex-column bg-light">
             
             <!-- Header Superior -->
             <header class="header-user px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
-                <div>
-                    <h4 class="fw-bold m-0 text-dark" id="tituloVista">Panel de Coordinación</h4>
-                    <p class="text-muted m-0 small">Bienvenido al sistema de gestión académica de Posgrados FIE.</p>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button class="btn-mobile-toggle" id="btn-mobile-sidebar-toggle" onclick="toggleSidebarMobile()" aria-label="Abrir menú">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div>
+                        <h4 class="fw-bold m-0 text-dark" id="tituloVista">Panel de Coordinación</h4>
+                        <p class="text-muted m-0 small">Bienvenido al sistema de gestión académica de Posgrados FIE.</p>
+                    </div>
                 </div>
 
                 <div class="d-flex align-items-center gap-3">

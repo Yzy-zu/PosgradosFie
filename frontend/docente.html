@@ -96,11 +96,17 @@
         </div>
     </nav>
 
+    <!-- Overlay móvil para cerrar la barra lateral -->
+    <div id="sidebar-mobile-overlay" class="sidebar-overlay" onclick="toggleSidebarMobile()"></div>
+
     <main class="main-content" style="position: relative;">
         <header class="topbar-modern" style="padding: 0 20px;">
             <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 20px;">
                 <!-- Izquierda: Título -->
-                <div class="topbar-greeting" style="display: flex; align-items: center; min-width: 180px;">
+                <div class="topbar-greeting" style="display: flex; align-items: center; min-width: 180px; gap: 10px;">
+                    <button class="btn-mobile-toggle" id="btn-mobile-sidebar-toggle" onclick="toggleSidebarMobile()" aria-label="Abrir menú">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
                     <span id="topbar-nombre-usuario" data-i18n="docente_revisor"
                         style="font-weight: 600; font-size: 1.25rem;">Docente</span>
                 </div>
@@ -402,7 +408,12 @@
                             comenzar con la auditoría documental.</p>
                     </div>
 
-                    <div id="contenido-detalle" style="display: none;">
+                    <div id="contenido-detalle" style="display: none; position: relative;">
+                        <!-- Botón Volver (solo visible en móvil mediante CSS de la clase back-to-list-btn) -->
+                        <button id="btn-volver-lista" onclick="volverAListaAspirantes()" class="btn btn-sm btn-outline-secondary d-md-none mb-3" style="display: none;">
+                            <i class="fa-solid fa-arrow-left me-1"></i> Volver a la lista
+                        </button>
+
                         <div class="detail-header"
                             style="border-bottom: 1px solid var(--color-border); padding-bottom: 15px;">
                             <div>
@@ -458,19 +469,21 @@
             <div id="vistaTablaAspirantes">
                 <div class="card"
                     style="padding: 20px; overflow-x: auto; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
-                    <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
-                        <thead>
-                            <tr
-                                style="border-bottom: 2px solid var(--color-border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted);">
-                                <th style="padding: 12px 15px;">Aspirante / Contacto</th>
-                                <th style="padding: 12px 15px;">CURP</th>
-                                <th style="padding: 12px 15px;">Antecedentes Académicos</th>
-                                <th style="padding: 12px 15px;">Posgrado Solicitado</th>
-                                <th style="padding: 12px 15px; text-align: center;">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaAspirantes"></tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
+                            <thead>
+                                <tr
+                                    style="border-bottom: 2px solid var(--color-border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted);">
+                                    <th style="padding: 12px 15px;">Aspirante / Contacto</th>
+                                    <th style="padding: 12px 15px;">CURP</th>
+                                    <th style="padding: 12px 15px;">Antecedentes Académicos</th>
+                                    <th style="padding: 12px 15px;">Posgrado Solicitado</th>
+                                    <th style="padding: 12px 15px; text-align: center;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaAspirantes"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

@@ -541,6 +541,14 @@ function renderizarListaAspirantes(lista) {
     });
 }
 
+// Función para volver a la lista de aspirantes en móvil
+function volverAListaAspirantes() {
+    const layout = document.querySelector('.aspirantes-layout');
+    if (layout) {
+        layout.classList.remove('mobile-detail-active');
+    }
+}
+
 /**
  * Abre el expediente del aspirante seleccionado en el panel de detalle derecho
  */
@@ -552,6 +560,10 @@ async function seleccionarAspirante(id) {
 
     const asp = aspirantes.find(a => a.id === id);
     if (!asp) return;
+
+    // Activar vista detalle en móvil
+    const layout = document.querySelector('.aspirantes-layout');
+    if (layout) layout.classList.add('mobile-detail-active');
 
     // Mostrar panel de contenido y ocultar placeholder
     document.getElementById('placeholder-detalle').style.display = 'none';
@@ -2609,10 +2621,10 @@ const EvaluacionTemasHelper = {
                         <table class="table table-hover align-middle mb-0 custom-premium-table">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Tema</th>
-                                    <th style="width: 130px;">Calificación</th>
-                                    <th>Observaciones</th>
-                                    <th style="width: 110px;">Acción</th>
+                                    <th style="min-width: 150px;">Tema</th>
+                                    <th style="width: 130px; min-width: 100px;">Calificación</th>
+                                    <th style="min-width: 150px;">Observaciones</th>
+                                    <th style="width: 110px; min-width: 120px;">Acción</th>
                                 </tr>
                             </thead>
                             <tbody id="temas-tbody-${idSolicitud}">
@@ -2629,13 +2641,13 @@ const EvaluacionTemasHelper = {
                     <tr data-tema-id="${tema.id}">
                         <td style="font-size: 0.9rem; color: var(--color-text);">${tema.nombreTema || 'Tema'}</td>
                         <td>
-                            <input type="number" class="form-control form-control-sm tema-calif" step="1" min="1" max="10" value="${calif}" placeholder="1-10" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px;">
+                            <input type="number" class="form-control tema-calif" step="1" min="1" max="10" value="${calif}" placeholder="1-10" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px; min-height: 40px;">
                         </td>
                         <td>
-                            <input type="text" class="form-control form-control-sm tema-obs" value="${obs}" placeholder="Opcional" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px;">
+                            <input type="text" class="form-control tema-obs" value="${obs}" placeholder="Opcional" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px; min-height: 40px;">
                         </td>
                         <td>
-                            <button type="button" class="btn btn-sm ${btnClase} btn-guardar-tema" onclick="EvaluacionTemasHelper.guardarTema(this, ${tema.id}, ${idSolicitud})" title="Guardar">
+                            <button type="button" class="btn ${btnClase} btn-guardar-tema w-100" onclick="EvaluacionTemasHelper.guardarTema(this, ${tema.id}, ${idSolicitud})" title="Guardar" style="min-height: 40px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                                 <i class="fa-solid ${btnIcon}"></i> <span class="btn-text">${btnText}</span>
                             </button>
                         </td>

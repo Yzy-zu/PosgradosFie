@@ -99,6 +99,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (profileContainer) {
         profileContainer.addEventListener('click', toggleProfileMenu);
     }
+
+    // Funcionalidad para submenús en táctil
+    document.querySelectorAll('.sidebar .has-submenu').forEach(submenu => {
+        submenu.addEventListener('click', function(e) {
+            // Solo prevenir default si hicimos clic en el enlace principal
+            if (e.target.closest('a') && e.target.closest('a').nextElementSibling && e.target.closest('a').nextElementSibling.classList.contains('sub-menu')) {
+                e.preventDefault();
+                this.classList.toggle('open');
+            }
+        });
+    });
 });
 function cerrarSesion() {
     Swal.fire({

@@ -120,12 +120,11 @@ html {
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     overflow-x: hidden;
-    overflow-y: hidden;   /* sin scroll de página */
+    overflow-y: auto;   /* con scroll de página en móvil */
     background: linear-gradient(135deg, #071527 0%, #0e2a47 50%, #0b1d33 100%);
     background-attachment: fixed;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -6448,15 +6447,34 @@ body.dark-mode .status-banner.status-aprobado .status-banner-badge {
     /* 4. Topbar Moderno Adaptado */
     .topbar-modern {
         margin: -15px -12px 15px -12px !important;
-        padding: 0 15px !important;
-        height: 65px !important;
+        padding: 10px 15px !important;
+        height: auto !important;
+        min-height: 65px !important;
         gap: 8px !important;
         border-radius: 0 !important;
+        flex-wrap: wrap !important;
+    }
+
+    .topbar-filtros {
+        order: 3 !important;
+        flex-basis: 100% !important;
+        margin-top: 10px !important;
+        flex-wrap: wrap !important;
+        justify-content: space-between !important;
+    }
+
+    .topbar-filtros > div {
+        flex: 1 1 48% !important;
+        min-width: 140px !important;
     }
 
     .topbar-greeting {
         overflow: hidden !important;
         max-width: calc(100vw - 170px) !important;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr !important;
     }
 
     .topbar-greeting span {
@@ -6468,13 +6486,13 @@ body.dark-mode .status-banner.status-aprobado .status-banner-badge {
 
     /* 5. Bandeja Mega Dropdown Notificaciones */
     .messages-mega-dropdown {
-        position: fixed !important;
-        top: 65px !important;
-        left: 10px !important;
-        right: 10px !important;
-        width: calc(100vw - 20px) !important;
-        max-width: none !important;
-        max-height: 80vh !important;
+        position: absolute !important;
+        top: calc(100% + 15px) !important;
+        right: -10px !important;
+        left: auto !important;
+        width: 320px !important;
+        max-width: calc(100vw - 20px) !important;
+        max-height: 70vh !important;
         flex-direction: column !important;
         overflow-y: auto !important;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
@@ -6641,6 +6659,35 @@ body.dark-mode .status-banner.status-aprobado .status-banner-badge {
     #modal-doc-enlace {
         width: 100% !important;
         justify-content: center !important;
+    }
+
+    #modal-evaluacion-doc .modal-card {
+        width: 96% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: 95svh !important;
+    }
+
+    /* 13. Vista Split Docente */
+    .aspirantes-layout {
+        flex-direction: column !important;
+        height: auto !important;
+    }
+    
+    .aspirantes-sidebar, .aspirante-detail {
+        width: 100% !important;
+    }
+
+    .aspirantes-layout.mobile-detail-active .aspirantes-sidebar {
+        display: none !important;
+    }
+
+    .aspirantes-layout:not(.mobile-detail-active) .aspirante-detail {
+        display: none !important;
+    }
+
+    #btn-volver-lista {
+        display: inline-block !important;
     }
 }
 
