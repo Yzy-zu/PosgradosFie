@@ -891,7 +891,7 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                idAspi: aspiranteData.id,
+                // idAspi se deriva del JWT en el backend (M-01)
                 idC: idConvocatoria,
                 idConvocatoriaOpcion: idOpcionSeleccionada
             })
@@ -2204,7 +2204,7 @@ async function cargarRequisitosDocumentales(idConvocatoria, documentosSubidos = 
                 const htmlReq = `
                     <div class="${fileBoxClass}">
                         <label><i class="fa-solid fa-file-arrow-up"></i> ${req.descripcion} <span style="color:red;">${isRequired}</span></label>
-                        <input type="file" name="${req.id}" accept=".pdf" onchange="verificarArchivosEstacion(estacionActual)" ${requiredAttr}>
+                        <input type="file" name="${req.id}" accept=".pdf,.jpg,.jpeg,.png" onchange="verificarArchivosEstacion(estacionActual)" ${requiredAttr}>
                         ${displayHtml}
                     </div>
                 `;
@@ -2644,11 +2644,9 @@ async function cargarDictamen() {
 
     try {
 
-        const token = sessionStorage.getItem("token");
-
         const res = await fetch("/api/aspirante/dictamen", {
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${sessionStorage.getItem("token")}`
             }
         });
 
@@ -2656,19 +2654,26 @@ async function cargarDictamen() {
 
         const dictamen = await res.json();
 
-        if (!dictamen) return;
+        // M-08: el backend ahora retorna un campo 'estado' que distingue los tres casos
+        // SIN_SOLICITUD → no hay proceso activo; no mostrar nada
+        if (!dictamen || dictamen.estado === 'SIN_SOLICITUD') return;
 
-        // Si tienes un elemento donde mostrarlo
-        const estado = document.getElementById("estadoDictamen");
-        const observacion = document.getElementById("observacionDictamen");
+        const elEstado      = document.getElementById("estadoDictamen");
+        const elObservacion = document.getElementById("observacionDictamen");
 
-        if (estado) {
-            estado.textContent = dictamen.resultado || "Pendiente";
+        if (dictamen.estado === 'EN_PROCESO') {
+            if (elEstado)      elEstado.textContent      = "En proceso";
+            if (elObservacion) elObservacion.textContent = "Tu proceso de admisión está en curso.";
+            return;
         }
 
-        if (observacion) {
-            observacion.textContent =
-                dictamen.observacion || "Sin observaciones.";
+        // FINALIZADO: mostrar resultado real
+        if (elEstado) {
+            elEstado.textContent = dictamen.resultado || "Pendiente";
+        }
+        if (elObservacion) {
+            // El backend retorna el campo 'motivo' (no 'observacion')
+            elObservacion.textContent = dictamen.motivo || "Sin observaciones.";
         }
 
     } catch (error) {

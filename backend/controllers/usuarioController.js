@@ -101,18 +101,23 @@ const crearUsuario = async (req, res) => {
 
 // Actualizar usuario
 const actualizarUsuario = async (req, res) => {
+    let connection;
     try {
         const { id } = req.params;
         const { correo, password, rol, activo, detalles } = req.body;
 
+        // M-07: usar transacción para que usuario + tabla de detalle sean atómicos
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+
         if (password && password.trim() !== '') {
             const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-            await db.query(
+            await connection.query(
                 'UPDATE usuario SET correo = ?, contraseña = ?, rol = ?, activo = ? WHERE id = ?',
                 [correo || '', passwordHash, rol || 'ASPIRANTE', activo !== undefined ? activo : 1, id]
             );
         } else {
-            await db.query(
+            await connection.query(
                 'UPDATE usuario SET correo = ?, rol = ?, activo = ? WHERE id = ?',
                 [correo || '', rol || 'ASPIRANTE', activo !== undefined ? activo : 1, id]
             );
@@ -120,42 +125,47 @@ const actualizarUsuario = async (req, res) => {
 
         if (detalles) {
             if (rol === 'ASPIRANTE') {
-                const [exists] = await db.query('SELECT id FROM aspirante WHERE idUsuario = ?', [id]);
+                const [exists] = await connection.query('SELECT id FROM aspirante WHERE idUsuario = ?', [id]);
                 if (exists.length > 0) {
-                    await db.query('UPDATE aspirante SET nombre=?, primerApellido=?, segundoApellido=?, curp=?, rfc=?, telefono=?, direccion=?, fechaNacimiento=?, estadoCivil=?, licenciatura=?, institucionLicenciatura=?, fechaEgreso=?, fechaTitulacion=?, promedio=?, otrosEstudios=?, ocupacion=?, direccionPostal=?, ciudadOcupacion=?, estadoOcupacion=?, telefonoOcupacion=? WHERE idUsuario=?', 
+                    await connection.query('UPDATE aspirante SET nombre=?, primerApellido=?, segundoApellido=?, curp=?, rfc=?, telefono=?, direccion=?, fechaNacimiento=?, estadoCivil=?, licenciatura=?, institucionLicenciatura=?, fechaEgreso=?, fechaTitulacion=?, promedio=?, otrosEstudios=?, ocupacion=?, direccionPostal=?, ciudadOcupacion=?, estadoOcupacion=?, telefonoOcupacion=? WHERE idUsuario=?',
                     [detalles.nombre||'', detalles.primerApellido||'', detalles.segundoApellido||'', detalles.curp||'', detalles.rfc||'', detalles.telefono||'', detalles.direccion||'', detalles.fechaNacimiento||new Date(), detalles.estadoCivil||'SOLTERO', detalles.licenciatura||'', detalles.institucionLicenciatura||'', detalles.fechaEgreso||null, detalles.fechaTitulacion||null, detalles.promedio||null, detalles.otrosEstudios||'', detalles.ocupacion||'', detalles.direccionPostal||null, detalles.ciudadOcupacion||'', detalles.estadoOcupacion||'', detalles.telefonoOcupacion||null, id]);
                 } else {
-                    await db.query('INSERT INTO aspirante (idUsuario, nombre, primerApellido, segundoApellido, curp, rfc, telefono, direccion, fechaNacimiento, estadoCivil, licenciatura, institucionLicenciatura, fechaEgreso, fechaTitulacion, promedio, otrosEstudios, ocupacion, direccionPostal, ciudadOcupacion, estadoOcupacion, telefonoOcupacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    await connection.query('INSERT INTO aspirante (idUsuario, nombre, primerApellido, segundoApellido, curp, rfc, telefono, direccion, fechaNacimiento, estadoCivil, licenciatura, institucionLicenciatura, fechaEgreso, fechaTitulacion, promedio, otrosEstudios, ocupacion, direccionPostal, ciudadOcupacion, estadoOcupacion, telefonoOcupacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                     [id, detalles.nombre||'', detalles.primerApellido||'', detalles.segundoApellido||'', detalles.curp||'', detalles.rfc||'', detalles.telefono||'', detalles.direccion||'', detalles.fechaNacimiento||new Date(), detalles.estadoCivil||'SOLTERO', detalles.licenciatura||'', detalles.institucionLicenciatura||'', detalles.fechaEgreso||null, detalles.fechaTitulacion||null, detalles.promedio||null, detalles.otrosEstudios||'', detalles.ocupacion||'', detalles.direccionPostal||null, detalles.ciudadOcupacion||'', detalles.estadoOcupacion||'', detalles.telefonoOcupacion||null]);
                 }
             } else if (rol === 'DOCENTE') {
-                const [exists] = await db.query('SELECT id FROM docente WHERE idUsua = ?', [id]);
+                const [exists] = await connection.query('SELECT id FROM docente WHERE idUsua = ?', [id]);
                 if (exists.length > 0) {
-                    await db.query('UPDATE docente SET nombre=?, primerApellido=?, segundoApellido=?, cargo=?, especialidad=?, cubiculo=? WHERE idUsua=?',
+                    await connection.query('UPDATE docente SET nombre=?, primerApellido=?, segundoApellido=?, cargo=?, especialidad=?, cubiculo=? WHERE idUsua=?',
                     [detalles.nombre||'', detalles.primerApellido||'', detalles.segundoApellido||'', detalles.cargo||'', detalles.especialidad||'', detalles.cubiculo||'', id]);
                 } else {
-                    await db.query('INSERT INTO docente (idUsua, nombre, primerApellido, segundoApellido, cargo, especialidad, cubiculo) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                    await connection.query('INSERT INTO docente (idUsua, nombre, primerApellido, segundoApellido, cargo, especialidad, cubiculo) VALUES (?, ?, ?, ?, ?, ?, ?)',
                     [id, detalles.nombre||'', detalles.primerApellido||'', detalles.segundoApellido||'', detalles.cargo||'', detalles.especialidad||'', detalles.cubiculo||'']);
                 }
             } else if (rol === 'SECRETARIO') {
-                const [exists] = await db.query('SELECT id FROM secretario WHERE idUsua = ?', [id]);
+                const [exists] = await connection.query('SELECT id FROM secretario WHERE idUsua = ?', [id]);
                 if (exists.length > 0) {
-                    await db.query('UPDATE secretario SET area=?, extension=? WHERE idUsua=?',
+                    await connection.query('UPDATE secretario SET area=?, extension=? WHERE idUsua=?',
                     [detalles.area||'', detalles.extension||'', id]);
                 } else {
-                    await db.query('INSERT INTO secretario (idUsua, area, extension) VALUES (?, ?, ?)',
+                    await connection.query('INSERT INTO secretario (idUsua, area, extension) VALUES (?, ?, ?)',
                     [id, detalles.area||'', detalles.extension||'']);
                 }
             }
         }
 
+        await connection.commit();
         if (req.app.get('io')) emit.aAdmin(req);
         return res.json({ success: true, mensaje: 'Usuario actualizado correctamente' });
     } catch (error) {
+        if (connection) await connection.rollback();
         console.error('Error en actualizarUsuario:', error);
         return res.status(500).json({ success: false, mensaje: 'Error al actualizar usuario' });
+    } finally {
+        if (connection) connection.release();
     }
 };
+
 
 // Eliminar usuario
 const eliminarUsuario = async (req, res) => {

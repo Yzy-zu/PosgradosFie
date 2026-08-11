@@ -12,19 +12,27 @@ const storage = multer.diskStorage({
     }
 });
 
-// Filtro de archivos
-const fileFilter = (req, file, cb) => {
-    const tiposPermitidos = [
-        'application/pdf',
-        'image/jpeg',
-        'image/png'
-    ];
+// M-05: mapa estricto MIME → extensiones permitidas.
+// Valida tanto el MIME declarado como la extensión real del archivo
+// para evitar spoofing con Content-Type falso.
+const MIME_EXTENSIONES = {
+    'application/pdf': ['.pdf'],
+    'image/jpeg':      ['.jpg', '.jpeg'],
+    'image/png':       ['.png'],
+};
 
-    if (tiposPermitidos.includes(file.mimetype)) {
-        cb(null, true);
-    } else {
-        cb(new Error('Tipo de archivo no permitido'), false);
+const fileFilter = (req, file, cb) => {
+    const extensionesPermitidas = MIME_EXTENSIONES[file.mimetype];
+    if (!extensionesPermitidas) {
+        return cb(new Error('Tipo de archivo no permitido'), false);
     }
+
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!extensionesPermitidas.includes(ext)) {
+        return cb(new Error('La extensión del archivo no coincide con su tipo declarado'), false);
+    }
+
+    cb(null, true);
 };
 
 const upload = multer({
