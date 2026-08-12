@@ -2664,20 +2664,33 @@ function updateCarousel() {
         if (index === currentSlide) ind.classList.add('active');
         else ind.classList.remove('active');
     });
-    // La altura la maneja CSS (aspect-ratio: 16/5) — sin dependencia de onload
+
+    clearInterval(autoSlideInterval);
+
+    const videos = carouselTrack.querySelectorAll('video');
+    videos.forEach(v => v.pause());
+
+    const currentSlideElement = carouselTrack.children[currentSlide];
+    if (currentSlideElement) {
+        const videoInSlide = currentSlideElement.querySelector('video');
+        if (videoInSlide) {
+            videoInSlide.currentTime = 0;
+            videoInSlide.play().catch(e => console.warn('Autoplay blocked:', e));
+        } else {
+            startAutoSlide();
+        }
+    }
 }
 
 function moveCarousel(direction) {
     if (totalSlides === 0) return;
     currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
     updateCarousel();
-    resetAutoSlide();
 }
 
 function goToSlide(index) {
     currentSlide = index;
     updateCarousel();
-    resetAutoSlide();
 }
 
 function startAutoSlide() {
@@ -2720,7 +2733,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const isVideo = aviso.tipo === 'video' || ['mp4', 'webm', 'ogg', 'mov'].includes(ext);
 
                     const mediaHTML = isVideo 
-                        ? `<video src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" autoplay muted loop playsinline style="object-fit: cover; width: 100%; height: 100%;"></video>`
+                        ? `<video src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" muted playsinline controls style="object-fit: cover; width: 100%; height: 100%;"></video>`
                         : `<img src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" alt="${aviso.titulo}" style="object-fit: cover; width: 100%; height: 100%;">`;
 
                     trackHTML += `
@@ -2736,11 +2749,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 carouselTrack.innerHTML = trackHTML;
                 indicatorsContainer.innerHTML = indicatorsHTML;
 
+                carouselTrack.querySelectorAll('video').forEach(video => {
+                    video.addEventListener('ended', () => {
+                        moveCarousel(1);
+                    });
+                });
+
                 carouselIndicators = Array.from(indicatorsContainer.querySelectorAll('.indicator'));
                 totalSlides = avisos.length;
                 currentSlide = 0;
                 updateCarousel();
-                startAutoSlide();
             }
         } catch (e) {
             console.error('Error al cargar avisos:', e);
