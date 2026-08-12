@@ -14,7 +14,7 @@ const moduloDocumentosRenderer = {
             if (encabezado) encabezado.style.display = 'block';
             if (stepper) stepper.style.display = 'flex';
 
-            // F-C03 FIX: Leer sessionStorage primero para mantener el estado exacto tras recargar (F5)
+            // leer sessionStorage para mantener estado tras recarga
             const idSoli = soliData.id;
             let estacionGuardada = parseInt(sessionStorage.getItem(`estacion_actual_soli_${idSoli}`));
             if (isNaN(estacionGuardada)) {

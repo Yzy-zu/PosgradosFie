@@ -20,7 +20,7 @@ window.fetch = async (resource, config = {}) => {
     const headers =
         new Headers(config.headers || {});
 
-    // Agregar el token únicamente cuando exista
+    //agregar token si existe
     if (token && !headers.has("Authorization")) {
         headers.set(
             "Authorization",

@@ -35,7 +35,7 @@ const obtenerOpcionesPorPosgradoId = async (req, res) => {
     }
 };
 
-// Crear nueva opción de posgrado
+
 const crearOpcionPosgrado = async (req, res) => {
     const { posgrado_id, nombre, descripcion, activo } = req.body;
     try {

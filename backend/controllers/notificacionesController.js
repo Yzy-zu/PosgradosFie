@@ -141,7 +141,7 @@ const actualizarNotificacion = async (req, res) => {
     }
 };
 
-// Eliminar notificación
+
 const eliminarNotificacion = async (req, res) => {
     try {
         const { id } = req.params;

@@ -5,7 +5,7 @@ socket.on('connect', () => {
     socket.emit('registrarSala', { rol: 'ADMIN', idUsuario: usr.id });
 });
 socket.on('actualizacionGlobal', () => {
-    // Recargar vista actual si hay un cambio en el sistema
+    //recargar vista actual
     const currentHash = window.location.hash.replace("#", "");
     if (currentHash === 'dashboard' || currentHash === '') {
         if (typeof cargarDashboard === 'function') cargarDashboard();
@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// Escuchar cambios en la URL (Botón Atrás/Adelante o clics en el menú)
+//escuchar cambios en url
 window.addEventListener("hashchange", activarSeccionPorHash);
 
 function validarSesion() {
@@ -106,7 +106,7 @@ function configurarBotones() {
         btnCerrar.addEventListener("click", cerrarSesion);
     }
 
-    // Asegurarnos de limpiar el formulario cuando se abre el modal para "Nuevo Usuario"
+    //limpiar formulario de nuevo usuario
     const btnNuevoUsuario = document.querySelector('[data-bs-target="#modalUsuario"]');
     if (btnNuevoUsuario) {
         btnNuevoUsuario.addEventListener("click", () => {
@@ -165,7 +165,7 @@ function activarSeccionPorHash() {
         seccionMostrar.classList.add("fade-in");
     }
 
-    // FASE 4: Evitar que la página se quede abajo al cambiar de sección
+    // evitar que la página se quede abajo
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -175,7 +175,7 @@ function configurarNavegacion() {
     enlaces.forEach(enlace => {
         enlace.addEventListener("click", (e) => {
             e.preventDefault();
-            // Al hacer clic, simplemente cambiamos la URL. 
+            //cambiar url
             // Esto dispara el evento 'hashchange' automáticamente.
             const target = e.currentTarget.getAttribute("data-target");
             window.location.hash = `#${target}`;
@@ -415,7 +415,7 @@ function renderizarCamposRol(rol, detalles = {}) {
     contenedorDetalles.innerHTML = html;
 }
 
-// Escuchar cambios en el selector de rol
+//escuchar cambios en rol
 document.getElementById("rol")?.addEventListener("change", function (e) {
     renderizarCamposRol(e.target.value);
 });
@@ -441,10 +441,10 @@ function toggleDetallesUsuario() {
     }
 }
 
-// Reset del modal al abrirlo para "Nuevo Usuario"
+//resetear modal para nuevo usuario
 document.getElementById("modalUsuario")?.addEventListener('show.bs.modal', function (event) {
     const isEdit = document.getElementById("idUsuarioForm").value !== "";
-    // Si no tiene ID asignado (se abrió por el botón de + Nuevo)
+    //abierto desde botón nuevo
     if (!isEdit && !event.relatedTarget?.closest('.btn-sm')) {
         document.getElementById("formUsuario").reset();
         document.getElementById("idUsuarioForm").value = "";
@@ -534,7 +534,7 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
             return;
         }
 
-        // Validación con Expresiones Regulares (Regex) para Aspirantes
+        //validación regex para aspirantes
         const regexLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
         const regexCurp = /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z\d]\d$/;
         const regexTelefono = /^\d{10}$/;
@@ -1299,7 +1299,7 @@ async function eliminarConvocatoria(id) {
     }
 }
 // ==========================================
-// MÓDULO ASPIRANTES
+//módulo aspirantes
 // ==========================================
 
 async function cargarAspirantes() {
@@ -1580,7 +1580,7 @@ function toggleSolicitudDocs(containerId, chevronId) {
     }
 }
 
-// Funciones de Filtrado UI para Aspirantes
+//funciones de filtrado para aspirantes
 window.filtrarTablaAspirantesUI = function () {
     const texto = (document.getElementById('filtro-aspirantes-texto')?.value || '').toLowerCase();
     const programa = (document.getElementById('filtro-aspirantes-programa')?.value || '').toLowerCase();
@@ -2088,7 +2088,7 @@ async function evaluarDocumentoAdmin(idDocumento, estadoValidacion, idSolicitud,
                 showConfirmButton: false
             });
             
-            // F-C05 FIX: Actualizar el DOM localmente sin recargar el modal
+            // actualizar dom localmente
             const badge = document.getElementById(`doc-badge-admin-${idDocumento}`);
             if (badge) {
                 let badgeClass = estadoValidacion === "APROBADO" ? "success" : "danger";
@@ -2672,7 +2672,7 @@ document.addEventListener('click', function (event) {
         notificationMenu.classList.remove('show');
     }
 
-    // profileDropdown ya puede estar manejado en utils.js, pero lo agregamos por seguridad
+    // vincular dropdown de perfil
     const profileDropdown = document.getElementById('profile-dropdown');
     if (profileDropdown && profileDropdown.classList.contains('show') && !event.target.closest('.profile-container')) {
         profileDropdown.classList.remove('show');
@@ -3100,7 +3100,7 @@ function renderExplorador() {
             itemsHTML = `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay documentos disponibles en el sistema.</p></div>`;
         }
         
-        // Agregar carpeta fija del Gestor de Archivos Físico (Linux style)
+        //agregar carpeta del gestor de archivos
         itemsHTML += `
             <div class="explorer-folder" onclick="exploradorEntrarDirectorio('filemanager', '/', 'Archivos Internos')">
                 <i class="fa-solid fa-hard-drive explorer-icon" style="color: #ef476f;"></i>

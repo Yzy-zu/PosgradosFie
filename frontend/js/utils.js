@@ -16,7 +16,7 @@ function ocultarLoader() {
 }
 
 // ==== SIDEBAR TOGGLE ====
-// Bug 5 Fix: implementación canónica con toggle sincronizado
+// sincronizar toggle
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const mainContent = document.querySelector('.main-content');
@@ -64,29 +64,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const temaSeleccionado = localStorage.getItem('temaSeleccionado') || 'Claro';
     cambiarTema(temaSeleccionado);
 
-    // F-B21 FIX: sincronizar el select de tema al abrir la página
-    // (antes solo se sincronizaba si el elemento ya existía — race condition en SPAs)
+    // sincronizar select de tema al abrir página
     const selectTema = document.getElementById('setting-tema');
     if (selectTema) selectTema.value = temaSeleccionado;
 
-    // F-B07 FIX: restaurar y vincular el select de densidad de interfaz
-    const densidad = localStorage.getItem('densidadInterfaz') || 'Cómoda';
-    const selectDensidad = document.getElementById('setting-densidad');
-    if (selectDensidad) {
-        selectDensidad.value = densidad;
-        aplicarDensidad(densidad);
-    }
 
-    // F-B08 FIX: restaurar estado de los toggles de notificaciones
-    ['setting-notif-push', 'setting-notif-correo', 'setting-notif-boletin'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            const stored = localStorage.getItem(id);
-            if (stored !== null) el.checked = stored === 'true';
-        }
-    });
 
-    // Cierra el menú de perfil si se hace clic fuera de él
+
+
+    //cerrar menú de perfil si se hace clic fuera
     window.addEventListener('click', function () {
         const dropdown = document.getElementById('profile-dropdown');
         if (dropdown && dropdown.classList.contains('show')) {
@@ -140,7 +126,7 @@ function toggleProfileMenu(event) {
 
 // Inicializar eventos globales al cargar el DOM
 document.addEventListener("DOMContentLoaded", () => {
-    // Cierra el menú si se hace clic fuera de él
+    //cerrar menú de perfil si se hace clic fuera
     window.addEventListener('click', function () {
         const dropdown = document.getElementById('profile-dropdown');
         if (dropdown && dropdown.classList.contains('show')) {
@@ -299,7 +285,7 @@ function cambiarTema(tema) {
     localStorage.setItem('temaSeleccionado', tema);
 }
 
-// Escuchar cambios a nivel de sistema operativo si está en modo "Sistema"
+//escuchar cambios de tema del sistema operativo
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
     const tema = localStorage.getItem('temaSeleccionado') || 'Claro';
     if (tema === 'Sistema') {
@@ -372,42 +358,16 @@ async function abrirArchivoSeguro(rutaArchivo) {
     }
 }
 
-// ==== F-B07 FIX: DENSIDAD DE INTERFAZ ====
-// Aplica padding CSS real según la preferencia del usuario.
-function aplicarDensidad(densidad) {
-    const root = document.documentElement;
-    if (densidad === 'Compacta') {
-        root.style.setProperty('--density-padding', '6px 12px');
-        root.style.setProperty('--density-gap', '6px');
-        root.style.setProperty('--density-row-height', '36px');
-    } else {
-        // Cómoda (default)
-        root.style.setProperty('--density-padding', '10px 18px');
-        root.style.setProperty('--density-gap', '12px');
-        root.style.setProperty('--density-row-height', '48px');
-    }
-    localStorage.setItem('densidadInterfaz', densidad);
-}
 
-// ==== F-B08 FIX: PERSISTENCIA DE NOTIFICACIONES ====
-// Persiste el estado checked de los toggles en localStorage.
-function guardarPreferenciaNotif(id, checked) {
-    localStorage.setItem(id, String(checked));
-}
 
-// ==== F-B21 FIX: SINCRONIZAR DRAWER AL ABRIRLO ====
-// Garantiza que todos los controles del drawer reflejen el estado guardado
-// CADA VEZ que se abre, no solo al cargar la página.
+// sincronizar controles del drawer al abrirlo
 function sincronizarDrawerAjustes() {
     // Tema
     const tema = localStorage.getItem('temaSeleccionado') || 'Claro';
     const selTema = document.getElementById('setting-tema');
     if (selTema) selTema.value = tema;
 
-    // Densidad
-    const densidad = localStorage.getItem('densidadInterfaz') || 'Cómoda';
-    const selDens = document.getElementById('setting-densidad');
-    if (selDens) selDens.value = densidad;
+
 
     // Idioma
     const idiomaGuardado = localStorage.getItem('idiomaSeleccionado');
@@ -420,14 +380,7 @@ function sincronizarDrawerAjustes() {
         if (opt) selIdioma.value = opt.value;
     }
 
-    // Toggles de notificaciones
-    ['setting-notif-push', 'setting-notif-correo', 'setting-notif-boletin'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            const stored = localStorage.getItem(id);
-            if (stored !== null) el.checked = stored === 'true';
-        }
-    });
+
 }
 
 

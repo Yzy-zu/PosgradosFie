@@ -224,7 +224,7 @@ const actualizarEstadoSolicitud = async (req, res) => {
 const actualizarModalidad = async (req, res) => {
     try {
         const { id } = req.params;
-        const { tipoAdmision } = req.body; // El frontend ahora envía el idModalidad aquí por retrocompatibilidad temporal de variable
+        const { tipoAdmision } = req.body;
         const idModalidad = parseInt(tipoAdmision);
 
         // Verificar si la solicitud pertenece a una convocatoria de Doctorado
@@ -268,7 +268,7 @@ const actualizarModalidad = async (req, res) => {
 };
 
 
-// Enviar expediente a revisión (Bug 2 Fix: validación server-side de documentos obligatorios)
+// enviar expediente a revisión
 const enviarExpediente = async (req, res) => {
     try {
         const { id } = req.params;
@@ -312,8 +312,7 @@ const enviarExpediente = async (req, res) => {
             }
         }
 
-        // Todos los documentos obligatorios están presentes — cambiar estado a revisión, SIN avanzar etapa
-        // La etapa se avanzará automáticamente cuando el evaluador apruebe todos los documentos
+        // cambiar estado a revisión
         await db.query("UPDATE solicitud SET estado = 'EN_REVISION' WHERE id = ?", [id]);
         // Notificar a ADMIN y DOCENTE (aspirante envíó su expediente)
         emit.aAdminYDocente(req);
@@ -325,7 +324,7 @@ const enviarExpediente = async (req, res) => {
 };
 
 
-// Obtener modalidades (Nuevos Endpoints Fase 1)
+// obtener modalidades
 const getModalidadesIngreso = async (req, res) => {
     try {
         const [resultados] = await db.query(
@@ -592,7 +591,7 @@ const getMapaProceso = async (req, res) => {
             [solicitud.idModalidad]
         );
 
-        // Agregar etapa inicial "Convocatoria"
+        // agregar etapa inicial
         etapas.unshift({ orden: 0, id: 'convocatoria', nombre: 'Convocatoria' });
 
         // 3. Mapear estado

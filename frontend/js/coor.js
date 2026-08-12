@@ -18,8 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarNotificaciones();
     cargarPerfilCoordinador();
 
-    // F-B06 FIX: inyectar nombre real del coordinador en el topbar.
-    // El HTML tenía "Coordinador" hardcodeado; ahora se lee de sessionStorage.
+    // inyectar nombre del coordinador en topbar
     try {
         const usuStr = sessionStorage.getItem('usuario');
         if (usuStr) {
@@ -68,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // F-B09 FIX: resetear el modal de entrevista al cerrarse para no arrastrar
+    // resetear modal de entrevista al cerrar
     // datos del aspirante anterior a la próxima apertura.
     const modalEntrevistaEl = document.getElementById('modalEntrevista');
     if (modalEntrevistaEl) {
@@ -121,7 +120,7 @@ function navegar() {
         document.getElementById('vista-inicio')?.classList.remove('d-none');
     }
 
-    // F-B17 FIX: activar link en el sidebar con fallback a #inicio si no coincide el hash
+    // activar link en sidebar
     const activeLink = document.querySelector(`.sidebar nav a[href="${hash}"]`);
     if (activeLink) {
         activeLink.classList.add('active');
@@ -130,7 +129,7 @@ function navegar() {
         if (inicioLink) inicioLink.classList.add('active');
     }
 
-    // FASE 4: Evitar que la página se quede abajo al cambiar de vista
+    // evitar que la página se quede abajo
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Cargar módulos
@@ -843,7 +842,7 @@ async function cargarEntrevistas() {
             tbody.appendChild(tr);
         });
 
-        // F-B13 FIX: actualizar métricas en las tarjetas de resumen de entrevistas
+        // actualizar métricas de entrevistas
         let numProg = 0, numPend = 0;
         const docentesSet = new Set();
         entrevistas.forEach(ent => {
@@ -1204,7 +1203,7 @@ async function verExpediente(idAspirante) {
                 }
             );
 
-        // F-05 FIX: verificar res.ok ANTES de llamar .json() para evitar error
+        //verificar respuesta exitosa antes de parsear json
         // si el servidor devuelve un cuerpo no-JSON en respuestas de error.
         if (!respuesta.ok) {
             const resultado = await respuesta.json().catch(() => ({}));
@@ -1423,7 +1422,7 @@ async function cargarDictamenes() {
                 }
             );
 
-        // F-11 FIX: verificar res.ok antes de parsear JSON para evitar
+        //verificar respuesta exitosa antes de parsear json
         // asignar a listaDictamenes una respuesta de error como objeto.
         if (!res.ok) {
             throw new Error(`Error del servidor: ${res.status}`);
@@ -1603,7 +1602,7 @@ function configurarBuscadorDictamenes() {
 
 }
 
-// F-01 FIX: Segunda definición duplicada de configurarBuscadorDictamenes eliminada.
+
 
 function configurarFiltrosDictamenes() {
 
@@ -1758,10 +1757,7 @@ async function cambiarDictamen(
 // ==========================================
 // 13. Guardar Dictamen
 // ==========================================
-// F-04 FIX: guardarDictamen unificado al mismo endpoint PUT que usa cambiarDictamen.
-// Antes usaba POST /api/coordinador/dictamen/:id con {resultado, motivo}.
-// Ahora usa PUT /api/coordinador/solicitud/:id/dictamen con {estado, motivo},
-// igual que cambiarDictamen(), eliminando el flujo duplicado.
+//unificar guardado y cambio de dictamen
 async function guardarDictamen() {
 
     const id = document.getElementById("dictamenSolicitud").value;
@@ -1773,7 +1769,7 @@ async function guardarDictamen() {
         return;
     }
 
-    // F-10 FIX: validar motivo obligatorio si el dictamen es de rechazo
+    // validar motivo obligatorio para rechazo
     if ((resultado === 'RECHAZADO' || resultado === 'NO_ACEPTADO') && !motivo.trim()) {
         Swal.fire('Observaciones requeridas', 'Debes escribir el motivo del rechazo antes de guardar.', 'warning');
         return;
@@ -1919,11 +1915,7 @@ async function cargarNotificaciones() {
 }
 
 
-// F-14 FIX: abrirModalProgramar() eliminada — era un duplicado incompleto
-// de abrirModalEntrevista(), que ya gestiona correctamente el mismo modal.
 
-// F-02 FIX: Segunda definición duplicada de configurarBuscadorEntrevistas eliminada.
-// La versión canónica (con dataset.listenerBusqueda y addEventListener) está en la línea ~1123.
 
 function cargarPerfilCoordinador() {
 

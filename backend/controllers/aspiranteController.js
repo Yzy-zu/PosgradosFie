@@ -49,7 +49,7 @@ const registrarAspirante = async (req, res) => {
             return res.status(409).json({ mensaje: 'La CURP ya está registrada.' });
         }
 
-        // Verificar RFC duplicado (antes era fire-and-forget, ahora se espera correctamente)
+        // Verificar RFC duplicado
         const [resultadoRfc] = await db.query('SELECT id FROM aspirante WHERE rfc = ?', [rfc]);
         if (resultadoRfc.length > 0) {
             return res.status(409).json({ mensaje: 'El RFC ya está registrado.' });
@@ -350,7 +350,7 @@ const obtenerDictamen = async (req, res) => {
         const idUsuario = req.usuario.id;
 
         // M-08: Primero verificar si el aspirante tiene solicitud activa.
-        // Esto permite distinguir entre "sin solicitud" y "solicitud en proceso sin dictamen aún".
+        // distinguir solicitud sin dictamen de solicitud inexistente
         const [[solicitudExiste]] = await db.query(`
             SELECT s.id
             FROM aspirante a
