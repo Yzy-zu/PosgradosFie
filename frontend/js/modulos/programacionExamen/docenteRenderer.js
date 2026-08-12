@@ -46,7 +46,7 @@ const moduloProgramacionExamenDocenteRenderer = {
             const btn = document.getElementById('btn-confirmar-aplicacion');
             if (btn) { btn.disabled = true; btn.innerText = 'Confirmando...'; }
             const response = await fetch(`/api/programacion-examen/confirmar/${idSolicitud}`, {
-                method: 'POST',
+                method: 'POST'
             });
             const data = await response.json();
             if (data.success) {

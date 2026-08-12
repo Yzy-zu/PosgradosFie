@@ -543,9 +543,9 @@ function abrirModalPerfil() {
     const ninguno = typeof t === 'function' ? t('prof_ninguno') : 'Ninguno';
 
     const cell = (label, value, span = 1) =>
-        `<div style="grid-column: span ${span};">
+        `<div style="flex: ${span} 1 ${span * 200}px; min-width: 150px; box-sizing: border-box;">
             <span style="display: block; font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">${label}</span>
-            <strong style="color: var(--color-text); font-size: 15px; font-weight: 500;">${value || noReg}</strong>
+            <strong style="color: var(--color-text); font-size: 15px; font-weight: 500; display: block; word-break: break-word;">${value || noReg}</strong>
         </div>`;
 
     Swal.fire({
@@ -568,7 +568,7 @@ function abrirModalPerfil() {
                 <!-- DATOS PERSONALES -->
                 <div style="padding: 30px 0; border-bottom: 1px solid var(--color-border);">
                     <h5 style="font-size: 13px; font-weight: 800; color: var(--color-text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px;">${typeof t === 'function' ? t('prof_personal') : 'Datos Personales'}</h5>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 24px;">
                         ${cell(typeof t === 'function' ? t('prof_curp') : 'CURP', (aspiranteData.curp || '').toUpperCase())}
                         ${cell(typeof t === 'function' ? t('prof_tel') : 'Teléfono', aspiranteData.telefono)}
                         ${cell(typeof t === 'function' ? t('prof_nacimiento') : 'Nacimiento', formatDate(aspiranteData.fechaNacimiento))}
@@ -581,7 +581,7 @@ function abrirModalPerfil() {
                 <!-- FORMACIÓN ACADÉMICA -->
                 <div style="padding: 30px 0; border-bottom: 1px solid var(--color-border);">
                     <h5 style="font-size: 13px; font-weight: 800; color: var(--color-text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px;">${typeof t === 'function' ? t('prof_academica') : 'Formación Académica'}</h5>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 24px;">
                         ${cell(typeof t === 'function' ? t('prof_lic') : 'Licenciatura', aspiranteData.licenciatura)}
                         ${cell(typeof t === 'function' ? t('prof_inst') : 'Institución', aspiranteData.institucionLicenciatura)}
                         ${cell(typeof t === 'function' ? t('prof_promedio') : 'Promedio', aspiranteData.promedio)}
@@ -594,7 +594,7 @@ function abrirModalPerfil() {
                 <!-- DATOS LABORALES -->
                 <div style="padding: 30px 0 35px;">
                     <h5 style="font-size: 13px; font-weight: 800; color: var(--color-text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px;">${typeof t === 'function' ? t('prof_laborales') : 'Datos Laborales'}</h5>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 24px;">
                         ${cell(typeof t === 'function' ? t('prof_ocupacion') : 'Ocupación', aspiranteData.ocupacion)}
                         ${cell(typeof t === 'function' ? t('prof_ciudad') : 'Ciudad', aspiranteData.ciudadOcupacion)}
                         ${cell(typeof t === 'function' ? t('prof_estado') : 'Estado', aspiranteData.estadoOcupacion)}
@@ -2664,20 +2664,33 @@ function updateCarousel() {
         if (index === currentSlide) ind.classList.add('active');
         else ind.classList.remove('active');
     });
-    // La altura la maneja CSS (aspect-ratio: 16/5) — sin dependencia de onload
+
+    clearInterval(autoSlideInterval);
+
+    const videos = carouselTrack.querySelectorAll('video');
+    videos.forEach(v => v.pause());
+
+    const currentSlideElement = carouselTrack.children[currentSlide];
+    if (currentSlideElement) {
+        const videoInSlide = currentSlideElement.querySelector('video');
+        if (videoInSlide) {
+            videoInSlide.currentTime = 0;
+            videoInSlide.play().catch(e => console.warn('Autoplay blocked:', e));
+        } else {
+            startAutoSlide();
+        }
+    }
 }
 
 function moveCarousel(direction) {
     if (totalSlides === 0) return;
     currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
     updateCarousel();
-    resetAutoSlide();
 }
 
 function goToSlide(index) {
     currentSlide = index;
     updateCarousel();
-    resetAutoSlide();
 }
 
 function startAutoSlide() {
@@ -2720,7 +2733,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const isVideo = aviso.tipo === 'video' || ['mp4', 'webm', 'ogg', 'mov'].includes(ext);
 
                     const mediaHTML = isVideo 
-                        ? `<video src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" autoplay muted loop playsinline style="object-fit: cover; width: 100%; height: 100%;"></video>`
+                        ? `<video src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" muted playsinline controls style="object-fit: cover; width: 100%; height: 100%;"></video>`
                         : `<img src="/api/files/admin/${aviso.rutaArchivo}?token=${token}" alt="${aviso.titulo}" style="object-fit: cover; width: 100%; height: 100%;">`;
 
                     trackHTML += `
@@ -2736,11 +2749,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 carouselTrack.innerHTML = trackHTML;
                 indicatorsContainer.innerHTML = indicatorsHTML;
 
+                carouselTrack.querySelectorAll('video').forEach(video => {
+                    video.addEventListener('ended', () => {
+                        moveCarousel(1);
+                    });
+                });
+
                 carouselIndicators = Array.from(indicatorsContainer.querySelectorAll('.indicator'));
                 totalSlides = avisos.length;
                 currentSlide = 0;
                 updateCarousel();
-                startAutoSlide();
             }
         } catch (e) {
             console.error('Error al cargar avisos:', e);
