@@ -7011,11 +7011,29 @@ button,
 .btn-mobile-toggle,
 .password-toggle-icon,
 [role="button"],
-input[type="checkbox"],
-input[type="radio"],
 select {
     min-height: 44px; /* Área táctil recomendada */
     touch-action: manipulation; /* Evitar zoom al hacer doble tap en botones */
+}
+
+/* Reset y control de tamaño para Checkboxes, Radios y Switches */
+input[type="checkbox"],
+input[type="radio"] {
+    min-height: auto;
+}
+
+.form-check-input {
+    min-height: 1.15rem !important;
+    height: 1.15rem !important;
+    width: 1.15rem !important;
+    cursor: pointer;
+}
+
+.form-switch .form-check-input {
+    min-height: 1.25rem !important;
+    height: 1.25rem !important;
+    width: 2.3rem !important;
+    border-radius: 2rem !important;
 }
 
 /* 2. Estados :active para feedback inmediato en móviles */

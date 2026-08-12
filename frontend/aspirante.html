@@ -473,7 +473,7 @@
 
 
         <!-- Modal de Revisión de Documento -->
-        <div id="modal-revision-doc" class="modal-overlay-modern" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="lbl-modal-revision">
+        <div id="modal-revision-doc" class="modal-overlay-modern" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="lbl-modal-revision"
             onclick="if (event.target === this) cerrarModalDoc()">
             <div class="modal-content-modern"
                 style="max-width: 600px; width: 92%; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
@@ -552,15 +552,7 @@
                             data-i18n="st_btn_cambiar" aria-label="Cambiar contraseña">Cambiar</button>
                     </div>
 
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <span class="setting-title" data-i18n="st_cerrar_sesiones">Cerrar otras sesiones</span>
-                            <span class="setting-desc" data-i18n="st_desconecta_otros">Desconecta otros dispositivos activos</span>
-                        </div>
-                        <button class="btn-outline-danger btn-sm"
-                            onclick="Swal.fire('Sesiones', 'Funcionalidad en desarrollo', 'info')"
-                            data-i18n="st_btn_cerrar" aria-label="Cerrar sesiones activas">Cerrar Sesiones</button>
-                    </div>
+
                 </div>
 
                 <!-- Apariencia -->
@@ -580,18 +572,7 @@
                         </select>
                     </div>
 
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <span class="setting-title">Densidad de Interfaz</span>
-                            <span class="setting-desc">Espaciado de los elementos</span>
-                        </div>
-                        <!-- F-B07 FIX: añadidos id y onchange para persistir y aplicar la preferencia -->
-                        <select id="setting-densidad" class="form-select setting-select"
-                            onchange="aplicarDensidad(this.value)">
-                            <option value="Cómoda">Cómoda</option>
-                            <option value="Compacta">Compacta</option>
-                        </select>
-                    </div>
+
                 </div>
 
                 <!-- Regional -->
@@ -611,47 +592,7 @@
                     </div>
                 </div>
 
-                <!-- Notificaciones -->
-                <div class="settings-section">
-                    <h4><i class="fa-solid fa-bell"></i> <span data-i18n="st_notificaciones">Notificaciones</span></h4>
 
-                    <!-- F-B08 FIX: checkboxes con id y handler para persistir en localStorage -->
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <span class="setting-title" data-i18n="st_noti_push">Notificaciones Push</span>
-                            <span class="setting-desc" data-i18n="st_noti_desc">Avisos dentro de la plataforma</span>
-                        </div>
-                        <label class="switch" aria-label="Activar notificaciones push">
-                            <input type="checkbox" id="setting-notif-push" checked
-                                onchange="guardarPreferenciaNotif('setting-notif-push', this.checked)">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <span class="setting-title">Alertas por Correo</span>
-                            <span class="setting-desc">Actualizaciones de tu expediente</span>
-                        </div>
-                        <label class="switch" aria-label="Activar alertas por correo">
-                            <input type="checkbox" id="setting-notif-correo" checked
-                                onchange="guardarPreferenciaNotif('setting-notif-correo', this.checked)">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <span class="setting-title">Boletines FIE</span>
-                            <span class="setting-desc">Noticias e información relevante</span>
-                        </div>
-                        <label class="switch" aria-label="Suscribirse a boletines FIE">
-                            <input type="checkbox" id="setting-notif-boletin"
-                                onchange="guardarPreferenciaNotif('setting-notif-boletin', this.checked)">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                </div>
 
             </div>
         </div>

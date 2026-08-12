@@ -238,11 +238,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     await cargarAspirantesAPI();
     cargarNotificaciones();
 
-    // Restaurar estado del toggle de notificaciones push
-    const toggleNotiPush = document.getElementById('toggle-notificaciones-push');
-    if (toggleNotiPush) {
-        toggleNotiPush.checked = localStorage.getItem('notificacionesPush') !== 'false';
-    }
+
 
     // Restaurar vista desde la URL (Persistencia)
     const currentHash = window.location.hash.replace("#", "");
@@ -1369,9 +1365,7 @@ function cerrarDrawerAjustes() {
     document.getElementById('settings-drawer-overlay').classList.remove('show');
 }
 
-function guardarToggleNotificaciones(activado) {
-    localStorage.setItem('notificacionesPush', activado ? 'true' : 'false');
-}
+
 
 // ==== PERFIL DOCENTE ====
 function abrirModalPerfilDocente() {

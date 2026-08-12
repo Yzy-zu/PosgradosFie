@@ -69,22 +69,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectTema = document.getElementById('setting-tema');
     if (selectTema) selectTema.value = temaSeleccionado;
 
-    // F-B07 FIX: restaurar y vincular el select de densidad de interfaz
-    const densidad = localStorage.getItem('densidadInterfaz') || 'Cómoda';
-    const selectDensidad = document.getElementById('setting-densidad');
-    if (selectDensidad) {
-        selectDensidad.value = densidad;
-        aplicarDensidad(densidad);
-    }
 
-    // F-B08 FIX: restaurar estado de los toggles de notificaciones
-    ['setting-notif-push', 'setting-notif-correo', 'setting-notif-boletin'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            const stored = localStorage.getItem(id);
-            if (stored !== null) el.checked = stored === 'true';
-        }
-    });
+
+
 
     // Cierra el menú de perfil si se hace clic fuera de él
     window.addEventListener('click', function () {
@@ -372,28 +359,7 @@ async function abrirArchivoSeguro(rutaArchivo) {
     }
 }
 
-// ==== F-B07 FIX: DENSIDAD DE INTERFAZ ====
-// Aplica padding CSS real según la preferencia del usuario.
-function aplicarDensidad(densidad) {
-    const root = document.documentElement;
-    if (densidad === 'Compacta') {
-        root.style.setProperty('--density-padding', '6px 12px');
-        root.style.setProperty('--density-gap', '6px');
-        root.style.setProperty('--density-row-height', '36px');
-    } else {
-        // Cómoda (default)
-        root.style.setProperty('--density-padding', '10px 18px');
-        root.style.setProperty('--density-gap', '12px');
-        root.style.setProperty('--density-row-height', '48px');
-    }
-    localStorage.setItem('densidadInterfaz', densidad);
-}
 
-// ==== F-B08 FIX: PERSISTENCIA DE NOTIFICACIONES ====
-// Persiste el estado checked de los toggles en localStorage.
-function guardarPreferenciaNotif(id, checked) {
-    localStorage.setItem(id, String(checked));
-}
 
 // ==== F-B21 FIX: SINCRONIZAR DRAWER AL ABRIRLO ====
 // Garantiza que todos los controles del drawer reflejen el estado guardado
@@ -404,10 +370,7 @@ function sincronizarDrawerAjustes() {
     const selTema = document.getElementById('setting-tema');
     if (selTema) selTema.value = tema;
 
-    // Densidad
-    const densidad = localStorage.getItem('densidadInterfaz') || 'Cómoda';
-    const selDens = document.getElementById('setting-densidad');
-    if (selDens) selDens.value = densidad;
+
 
     // Idioma
     const idiomaGuardado = localStorage.getItem('idiomaSeleccionado');
@@ -420,14 +383,7 @@ function sincronizarDrawerAjustes() {
         if (opt) selIdioma.value = opt.value;
     }
 
-    // Toggles de notificaciones
-    ['setting-notif-push', 'setting-notif-correo', 'setting-notif-boletin'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            const stored = localStorage.getItem(id);
-            if (stored !== null) el.checked = stored === 'true';
-        }
-    });
+
 }
 
 
