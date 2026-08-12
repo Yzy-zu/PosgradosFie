@@ -76,7 +76,7 @@ const subirDocumento = async (req, res) => {
         }
 
         if (idRequisito) {
-            // Flujo nuevo: tabla solicitud_documentos
+
             const [resultado] = await db.query(
                 `INSERT INTO solicitud_documentos (idSolicitud, idRequisito, rutaArchivo, estadoValidacion)
                  VALUES (?, ?, ?, 'PENDIENTE')`,
@@ -102,7 +102,7 @@ const subirDocumento = async (req, res) => {
 
 
 
-// Evaluar documento (flujo nuevo: solicitud_documentos)
+// evaluar documento
 const evaluarDocumento = async (req, res) => {
     try {
         const { id } = req.params; // ID de solicitud_documentos
@@ -145,7 +145,7 @@ const evaluarDocumento = async (req, res) => {
     }
 };
 
-// Reemplazar / Re-subir documento rechazado (Máximo 3 intentos)
+// Reemplazar documento rechazado (Máximo 3 intentos)
 const reemplazarDocumento = async (req, res) => {
     try {
         const { id } = req.params; // ID de solicitud_documentos
@@ -198,7 +198,7 @@ const reemplazarDocumento = async (req, res) => {
 
         const nuevosIntentos = ultimoIntento + 1;
 
-        // Insertar NUEVA FILA para registrar el nuevo intento conservando el historial anterior
+        // registrar nuevo intento
         const [resultado] = await db.query(
             `INSERT INTO solicitud_documentos (idSolicitud, idRequisito, rutaArchivo, estadoValidacion, comentarios, intentos)
              VALUES (?, ?, ?, 'PENDIENTE', NULL, ?)`,
@@ -208,7 +208,7 @@ const reemplazarDocumento = async (req, res) => {
         // Recalcular estado de la solicitud basándose únicamente en los ÚLTIMOS intentos de cada requisito
         await WorkflowService.evaluarTransicionDocumentacion(documentData.idSolicitud);
 
-        // Notificar a ADMIN y DOCENTE (aspirante reemplazó un documento)
+        // notificar reemplazo de documento
         emit.aAdminYDocente(req);
 
         return res.json({ 

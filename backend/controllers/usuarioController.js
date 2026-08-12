@@ -167,7 +167,7 @@ const actualizarUsuario = async (req, res) => {
 };
 
 
-// Eliminar usuario
+
 const eliminarUsuario = async (req, res) => {
     try {
         const { id } = req.params;
@@ -180,7 +180,7 @@ const eliminarUsuario = async (req, res) => {
     }
 };
 
-// Cambiar contraseña del usuario
+
 const cambiarPassword = async (req, res) => {
     try {
         const { id } = req.params;

@@ -70,7 +70,7 @@ const actualizarDocente = async (req, res) => {
     }
 };
 
-// Eliminar docente
+
 // :id en la ruta corresponde a idUsua
 const eliminarDocente = async (req, res) => {
     try {

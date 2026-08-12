@@ -31,7 +31,7 @@ router.put('/estado/:id',    verificarToken, validarRol('COORDINADOR', 'ADMIN'),
 router.put('/modalidad/:id', verificarToken, validarRol('ASPIRANTE', 'COORDINADOR', 'ADMIN'),                 actualizarModalidad);
 router.put('/enviar/:id',    verificarToken, validarRol('ASPIRANTE'),                            enviarExpediente);
 
-// Nuevos Endpoints Workflow
+//rutas de workflow
 router.get('/ingreso/modalidades', getModalidadesIngreso);
 router.get('/workflow/:idModalidad/etapas', getEtapasWorkflow);
 router.get('/acciones/:id', getAccionesSolicitud);

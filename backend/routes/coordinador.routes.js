@@ -19,7 +19,7 @@ router.get('/metricas', validarRol('COORDINADOR', 'ADMIN'), coordinadorControlle
 // ==========================================
 // 2. Aspirantes, Expedientes y Dictámenes
 // ==========================================
-// GET /api/coordinador/aspirantes
+
 router.get('/aspirantes', validarRol('COORDINADOR', 'ADMIN', 'SECRETARIO', 'DOCENTE'), coordinadorController.getAspirantes);
 
 // GET /api/coordinador/aspirante/:id/expediente
@@ -29,7 +29,7 @@ router.get('/aspirante/:id/expediente', validarRol('COORDINADOR', 'ADMIN', 'SECR
 router.put('/solicitud/:id/dictamen', validarRol('COORDINADOR', 'ADMIN'), coordinadorController.actualizarDictamen);
 
 // ==========================================
-// NUEVAS RUTAS DE DICTÁMENES
+//rutas de dictámenes
 // ==========================================
 
 // GET /api/coordinador/dictamenes

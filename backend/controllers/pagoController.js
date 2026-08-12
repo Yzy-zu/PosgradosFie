@@ -78,10 +78,9 @@ const subirComprobante = async (req, res) => {
             );
         }
 
-        // Bug 1 & 2: marcar EN_REVISION para que el coordinador vea que hay comprobante esperando revisión.
-        // Esto cubre tanto el primer upload como la re-subida después de un rechazo.
+        // actualizar estado a en revisión
         await db.query("UPDATE solicitud SET estado = 'EN_REVISION' WHERE id = ?", [idSolicitud]);
-        // Notificar a ADMIN y DOCENTE (aspirante subió comprobante)
+        // notificar subida de comprobante
         emit.aAdminYDocente(req);
         return res.json({ success: true, mensaje: 'Comprobante subido correctamente. En espera de verificación.' });
     } catch (error) {
