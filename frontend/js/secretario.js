@@ -244,10 +244,7 @@ async function cargarAspirantes() {
     };
 
     try {
-        let respuesta = await fetch('/api/aspirantes', { headers });
-        if (respuesta.status === 404) {
-            respuesta = await fetch('/api/aspirante', { headers });
-        }
+        let respuesta = await fetch('/api/aspirante', { headers });
 
         if (respuesta.ok) {
             const aspirantes = await respuesta.json();
@@ -296,7 +293,7 @@ async function cargarDatosInicio() {
     const headers = { 'Authorization': `Bearer ${token}` };
 
     try {
-        const resAspirantes = await fetch('/api/aspirantes', { headers });
+        const resAspirantes = await fetch('/api/aspirante', { headers });
         if (resAspirantes.ok) {
             const aspirantes = await resAspirantes.json();
             // Por ahora, los documentos no tienen endpoint propio en secretario.

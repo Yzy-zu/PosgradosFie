@@ -96,10 +96,10 @@ class WorkflowService {
      * Asigna la modalidad a una solicitud y la inicializa en la primera etapa.
      * ÚNICO punto autorizado para inicializar idEtapaActual al cambiar modalidad.
      */
-    static async asignarModalidad(idSolicitud, idModalidad) {
-        const idEtapaActual = await this.getPrimeraEtapa(idModalidad);
+    static async asignarModalidad(idSolicitud, idModalidad, conn = db) {
+        const idEtapaActual = await this.getPrimeraEtapa(idModalidad, conn);
         
-        await db.query(
+        await conn.query(
             'UPDATE solicitud SET idModalidad = ?, idEtapaActual = ? WHERE id = ?', 
             [idModalidad, idEtapaActual, idSolicitud]
         );

@@ -6996,3 +6996,189 @@ body.dark-mode .status-banner.status-aprobado .status-banner-badge {
         gap: 15px;
     }
 }
+
+/* =========================================================
+   FASE 3 - Accesibilidad y Touch (A11Y)
+   ========================================================= */
+
+/* 1. Áreas táctiles y feedback */
+button, 
+.btn,
+.sidebar-nav-item,
+.topbar-action-btn,
+.notification-trigger,
+.doc-action-ver,
+.btn-mobile-toggle,
+.password-toggle-icon,
+[role="button"],
+input[type="checkbox"],
+input[type="radio"],
+select {
+    min-height: 44px; /* Área táctil recomendada */
+    touch-action: manipulation; /* Evitar zoom al hacer doble tap en botones */
+}
+
+/* 2. Estados :active para feedback inmediato en móviles */
+button:active, 
+.btn:active,
+.sidebar-nav-item:active,
+.topbar-action-btn:active,
+.doc-action-ver:active,
+.btn-mobile-toggle:active,
+.item-aspirante:active,
+[role="button"]:active {
+    transform: scale(0.96) !important;
+    opacity: 0.8;
+    transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+/* Focus styles para navegación por teclado */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb, 67, 56, 202), 0.2);
+}
+
+/* Toggle de contraseña con buen tamaño */
+.password-toggle-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    color: var(--color-text-muted);
+}
+
+/* Ocultar iconos decorativos a lectores de pantalla */
+i.fa-solid, i.fa-regular, i.fa-brands {
+    pointer-events: none; /* Asegura que el click pase al botón contenedor */
+}
+i.fa-solid[onclick], i.fa-regular[onclick] {
+    pointer-events: auto; /* Excepto si tienen onclick directo */
+}
+
+/* =========================================================
+   AUDITORÍA VISUAL MOBILE (320px - 430px) - FASE 5
+   ========================================================= */
+
+@media (max-width: 430px) {
+    /* 1. Modales y Paneles: Reducción de paddings asfixiantes */
+    .modal-card,
+    .split-form-panel,
+    .modal-content-modern,
+    .modal-card-perfil {
+        padding: 15px !important;
+    }
+    
+    /* Títulos de modales */
+    .modal-title, .form-title, .swal2-title, .profile-name-large {
+        font-size: 1.25rem !important;
+        line-height: 1.3 !important;
+    }
+
+    /* 2. Dropdown de Notificaciones: Centrado como modal flotante */
+    .messages-mega-dropdown {
+        position: fixed !important;
+        top: 70px !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        width: 95vw !important;
+        max-width: 400px !important;
+        max-height: calc(100vh - 90px) !important;
+        border-radius: 12px !important;
+    }
+
+    /* 3. Filtros Superiores: 100% de ancho para evitar deformación de texto */
+    .topbar-filtros > div {
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+
+    /* 4. Botones de Acción en Tablas: Evitar columnas de acciones anchas */
+    /* Aplica a botones redondeados y normales que se encuentren dentro de celdas en dispositivos pequeños */
+    .table-responsive td .btn {
+        width: 100% !important;
+        margin-bottom: 5px !important;
+        border-radius: 8px !important; /* Si era redondeado circular (36px), en móvil se hace bloque ancho */
+    }
+    
+    /* Específicamente, agrupamos los botones de acción verticalmente */
+    .table-responsive td[style*="display: flex"],
+    .table-responsive td {
+        white-space: normal !important;
+    }
+    
+    .table-responsive tr {
+        /* Para no deformar el contenedor total, la tabla usará scroll si es necesario, 
+           pero las acciones se apilarán gracias a flex-direction en celdas flexibles */
+    }
+}
+
+/* Modal de Perfil Grid: Regla especial para max-width: 600px */
+@media (max-width: 600px) {
+    .info-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* EvaluacionTemasHelper Card Layout (FASE 5) */
+    .eval-temas-table thead {
+        display: none !important;
+    }
+    .eval-temas-table tbody, 
+    .eval-temas-table tr, 
+    .eval-temas-table td {
+        display: block !important;
+        width: 100% !important;
+    }
+    .eval-temas-table tr {
+        margin-bottom: 15px !important;
+        border: 1px solid var(--color-border) !important;
+        border-radius: 8px !important;
+        padding: 12px !important;
+        background: var(--color-bg) !important;
+    }
+    .eval-temas-table td {
+        border: none !important;
+        padding: 6px 0 !important;
+    }
+    .eval-temas-table td:first-child {
+        font-weight: 600 !important;
+        font-size: 1.05rem !important;
+        margin-bottom: 8px !important;
+        border-bottom: 1px solid var(--color-border) !important;
+        padding-bottom: 10px !important;
+        color: var(--color-primary) !important;
+    }
+    .eval-temas-table td:nth-child(2)::before {
+        content: "Calificación:" !important;
+        display: block !important;
+        font-size: 0.85rem !important;
+        color: var(--color-text-muted) !important;
+        margin-bottom: 4px !important;
+        font-weight: 600 !important;
+    }
+    .eval-temas-table td:nth-child(3)::before {
+        content: "Observaciones:" !important;
+        display: block !important;
+        font-size: 0.85rem !important;
+        color: var(--color-text-muted) !important;
+        margin-bottom: 4px !important;
+        font-weight: 600 !important;
+    }
+    .eval-temas-table td:last-child {
+        margin-top: 10px !important;
+    }
+}
+@media (max-width: 360px) {
+    .info-grid {
+        grid-template-columns: 1fr !important;
+    }
+}

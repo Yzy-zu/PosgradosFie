@@ -943,9 +943,6 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
         navDocumentos.style.display = 'block';
     }
 
-    // Configurar paneles según nivel (lógica centralizada en configurarPanelesNivel)
-    configurarPanelesNivel(nivel, idConvocatoria);
-
     // Redirigir a la vista de documentos
     switchView('documentos');
 }
@@ -955,8 +952,17 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
  */
 function cambiarEstacion(nuevaEstacion) {
     // Ocultar panel actual y mostrar el nuevo
-    document.getElementById(`panel-estacion-${estacionActual}`).classList.remove('active-panel');
-    document.getElementById(`panel-estacion-${nuevaEstacion}`).classList.add('active-panel');
+    const panelAnterior = document.getElementById(`panel-estacion-${estacionActual}`);
+    const panelNuevo = document.getElementById(`panel-estacion-${nuevaEstacion}`);
+    
+    if (panelAnterior) {
+        panelAnterior.classList.remove('active-panel');
+        panelAnterior.style.display = 'none';
+    }
+    if (panelNuevo) {
+        panelNuevo.classList.add('active-panel');
+        panelNuevo.style.display = 'block';
+    }
 
     // F-C04 FIX: Recorrer todos los nodos para asegurar los estados active/completed
     const maxEtapas = typeof totalEstaciones !== 'undefined' && totalEstaciones > 0 ? totalEstaciones : 3;
@@ -1034,6 +1040,7 @@ async function avanzarEstacion(nuevaEstacion) {
 
     // Interceptar si es la estación 0 para guardar la modalidad de admisión
     if (estacionActual === 0 && currentSolicitudId) {
+        let inputModalidadValue = null;
         if (nivelAcademicoSeleccionado !== 'Doctorado') {
             const contenedorMaestria = document.getElementById('opciones-admision-maestria');
             const inputModalidad = contenedorMaestria ? contenedorMaestria.querySelector('input[name="modalidad"]:checked') : null;
@@ -1047,24 +1054,28 @@ async function avanzarEstacion(nuevaEstacion) {
                 });
                 return;
             }
-            try {
-                const res = await fetch(`/api/solicitud/modalidad/${currentSolicitudId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tipoAdmision: inputModalidad.value }) // Por retrocompatibilidad de nombre de var en frontend, enviamos el ID en value
-                });
-                if (!res.ok) {
-                    console.error("Error al guardar la modalidad en la base de datos.");
-                    Swal.fire('Error', 'No se pudo guardar la modalidad de admisión. Inténtalo de nuevo.', 'error');
-                    if (boton) boton.disabled = false;
-                    return; // F-C01 FIX: abortar avance si falla guardar modalidad
-                }
-            } catch (e) {
-                console.error("Error de conexión al guardar modalidad:", e);
-                Swal.fire('Error de conexión', 'No se pudo contactar al servidor. Inténtalo de nuevo.', 'error');
+            inputModalidadValue = inputModalidad.value;
+        } else {
+            inputModalidadValue = 6; // Entrevista de Admisión para Doctorado
+        }
+        
+        try {
+            const res = await fetch(`/api/solicitud/modalidad/${currentSolicitudId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tipoAdmision: inputModalidadValue }) // Por retrocompatibilidad de nombre de var en frontend, enviamos el ID en value
+            });
+            if (!res.ok) {
+                console.error("Error al guardar la modalidad en la base de datos.");
+                Swal.fire('Error', 'No se pudo guardar la modalidad de admisión. Inténtalo de nuevo.', 'error');
                 if (boton) boton.disabled = false;
-                return; // F-C01 FIX: abortar avance si falla conexión
+                return; // F-C01 FIX: abortar avance si falla guardar modalidad
             }
+        } catch (e) {
+            console.error("Error de conexión al guardar modalidad:", e);
+            Swal.fire('Error de conexión', 'No se pudo contactar al servidor. Inténtalo de nuevo.', 'error');
+            if (boton) boton.disabled = false;
+            return; // F-C01 FIX: abortar avance si falla conexión
         }
     }
 
@@ -1736,7 +1747,7 @@ async function finalizarProcesoEstaciones() {
             });
 
             // Forzar recarga de UI a EN_REVISION
-            const soliRes = await fetch(`/api/solicitud/${currentSolicitudId}`);
+            const soliRes = await fetch(`/api/solicitud/activa/${aspiranteData.id}`);
             if (soliRes.ok) {
                 const soliData = await soliRes.json();
                 if (['EN_REVISION', 'RECHAZADO', 'APROBADO'].includes(soliData.estado)) {
@@ -2451,12 +2462,6 @@ function hidratarUI(soliData) {
                 <p style="margin-bottom: 20px; color: var(--color-text-muted); font-size: 14px; line-height: 1.5;">${soliData.idModalidad === 2 ? 'Tu curso propedéutico ha sido evaluado y los resultados ya se integraron a tu proceso.' : (typeof t === 'function' ? t('exam_evaluado_desc') : 'Tu examen de admisión ha sido evaluado y los resultados ya se integraron a tu proceso.')}</p>
                 
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    ${soliData.idModalidad !== 2 ? `
-                    <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 16px 20px; border-radius: 12px; flex: 1; min-width: 160px;">
-                        <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; color: var(--color-text-muted); margin-bottom: 6px;">${typeof t === 'function' ? t('exam_calif_obtenida') : 'Calificación Obtenida'}</span>
-                        <strong style="font-size: 32px; font-weight: 800; color: var(--color-text); line-height: 1;">${soliData.calificacion}</strong>
-                    </div>
-                    ` : ''}
                     <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 16px 20px; border-radius: 12px; flex: 1; min-width: 160px;">
                         <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; color: var(--color-text-muted); margin-bottom: 6px;">${typeof t === 'function' ? t('exam_resultado') : 'Resultado Final'}</span>
                         <div style="font-size: 20px; font-weight: 800; color: ${soliData.resultadoAprobado ? '#10b981' : '#ef4444'}; display: flex; align-items: center; gap: 8px;">

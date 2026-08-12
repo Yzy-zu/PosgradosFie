@@ -1,9 +1,68 @@
 const moduloProgramacionExamenDocenteRenderer = {
     renderizar(soliData) {
-        if (soliData.accionActiva === 'CAPTURAR_RESULTADO_EXAMEN' || soliData.accionActiva === 'HABILITAR_CAPTURA_RESULTADO') {
+        if (soliData.accionActiva === 'CAPTURAR_RESULTADO_EXAMEN') {
             this.renderizarCaptura(soliData);
+        } else if (soliData.accionActiva === 'HABILITAR_CAPTURA_RESULTADO') {
+            this.renderizarConfirmacion(soliData);
         } else {
             this.renderizarProgramacion(soliData);
+        }
+    },
+
+    renderizarConfirmacion(soliData) {
+        const modalTitulo = document.getElementById('modal-dinamico-titulo');
+        const modalBody = document.getElementById('modal-dinamico-body');
+        
+        if (!modalTitulo || !modalBody) return;
+
+        modalTitulo.innerHTML = '<i class="fa-solid fa-clipboard-check"></i> Confirmar Aplicación de Examen';
+
+        const divContainer = document.createElement('div');
+        divContainer.className = 'modulo-confirmar-examen';
+        
+        divContainer.innerHTML = `
+            <div style="margin-bottom: 20px; padding: 15px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 8px;">
+                <p style="margin: 0; font-size: 0.95rem; line-height: 1.6;">
+                    El examen de <strong>${soliData.aspiranteNombre || 'el aspirante'}</strong> estaba programado. 
+                    Por favor, confirme que el examen se aplicó correctamente para habilitar la captura de calificaciones.
+                </p>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 25px;">
+                <button type="button" class="modal-btn-secondary" onclick="document.getElementById('modal-docente-dinamico').style.display='none'">Cancelar</button>
+                <button type="button" class="modal-btn-primary" id="btn-confirmar-aplicacion">Confirmar Aplicación</button>
+            </div>
+        `;
+
+        modalBody.appendChild(divContainer);
+
+        const btnConfirmar = divContainer.querySelector('#btn-confirmar-aplicacion');
+        btnConfirmar.addEventListener('click', () => this.confirmarAplicacion(soliData.idSolicitud || soliData.id));
+    },
+
+    async confirmarAplicacion(idSolicitud) {
+        if (!idSolicitud) return;
+        try {
+            const btn = document.getElementById('btn-confirmar-aplicacion');
+            if (btn) { btn.disabled = true; btn.innerText = 'Confirmando...'; }
+            const response = await fetch(`/api/programacion-examen/confirmar/${idSolicitud}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const data = await response.json();
+            if (data.success) {
+                Swal.fire({ icon: 'success', title: 'Confirmado', text: data.mensaje, timer: 1500 });
+                document.getElementById('modal-docente-dinamico').style.display = 'none';
+                if (typeof cargarSolicitudesDocente === 'function') { cargarSolicitudesDocente(); }
+                if (typeof cargarSolicitudesHistoricas === 'function') { cargarSolicitudesHistoricas(); }
+            } else {
+                throw new Error(data.mensaje || 'Error al confirmar la aplicación del examen.');
+            }
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+        } finally {
+            const btn = document.getElementById('btn-confirmar-aplicacion');
+            if (btn) { btn.disabled = false; btn.innerText = 'Confirmar Aplicación'; }
         }
     },
 

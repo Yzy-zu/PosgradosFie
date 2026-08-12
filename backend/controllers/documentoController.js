@@ -20,9 +20,8 @@ const getExploradorDocumentos = async (req, res) => {
             FROM solicitud_documentos sd
             JOIN solicitud s ON sd.idSolicitud = s.id
             JOIN aspirante a ON s.idAspi = a.id
-            LEFT JOIN convocatoria_opcion co ON s.idConvocatoriaOpcion = co.id
-            LEFT JOIN opcion_posgrado op ON co.opcion_posgrado_id = op.id
-            LEFT JOIN posgrado p ON op.posgrado_id = p.id
+            JOIN convocatorias c ON s.idConvocatoria = c.id
+            LEFT JOIN posgrado p ON c.posgrado_id = p.id
             JOIN catalogo_requisitos cr ON sd.idRequisito = cr.id
             WHERE sd.id IN (
                 SELECT MAX(id) 
@@ -166,9 +165,17 @@ const reemplazarDocumento = async (req, res) => {
         if (aspirante.length === 0) {
             return res.status(403).json({ mensaje: 'Acceso denegado: no se encontró perfil de aspirante.' });
         }
-        const [solicitud] = await db.query('SELECT idAspi FROM solicitud WHERE id = ?', [documentData.idSolicitud]);
+        const [solicitud] = await db.query('SELECT idAspi, idEtapaActual, estado FROM solicitud WHERE id = ?', [documentData.idSolicitud]);
         if (solicitud.length === 0 || solicitud[0].idAspi !== aspirante[0].id) {
             return res.status(403).json({ mensaje: 'Acceso denegado: este documento no te pertenece.' });
+        }
+
+        const ETAPAS = require('../constants').ETAPAS;
+        if (solicitud[0].idEtapaActual !== ETAPAS.DOCUMENTACION) {
+            return res.status(400).json({ mensaje: 'La solicitud no se encuentra en la etapa de documentación.' });
+        }
+        if (solicitud[0].estado !== 'PENDIENTE' && solicitud[0].estado !== 'EN_REVISION' && solicitud[0].estado !== 'RECHAZADO') {
+            return res.status(400).json({ mensaje: `La solicitud debe estar activa (Pendiente, En Revisión o Rechazada) para reemplazar documentos. Estado actual: ${solicitud[0].estado}` });
         }
 
         if (documentData.estadoValidacion !== 'RECHAZADO') {

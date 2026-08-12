@@ -74,7 +74,7 @@ window.fetch = async (resource, config = {}) => {
             localStorage.removeItem("token");
 
             window.location.href =
-                "login.html";
+                "/login.html";
 
             throw new Error(
                 "Sesión expirada."

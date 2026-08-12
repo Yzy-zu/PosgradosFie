@@ -67,8 +67,28 @@ class ProgramacionExamenService {
      * Esto avanza la etapa hacia la captura de resultados.
      */
     static async confirmarExamen(idSolicitud) {
-        await WorkflowService.avanzarEtapa(idSolicitud);
-        return { success: true, mensaje: 'Aplicación del examen confirmada exitosamente.' };
+        const conn = await db.getConnection();
+        await conn.beginTransaction();
+        try {
+            // Validar que se encuentre en Examen programado
+            const [solicitudes] = await conn.query(
+                'SELECT ep.nombre FROM solicitud s LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id WHERE s.id = ? FOR UPDATE',
+                [idSolicitud]
+            );
+
+            if (solicitudes.length === 0 || solicitudes[0].nombre !== 'Examen programado') {
+                throw new Error('La solicitud no se encuentra en la etapa de Examen programado.');
+            }
+
+            await WorkflowService.avanzarEtapa(idSolicitud, conn);
+            await conn.commit();
+            return { success: true, mensaje: 'Aplicación del examen confirmada exitosamente.' };
+        } catch (error) {
+            await conn.rollback();
+            throw error;
+        } finally {
+            conn.release();
+        }
     }
 
     /**
@@ -76,7 +96,7 @@ class ProgramacionExamenService {
      */
     static async getProgramacionPorSolicitud(idSolicitud) {
         const [resultados] = await db.query(
-            'SELECT fecha, hora, lugar, observaciones FROM programacion_examen WHERE idSolicitud = ?',
+            'SELECT id, fecha, hora, lugar, observaciones FROM programacion_examen WHERE idSolicitud = ?',
             [idSolicitud]
         );
         return resultados.length > 0 ? resultados[0] : null;
@@ -100,7 +120,7 @@ class ProgramacionExamenService {
             // Verificar etapa actual para impedir regresiones
             const [solicitudes] = await conn.query('SELECT s.idEtapaActual, ep.nombre FROM solicitud s LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id WHERE s.id = ? FOR UPDATE', [idSolicitud]);
             
-            if (solicitudes.length === 0 || (solicitudes[0].nombre !== 'Examen' && solicitudes[0].nombre !== 'Examen programado')) {
+            if (solicitudes.length === 0 || solicitudes[0].nombre !== 'Examen') {
                 throw new Error('Regresión de workflow impedida: La solicitud ya no se encuentra en la etapa de Examen.');
             }
 
@@ -116,15 +136,11 @@ class ProgramacionExamenService {
                 [idSolicitud, calificacion, aprobado ? 1 : 0, observaciones || null]
             );
 
-            // Avance dinámico, se asume 'Resultado' como la etapa de destino o la idEtapa=6
-            const [etapasResultado] = await conn.query("SELECT id FROM etapa_proceso WHERE nombre = 'Resultado' LIMIT 1");
-            const idEtapaResultado = etapasResultado.length > 0 ? etapasResultado[0].id : ETAPAS.RESULTADO;
-
-            // Actualizar la etapa
-            await conn.query('UPDATE solicitud SET idEtapaActual = ? WHERE id = ?', [idEtapaResultado, idSolicitud]);
+            // Avanzar a la siguiente etapa de forma centralizada según la modalidad configurada
+            await WorkflowService.avanzarEtapa(idSolicitud, conn);
 
             await conn.commit();
-            return { success: true, mensaje: 'Resultado capturado y etapa avanzada a Resultado correctamente.' };
+            return { success: true, mensaje: 'Resultado capturado y etapa avanzada correctamente.' };
         } catch (error) {
             await conn.rollback();
             throw error;

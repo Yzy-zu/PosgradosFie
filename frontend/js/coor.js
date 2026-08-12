@@ -129,6 +129,9 @@ function navegar() {
         if (inicioLink) inicioLink.classList.add('active');
     }
 
+    // FASE 4: Evitar que la página se quede abajo al cambiar de vista
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     // Cargar módulos
     switch (hash) {
         case '#inicio':

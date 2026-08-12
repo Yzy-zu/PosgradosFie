@@ -164,6 +164,9 @@ function activarSeccionPorHash() {
         void seccionMostrar.offsetWidth; // Trigger reflow for animation
         seccionMostrar.classList.add("fade-in");
     }
+
+    // FASE 4: Evitar que la página se quede abajo al cambiar de sección
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function configurarNavegacion() {

@@ -124,12 +124,3 @@ app.get('/', (req, res) => {
 server.listen(PORT, () => {
     console.log(`Servidor listo en http://localhost:${PORT}`);
 });
-
-// Rutas temporales/básicas para secretario si aún no las tienes declaradas
-app.get('/api/secretario/aspirantes', (req, res) => {
-    res.json({ success: true, aspirantes: [] });
-});
-
-app.get('/api/secretario/documentos', (req, res) => {
-    res.json({ success: true, documentos: [] });
-});

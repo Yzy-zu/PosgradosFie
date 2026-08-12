@@ -2618,7 +2618,7 @@ const EvaluacionTemasHelper = {
                     <h6 style="margin-bottom: 12px; font-weight: 600; color: var(--color-text);">Evaluación por Temas</h6>
                     <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 15px;">Guarde cada tema individualmente antes de finalizar la captura general.</p>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 custom-premium-table">
+                        <table class="table table-hover align-middle mb-0 custom-premium-table eval-temas-table">
                             <thead class="table-light">
                                 <tr>
                                     <th style="min-width: 150px;">Tema</th>
@@ -2641,13 +2641,13 @@ const EvaluacionTemasHelper = {
                     <tr data-tema-id="${tema.id}">
                         <td style="font-size: 0.9rem; color: var(--color-text);">${tema.nombreTema || 'Tema'}</td>
                         <td>
-                            <input type="number" class="form-control tema-calif" step="1" min="1" max="10" value="${calif}" placeholder="1-10" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px; min-height: 40px;">
+                            <input type="number" class="form-control tema-calif" step="1" min="1" max="10" value="${calif}" placeholder="1-10" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px; min-height: 40px;" aria-label="Calificación para el tema ${tema.nombreTema || 'Tema'}">
                         </td>
                         <td>
-                            <input type="text" class="form-control tema-obs" value="${obs}" placeholder="Opcional" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px; min-height: 40px;">
+                            <input type="text" class="form-control tema-obs" value="${obs}" placeholder="Opcional" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px; min-height: 40px;" aria-label="Observaciones para el tema ${tema.nombreTema || 'Tema'}">
                         </td>
                         <td>
-                            <button type="button" class="btn ${btnClase} btn-guardar-tema w-100" onclick="EvaluacionTemasHelper.guardarTema(this, ${tema.id}, ${idSolicitud})" title="Guardar" style="min-height: 40px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <button type="button" class="btn ${btnClase} btn-guardar-tema w-100" onclick="EvaluacionTemasHelper.guardarTema(this, ${tema.id}, ${idSolicitud})" title="Guardar calificación de ${tema.nombreTema || 'Tema'}" style="min-height: 40px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                                 <i class="fa-solid ${btnIcon}"></i> <span class="btn-text">${btnText}</span>
                             </button>
                         </td>

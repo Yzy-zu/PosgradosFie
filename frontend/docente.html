@@ -63,21 +63,21 @@
         <ul class="side-menu top">
             <li>
                 <a href="#inicio" id="nav-inicio" class="active" title="Inicio"
-                    data-i18n-title="sb_inicio">
+                    data-i18n-title="sb_inicio" onclick="switchView('inicio')">
                     <i class="fa-solid fa-chalkboard-user"></i>
                     <span class="text" data-i18n="sb_inicio">Inicio</span>
                 </a>
             </li>
             <li>
                 <a href="#expedientes" id="nav-expedientes" title="Expedientes"
-                    data-i18n-title="sb_expedientes">
+                    data-i18n-title="sb_expedientes" onclick="switchView('expedientes')">
                     <i class="fa-solid fa-folder-open"></i>
                     <span class="text" data-i18n="sb_expedientes">Expedientes</span>
                 </a>
             </li>
             <li>
                 <a href="#aspirantes" id="nav-aspirantes" title="Aspirantes"
-                    data-i18n-title="sb_aspirantes">
+                    data-i18n-title="sb_aspirantes" onclick="switchView('aspirantes')">
                     <i class="fa-solid fa-users"></i>
                     <span class="text" data-i18n="sb_aspirantes">Aspirantes</span>
                 </a>
@@ -261,7 +261,7 @@
                 <div
                     style="display: flex; align-items: center; gap: 20px; min-width: 180px; justify-content: flex-end;">
                     <!-- Menú de Mensajes -->
-                    <div class="notification-container" onclick="toggleNotificationMenu(event)"
+                    <div class="notification-container" role="button" tabindex="0" aria-label="Notificaciones" onclick="toggleNotificationMenu(event)" onkeydown="if(event.key==='Enter' || event.key===' ') toggleNotificationMenu(event)"
                         style="position: relative;">
                         <div class="notification-trigger"
                             style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; color: var(--color-text); background: var(--color-card-bg);">
@@ -756,6 +756,7 @@
     <!-- Modal Genérico Dinámico para Módulos (Examen, Curso, etc.) -->
     <div class="modal-overlay" id="modal-docente-dinamico"
         style="display: none; align-items: center; justify-content: center; z-index: 1050; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);"
+        role="dialog" aria-modal="true" aria-labelledby="modal-dinamico-titulo"
         onclick="if (event.target === this) this.style.display='none'">
         <div class="modal-card"
             style="width: 950px; max-width: 95%; max-height: 95vh; display: flex; flex-direction: column; background: var(--color-card-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">

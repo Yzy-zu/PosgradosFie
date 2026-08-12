@@ -3,6 +3,7 @@ const WorkflowService = require('../services/workflowService');
 const emit = require('../utils/socketEmit');
 // Crear una solicitud
 const crearSolicitud = async (req, res) => {
+    let conn;
     try {
         // M-01: idAspi se deriva del JWT, no del body, para evitar IDOR
         const { idC, idConvocatoriaOpcion } = req.body;
@@ -11,28 +12,34 @@ const crearSolicitud = async (req, res) => {
             return res.status(400).json({ mensaje: 'Todos los campos son obligatorios.' });
         }
 
-        // Resolver el aspirante desde el usuario autenticado
-        const [aspiranteJWT] = await db.query('SELECT id FROM aspirante WHERE idUsuario = ?', [req.usuario.id]);
+        conn = await db.getConnection();
+        await conn.beginTransaction();
+
+        // Bloquear el registro del aspirante para serializar peticiones concurrentes (M-03)
+        const [aspiranteJWT] = await conn.query('SELECT id FROM aspirante WHERE idUsuario = ? FOR UPDATE', [req.usuario.id]);
         if (aspiranteJWT.length === 0) {
+            await conn.rollback();
             return res.status(403).json({ mensaje: 'El usuario autenticado no tiene perfil de aspirante.' });
         }
         const idAspi = aspiranteJWT[0].id;
 
         // Verificar que exista la convocatoria
-        const [convocatoria] = await db.query('SELECT id, tipo FROM convocatorias WHERE id = ?', [idC]);
+        const [convocatoria] = await conn.query('SELECT id, tipo FROM convocatorias WHERE id = ?', [idC]);
         if (convocatoria.length === 0) {
+            await conn.rollback();
             return res.status(404).json({ mensaje: 'El posgrado no existe.' });
         }
 
-        // Buscar solicitudes activas del aspirante
-        const [solicitudes] = await db.query(
-            "SELECT * FROM solicitud WHERE idAspi = ? AND estado != 'CANCELADO'",
+        // Buscar solicitudes activas del aspirante (protegidas por el bloqueo en aspirante)
+        const [solicitudes] = await conn.query(
+            "SELECT id, idConvocatoria FROM solicitud WHERE idAspi = ? AND estado != 'CANCELADO'",
             [idAspi]
         );
 
         if (solicitudes.length > 0) {
             const match = solicitudes.find(s => s.idConvocatoria == idC);
 
+            await conn.rollback();
             if (match) {
                 return res.status(200).json({
                     mensaje: 'Solicitud recuperada.',
@@ -46,7 +53,7 @@ const crearSolicitud = async (req, res) => {
         }
 
         // Insertar nueva solicitud
-        const [resultado] = await db.query(
+        const [resultado] = await conn.query(
             'INSERT INTO solicitud (idAspi, idConvocatoria, idConvocatoriaOpcion) VALUES (?, ?, ?)',
             [idAspi, idC, idConvocatoriaOpcion || null]
         );
@@ -55,10 +62,12 @@ const crearSolicitud = async (req, res) => {
 
         // Si la convocatoria es de tipo DOCTORADO, asignar automáticamente la modalidad ENTREVISTA
         if (convocatoria[0].tipo === 'DOCTORADO') {
-            const [modEntrevista] = await db.query("SELECT id FROM modalidad_ingreso WHERE codigo = 'ENTREVISTA' LIMIT 1");
+            const [modEntrevista] = await conn.query("SELECT id FROM modalidad_ingreso WHERE codigo = 'ENTREVISTA' LIMIT 1");
             const idEntrevista = modEntrevista.length > 0 ? modEntrevista[0].id : 6;
-            await WorkflowService.asignarModalidad(idNuevaSolicitud, idEntrevista);
+            await WorkflowService.asignarModalidad(idNuevaSolicitud, idEntrevista, conn);
         }
+
+        await conn.commit();
 
         // Notificar a ADMIN y DOCENTE (aspirante creó una nueva solicitud)
         emit.aAdminYDocente(req);
@@ -68,8 +77,11 @@ const crearSolicitud = async (req, res) => {
             idSolicitud: idNuevaSolicitud
         });
     } catch (error) {
+        if (conn) await conn.rollback();
         console.error('Error en crearSolicitud:', error);
         return res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
+    } finally {
+        if (conn) conn.release();
     }
 };
 
@@ -165,6 +177,14 @@ const cancelarSolicitud = async (req, res) => {
             }
         }
 
+        const [estadoResult] = await db.query('SELECT estado FROM solicitud WHERE id = ?', [id]);
+        if (estadoResult.length === 0) {
+            return res.status(404).json({ success: false, mensaje: 'Solicitud no encontrada.' });
+        }
+        if (estadoResult[0].estado === 'APROBADO' || estadoResult[0].estado === 'RECHAZADO') {
+            return res.status(400).json({ success: false, mensaje: 'No se puede cancelar una solicitud que ya ha sido procesada.' });
+        }
+
         await db.query("UPDATE solicitud SET estado = 'CANCELADO' WHERE id = ?", [id]);
         // Obtener aspirante para notificación dirigida
         const [solCancel] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [id]);
@@ -254,7 +274,7 @@ const enviarExpediente = async (req, res) => {
         const { id } = req.params;
 
         // Obtener la solicitud y su convocatoria asociada
-        const [solicitudes] = await db.query('SELECT id, idConvocatoria, estado FROM solicitud WHERE id = ?', [id]);
+        const [solicitudes] = await db.query('SELECT id, idConvocatoria, estado, idModalidad FROM solicitud WHERE id = ?', [id]);
         if (solicitudes.length === 0) {
             return res.status(404).json({ mensaje: 'La solicitud no existe.' });
         }
@@ -262,6 +282,10 @@ const enviarExpediente = async (req, res) => {
 
         if (solicitud.estado !== 'PENDIENTE') {
             return res.status(400).json({ mensaje: `La solicitud ya está en estado ${solicitud.estado} y no puede enviarse de nuevo.` });
+        }
+
+        if (solicitud.idModalidad === null) {
+            return res.status(400).json({ mensaje: 'Debes seleccionar una modalidad de ingreso antes de enviar el expediente.' });
         }
 
         // Obtener los requisitos OBLIGATORIOS de la convocatoria
@@ -304,7 +328,9 @@ const enviarExpediente = async (req, res) => {
 // Obtener modalidades (Nuevos Endpoints Fase 1)
 const getModalidadesIngreso = async (req, res) => {
     try {
-        const [resultados] = await db.query('SELECT id, codigo, icono, nombre, descripcion FROM modalidad_ingreso WHERE activo = 1 ORDER BY id ASC');
+        const [resultados] = await db.query(
+            "SELECT id, codigo, icono, nombre, descripcion FROM modalidad_ingreso WHERE activo = 1 AND codigo != 'ENTREVISTA' ORDER BY id ASC"
+        );
         return res.json(resultados);
     } catch (error) {
         console.error('Error en getModalidadesIngreso:', error);
@@ -371,11 +397,11 @@ const getSolicitudesPorModalidad = async (req, res) => {
                 mi.nombre AS modalidadNombre,
                 ep.id AS idEtapaActual,
                 ep.nombre AS etapaNombre,
-                pe.id AS idProgramacion,
-                pe.fecha,
+                COALESCE(pe.id, pc.id) AS idProgramacion,
+                COALESCE(pe.fecha, pc.fechaInicio) AS fecha,
                 pe.hora,
-                pe.lugar,
-                pe.observaciones
+                COALESCE(pe.lugar, pc.aula) AS lugar,
+                COALESCE(pe.observaciones, pc.observaciones) AS observaciones
             FROM solicitud s
             JOIN aspirante a ON s.idAspi = a.id
             JOIN usuario u ON a.idUsuario = u.id
@@ -387,6 +413,7 @@ const getSolicitudesPorModalidad = async (req, res) => {
             LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
             LEFT JOIN modalidad_etapa me ON s.idModalidad = me.modalidad_id AND s.idEtapaActual = me.etapa_id
             LEFT JOIN programacion_examen pe ON pe.idSolicitud = s.id
+            LEFT JOIN programacion_curso pc ON pc.idSolicitud = s.id
             WHERE s.idModalidad = ? AND s.estado != 'CANCELADO' ${filtroEtapa}
             ORDER BY s.creadoEn DESC
         `;
@@ -494,11 +521,11 @@ const getSolicitudesActivas = async (req, res) => {
                 mi.nombre AS modalidadNombre,
                 ep.id AS idEtapaActual,
                 ep.nombre AS etapaNombre,
-                pe.id AS idProgramacion,
-                pe.fecha,
+                COALESCE(pe.id, pc.id) AS idProgramacion,
+                COALESCE(pe.fecha, pc.fechaInicio) AS fecha,
                 pe.hora,
-                pe.lugar,
-                pe.observaciones
+                COALESCE(pe.lugar, pc.aula) AS lugar,
+                COALESCE(pe.observaciones, pc.observaciones) AS observaciones
             FROM solicitud s
             JOIN aspirante a ON s.idAspi = a.id
             JOIN usuario u ON a.idUsuario = u.id
@@ -509,6 +536,7 @@ const getSolicitudesActivas = async (req, res) => {
             LEFT JOIN modalidad_ingreso mi ON s.idModalidad = mi.id
             LEFT JOIN etapa_proceso ep ON s.idEtapaActual = ep.id
             LEFT JOIN programacion_examen pe ON pe.idSolicitud = s.id
+            LEFT JOIN programacion_curso pc ON pc.idSolicitud = s.id
             WHERE s.estado != 'CANCELADO'
             ORDER BY s.creadoEn DESC
         `;
