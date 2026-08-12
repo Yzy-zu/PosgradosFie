@@ -54,9 +54,11 @@ app.use(cors({
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, '../frontend')));
-// La carpeta de uploads ya no se sirve de manera estática para proteger los archivos (Prioridad 2)
-// Servir imágenes y flyers generales
+
+// Servir carpetas estáticas de archivos e imágenes
 app.use('/files', express.static(path.join(__dirname, 'files')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/usuario', require('./routes/usuario.routes'));
 app.use('/api/posgrado', require('./routes/posgrado.routes'));
@@ -114,8 +116,6 @@ app.get('/api/files/{*path}', (req, res) => {
 });
 
 // Nota: La ruta POST /api/entrevistas (legacy) fue migrada a /api/entrevista via entrevista.routes.js
-
-
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/aspirante.html'));
