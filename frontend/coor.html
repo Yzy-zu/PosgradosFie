@@ -125,23 +125,44 @@
                     </div>
 
                   <!-- Menu de Usuario -->
-    <div class="dropdown">
-        <div class="d-flex align-items-center gap-2 border rounded-pill px-3 py-1 bg-white cursor-pointer" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
-            <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem;">
-            CO
-        </div>
-            <span class="fw-medium small text-dark">Coordinador</span>
-            <i class="fa-solid fa-chevron-down text-muted small"></i>
-         </div>
-            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" aria-labelledby="userMenu">
-        <li>
-            <a class="dropdown-item small" href="#perfil">
-                <i class="fa-solid fa-id-badge me-2 text-muted"></i>Ver Perfil
-            </a>
-        </li>
-    </ul>
-</div>
-            </header>
+                    <div class="dropdown">
+                        <div
+                            class="d-flex align-items-center gap-2 border rounded-pill px-3 py-1 bg-white"
+                            id="userMenu"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            style="cursor:pointer; max-width:360px;">
+
+                            <div
+                                id="headerInicialesCoordinador"
+                                class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
+                                style="width:32px;height:32px;font-size:.8rem;">
+                                CO
+                            </div>
+
+                            <span
+                                id="correoHeaderCoordinador"
+                                class="fw-medium small text-dark text-truncate"
+                                style="max-width:250px;">
+                                Cargando...
+                            </span>
+
+                            <i class="fa-solid fa-chevron-down text-muted small flex-shrink-0"></i>
+                        </div>
+
+                        <ul
+                            class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2"
+                            aria-labelledby="userMenu">
+
+                            <li>
+                                <a class="dropdown-item small" href="#perfil">
+                                    <i class="fa-solid fa-id-badge me-2 text-muted"></i>
+                                    Ver Perfil
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </header>
 
           <!-- ==========================================================
      VISTA 1: INICIO - NUEVO DISEÑO
@@ -1341,121 +1362,129 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
 ========================================================== -->
 <section id="vista-perfil" class="vista-seccion p-4 d-none">
 
-    <div class="row justify-content-center">
+    <div class="container-fluid">
 
-        <div class="col-xl-8">
+        <div class="row justify-content-center">
 
-            <div class="card border-0 shadow-sm"
-                 style="border-radius: 20px; overflow: hidden;">
+            <div class="col-12 col-lg-9 col-xl-7">
 
-                <div style="
-                    height: 130px;
-                    background: linear-gradient(
-                        135deg,
-                        #111827 0%,
-                        #8a1c24 100%
-                    );
-                "></div>
+                <div
+                    class="card border-0 shadow-sm mx-auto"
+                    style="
+                        border-radius:22px;
+                        overflow:hidden;
+                        max-width:820px;
+                    ">
 
-                <div class="card-body px-4 px-md-5 pb-5">
-
-                    <div class="d-flex flex-column flex-md-row align-items-md-end gap-3"
-                         style="margin-top: -46px;">
-
-                        <div class="rounded-circle bg-white p-1 shadow-sm">
-
-                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-                                 style="
-                                    width: 90px;
-                                    height: 90px;
-                                    background: #8a1c24;
-                                    font-size: 1.5rem;
-                                 ">
-                                CO
-                            </div>
-
-                        </div>
-
-                        <div class="pb-md-2">
-
-                            <h4 class="fw-bold text-dark mb-1">
-                                Coordinador
-                            </h4>
-
-                            <span class="badge rounded-pill px-3 py-2"
-                                  style="
-                                    background: rgba(138, 28, 36, 0.10);
-                                    color: #8a1c24;
-                                  ">
-                                Coordinación de Posgrados
-                            </span>
-
-                        </div>
-
+                    <div
+                        style="
+                            height:100px;
+                            background:linear-gradient(
+                                120deg,
+                                #111827 0%,
+                                #8a1c24 100%
+                            );
+                        ">
                     </div>
 
-                    <hr class="my-4">
+                    <div class="card-body px-4 px-md-5 pb-5">
 
-                    <div class="row g-4">
+                        <div
+                            class="d-flex align-items-end gap-3"
+                            style="margin-top:-50px;">
 
-                        <div class="col-md-6">
+                            <div class="rounded-circle bg-white p-1 shadow-sm flex-shrink-0">
+                                <div
+                                    id="perfilIniciales"
+                                    class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                                    style="
+                                        width:92px;
+                                        height:92px;
+                                        background:#8a1c24;
+                                        font-size:1.7rem;
+                                    ">
+                                    CO
+                                </div>
+                            </div>
 
-                            <label class="text-muted small fw-bold text-uppercase mb-2">
-                                Nombre
-                            </label>
-
-                            <div class="border rounded-3 p-3 bg-light">
-                                Coordinador
+                                <div
+                                    id="perfilCorreoTitulo"
+                                    class="fw-bold text-dark"
+                                    style="
+                                        font-size:1.25rem;
+                                        overflow-wrap:anywhere;
+                                    ">
+                                    Cargando...
+                                </div>
                             </div>
 
                         </div>
 
-                        <div class="col-md-6">
+                        <hr class="my-4">
 
-                            <label class="text-muted small fw-bold text-uppercase mb-2">
-                                Rol
-                            </label>
+                        <div class="row g-4">
 
-                            <div class="border rounded-3 p-3 bg-light">
-                                COORDINADOR
-                            </div>
+                            <div class="col-12">
 
-                        </div>
+                                <label
+                                    class="small fw-bold text-uppercase mb-2 d-block"
+                                    style="color:#475569;">
 
-                        <div class="col-md-6">
+                                    <i class="fa-regular fa-envelope me-2"></i>
+                                    Correo Electronico
 
-                            <label class="text-muted small fw-bold text-uppercase mb-2">
-                                Correo
-                            </label>
+                                </label>
 
-                            <div
-                                id="perfilCorreoCoordinador"
-                                class="border rounded-3 p-3 bg-light">
-                                Sin información
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-6">
-
-                            <label class="text-muted small fw-bold text-uppercase mb-2">
-                                Estado
-                            </label>
-
-                            <div class="border rounded-3 p-3 bg-light">
-
-                                <span class="text-success fw-semibold">
-                                    <i class="fa-solid fa-circle-check me-1"></i>
-                                    Sesión activa
-                                </span>
+                                <div
+                                    id="perfilCorreoCoordinador"
+                                    class="border rounded-3 bg-light"
+                                    style="
+                                        min-height:72px;
+                                        padding:20px;
+                                        font-size:1.05rem;
+                                        font-weight:600;
+                                        overflow-wrap:anywhere;
+                                    ">
+                                    Cargando...
+                                </div>
 
                             </div>
 
+                            <div class="col-12">
+
+                                <label
+                                    class="small fw-bold text-uppercase mb-2 d-block"
+                                    style="color:#475569;">
+
+                                    <i class="fa-solid fa-user-shield me-2"></i>
+                                    Rol
+
+                                </label>
+
+                                <div
+                                    id="perfilRol"
+                                    class="border rounded-3 bg-light"
+                                    style="
+                                        min-height:72px;
+                                        padding:20px;
+                                        font-size:1.05rem;
+                                        font-weight:600;
+                                    ">
+                                    COORDINADOR
+
+                                    
+                                </div>
+                            </div>
+
+                                 <div class="pb-2 min-width-0">
+                                <div
+                                    class="small text-muted text-uppercase fw-bold mb-1"
+                                    style="letter-spacing:.10px;">
+                                    Cuenta activa
+                                </div>
+
                         </div>
 
-                    </div>
-
-                    <div class="mt-4 text-end">
                     </div>
 
                 </div>
@@ -1878,6 +1907,146 @@ VISTA 4: ENTREVISTAS - NUEVO DISEÑO
 
 <!-- Scripts propios -->
 <script src="js/convocatorias.js"></script>
+
+<script>
+(function () {
+
+    function leerObjetoUsuario() {
+        const fuentes = [
+            sessionStorage.getItem("usuario"),
+            localStorage.getItem("usuario")
+        ];
+
+        for (const valor of fuentes) {
+            if (!valor) continue;
+
+            try {
+                const parsed = JSON.parse(valor);
+
+                if (parsed && typeof parsed === "object") {
+                    return parsed.usuario || parsed;
+                }
+            } catch (e) {
+                // Ignorar valores que no sean JSON.
+            }
+        }
+
+        return {};
+    }
+
+    function inicialesDesdeCorreo(correo) {
+        const local = String(correo || "")
+            .split("@")[0]
+            .replace(/[._-]+/g, " ")
+            .trim();
+
+        if (!local) return "CO";
+
+        const partes = local.split(/\s+/).filter(Boolean);
+
+        if (partes.length >= 2) {
+            return (partes[0][0] + partes[1][0]).toUpperCase();
+        }
+
+        return local.substring(0, 2).toUpperCase();
+    }
+
+    function pintarPerfil(datos) {
+        const correo = String(
+            datos.correo ||
+            datos.email ||
+            sessionStorage.getItem("correo") ||
+            localStorage.getItem("correo") ||
+            "Sin información"
+        ).trim();
+
+        const rol = String(
+            datos.rol ||
+            sessionStorage.getItem("rol") ||
+            localStorage.getItem("rol") ||
+            "COORDINADOR"
+        ).trim().toUpperCase();
+
+        const iniciales = inicialesDesdeCorreo(correo);
+
+        const idsTexto = {
+            correoHeaderCoordinador: correo,
+            perfilCorreoTitulo: correo,
+            perfilCorreoCoordinador: correo,
+            perfilRol: rol,
+            perfilIniciales: iniciales,
+            headerInicialesCoordinador: iniciales
+        };
+
+        Object.entries(idsTexto).forEach(([id, valor]) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = valor;
+        });
+
+        if (correo && correo !== "Sin información") {
+            sessionStorage.setItem("correo", correo);
+        }
+
+        if (rol) {
+            sessionStorage.setItem("rol", rol);
+        }
+    }
+
+    async function cargarPerfilCuentaActual() {
+        const local = leerObjetoUsuario();
+
+        // Pintar inmediatamente con lo que dejó el login.
+        pintarPerfil(local);
+
+        // Si no vino correo, consultarlo al backend con el token actual.
+        const correoLocal =
+            local.correo ||
+            local.email ||
+            sessionStorage.getItem("correo") ||
+            localStorage.getItem("correo");
+
+        if (correoLocal) return;
+
+        try {
+            const respuesta = await fetch("/api/coordinador/perfil");
+            const resultado = await respuesta.json().catch(() => ({}));
+
+            if (!respuesta.ok) {
+                console.warn(
+                    "No se pudo obtener el perfil desde la API:",
+                    resultado.mensaje || resultado.error || respuesta.status
+                );
+                return;
+            }
+
+            const usuario =
+                resultado.usuario ||
+                resultado.perfil ||
+                resultado;
+
+            pintarPerfil(usuario);
+
+        } catch (error) {
+            console.error(
+                "Error al consultar el perfil del coordinador:",
+                error
+            );
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", cargarPerfilCuentaActual);
+
+    window.addEventListener("hashchange", () => {
+        if (window.location.hash === "#perfil") {
+            cargarPerfilCuentaActual();
+        }
+    });
+
+    window.cargarPerfilCuentaActual = cargarPerfilCuentaActual;
+
+})();
+</script>
+
 <script src="js/coor.js"></script>
 
 </body>

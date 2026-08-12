@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     configurarBuscadorAspirantes();
     configurarFiltrosAspirantes();
     cargarNotificaciones();
+    cargarPerfilCoordinador();
 
     // inyectar nombre del coordinador en topbar
     try {
@@ -1915,6 +1916,101 @@ async function cargarNotificaciones() {
 
 
 
+
+function cargarPerfilCoordinador() {
+
+    try {
+
+        const usuarioGuardado = sessionStorage.getItem("usuario");
+
+        if (!usuarioGuardado) {
+            console.warn("No existe usuario en sessionStorage");
+            return;
+        }
+
+        const usuario = JSON.parse(usuarioGuardado);
+
+        console.log("Usuario coordinador:", usuario);
+
+        const correo =
+            usuario.correo ||
+            usuario.email ||
+            "Sin información";
+
+        const rol =
+            usuario.rol ||
+            "COORDINADOR";
+
+
+        // ==========================
+        // CORREO DEL HEADER
+        // ==========================
+
+        const correoHeader =
+            document.getElementById(
+                "correoCoordinadorHeader"
+            );
+
+        if (correoHeader) {
+            correoHeader.textContent = correo;
+        }
+
+
+        // ==========================
+        // CORREO DEL PERFIL
+        // ==========================
+
+        const correoPerfil =
+            document.getElementById(
+                "perfilCorreoCoordinador"
+            );
+
+        if (correoPerfil) {
+            correoPerfil.textContent = correo;
+        }
+
+
+        // ==========================
+        // ROL
+        // ==========================
+
+        const rolPerfil =
+            document.getElementById(
+                "perfilRolCoordinador"
+            );
+
+        if (rolPerfil) {
+            rolPerfil.textContent = rol;
+        }
+
+
+        // ==========================
+        // INICIALES
+        // ==========================
+
+        const iniciales =
+            document.getElementById(
+                "perfilIniciales"
+            );
+
+        if (iniciales) {
+
+            iniciales.textContent =
+                rol === "COORDINADOR"
+                    ? "CO"
+                    : rol.substring(0, 2).toUpperCase();
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando perfil:",
+            error
+        );
+
+    }
+}
 
 
 // Expuestos al Scope Global para listeners en el DOM
