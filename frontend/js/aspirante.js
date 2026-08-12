@@ -1,6 +1,7 @@
 // Variables globales
-let nivelAcademicoSeleccionado = null;
+let nivelAcademicoSeleccionado = '';
 let estacionActual = 0;
+let totalEstaciones = 0;
 let aspiranteData = null; // Almacenará los datos de la BD del aspirante
 let currentSolicitudId = null;
 
@@ -11,7 +12,7 @@ socket.on('connect', () => {
     socket.emit('registrarSala', { rol: 'ASPIRANTE', idUsuario: usr.id });
 });
 socket.on('actualizacionGlobal', () => {
-    // Recargar vista actual si hay un cambio en el sistema (ej. evaluación de docente)
+    //recargar vista al detectar cambios
     const currentHash = window.location.hash;
     if (currentHash === '#inicio' || currentHash === '') {
         if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
@@ -40,7 +41,7 @@ socket.on('actualizacionGlobal', () => {
                 .catch(e => console.error("Error validando estado de solicitud:", e));
         }
     } else if (currentHash === '#convocatorias') {
-        // Antes de renderizar la lista, verificar si ya hay solicitud activa.
+        // verificar si hay solicitud activa
         // Si la hay, mantener la tarjeta de solicitud activa en lugar de sobreescribirla.
         if (aspiranteData && aspiranteData.id) {
             fetch(`/api/solicitud/activa/${aspiranteData.id}`)
@@ -60,11 +61,7 @@ socket.on('actualizacionGlobal', () => {
 });
 
 // Manejo y persistencia de estado de la barra lateral (Sidebar)
-// Bug 5 Fix: toggleSidebar() es la versión canónica definida en utils.js
-// Se elimina la definición local para evitar duplicación.
-
-// BUG-07 Fix: restaurarEstadoSidebar() ya es manejada por utils.js (DOMContentLoaded).
-// Se mantiene como no-op para no romper la llamada en línea 37 en caso de orden de carga.
+// mantener como no-op para retrocompatibilidad
 function restaurarEstadoSidebar() {
     // Delegado a utils.js — no duplicar lógica
 }
@@ -94,7 +91,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     };
 
     // Obtener datos del aspirante real
-    // Bug 1 Fix: usar /api/aspirante/me en lugar de descargar toda la tabla
+    // obtener datos del aspirante
     try {
         const resAspirantes = await fetch('/api/aspirante/me');
         if (resAspirantes.ok) {
@@ -119,9 +116,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                 if (topbarNombre) topbarNombre.innerText = nombreCompleto;
                 if (topbarIniciales) topbarIniciales.innerText = iniciales;
                 if (topbarFirstName) topbarFirstName.innerText = nombreCapitalizado.split(' ')[0];
-
-                // Menú Perfil Antiguo removido, ya no es necesario inyectar datos al dropdown
-
 
                 // Cargar modalidades de admisión dinámicas
                 cargarModalidadesAdmision();
@@ -148,9 +142,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                             window.location.hash = targetHash;
                             switchView(targetHash);
 
-                            // Ocultamos el loader inicial si hubiera
+                            // ocultar loader
                             ocultarLoader();
-                            return; // Salimos para no ejecutar el código de abajo
+                            return;
                         }
                     }
                 } catch (e) {
@@ -173,6 +167,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     const fallbackHash = window.location.hash.replace('#', '') || 'inicio';
     window.location.hash = fallbackHash;
     switchView(fallbackHash);
+
+    // ocultar loader
+    ocultarLoader();
 });
 
 
@@ -230,7 +227,7 @@ function switchView(viewId) {
                 'admision': typeof t === 'function' ? t('sb_admision') : 'Admisión'
             };
             topbarNombre.innerText = titulos[viewId] || (viewId.charAt(0).toUpperCase() + viewId.slice(1));
-            // Bug 6 Fix: cargar datos reales para la gráfica de proceso
+            // cargar datos para gráfica de proceso
             if (viewId === 'proceso') {
                 cargarDatosProceso();
             }
@@ -403,7 +400,7 @@ async function cargarDatosProceso() {
                     avance = total > 0 ? (aprobados / total) : 0.05; // 0.05 minimo para ver zorro avanzar poquito
                 }
             } else {
-                // Otras etapas podrían tener lógicas de avance, por ahora 0.1
+                // lógicas de avance adicionales
                 avance = 0.1; 
             }
         }
@@ -473,7 +470,7 @@ async function cargarNotificaciones() {
                     grupos[remitente].mensajes.push(notif);
                 });
 
-                // Ordenar mensajes de cada grupo (más viejo al más nuevo para leer como chat)
+                //ordenar mensajes cronológicamente
                 Object.values(grupos).forEach(grupo => {
                     grupo.mensajes.sort((a, b) => new Date(a.creado_en || 0) - new Date(b.creado_en || 0));
                 });
@@ -649,7 +646,7 @@ function abrirNotificacion(remitenteKey, element) {
 
         if (!grupo) return;
 
-        // BUG-08 Fix: función para escapar HTML y prevenir XSS en mensajes del servidor
+        // escapar HTML para prevenir XSS
         const escaparHTML = (str) => {
             if (!str) return '';
             return String(str)
@@ -724,7 +721,7 @@ function seleccionarPrograma(nombrePrograma) {
     const token = sessionStorage.getItem('token');
     const usuario = sessionStorage.getItem('usuario');
 
-    // SI NO HA INICIADO SESIÓN (Es un aspirante nuevo o sin credenciales activas)
+    //aspirante sin sesión
     if (!token || !usuario) {
         Swal.fire({
             title: 'Atención',
@@ -732,7 +729,7 @@ function seleccionarPrograma(nombrePrograma) {
             icon: 'info',
             confirmButtonColor: 'var(--color-info)'
         }).then(() => {
-            // Guardamos temporalmente qué programa seleccionó
+            //guardar selección temporalmente
             sessionStorage.setItem('programaPendiente', nombrePrograma);
             // Lo mandamos al formulario de registro limpio (registro.html)
             window.location.href = "registro.html";
@@ -891,7 +888,7 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                idAspi: aspiranteData.id,
+                //derivar id desde token
                 idC: idConvocatoria,
                 idConvocatoriaOpcion: idOpcionSeleccionada
             })
@@ -935,14 +932,11 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
     if (idConvocatoria) sessionStorage.setItem('idConvocatoriaPendiente', idConvocatoria);
     nivelAcademicoSeleccionado = nivel;
 
-    // Mostrar pestaña de Documentos ahora que ya seleccionó convocatoria
+    // mostrar pestaña de documentos
     const navDocumentos = document.getElementById('li-nav-documentos');
     if (navDocumentos) {
         navDocumentos.style.display = 'block';
     }
-
-    // Configurar paneles según nivel (lógica centralizada en configurarPanelesNivel)
-    configurarPanelesNivel(nivel, idConvocatoria);
 
     // Redirigir a la vista de documentos
     switchView('documentos');
@@ -952,26 +946,40 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
  * LÓGICA DE LAS ESTACIONES (STEPPER) - NAVEGACIÓN
  */
 function cambiarEstacion(nuevaEstacion) {
-    // Ocultar panel actual y mostrar el nuevo
-    document.getElementById(`panel-estacion-${estacionActual}`).classList.remove('active-panel');
-    document.getElementById(`panel-estacion-${nuevaEstacion}`).classList.add('active-panel');
-
-    // BUG-04 Fix: solo marcar como 'completed' al avanzar; al retroceder limpiar 'completed' del nodo actual
-    const nodeActual = document.getElementById(`node-${estacionActual}`);
-    const nodeNuevo = document.getElementById(`node-${nuevaEstacion}`);
-
-    nodeActual.classList.remove('active');
-    if (nuevaEstacion > estacionActual) {
-        // Avanzando: el nodo anterior queda completado
-        nodeActual.classList.add('completed');
-    } else {
-        // Retrocediendo: el nodo al que volvemos deja de ser completado
-        nodeActual.classList.remove('completed');
-        nodeNuevo.classList.remove('completed');
+    // mostrar panel destino
+    const panelAnterior = document.getElementById(`panel-estacion-${estacionActual}`);
+    const panelNuevo = document.getElementById(`panel-estacion-${nuevaEstacion}`);
+    
+    if (panelAnterior) {
+        panelAnterior.classList.remove('active-panel');
+        panelAnterior.style.display = 'none';
     }
-    nodeNuevo.classList.add('active');
+    if (panelNuevo) {
+        panelNuevo.classList.add('active-panel');
+        panelNuevo.style.display = 'block';
+    }
+
+    // asegurar estados active y completed en nodos
+    const maxEtapas = typeof totalEstaciones !== 'undefined' && totalEstaciones > 0 ? totalEstaciones : 3;
+    for (let i = 0; i <= maxEtapas; i++) {
+        const nodo = document.getElementById(`node-${i}`);
+        if (nodo) {
+            nodo.classList.remove('active', 'completed');
+            if (i < nuevaEstacion) {
+                nodo.classList.add('completed');
+            } else if (i === nuevaEstacion) {
+                nodo.classList.add('active');
+            }
+        }
+    }
 
     estacionActual = nuevaEstacion;
+    
+    // persistir en sessionStorage
+    if (currentSolicitudId) {
+        sessionStorage.setItem(`estacion_actual_soli_${currentSolicitudId}`, nuevaEstacion);
+    }
+    
     actualizarPosicionZorro();
 }
 
@@ -990,7 +998,8 @@ function actualizarPosicionZorro(salto = true) {
         fox.style.left = `${offsetLeft}px`;
 
         // Actualizar la línea de progreso (animación tipo agua)
-        const porcentaje = (estacionActual / 3) * 100;
+        const maxEtapas = typeof totalEstaciones !== 'undefined' && totalEstaciones > 0 ? totalEstaciones : 3;
+        const porcentaje = (estacionActual / maxEtapas) * 100;
         wrapper.style.setProperty('--progress', `${porcentaje}%`);
 
         if (salto) {
@@ -1004,9 +1013,17 @@ function actualizarPosicionZorro(salto = true) {
     }
 }
 
-// Actualizar zorro al cambiar el tamaño de la ventana
+// Actualizar mapa al cambiar el tamaño de la ventana con debounce
+let resizeTimer;
 window.addEventListener('resize', () => {
-    actualizarPosicionZorro(false);
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        if (window.mapaProcesoData) {
+            renderizarMapaProceso(window.mapaProcesoData.etapas, window.mapaProcesoData.avance);
+        } else {
+            actualizarPosicionZorro(false);
+        }
+    }, 250);
 });
 
 /**
@@ -1014,10 +1031,11 @@ window.addEventListener('resize', () => {
  */
 async function avanzarEstacion(nuevaEstacion) {
     const boton = document.getElementById(`btn-next-${estacionActual}`);
-    if (boton) boton.disabled = true; // Deshabilitar temporalmente para evitar doble click
+    if (boton) boton.disabled = true; //evitar doble click
 
     // Interceptar si es la estación 0 para guardar la modalidad de admisión
     if (estacionActual === 0 && currentSolicitudId) {
+        let inputModalidadValue = null;
         if (nivelAcademicoSeleccionado !== 'Doctorado') {
             const contenedorMaestria = document.getElementById('opciones-admision-maestria');
             const inputModalidad = contenedorMaestria ? contenedorMaestria.querySelector('input[name="modalidad"]:checked') : null;
@@ -1031,18 +1049,28 @@ async function avanzarEstacion(nuevaEstacion) {
                 });
                 return;
             }
-            try {
-                const res = await fetch(`/api/solicitud/modalidad/${currentSolicitudId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tipoAdmision: inputModalidad.value }) // Por retrocompatibilidad de nombre de var en frontend, enviamos el ID en value
-                });
-                if (!res.ok) {
-                    console.error("Error al guardar la modalidad en la base de datos.");
-                }
-            } catch (e) {
-                console.error("Error de conexión al guardar modalidad:", e);
+            inputModalidadValue = inputModalidad.value;
+        } else {
+            inputModalidadValue = 6; // Entrevista de Admisión para Doctorado
+        }
+        
+        try {
+            const res = await fetch(`/api/solicitud/modalidad/${currentSolicitudId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tipoAdmision: inputModalidadValue }) // Por retrocompatibilidad de nombre de var en frontend, enviamos el ID en value
+            });
+            if (!res.ok) {
+                console.error("Error al guardar la modalidad en la base de datos.");
+                Swal.fire('Error', 'No se pudo guardar la modalidad de admisión. Inténtalo de nuevo.', 'error');
+                if (boton) boton.disabled = false;
+                return; // abortar avance si falla modalidad
             }
+        } catch (e) {
+            console.error("Error de conexión al guardar modalidad:", e);
+            Swal.fire('Error de conexión', 'No se pudo contactar al servidor. Inténtalo de nuevo.', 'error');
+            if (boton) boton.disabled = false;
+            return; // abortar avance si falla conexión
         }
     }
 
@@ -1051,14 +1079,14 @@ async function avanzarEstacion(nuevaEstacion) {
 
     if (form && currentSolicitudId) {
         const formData = new FormData(form);
-        // Bug 8 Fix: rastrear fallos de subida y notificar al usuario
+        // rastrear fallos de subida
         const fallos = [];
         // Iterar sobre los archivos seleccionados en este form
         for (let [name, file] of formData.entries()) {
             if (file && file.size > 0) {
                 const subidaData = new FormData();
                 subidaData.append('idSoli', currentSolicitudId);
-                // El name del input ahora es el idRequisito dinámico
+                //usar id de requisito como nombre de input
                 subidaData.append('idRequisito', name);
                 subidaData.append('archivo', file);
 
@@ -1082,11 +1110,13 @@ async function avanzarEstacion(nuevaEstacion) {
         if (fallos.length > 0) {
             ocultarLoader();
             await Swal.fire({
-                title: 'Advertencia',
-                html: `Los siguientes archivos no pudieron subirse:<br><strong>${fallos.join('<br>')}</strong><br><br>Puedes intentar subirlos de nuevo más tarde.`,
-                icon: 'warning',
+                title: 'Error de Subida',
+                html: `Los siguientes archivos no pudieron subirse:<br><strong>${fallos.join('<br>')}</strong><br><br>Por favor, intenta subirlos de nuevo.`,
+                icon: 'error',
                 confirmButtonColor: '#8a1c24'
             });
+            if (boton) boton.disabled = false;
+            return; // abortar si hay errores de subida
         }
     }
 
@@ -1148,12 +1178,9 @@ function verificarArchivosEstacion(estacion) {
         return;
     }
 
-    if (estacion >= 1 && estacion <= 3) {
-        let containerId = '';
-        let btnId = '';
-        if (estacion === 1) { containerId = 'grid-dinamico-identidad'; btnId = 'btn-next-1'; }
-        else if (estacion === 2) { containerId = 'grid-dinamico-academico'; btnId = 'btn-next-2'; }
-        else if (estacion === 3) { containerId = 'grid-dinamico-evaluacion'; btnId = 'btn-finalizar'; }
+    if (estacion >= 1 && estacion <= totalEstaciones) {
+        let containerId = `grid-dinamico-${estacion}`;
+        let btnId = estacion === totalEstaciones ? 'btn-finalizar' : `btn-next-${estacion}`;
 
         const contenedor = document.getElementById(containerId);
         if (contenedor) {
@@ -1165,16 +1192,16 @@ function verificarArchivosEstacion(estacion) {
                 }
             });
 
-            // Si es estación 3, también validar el checkbox legal
-            if (estacion === 3) {
-                const chkProtesta = document.getElementById('chk-protesta');
-                if (chkProtesta && !chkProtesta.checked) {
+            // Si es la última estación, también validar el checkbox legal
+            if (estacion === totalEstaciones) {
+                const checkProtesta = document.getElementById('chk-protesta');
+                if (!checkProtesta || !checkProtesta.checked) {
                     allValid = false;
                 }
             }
 
-            const btn = document.getElementById(btnId);
-            if (btn) btn.disabled = !allValid;
+            const btnFinal = document.getElementById(btnId);
+            if (btnFinal) btnFinal.disabled = !allValid;
         }
     }
 }
@@ -1611,7 +1638,7 @@ async function iniciarReSubidaDocumento(idDoc, nombreReqEncoded, intentosActuale
                     confirmButtonColor: '#10b981'
                 });
 
-                // Recargar el panel dinámico para reflejar el nuevo estado en tiempo real
+                // recargar panel dinámico
                 bloquearInterfazPorRevision();
             } else {
                 Swal.fire({
@@ -1662,8 +1689,8 @@ async function finalizarProcesoEstaciones() {
 
     mostrarLoader();
 
-    // Subir todos los documentos de la estación 3 (Última Estación)
-    const form = document.getElementById(`form-estacion-3`);
+    // Subir todos los documentos de la última estación
+    const form = document.getElementById(`form-estacion-${typeof totalEstaciones !== 'undefined' && totalEstaciones > 0 ? totalEstaciones : 3}`);
     if (form && currentSolicitudId) {
         const formData = new FormData(form);
         for (let [name, file] of formData.entries()) {
@@ -1681,7 +1708,7 @@ async function finalizarProcesoEstaciones() {
                         console.error(`Error al subir documento ID Requisito: ${name}`);
                     }
                 } catch (e) {
-                    console.error("Error subiendo estación 3", e);
+                    console.error("Error subiendo última estación", e);
                 }
             }
         }
@@ -1692,7 +1719,7 @@ async function finalizarProcesoEstaciones() {
                 method: 'PUT'
             });
 
-            // BUG-06 Fix: verificar res.ok antes de mostrar éxito
+            // verificar respuesta exitosa
             if (!envioRes.ok) {
                 const errData = await envioRes.json().catch(() => ({}));
                 ocultarLoader();
@@ -1715,7 +1742,7 @@ async function finalizarProcesoEstaciones() {
             });
 
             // Forzar recarga de UI a EN_REVISION
-            const soliRes = await fetch(`/api/solicitud/${currentSolicitudId}`);
+            const soliRes = await fetch(`/api/solicitud/activa/${aspiranteData.id}`);
             if (soliRes.ok) {
                 const soliData = await soliRes.json();
                 if (['EN_REVISION', 'RECHAZADO', 'APROBADO'].includes(soliData.estado)) {
@@ -1724,7 +1751,7 @@ async function finalizarProcesoEstaciones() {
             }
         } catch (e) {
             console.error("Error al enviar expediente a revisión en DB:", e);
-            // BUG-03 Fix: ocultar loader en el catch para no bloquear la pantalla
+            // ocultar loader en caso de error
             ocultarLoader();
             Swal.fire({
                 title: 'Error de conexión',
@@ -1750,10 +1777,10 @@ async function finalizarProcesoEstaciones() {
  */
 function cargarConvocatorias() {
     if (nivelAcademicoSeleccionado) {
-        // Ya había seleccionado nivel → recargar la lista con datos frescos
-        activarModulosPostRegistro(nivelAcademicoSeleccionado === 'Doctorado'
-            ? 'Doctorado en Ingeniería Eléctrica'
-            : 'Maestría en Ingeniería Eléctrica');
+        // establecer nombre del programa
+        // activarModulosPostRegistro solo necesita el nivel ('Maestría' | 'Doctorado')
+        // para filtrar las convocatorias — no el nombre completo del programa.
+        activarModulosPostRegistro(nivelAcademicoSeleccionado);
     } else {
         // Sin nivel seleccionado → asegurar que se muestra el panel inicial
         const panelSeleccion = document.getElementById('seleccion-programa');
@@ -1774,6 +1801,9 @@ function cargarConvocatorias() {
 function renderizarMapaProceso(etapas, avance = 0) {
     const container = document.getElementById('mapa-proceso-container');
     if (!container) return;
+
+    // Guardar para redibujar en resize
+    window.mapaProcesoData = { etapas, avance };
 
     if (!etapas || etapas.length === 0) {
         container.innerHTML = `
@@ -1925,7 +1955,7 @@ function regresarAConvocatorias() {
     }
 }
 
-// --- NUEVAS FUNCIONES DE SEGURIDAD Y CANCELACION ---
+// --- FUNCIONES DE SEGURIDAD Y CANCELACIÓN ---
 
 function bloquearConvocatorias(soliData = null) {
     const seleccion = document.getElementById('seleccion-programa');
@@ -2039,7 +2069,7 @@ function bloquearConvocatorias(soliData = null) {
             if (!infoContainer) {
                 infoContainer = document.createElement('div');
                 infoContainer.id = 'bloqueo-info-convocatoria';
-                // Insertamos antes del boton de regresar a mis documentos
+                //insertar antes de regresar
                 const btn = bloqueo.querySelector('button');
                 bloqueo.insertBefore(infoContainer, btn);
             }
@@ -2080,7 +2110,7 @@ async function cancelarSolicitudActual() {
             if (seleccion) seleccion.style.display = 'flex';
             if (bloqueo) bloqueo.style.display = 'none';
 
-            // Bug 7 Fix: null-check antes de acceder al elemento
+            // validar existencia del elemento
             const navDocumentos = document.getElementById('li-nav-documentos');
             if (navDocumentos) navDocumentos.style.display = 'none';
 
@@ -2131,15 +2161,23 @@ async function cargarModalidadesAdmision() {
 /**
  * Abre modal informativo al hacer clic en el ícono (i) de cada opción de Estación 0
  */
-function abrirModalInfoModalidad(modKey, titulo) {
-    const tituloMod = typeof t === 'function' ? t('mod_' + modKey.toLowerCase()) : titulo;
+// modal de información de modalidad
+// real que ya viene del backend en lugar de buscarla por clave i18n (que no existe).
+function abrirModalInfoModalidad(modKey, descripcionReal) {
+    // Usar la descripción real del backend; solo como fallback intentar i18n
+    const tituloMod = typeof t === 'function'
+        ? (t('mod_' + (modKey || '').toLowerCase()) || modKey)
+        : modKey;
+    const descripcionTexto = descripcionReal && descripcionReal.trim()
+        ? descripcionReal
+        : 'Sin descripción adicional disponible para esta modalidad.';
     Swal.fire({
         title: `<i class="fa-solid fa-circle-info" style="color: var(--color-guinda);"></i> ${tituloMod}`,
         html: `
             <div style="text-align: left; font-size: 14px; color: var(--color-text); line-height: 1.6; margin-top: 10px;">
-                <p style="margin-bottom: 12px;"><strong>Información sobre: ${tituloMod}</strong></p>
+                <p style="margin-bottom: 12px;"><strong>${tituloMod}</strong></p>
                 <div style="background: var(--color-bg); border-left: 4px solid var(--color-guinda); padding: 14px 16px; border-radius: 8px; border: 1px solid var(--color-border); border-left-width: 4px;">
-                    Aquí se mostrarán los detalles, requisitos específicos y procedimientos correspondientes a la modalidad seleccionada.
+                    ${descripcionTexto}
                 </div>
             </div>
         `,
@@ -2157,75 +2195,137 @@ async function cargarRequisitosDocumentales(idConvocatoria, documentosSubidos = 
         const res = await fetch(`/api/convocatorias/${idConvocatoria}/requisitos`);
         if (res.ok) {
             const requisitos = await res.json();
-            const gridIdentidad = document.getElementById('grid-dinamico-identidad');
-            const gridAcademico = document.getElementById('grid-dinamico-academico');
-            const gridEvaluacion = document.getElementById('grid-dinamico-evaluacion');
+            const stepperContainer = document.getElementById('stepper-container');
+            const dynamicPanelsContainer = document.getElementById('dynamic-panels-container');
 
-            if (gridIdentidad) gridIdentidad.innerHTML = '';
-            if (gridAcademico) gridAcademico.innerHTML = '';
-            if (gridEvaluacion) gridEvaluacion.innerHTML = '';
+            if (dynamicPanelsContainer) dynamicPanelsContainer.innerHTML = '';
+            
+            //eliminar nodos dinámicos previos
+            if (stepperContainer) {
+                const nodos = stepperContainer.querySelectorAll('.step-node');
+                nodos.forEach(n => { if (n.id !== 'node-0') n.remove(); });
+            }
 
             if (requisitos.length === 0) {
-                if (gridIdentidad) gridIdentidad.innerHTML = '<p style="color: #666; font-style: italic;">No hay requisitos configurados.</p>';
+                totalEstaciones = 0;
                 return;
             }
 
-            let htmlIdentidad = '';
-            let htmlAcademico = '';
-            let htmlEvaluacion = '';
-
+            // Agrupar por categoría
+            const categoriasUnicas = [];
             requisitos.forEach(req => {
-                const docSubido = documentosSubidos.find(d => parseInt(d.idRequisito) === req.id);
-                const isRequired = req.obligatorio ? '*' : '';
-                const requiredAttr = (req.obligatorio && !docSubido) ? 'required' : '';
+                let cat = req.categoria;
+                if (cat === 'GENERAL') cat = 'IDENTIDAD'; // Fusionar GENERAL e IDENTIDAD
+                
+                let catObj = categoriasUnicas.find(c => c.id === cat);
+                if (!catObj) {
+                    let titulo = cat;
+                    let desc = "Sube los documentos oficiales requeridos. Asegúrate de que sean legibles y en formato PDF.";
+                    if (cat === 'IDENTIDAD') { titulo = "Identidad y Datos Generales"; }
+                    else if (cat === 'ACADEMICO') { titulo = "Antecedentes Académicos"; desc = "Carga tus títulos, certificados e historial académico oficial."; }
+                    else if (cat === 'EVALUACION') { titulo = "Evaluación y Cartas"; desc = "Sube los resultados de tus certificaciones, exámenes y cartas de recomendación."; }
+                    else if (cat === 'PAGO') { titulo = "Comprobantes de Pago"; desc = "Sube los comprobantes de pago requeridos."; }
+                    
+                    catObj = { id: cat, titulo, desc, reqs: [] };
+                    categoriasUnicas.push(catObj);
+                }
+                catObj.reqs.push(req);
+            });
 
-                let displayHtml = '';
-                let fileBoxClass = 'file-box';
+            totalEstaciones = categoriasUnicas.length;
 
-                if (docSubido) {
-                    fileBoxClass = 'file-box file-selected';
-                    let iconColor = 'var(--color-primary)';
-                    let statusText = 'Enviado';
-                    if (docSubido.estadoValidacion === 'APROBADO') {
-                        iconColor = 'var(--color-success)';
-                        statusText = 'Aprobado';
-                    } else if (docSubido.estadoValidacion === 'RECHAZADO') {
-                        iconColor = 'var(--color-danger)';
-                        statusText = 'Rechazado';
+            categoriasUnicas.forEach((catObj, index) => {
+                const estacionIndex = index + 1;
+                
+                // Generar Nodo Stepper
+                if (stepperContainer) {
+                    const nodoHtml = `<div class="step-node" id="node-${estacionIndex}">${estacionIndex}<span class="step-label" id="lbl-step-${estacionIndex}">${catObj.titulo}</span></div>`;
+                    stepperContainer.insertAdjacentHTML('beforeend', nodoHtml);
+                }
+                
+                // Generar Requisitos HTML
+                let gridHtml = '';
+                catObj.reqs.forEach(req => {
+                    const docSubido = documentosSubidos.find(d => parseInt(d.idRequisito) === req.id);
+                    const isRequired = req.obligatorio ? '*' : '';
+                    const requiredAttr = (req.obligatorio && !docSubido) ? 'required' : '';
+                    let displayHtml = '';
+                    let fileBoxClass = 'file-box';
+
+                    if (docSubido) {
+                        fileBoxClass = 'file-box file-selected';
+                        let iconColor = 'var(--color-primary)';
+                        let statusText = 'Enviado';
+                        if (docSubido.estadoValidacion === 'APROBADO') {
+                            iconColor = 'var(--color-success)';
+                            statusText = 'Aprobado';
+                        } else if (docSubido.estadoValidacion === 'RECHAZADO') {
+                            iconColor = 'var(--color-danger)';
+                            statusText = 'Rechazado';
+                        }
+                        displayHtml = `
+                            <div class="file-name-display" style="color: ${iconColor};">
+                                <i class="fa-solid fa-file-pdf"></i> ${statusText}
+                                ${docSubido.estadoValidacion === 'RECHAZADO' && docSubido.comentarios ? `<br><small style="color:var(--color-danger)">Motivo: ${docSubido.comentarios}</small>` : ''}
+                            </div>
+                        `;
                     }
-                    displayHtml = `
-                        <div class="file-name-display" style="color: ${iconColor};">
-                            <i class="fa-solid fa-file-pdf"></i> ${statusText}
-                            ${docSubido.estadoValidacion === 'RECHAZADO' && docSubido.comentarios ? `<br><small style="color:var(--color-danger)">Motivo: ${docSubido.comentarios}</small>` : ''}
+
+                    gridHtml += `
+                        <div class="${fileBoxClass}">
+                            <label><i class="fa-solid fa-file-arrow-up"></i> ${req.descripcion} <span style="color:red;">${isRequired}</span></label>
+                            <input type="file" name="${req.id}" accept=".pdf,.jpg,.jpeg,.png" onchange="verificarArchivosEstacion(${estacionIndex})" ${requiredAttr}>
+                            ${displayHtml}
+                        </div>
+                    `;
+                });
+
+                // Botones
+                let botonesHtml = '';
+                if (estacionIndex === totalEstaciones) {
+                    botonesHtml = `
+                        <div id="protesta-legal" class="protesta-box">
+                            <label style="display:flex; align-items:start; gap:10px; cursor:pointer;">
+                                <input type="checkbox" id="chk-protesta" style="margin-top:3px;" onchange="verificarArchivosEstacion(${estacionIndex})">
+                                <span><strong>Bajo protesta de decir verdad</strong>, declaro que la información y documentación proporcionada es auténtica y verídica. Entiendo que al enviar este expediente no podré modificarlo después.</span>
+                            </label>
+                        </div>
+                        <div id="botones-estacion-${estacionIndex}" style="display:flex; gap:15px; margin-top: 20px;">
+                            <button type="button" class="btn-secondary" onclick="cambiarEstacion(${estacionIndex - 1})" aria-label="Ir a paso ${estacionIndex}"><i class="fa-solid fa-arrow-left"></i> <span>Volver</span></button>
+                            <button type="button" class="btn-primary" id="btn-finalizar" style="width:auto; padding:12px 30px; background-color: var(--color-success);" disabled onclick="finalizarProcesoEstaciones()" aria-label="Concluir proceso"><span>Concluir y Enviar Expediente</span> <i class="fa-solid fa-paper-plane icon-anim-send"></i></button>
+                        </div>
+                    `;
+                } else {
+                    botonesHtml = `
+                        <div id="botones-estacion-${estacionIndex}" style="display:flex; gap:15px; margin-top: 20px;">
+                            <button type="button" class="btn-secondary" onclick="cambiarEstacion(${estacionIndex - 1})" aria-label="Ir a paso ${estacionIndex}"><i class="fa-solid fa-arrow-left"></i> <span>Volver</span></button>
+                            <button type="button" class="btn-primary" id="btn-next-${estacionIndex}" style="width:auto; padding:12px 30px;" disabled onclick="avanzarEstacion(${estacionIndex + 1})" aria-label="Siguiente paso"><span>Siguiente Estación</span> <i class="fa-solid fa-arrow-right icon-anim-next"></i></button>
                         </div>
                     `;
                 }
 
-                const htmlReq = `
-                    <div class="${fileBoxClass}">
-                        <label><i class="fa-solid fa-file-arrow-up"></i> ${req.descripcion} <span style="color:red;">${isRequired}</span></label>
-                        <input type="file" name="${req.id}" accept=".pdf" onchange="verificarArchivosEstacion(estacionActual)" ${requiredAttr}>
-                        ${displayHtml}
+                // Generar Panel HTML
+                const panelHtml = `
+                    <div id="panel-estacion-${estacionIndex}" class="station-panel" style="display:none;">
+                        <div class="premium-panel">
+                            <h3>${catObj.titulo}</h3>
+                            <p style="margin-bottom: 20px; color: var(--color-text-muted);">${catObj.desc}</p>
+                            <form id="form-estacion-${estacionIndex}">
+                                <div id="grid-dinamico-${estacionIndex}" class="file-grid">
+                                    ${gridHtml}
+                                </div>
+                                ${botonesHtml}
+                            </form>
+                        </div>
                     </div>
                 `;
-
-                if (req.categoria === 'IDENTIDAD' || req.categoria === 'GENERAL') {
-                    htmlIdentidad += htmlReq;
-                } else if (req.categoria === 'ACADEMICO') {
-                    htmlAcademico += htmlReq;
-                } else if (req.categoria === 'EVALUACION') {
-                    htmlEvaluacion += htmlReq;
-                }
+                if (dynamicPanelsContainer) dynamicPanelsContainer.insertAdjacentHTML('beforeend', panelHtml);
             });
 
-            if (gridIdentidad) gridIdentidad.innerHTML = htmlIdentidad;
-            if (gridAcademico) gridAcademico.innerHTML = htmlAcademico;
-            if (gridEvaluacion) gridEvaluacion.innerHTML = htmlEvaluacion;
-
-            // Re-ejecutar verificación en caso de que todo sea opcional
-            verificarArchivosEstacion(1);
-            verificarArchivosEstacion(2);
-            verificarArchivosEstacion(3);
+            // Re-ejecutar verificación
+            for (let i = 1; i <= totalEstaciones; i++) {
+                verificarArchivosEstacion(i);
+            }
         } else {
             console.error('Error al cargar los requisitos de la convocatoria.');
             Swal.fire('Error', 'Error al cargar los requisitos de la convocatoria.', 'error');
@@ -2274,6 +2374,10 @@ const MODULOS_REGISTRY = {
  * Hidrata la UI con el progreso guardado en la base de datos (Backend como fuente de verdad)
  */
 function hidratarUI(soliData) {
+    //resetear estación actual antes de hidratar
+    // cambiarEstacion() no intente acceder a un panel que no existe.
+    estacionActual = 0;
+
     currentSolicitudId = soliData.idSolicitud || soliData.id;
     nivelAcademicoSeleccionado = soliData.nivel === 'DOCTORADO' ? 'Doctorado' : 'Maestría';
 
@@ -2289,13 +2393,21 @@ function hidratarUI(soliData) {
         navAdmision.style.display = 'block';
     }
 
-    // Si ya tiene modalidad, avanzamos a la estación 1 (Identidad) para no empezar desde cero
-    if (soliData.idModalidad && estacionActual === 0) {
-        cambiarEstacion(1);
-    }
-
     // Configurar paneles según el nivel y pasar documentos ya subidos
-    configurarPanelesNivel(nivelAcademicoSeleccionado, soliData.idConvocatoria, soliData.documentosSubidos || []);
+    const promesaPaneles = configurarPanelesNivel(nivelAcademicoSeleccionado, soliData.idConvocatoria, soliData.documentosSubidos || []);
+
+    if (promesaPaneles && typeof promesaPaneles.then === 'function') {
+        promesaPaneles.then(() => {
+            // Si ya tiene modalidad, avanzamos a la estación 1 (Identidad) para no empezar desde cero
+            if (soliData.idModalidad && estacionActual === 0) {
+                cambiarEstacion(1);
+            }
+        });
+    } else {
+        if (soliData.idModalidad && estacionActual === 0) {
+            cambiarEstacion(1);
+        }
+    }
 
     // Siempre hidratar el módulo base de Documentos (Expediente) para garantizar el estado de #view-documentos
     if (typeof moduloDocumentos !== 'undefined') {
@@ -2345,12 +2457,6 @@ function hidratarUI(soliData) {
                 <p style="margin-bottom: 20px; color: var(--color-text-muted); font-size: 14px; line-height: 1.5;">${soliData.idModalidad === 2 ? 'Tu curso propedéutico ha sido evaluado y los resultados ya se integraron a tu proceso.' : (typeof t === 'function' ? t('exam_evaluado_desc') : 'Tu examen de admisión ha sido evaluado y los resultados ya se integraron a tu proceso.')}</p>
                 
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    ${soliData.idModalidad !== 2 ? `
-                    <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 16px 20px; border-radius: 12px; flex: 1; min-width: 160px;">
-                        <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; color: var(--color-text-muted); margin-bottom: 6px;">${typeof t === 'function' ? t('exam_calif_obtenida') : 'Calificación Obtenida'}</span>
-                        <strong style="font-size: 32px; font-weight: 800; color: var(--color-text); line-height: 1;">${soliData.calificacion}</strong>
-                    </div>
-                    ` : ''}
                     <div style="background: var(--color-bg); border: 1px solid var(--color-border); padding: 16px 20px; border-radius: 12px; flex: 1; min-width: 160px;">
                         <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; color: var(--color-text-muted); margin-bottom: 6px;">${typeof t === 'function' ? t('exam_resultado') : 'Resultado Final'}</span>
                         <div style="font-size: 20px; font-weight: 800; color: ${soliData.resultadoAprobado ? '#10b981' : '#ef4444'}; display: flex; align-items: center; gap: 8px;">
@@ -2472,7 +2578,10 @@ function configurarPanelesNivel(nivel, idConvocatoria, documentosSubidos = []) {
         verificarArchivosEstacion(0);
     }
 
-    if (idConvocatoria) cargarRequisitosDocumentales(idConvocatoria, documentosSubidos);
+    if (idConvocatoria) {
+        return cargarRequisitosDocumentales(idConvocatoria, documentosSubidos);
+    }
+    return Promise.resolve();
 }
 
 // ==== MANEJO DE UI PARA INPUTS DE ARCHIVOS ====
@@ -2482,7 +2591,7 @@ document.addEventListener('change', function (e) {
         if (fileBox) {
             const files = e.target.files;
 
-            // Eliminar nombre de archivo previo si existe
+            //eliminar nombre de archivo previo
             const existingDisplay = fileBox.querySelector('.file-name-display');
             if (existingDisplay) {
                 existingDisplay.remove();
@@ -2644,11 +2753,9 @@ async function cargarDictamen() {
 
     try {
 
-        const token = sessionStorage.getItem("token");
-
         const res = await fetch("/api/aspirante/dictamen", {
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${sessionStorage.getItem("token")}`
             }
         });
 
@@ -2656,19 +2763,26 @@ async function cargarDictamen() {
 
         const dictamen = await res.json();
 
-        if (!dictamen) return;
+        // evaluar estado de solicitud
+        // SIN_SOLICITUD → no hay proceso activo; no mostrar nada
+        if (!dictamen || dictamen.estado === 'SIN_SOLICITUD') return;
 
-        // Si tienes un elemento donde mostrarlo
-        const estado = document.getElementById("estadoDictamen");
-        const observacion = document.getElementById("observacionDictamen");
+        const elEstado      = document.getElementById("estadoDictamen");
+        const elObservacion = document.getElementById("observacionDictamen");
 
-        if (estado) {
-            estado.textContent = dictamen.resultado || "Pendiente";
+        if (dictamen.estado === 'EN_PROCESO') {
+            if (elEstado)      elEstado.textContent      = "En proceso";
+            if (elObservacion) elObservacion.textContent = "Tu proceso de admisión está en curso.";
+            return;
         }
 
-        if (observacion) {
-            observacion.textContent =
-                dictamen.observacion || "Sin observaciones.";
+        // FINALIZADO: mostrar resultado real
+        if (elEstado) {
+            elEstado.textContent = dictamen.resultado || "Pendiente";
+        }
+        if (elObservacion) {
+            // El backend retorna el campo 'motivo' (no 'observacion')
+            elObservacion.textContent = dictamen.motivo || "Sin observaciones.";
         }
 
     } catch (error) {
@@ -2685,8 +2799,13 @@ async function cargarDictamen() {
 // FUNCIONES DEL PANEL LATERAL DE AJUSTES
 // ==========================================
 function abrirDrawerAjustes() {
-    document.getElementById('settings-drawer').classList.add('open');
-    document.getElementById('settings-drawer-overlay').classList.add('show');
+    const drawer = document.getElementById('settings-drawer');
+    const overlay = document.getElementById('settings-drawer-overlay');
+    if (drawer) drawer.classList.add('open');
+    if (overlay) overlay.classList.add('show');
+    if (typeof sincronizarDrawerAjustes === 'function') {
+        sincronizarDrawerAjustes();
+    }
 }
 
 function cerrarDrawerAjustes() {

@@ -26,12 +26,12 @@ const moduloCursoDocenteRenderer = {
             </div>
             
             <form id="form-programar-curso" onsubmit="event.preventDefault();">
-                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                    <div style="flex: 1;">
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <div style="flex: 1 1 200px;">
                         <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--color-text-muted); font-size: 0.9rem;">Fecha de Inicio *</label>
                         <input type="date" id="prog-curso-fecha-inicio" class="form-control" required style="width: 100%; padding: 10px 12px; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 6px; outline: none; box-sizing: border-box;">
                     </div>
-                    <div style="flex: 1;">
+                    <div style="flex: 1 1 200px;">
                         <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--color-text-muted); font-size: 0.9rem;">Fecha de Fin *</label>
                         <input type="date" id="prog-curso-fecha-fin" class="form-control" required style="width: 100%; padding: 10px 12px; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 6px; outline: none; box-sizing: border-box;">
                     </div>

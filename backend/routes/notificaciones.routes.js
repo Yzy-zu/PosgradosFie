@@ -11,9 +11,9 @@ const {
 
 const verificarToken = require('../middlewares/auth');
 
-router.get('/', obtenerNotificaciones);
+router.get('/',    verificarToken, obtenerNotificaciones);
 
-router.get('/:id', obtenerNotificacion);
+router.get('/:id', verificarToken, obtenerNotificacion);
 
 router.post('/', verificarToken, crearNotificacion);
 

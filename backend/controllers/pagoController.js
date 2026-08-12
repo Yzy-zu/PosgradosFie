@@ -78,10 +78,9 @@ const subirComprobante = async (req, res) => {
             );
         }
 
-        // Bug 1 & 2: marcar EN_REVISION para que el coordinador vea que hay comprobante esperando revisión.
-        // Esto cubre tanto el primer upload como la re-subida después de un rechazo.
+        // actualizar estado a en revisión
         await db.query("UPDATE solicitud SET estado = 'EN_REVISION' WHERE id = ?", [idSolicitud]);
-        // Notificar a ADMIN y DOCENTE (aspirante subió comprobante)
+        // notificar subida de comprobante
         emit.aAdminYDocente(req);
         return res.json({ success: true, mensaje: 'Comprobante subido correctamente. En espera de verificación.' });
     } catch (error) {
@@ -95,9 +94,8 @@ const subirComprobante = async (req, res) => {
  * Si se aprueba, avanza la solicitud a la siguiente etapa del workflow.
  */
 const verificarPago = async (req, res) => {
-    try {
-        const { idSolicitud } = req.params;
-        const decision = req.body.decision || req.body.estado;
+    const { idSolicitud } = req.params;
+    const decision = req.body.decision || req.body.estado;
         const { observaciones } = req.body; // decision: 'APROBADO' | 'RECHAZADO'
 
         if (!decision || !['APROBADO', 'RECHAZADO'].includes(decision)) {
@@ -108,44 +106,66 @@ const verificarPago = async (req, res) => {
             return res.status(400).json({ success: false, mensaje: 'Debes indicar el motivo del rechazo en observaciones.' });
         }
 
-        // Verificar que exista el comprobante
-        const [rows] = await db.query(
-            'SELECT id FROM pago_solicitud WHERE idSolicitud = ? AND estado = ?',
-            [idSolicitud, 'PENDIENTE']
-        );
+        let conn;
+        try {
+            conn = await db.getConnection();
+            await conn.beginTransaction();
 
-        if (rows.length === 0) {
-            return res.status(404).json({ success: false, mensaje: 'No hay un comprobante pendiente de verificación para esta solicitud.' });
-        }
+            const [solicitud] = await conn.query('SELECT idEtapaActual FROM solicitud WHERE id = ? FOR UPDATE', [idSolicitud]);
+            if (solicitud.length === 0) {
+                await conn.rollback();
+                return res.status(404).json({ success: false, mensaje: 'Solicitud no encontrada.' });
+            }
+            if (Number(solicitud[0].idEtapaActual) !== ETAPAS.PAGO) {
+                await conn.rollback();
+                return res.status(400).json({ success: false, mensaje: 'La solicitud no se encuentra en la etapa de pago.' });
+            }
 
-        await db.query(
-            'UPDATE pago_solicitud SET estado = ?, observaciones = ? WHERE idSolicitud = ?',
-            [decision, observaciones || null, idSolicitud]
-        );
+            // Verificar que exista el comprobante
+            const [rows] = await conn.query(
+                'SELECT id FROM pago_solicitud WHERE idSolicitud = ? AND estado = ? FOR UPDATE',
+                [idSolicitud, 'PENDIENTE']
+            );
 
-        if (decision === 'APROBADO') {
-            // Avanzar el workflow a la siguiente etapa (Programación para Examen, Curso para Curso)
-            await WorkflowService.avanzarEtapa(idSolicitud);
-            await db.query("UPDATE solicitud SET estado = 'PENDIENTE' WHERE id = ?", [idSolicitud]);
-        } else {
-            // Pago rechazado: el aspirante debe volver a subir
-            await db.query("UPDATE solicitud SET estado = 'RECHAZADO' WHERE id = ?", [idSolicitud]);
-        }
+            if (rows.length === 0) {
+                await conn.rollback();
+                return res.status(404).json({ success: false, mensaje: 'No hay un comprobante pendiente de verificación para esta solicitud.' });
+            }
 
-        // Notificar al aspirante específico + ADMIN (pago verificado)
-        const [solPago] = await db.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [idSolicitud]);
-        if (solPago.length > 0) emit.aAspiranteEspecifico(req, solPago[0].idUsuario);
-        else emit.aAdmin(req);
+            await conn.query(
+                'UPDATE pago_solicitud SET estado = ?, observaciones = ? WHERE idSolicitud = ?',
+                [decision, observaciones || null, idSolicitud]
+            );
 
-        return res.json({
-            success: true,
-            mensaje: decision === 'APROBADO'
-                ? 'Pago aprobado. La solicitud ha avanzado a la siguiente etapa.'
-                : 'Pago rechazado. El aspirante deberá subir un nuevo comprobante.'
-        });
-    } catch (error) {
-        console.error('Error en verificarPago:', error);
-        return res.status(500).json({ success: false, mensaje: 'Error al verificar el pago.' });
+            if (decision === 'APROBADO') {
+                // Avanzar el workflow a la siguiente etapa (Programación para Examen, Curso para Curso)
+                await WorkflowService.avanzarEtapa(idSolicitud, conn);
+                await conn.query("UPDATE solicitud SET estado = 'PENDIENTE' WHERE id = ?", [idSolicitud]);
+            } else {
+                // Pago rechazado: el aspirante debe volver a subir
+                await conn.query("UPDATE solicitud SET estado = 'RECHAZADO' WHERE id = ?", [idSolicitud]);
+            }
+
+            // Notificar al aspirante específico + ADMIN (pago verificado)
+            const [solPago] = await conn.query('SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?', [idSolicitud]);
+            
+            await conn.commit();
+            
+            if (solPago.length > 0) emit.aAspiranteEspecifico(req, solPago[0].idUsuario);
+            else emit.aAdmin(req);
+
+            return res.json({
+                success: true,
+                mensaje: decision === 'APROBADO'
+                    ? 'Pago aprobado. La solicitud ha avanzado a la siguiente etapa.'
+                    : 'Pago rechazado. El aspirante debe subir un nuevo comprobante.'
+            });
+        } catch (error) {
+            if (conn) await conn.rollback();
+            console.error('Error verificando pago:', error);
+            return res.status(500).json({ success: false, mensaje: 'Error interno al verificar el pago.' });
+        } finally {
+            if (conn) conn.release();
     }
 };
 

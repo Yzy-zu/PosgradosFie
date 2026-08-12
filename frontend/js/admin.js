@@ -5,7 +5,7 @@ socket.on('connect', () => {
     socket.emit('registrarSala', { rol: 'ADMIN', idUsuario: usr.id });
 });
 socket.on('actualizacionGlobal', () => {
-    // Recargar vista actual si hay un cambio en el sistema
+    //recargar vista actual
     const currentHash = window.location.hash.replace("#", "");
     if (currentHash === 'dashboard' || currentHash === '') {
         if (typeof cargarDashboard === 'function') cargarDashboard();
@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// Escuchar cambios en la URL (Botón Atrás/Adelante o clics en el menú)
+//escuchar cambios en url
 window.addEventListener("hashchange", activarSeccionPorHash);
 
 function validarSesion() {
@@ -106,7 +106,7 @@ function configurarBotones() {
         btnCerrar.addEventListener("click", cerrarSesion);
     }
 
-    // Asegurarnos de limpiar el formulario cuando se abre el modal para "Nuevo Usuario"
+    //limpiar formulario de nuevo usuario
     const btnNuevoUsuario = document.querySelector('[data-bs-target="#modalUsuario"]');
     if (btnNuevoUsuario) {
         btnNuevoUsuario.addEventListener("click", () => {
@@ -164,6 +164,9 @@ function activarSeccionPorHash() {
         void seccionMostrar.offsetWidth; // Trigger reflow for animation
         seccionMostrar.classList.add("fade-in");
     }
+
+    // evitar que la página se quede abajo
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function configurarNavegacion() {
@@ -172,7 +175,7 @@ function configurarNavegacion() {
     enlaces.forEach(enlace => {
         enlace.addEventListener("click", (e) => {
             e.preventDefault();
-            // Al hacer clic, simplemente cambiamos la URL. 
+            //cambiar url
             // Esto dispara el evento 'hashchange' automáticamente.
             const target = e.currentTarget.getAttribute("data-target");
             window.location.hash = `#${target}`;
@@ -412,7 +415,7 @@ function renderizarCamposRol(rol, detalles = {}) {
     contenedorDetalles.innerHTML = html;
 }
 
-// Escuchar cambios en el selector de rol
+//escuchar cambios en rol
 document.getElementById("rol")?.addEventListener("change", function (e) {
     renderizarCamposRol(e.target.value);
 });
@@ -438,10 +441,10 @@ function toggleDetallesUsuario() {
     }
 }
 
-// Reset del modal al abrirlo para "Nuevo Usuario"
+//resetear modal para nuevo usuario
 document.getElementById("modalUsuario")?.addEventListener('show.bs.modal', function (event) {
     const isEdit = document.getElementById("idUsuarioForm").value !== "";
-    // Si no tiene ID asignado (se abrió por el botón de + Nuevo)
+    //abierto desde botón nuevo
     if (!isEdit && !event.relatedTarget?.closest('.btn-sm')) {
         document.getElementById("formUsuario").reset();
         document.getElementById("idUsuarioForm").value = "";
@@ -531,7 +534,7 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
             return;
         }
 
-        // Validación con Expresiones Regulares (Regex) para Aspirantes
+        //validación regex para aspirantes
         const regexLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
         const regexCurp = /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z\d]\d$/;
         const regexTelefono = /^\d{10}$/;
@@ -1296,7 +1299,7 @@ async function eliminarConvocatoria(id) {
     }
 }
 // ==========================================
-// MÓDULO ASPIRANTES
+//módulo aspirantes
 // ==========================================
 
 async function cargarAspirantes() {
@@ -1577,7 +1580,7 @@ function toggleSolicitudDocs(containerId, chevronId) {
     }
 }
 
-// Funciones de Filtrado UI para Aspirantes
+//funciones de filtrado para aspirantes
 window.filtrarTablaAspirantesUI = function () {
     const texto = (document.getElementById('filtro-aspirantes-texto')?.value || '').toLowerCase();
     const programa = (document.getElementById('filtro-aspirantes-programa')?.value || '').toLowerCase();
@@ -1795,7 +1798,7 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
                 if (doc.estadoValidacion === "APROBADO") { badgeClass = "success"; textStatus = "Aprobado"; iconStatus = "fa-check-circle"; }
                 else if (doc.estadoValidacion === "RECHAZADO") { badgeClass = "danger"; textStatus = "Rechazado"; iconStatus = "fa-times-circle"; }
                 docsHtml += `
-                    <div class="list-group-item d-flex justify-content-between align-items-center" style="background: transparent; border-color: var(--color-border); padding: 15px 20px;">
+                    <div id="doc-item-admin-${doc.idDocumento || doc.id}" class="list-group-item d-flex justify-content-between align-items-center" style="background: transparent; border-color: var(--color-border); padding: 15px 20px;">
                         <div class="d-flex align-items-center gap-3">
                             <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(59,130,246,0.1); color: var(--color-primary); display: flex; justify-content: center; align-items: center; font-size: 1.2rem;">
                                 <i class="fa-solid fa-file-pdf"></i>
@@ -1806,7 +1809,7 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-${badgeClass} rounded-pill px-3 py-2 fw-semibold shadow-sm d-flex align-items-center gap-1 me-1">
+                            <span id="doc-badge-admin-${doc.idDocumento || doc.id}" class="badge bg-${badgeClass} rounded-pill px-3 py-2 fw-semibold shadow-sm d-flex align-items-center gap-1 me-1">
                                 <i class="fa-solid ${iconStatus}"></i> ${textStatus}
                             </span>
                             <button onclick="evaluarDocumentoAdmin(${doc.idDocumento || doc.id}, 'APROBADO', ${idSolicitud}, ${idAspi})" class="btn btn-sm btn-outline-success rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Aprobar Documento">
@@ -2084,8 +2087,20 @@ async function evaluarDocumentoAdmin(idDocumento, estadoValidacion, idSolicitud,
                 timer: 1500,
                 showConfirmButton: false
             });
-            await cargarSolicitudesAdmin();
-            await abrirDetalleSolicitudAdmin(idSolicitud, idAspi);
+            
+            // actualizar dom localmente
+            const badge = document.getElementById(`doc-badge-admin-${idDocumento}`);
+            if (badge) {
+                let badgeClass = estadoValidacion === "APROBADO" ? "success" : "danger";
+                let textStatus = estadoValidacion === "APROBADO" ? "Aprobado" : "Rechazado";
+                let iconStatus = estadoValidacion === "APROBADO" ? "fa-check-circle" : "fa-times-circle";
+                
+                badge.className = `badge bg-${badgeClass} rounded-pill px-3 py-2 fw-semibold shadow-sm d-flex align-items-center gap-1 me-1`;
+                badge.innerHTML = `<i class="fa-solid ${iconStatus}"></i> ${textStatus}`;
+            }
+
+            // Aún actualizamos la tabla en segundo plano por si el usuario la revisa después
+            cargarSolicitudesAdmin();
         } else {
             throw new Error(data.mensaje || 'Error al evaluar el documento.');
         }
@@ -2630,6 +2645,9 @@ function abrirDrawerAjustes() {
     const drawer = document.getElementById('settings-drawer');
     if (overlay) overlay.classList.add('show');
     if (drawer) drawer.classList.add('open');
+    if (typeof sincronizarDrawerAjustes === 'function') {
+        sincronizarDrawerAjustes();
+    }
 }
 
 function cerrarDrawerAjustes() {
@@ -2654,7 +2672,7 @@ document.addEventListener('click', function (event) {
         notificationMenu.classList.remove('show');
     }
 
-    // profileDropdown ya puede estar manejado en utils.js, pero lo agregamos por seguridad
+    // vincular dropdown de perfil
     const profileDropdown = document.getElementById('profile-dropdown');
     if (profileDropdown && profileDropdown.classList.contains('show') && !event.target.closest('.profile-container')) {
         profileDropdown.classList.remove('show');
@@ -3082,7 +3100,7 @@ function renderExplorador() {
             itemsHTML = `<div class="text-center w-100 py-5 text-muted" style="grid-column: 1 / -1;"><p>No hay documentos disponibles en el sistema.</p></div>`;
         }
         
-        // Agregar carpeta fija del Gestor de Archivos Físico (Linux style)
+        //agregar carpeta del gestor de archivos
         itemsHTML += `
             <div class="explorer-folder" onclick="exploradorEntrarDirectorio('filemanager', '/', 'Archivos Internos')">
                 <i class="fa-solid fa-hard-drive explorer-icon" style="color: #ef476f;"></i>

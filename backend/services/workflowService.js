@@ -96,10 +96,10 @@ class WorkflowService {
      * Asigna la modalidad a una solicitud y la inicializa en la primera etapa.
      * ÚNICO punto autorizado para inicializar idEtapaActual al cambiar modalidad.
      */
-    static async asignarModalidad(idSolicitud, idModalidad) {
-        const idEtapaActual = await this.getPrimeraEtapa(idModalidad);
+    static async asignarModalidad(idSolicitud, idModalidad, conn = db) {
+        const idEtapaActual = await this.getPrimeraEtapa(idModalidad, conn);
         
-        await db.query(
+        await conn.query(
             'UPDATE solicitud SET idModalidad = ?, idEtapaActual = ? WHERE id = ?', 
             [idModalidad, idEtapaActual, idSolicitud]
         );
@@ -136,18 +136,17 @@ class WorkflowService {
         if (tieneRechazados) {
             nuevoEstado = 'RECHAZADO';
         } else if (todosAprobados) {
-            nuevoEstado = 'APROBADO'; // TODO: Debería avanzar a la etapa siguiente y tal vez PENDIENTE?
-            // Si la etapa de documentación fue superada, avanzamos la etapa en el workflow.
+            // Todos los documentos aprobados: avanzar al siguiente etapa del workflow.
             const avance = await this.avanzarEtapa(idSolicitud);
             if (!avance.completado) {
-                // Al avanzar a una nueva etapa (ej. EXAMEN), la solicitud vuelve a requerir acción, 
-                // se podría poner en PENDIENTE para la siguiente etapa, pero por ahora conservamos la semántica.
-                // En un diseño más maduro, cada etapa tendría su propio estado.
-                nuevoEstado = 'PENDIENTE'; // Vuelve a pendiente en la nueva etapa para que el aspirante proceda.
+                // Hay siguiente etapa (ej. PAGO, EXAMEN) → aspirante debe actuar.
+                nuevoEstado = 'PENDIENTE';
             } else {
-                nuevoEstado = 'APROBADO'; // Fin del workflow
+                // No hay más etapas: el workflow finalizó.
+                nuevoEstado = 'APROBADO';
             }
         }
+        // Si !tieneRechazados && !todosAprobados → algún doc está PENDIENTE de revisión → EN_REVISION (default).
         
         await db.query('UPDATE solicitud SET estado = ? WHERE id = ?', [nuevoEstado, idSolicitud]);
         return nuevoEstado;

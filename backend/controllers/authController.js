@@ -39,12 +39,7 @@ exports.login = async (req, res) => {
         let datosExtra = {};
         if (usuarioDB.rol === 'SECRETARIO') {
             try {
-                const [columns] = await db.query('SHOW COLUMNS FROM secretario');
-                const fieldNames = columns.map(c => c.Field);
-
-                let fkCol = fieldNames.find(f => ['idUsuario', 'idUsua', 'id_usuario', 'usuario_id'].includes(f)) || 'id';
-
-                const sqlQuery = 'SELECT * FROM secretario WHERE ' + fkCol + ' = ? LIMIT 1';
+                const sqlQuery = 'SELECT * FROM secretario WHERE idUsua = ? LIMIT 1';
                 const [secResult] = await db.query(sqlQuery, [usuarioDB.id]);
 
                 if (secResult.length > 0) {
@@ -95,6 +90,21 @@ exports.register = async (req, res) => {
         await connection.beginTransaction();
 
         const passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS);
+
+        // B-02: Verificar duplicados manualmente para dar mensajes específicos
+        const [existingUser] = await connection.query('SELECT id FROM usuario WHERE correo = ?', [data.correo]);
+        if (existingUser.length > 0) {
+            await connection.rollback();
+            connection.release();
+            return res.status(400).json({ success: false, mensaje: 'El correo electrónico ya está registrado.' });
+        }
+
+        const [existingAspirante] = await connection.query('SELECT id FROM aspirante WHERE curp = ?', [data.curp]);
+        if (existingAspirante.length > 0) {
+            await connection.rollback();
+            connection.release();
+            return res.status(400).json({ success: false, mensaje: 'La CURP ya está registrada.' });
+        }
 
         // 1. Crear Usuario
         const [userResult] = await connection.query(
@@ -148,7 +158,17 @@ exports.register = async (req, res) => {
         console.error('Error en register:', error);
 
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ success: false, mensaje: 'El correo, CURP o RFC ya se encuentra registrado.' });
+            const msg = error.sqlMessage || error.message || '';
+            if (msg.includes('Usuario_correo_key') || msg.includes('correo')) {
+                return res.status(400).json({ success: false, mensaje: 'El correo electrónico ya está registrado.' });
+            }
+            if (msg.includes('Aspirante_curp_key') || msg.includes('curp')) {
+                return res.status(400).json({ success: false, mensaje: 'La CURP ya está registrada.' });
+            }
+            if (msg.includes('rfc')) {
+                return res.status(400).json({ success: false, mensaje: 'El RFC ya está registrado.' });
+            }
+            return res.status(400).json({ success: false, mensaje: 'Los datos proporcionados ya están registrados.' });
         }
 
         return res.status(500).json({ success: false, mensaje: 'Error interno del servidor al registrar aspirante.' });

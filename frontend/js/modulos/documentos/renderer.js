@@ -14,9 +14,15 @@ const moduloDocumentosRenderer = {
             if (encabezado) encabezado.style.display = 'block';
             if (stepper) stepper.style.display = 'flex';
 
-            const estacionGuardada = soliData.etapaOrden ? (soliData.etapaOrden - 1) : 0;
+            // leer sessionStorage para mantener estado tras recarga
+            const idSoli = soliData.id;
+            let estacionGuardada = parseInt(sessionStorage.getItem(`estacion_actual_soli_${idSoli}`));
+            if (isNaN(estacionGuardada)) {
+                estacionGuardada = soliData.etapaOrden ? (soliData.etapaOrden - 1) : 0;
+            }
             if (typeof cambiarEstacion === 'function' && estacionGuardada > 0) {
-                cambiarEstacion(Math.min(estacionGuardada, 3));
+                const maxEstacion = typeof totalEstaciones !== 'undefined' && totalEstaciones > 0 ? totalEstaciones : 3;
+                cambiarEstacion(Math.min(estacionGuardada, maxEstacion));
             }
         }
     }

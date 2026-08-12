@@ -8,12 +8,14 @@ if (!fs.existsSync(baseDir)) {
     fs.mkdirSync(baseDir, { recursive: true });
 }
 
-// Función auxiliar para evitar path traversal
+// Función auxiliar para evitar path traversal (M-04)
+// Usa path.resolve para resolver symlinks y rutas relativas,
+// y startsWith con separador para evitar ataques de prefijo similar.
 const safeJoin = (base, requestPath) => {
-    // Normalizar la ruta solicitada y resolverla contra el directorio base
-    const targetPath = path.join(base, requestPath || '');
-    // Verificar que targetPath comience con baseDir
-    if (targetPath.indexOf(baseDir) !== 0) {
+    const resolvedBase   = path.resolve(base);
+    const targetPath     = path.resolve(path.join(base, requestPath || ''));
+    // El targetPath debe comenzar con resolvedBase + separador (o ser igual a resolvedBase).
+    if (targetPath !== resolvedBase && !targetPath.startsWith(resolvedBase + path.sep)) {
         throw new Error('Acceso denegado');
     }
     return targetPath;

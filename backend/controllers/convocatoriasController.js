@@ -67,7 +67,9 @@ const crearConvocatorias = async (req, res) => {
         connection = await db.getConnection();
         await connection.beginTransaction();
 
-        const idCreador = req.usuario ? req.usuario.id : (req.body.creado_por || 1);
+        // M-06: idCreador siempre proviene del JWT (req.usuario.id garantizado por auth middleware).
+        // Nunca se acepta del body para evitar spoofing del creador.
+        const idCreador = req.usuario.id;
 
         const [resultado] = await connection.query(
             'INSERT INTO convocatorias (nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, tipo, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, duracion, modalidad, inicioCurso, finCurso, inicioExamen, finExamen, creado_por) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -96,7 +98,7 @@ const crearConvocatorias = async (req, res) => {
 
         await connection.commit();
 
-        // Notificar a ADMIN y ASPIRANTE (nueva convocatoria disponible)
+        //notificar nueva convocatoria
         emit.aAdminYAspirantes(req);
         return res.json({ success: true, mensaje: 'Convocatoria creada correctamente' });
     } catch (error) {
@@ -194,13 +196,13 @@ const actualizarConvocatorias = async (req, res) => {
     }
 };
 
-// Eliminar convocatoria
+
 const eliminarConvocatorias = async (req, res) => {
     try {
         const { id } = req.params;
         await db.query('DELETE FROM convocatorias WHERE id=?', [id]);
         
-        // Notificar a ADMIN y ASPIRANTE (convocatoria eliminada)
+        //notificar convocatoria eliminada
         emit.aAdminYAspirantes(req);
         return res.json({ success: true, mensaje: 'Convocatoria eliminada correctamente' });
     } catch (error) {

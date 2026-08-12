@@ -1,6 +1,7 @@
 const db = require('../database/db');
 const WorkflowService = require('../services/workflowService');
 const emit = require('../utils/socketEmit');
+const { ETAPAS } = require('../constants');
 
 const coordinadorController = {
 
@@ -83,8 +84,6 @@ getAspirantes: async (req, res) => {
 
                 c.nombre AS programa,
 
-                c.nombre AS convocatoria,
-
                 COALESCE(
                     mi.nombre,
                     'N/A'
@@ -140,20 +139,58 @@ getAspirantes: async (req, res) => {
 // 3. Actualizar Estado / Dictamen
 // ==========================================
 actualizarDictamen: async (req, res) => {
-
     const { id } = req.params;
-    const { estado } = req.body;
+    const { estado, motivo } = req.body;
 
+    const whitelistEstados = ['APROBADO', 'RECHAZADO', 'ACEPTADO', 'NO_ACEPTADO', 'EN_REVISION', 'PENDIENTE', 'CANCELADO', 'LISTA_ESPERA'];
+    if (!estado || !whitelistEstados.includes(estado)) {
+        return res.status(400).json({ ok: false, mensaje: 'Estado no válido.' });
+    }
+
+    let estadoSolicitud = estado;
+    let resultadoFinal = estado;
+    
+    if (estado === 'ACEPTADO') estadoSolicitud = 'APROBADO';
+    if (estado === 'NO_ACEPTADO') {
+        estadoSolicitud = 'RECHAZADO';
+        resultadoFinal = 'RECHAZADO';
+    }
+    if (estado === 'APROBADO') resultadoFinal = 'ACEPTADO';
+
+    let connection;
     try {
+        connection = await db.getConnection();
+        await connection.beginTransaction();
 
-        await db.query(`
+        await connection.query(`
             UPDATE solicitud
             SET estado = ?
             WHERE id = ?
-        `, [estado, id]);
+        `, [estadoSolicitud, id]);
+
+        if (['ACEPTADO', 'RECHAZADO', 'APROBADO', 'NO_ACEPTADO', 'LISTA_ESPERA'].includes(estado)) {
+            const [dictamenExistente] = await connection.query(`
+                SELECT id FROM resultado_final WHERE idSolicitud = ?
+            `, [id]);
+
+            if (dictamenExistente.length > 0) {
+                await connection.query(`
+                    UPDATE resultado_final
+                    SET resultado = ?, motivo = ?, publicado = 1, fechaPublicacion = NOW()
+                    WHERE idSolicitud = ?
+                `, [resultadoFinal, (motivo || '').trim(), id]);
+            } else {
+                await connection.query(`
+                    INSERT INTO resultado_final (idSolicitud, resultado, motivo, publicado, fechaPublicacion)
+                    VALUES (?, ?, ?, 1, NOW())
+                `, [id, resultadoFinal, (motivo || '').trim()]);
+            }
+        }
+
+        await connection.commit();
+        connection.release();
 
         if (req.app.get('io')) {
-            // Notificar al aspirante específico + ADMIN
             const [solD] = await db.query(
                 'SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?',
                 [id]
@@ -168,16 +205,13 @@ actualizarDictamen: async (req, res) => {
         });
 
     } catch (error) {
-
+        if (connection) {
+            await connection.rollback();
+            connection.release();
+        }
         console.error(error);
-
-        res.status(500).json({
-            ok: false,
-            mensaje: "Error al actualizar."
-        });
-
+        res.status(500).json({ ok: false, mensaje: "Error al actualizar." });
     }
-
 },
     // ==========================================
 // 4. Expediente del Aspirante
@@ -263,6 +297,15 @@ getExpediente: async (req, res) => {
             ORDER BY cr.nombre ASC
         `, [aspirante.idSolicitud]);
 
+        const mapaDocs = {};
+        documentos.forEach(doc => {
+            const key = doc.idRequisito;
+            if (!mapaDocs[key] || doc.intentos > mapaDocs[key].intentos) {
+                mapaDocs[key] = doc;
+            }
+        });
+        const documentosFiltrados = Object.values(mapaDocs);
+
         return res.json({
             ok: true,
 
@@ -283,7 +326,7 @@ getExpediente: async (req, res) => {
                 idSolicitud: aspirante.idSolicitud
             },
 
-            documentos: documentos.map(documento => ({
+            documentos: documentosFiltrados.map(documento => ({
                 id: documento.id,
 
                 requisito:
@@ -546,7 +589,16 @@ guardarEntrevista: async (req, res) => {
                 ]
             );
 
-        }
+            // M-02: avanzar el workflow solo si la solicitud aún está en la etapa de Entrevista.
+            // Esto sincroniza coordinadorController con entrevistaController (que sí avanzaba la etapa).
+            const [[solicitudEtapa]] = await connection.query(
+                'SELECT idEtapaActual FROM solicitud WHERE id = ?', [id]
+            );
+            if (solicitudEtapa && Number(solicitudEtapa.idEtapaActual) === ETAPAS.ENTREVISTA) {
+                await WorkflowService.avanzarEtapa(parseInt(id), connection);
+            }
+
+        } // fin else (nueva entrevista)
 
         // ==========================================
         // Buscar aspirante y usuario

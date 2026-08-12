@@ -23,7 +23,6 @@ const {
 // Registro público: Cualquier persona externa puede crear su cuenta de aspirante
 router.post('/registro', registrarAspirante);
 
-// Ruta autenticada: el aspirante obtiene sus propios datos usando el JWT (Bug 1 - Fix)
 router.get('/me', verificarToken, getAspiranteMe);
 
 // Obtener el dictamen del aspirante autenticado
@@ -34,7 +33,6 @@ router.get('/expedientes/todos', verificarToken, validarRol('ADMIN', 'DOCENTE', 
 router.get('/:id/expediente', verificarToken, obtenerExpediente);
 router.get('/:id', verificarToken, obtenerAspirantePorId);
 
-// Lista general protegida (Bug 1 - Fix): Solo roles admins/docentes deberían acceder
 router.get('/', verificarToken, obtenerAspirantes);
 
 module.exports = router;

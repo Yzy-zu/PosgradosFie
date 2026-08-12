@@ -3,7 +3,7 @@
 
 <head>
     <script>
-        // Protección de ruta: se ejecuta ANTES de renderizar el body
+        //proteger ruta antes de renderizar
         (function () {
             if (!sessionStorage.getItem('token') || !sessionStorage.getItem('usuario')) {
                 document.documentElement.style.visibility = 'hidden';
@@ -138,10 +138,16 @@
         </div>
     </nav>
 
+    <!-- Overlay móvil para cerrar la barra lateral -->
+    <div id="sidebar-mobile-overlay" class="sidebar-overlay" onclick="toggleSidebarMobile()"></div>
+
     <main class="main-content">
 
         <header class="topbar-modern">
-            <div class="topbar-greeting">
+            <div class="topbar-greeting" style="display: flex; align-items: center; gap: 10px;">
+                <button class="btn-mobile-toggle" id="btn-mobile-sidebar-toggle" onclick="toggleSidebarMobile()" aria-label="Abrir menú">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
                 <span id="seccion-titulo" style="font-size: 22px; font-weight: 800; color: var(--color-text);">Panel de
                     Administración</span>
             </div>
@@ -149,7 +155,7 @@
             <!-- Acciones Superiores Derechas -->
             <div style="display: flex; align-items: center; gap: 20px; margin-left: auto;">
                 <!-- Menú de Mensajes -->
-                <div class="notification-container" onclick="toggleNotificationMenu(event)" style="position: relative;">
+                <div class="notification-container" role="button" tabindex="0" aria-label="Notificaciones" onclick="toggleNotificationMenu(event)" onkeydown="if(event.key==='Enter' || event.key===' ') toggleNotificationMenu(event)" style="position: relative;">
                     <div class="notification-trigger"
                         style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; color: var(--color-text); background: var(--color-card-bg);">
                         <i class="fa-regular fa-bell icon-anim-bell"></i>
@@ -442,19 +448,21 @@
                         </div>
                     </div>
 
-                    <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
-                        <thead>
-                            <tr
-                                style="border-bottom: 2px solid var(--color-border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted);">
-                                <th style="padding: 12px 15px;">Aspirante / Contacto</th>
-                                <th style="padding: 12px 15px;">CURP</th>
-                                <th style="padding: 12px 15px;">Antecedentes Académicos</th>
-                                <th style="padding: 12px 15px;">Posgrado Solicitado</th>
-                                <th style="padding: 12px 15px; text-align: center;">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaAspirantes"></tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
+                            <thead>
+                                <tr
+                                    style="border-bottom: 2px solid var(--color-border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted);">
+                                    <th style="padding: 12px 15px;">Aspirante / Contacto</th>
+                                    <th style="padding: 12px 15px;">CURP</th>
+                                    <th style="padding: 12px 15px;">Antecedentes Académicos</th>
+                                    <th style="padding: 12px 15px;">Posgrado Solicitado</th>
+                                    <th style="padding: 12px 15px; text-align: center;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaAspirantes"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

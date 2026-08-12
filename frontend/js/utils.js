@@ -16,7 +16,7 @@ function ocultarLoader() {
 }
 
 // ==== SIDEBAR TOGGLE ====
-// Bug 5 Fix: implementación canónica con toggle sincronizado
+// sincronizar toggle
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const mainContent = document.querySelector('.main-content');
@@ -63,14 +63,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Restaurar Tema
     const temaSeleccionado = localStorage.getItem('temaSeleccionado') || 'Claro';
     cambiarTema(temaSeleccionado);
-    
-    // Sincronizar el select del UI si existe
-    const selectTema = document.getElementById('setting-tema');
-    if (selectTema) {
-        selectTema.value = temaSeleccionado;
-    }
 
-    // Cierra el menú de perfil si se hace clic fuera de él
+    // sincronizar select de tema al abrir página
+    const selectTema = document.getElementById('setting-tema');
+    if (selectTema) selectTema.value = temaSeleccionado;
+
+
+
+
+
+    //cerrar menú de perfil si se hace clic fuera
     window.addEventListener('click', function () {
         const dropdown = document.getElementById('profile-dropdown');
         if (dropdown && dropdown.classList.contains('show')) {
@@ -83,6 +85,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (profileContainer) {
         profileContainer.addEventListener('click', toggleProfileMenu);
     }
+
+    // Funcionalidad para submenús en táctil
+    document.querySelectorAll('.sidebar .has-submenu').forEach(submenu => {
+        submenu.addEventListener('click', function(e) {
+            // Solo prevenir default si hicimos clic en el enlace principal
+            if (e.target.closest('a') && e.target.closest('a').nextElementSibling && e.target.closest('a').nextElementSibling.classList.contains('sub-menu')) {
+                e.preventDefault();
+                this.classList.toggle('open');
+            }
+        });
+    });
 });
 function cerrarSesion() {
     Swal.fire({
@@ -113,7 +126,7 @@ function toggleProfileMenu(event) {
 
 // Inicializar eventos globales al cargar el DOM
 document.addEventListener("DOMContentLoaded", () => {
-    // Cierra el menú si se hace clic fuera de él
+    //cerrar menú de perfil si se hace clic fuera
     window.addEventListener('click', function () {
         const dropdown = document.getElementById('profile-dropdown');
         if (dropdown && dropdown.classList.contains('show')) {
@@ -272,7 +285,7 @@ function cambiarTema(tema) {
     localStorage.setItem('temaSeleccionado', tema);
 }
 
-// Escuchar cambios a nivel de sistema operativo si está en modo "Sistema"
+//escuchar cambios de tema del sistema operativo
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
     const tema = localStorage.getItem('temaSeleccionado') || 'Claro';
     if (tema === 'Sistema') {
@@ -343,6 +356,31 @@ async function abrirArchivoSeguro(rutaArchivo) {
     } finally {
         ocultarLoader();
     }
+}
+
+
+
+// sincronizar controles del drawer al abrirlo
+function sincronizarDrawerAjustes() {
+    // Tema
+    const tema = localStorage.getItem('temaSeleccionado') || 'Claro';
+    const selTema = document.getElementById('setting-tema');
+    if (selTema) selTema.value = tema;
+
+
+
+    // Idioma
+    const idiomaGuardado = localStorage.getItem('idiomaSeleccionado');
+    const selIdioma = document.getElementById('setting-idioma');
+    if (selIdioma && idiomaGuardado) {
+        // Buscar la opción cuyo value coincida con el idioma guardado
+        const opt = Array.from(selIdioma.options).find(o =>
+            o.value === idiomaGuardado || o.value.startsWith(idiomaGuardado)
+        );
+        if (opt) selIdioma.value = opt.value;
+    }
+
+
 }
 
 

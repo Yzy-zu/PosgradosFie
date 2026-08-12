@@ -1,6 +1,7 @@
 const db = require('../database/db');
 const WorkflowService = require('../services/workflowService');
 const emit = require('../utils/socketEmit');
+const { ETAPAS } = require('../constants');
 
 // Obtener todos los documentos para el explorador
 const getExploradorDocumentos = async (req, res) => {
@@ -19,9 +20,8 @@ const getExploradorDocumentos = async (req, res) => {
             FROM solicitud_documentos sd
             JOIN solicitud s ON sd.idSolicitud = s.id
             JOIN aspirante a ON s.idAspi = a.id
-            LEFT JOIN convocatoria_opcion co ON s.idConvocatoriaOpcion = co.id
-            LEFT JOIN opcion_posgrado op ON co.opcion_posgrado_id = op.id
-            LEFT JOIN posgrado p ON op.posgrado_id = p.id
+            JOIN convocatorias c ON s.idConvocatoria = c.id
+            LEFT JOIN posgrado p ON c.posgrado_id = p.id
             JOIN catalogo_requisitos cr ON sd.idRequisito = cr.id
             WHERE sd.id IN (
                 SELECT MAX(id) 
@@ -51,10 +51,23 @@ const subirDocumento = async (req, res) => {
             return res.status(400).json({ mensaje: 'Debe seleccionar un archivo.' });
         }
 
-        // Verificar que exista la solicitud y su estado actual
-        const [solicitud] = await db.query('SELECT id, estado FROM solicitud WHERE id = ?', [idSoli]);
+        // Verificar que exista la solicitud, su estado y etapa actual
+        const [solicitud] = await db.query(
+            'SELECT id, idAspi, estado, idEtapaActual FROM solicitud WHERE id = ?', [idSoli]
+        );
         if (solicitud.length === 0) {
             return res.status(404).json({ mensaje: 'La solicitud no existe.' });
+        }
+
+        // C-03: verificar que la solicitud pertenece al aspirante autenticado
+        const [aspirante] = await db.query('SELECT id FROM aspirante WHERE idUsuario = ?', [req.usuario.id]);
+        if (aspirante.length === 0 || solicitud[0].idAspi !== aspirante[0].id) {
+            return res.status(403).json({ mensaje: 'Acceso denegado: esta solicitud no te pertenece.' });
+        }
+
+        // C-10: solo se pueden subir documentos en la etapa de Documentación
+        if (solicitud[0].idEtapaActual !== ETAPAS.DOCUMENTACION) {
+            return res.status(403).json({ mensaje: 'Acceso denegado: la subida de documentos solo está habilitada en la etapa de Documentación.' });
         }
 
         // Validación de Seguridad: Sólo se pueden subir archivos si la solicitud está PENDIENTE
@@ -63,7 +76,7 @@ const subirDocumento = async (req, res) => {
         }
 
         if (idRequisito) {
-            // Flujo nuevo: tabla solicitud_documentos
+
             const [resultado] = await db.query(
                 `INSERT INTO solicitud_documentos (idSolicitud, idRequisito, rutaArchivo, estadoValidacion)
                  VALUES (?, ?, ?, 'PENDIENTE')`,
@@ -88,7 +101,8 @@ const subirDocumento = async (req, res) => {
 
 
 
-// Evaluar documento (flujo nuevo: solicitud_documentos)
+
+// evaluar documento
 const evaluarDocumento = async (req, res) => {
     try {
         const { id } = req.params; // ID de solicitud_documentos
@@ -131,7 +145,7 @@ const evaluarDocumento = async (req, res) => {
     }
 };
 
-// Reemplazar / Re-subir documento rechazado (Máximo 3 intentos)
+// Reemplazar documento rechazado (Máximo 3 intentos)
 const reemplazarDocumento = async (req, res) => {
     try {
         const { id } = req.params; // ID de solicitud_documentos
@@ -145,6 +159,24 @@ const reemplazarDocumento = async (req, res) => {
             return res.status(404).json({ mensaje: 'Documento no encontrado.' });
         }
         const documentData = doc[0];
+
+        // C-03: verificar que la solicitud del documento pertenece al aspirante autenticado
+        const [aspirante] = await db.query('SELECT id FROM aspirante WHERE idUsuario = ?', [req.usuario.id]);
+        if (aspirante.length === 0) {
+            return res.status(403).json({ mensaje: 'Acceso denegado: no se encontró perfil de aspirante.' });
+        }
+        const [solicitud] = await db.query('SELECT idAspi, idEtapaActual, estado FROM solicitud WHERE id = ?', [documentData.idSolicitud]);
+        if (solicitud.length === 0 || solicitud[0].idAspi !== aspirante[0].id) {
+            return res.status(403).json({ mensaje: 'Acceso denegado: este documento no te pertenece.' });
+        }
+
+        const ETAPAS = require('../constants').ETAPAS;
+        if (solicitud[0].idEtapaActual !== ETAPAS.DOCUMENTACION) {
+            return res.status(400).json({ mensaje: 'La solicitud no se encuentra en la etapa de documentación.' });
+        }
+        if (solicitud[0].estado !== 'PENDIENTE' && solicitud[0].estado !== 'EN_REVISION' && solicitud[0].estado !== 'RECHAZADO') {
+            return res.status(400).json({ mensaje: `La solicitud debe estar activa (Pendiente, En Revisión o Rechazada) para reemplazar documentos. Estado actual: ${solicitud[0].estado}` });
+        }
 
         if (documentData.estadoValidacion !== 'RECHAZADO') {
             return res.status(400).json({ mensaje: 'Sólo se pueden volver a subir documentos que hayan sido rechazados.' });
@@ -166,7 +198,7 @@ const reemplazarDocumento = async (req, res) => {
 
         const nuevosIntentos = ultimoIntento + 1;
 
-        // Insertar NUEVA FILA para registrar el nuevo intento conservando el historial anterior
+        // registrar nuevo intento
         const [resultado] = await db.query(
             `INSERT INTO solicitud_documentos (idSolicitud, idRequisito, rutaArchivo, estadoValidacion, comentarios, intentos)
              VALUES (?, ?, ?, 'PENDIENTE', NULL, ?)`,
@@ -176,7 +208,7 @@ const reemplazarDocumento = async (req, res) => {
         // Recalcular estado de la solicitud basándose únicamente en los ÚLTIMOS intentos de cada requisito
         await WorkflowService.evaluarTransicionDocumentacion(documentData.idSolicitud);
 
-        // Notificar a ADMIN y DOCENTE (aspirante reemplazó un documento)
+        // notificar reemplazo de documento
         emit.aAdminYDocente(req);
 
         return res.json({ 

@@ -13,15 +13,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const togglePasswordIcon = document.getElementById("togglePassword");
     const passwordInput = document.getElementById("password");
     if (togglePasswordIcon && passwordInput) {
-        togglePasswordIcon.addEventListener("click", () => {
+        const toggleVisibility = () => {
             if (passwordInput.type === "password") {
                 passwordInput.type = "text";
                 togglePasswordIcon.classList.remove("fa-eye");
                 togglePasswordIcon.classList.add("fa-eye-slash");
+                togglePasswordIcon.setAttribute("aria-label", "Ocultar contraseña");
             } else {
                 passwordInput.type = "password";
                 togglePasswordIcon.classList.remove("fa-eye-slash");
                 togglePasswordIcon.classList.add("fa-eye");
+                togglePasswordIcon.setAttribute("aria-label", "Mostrar contraseña");
+            }
+        };
+
+        togglePasswordIcon.addEventListener("click", toggleVisibility);
+        togglePasswordIcon.addEventListener("keydown", (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleVisibility();
             }
         });
     }

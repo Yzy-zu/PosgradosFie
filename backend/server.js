@@ -2,8 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const http = require('http'); // Agregado para Socket.io
-const { Server } = require('socket.io'); // Agregado para Socket.io
+const http = require('http');
+const { Server } = require('socket.io');
 require('dotenv').config();
 require('./database/db');
 
@@ -54,8 +54,12 @@ app.use(cors({
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, '../frontend')));
+<<<<<<< HEAD
 
 // Servir carpetas estáticas de archivos e imágenes
+=======
+// Servir imágenes y flyers generales
+>>>>>>> f63615ce5019a483681d09ef4164995b93032334
 app.use('/files', express.static(path.join(__dirname, 'files')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -80,7 +84,7 @@ app.use('/api/avisos', require('./routes/avisos.routes'));
 app.use('/api/filemanager', require('./routes/fileManager.routes'));
 
 // -------------------------------------------------------------------
-// Ruta protegida para servir archivos de solicitud (Bug 10 Fix)
+// ruta para archivos de solicitud
 // Acepta el JWT como query param ?token= para links directos en nueva pestaña
 // -------------------------------------------------------------------
 const jwt = require('jsonwebtoken');
@@ -115,7 +119,6 @@ app.get('/api/files/{*path}', (req, res) => {
     }
 });
 
-// Nota: La ruta POST /api/entrevistas (legacy) fue migrada a /api/entrevista via entrevista.routes.js
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/aspirante.html'));
@@ -123,13 +126,4 @@ app.get('/', (req, res) => {
 
 server.listen(PORT, () => {
     console.log(`Servidor listo en http://localhost:${PORT}`);
-});
-
-// Rutas temporales/básicas para secretario si aún no las tienes declaradas
-app.get('/api/secretario/aspirantes', (req, res) => {
-    res.json({ success: true, aspirantes: [] });
-});
-
-app.get('/api/secretario/documentos', (req, res) => {
-    res.json({ success: true, documentos: [] });
 });

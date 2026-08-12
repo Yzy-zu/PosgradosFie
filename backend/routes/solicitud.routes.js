@@ -4,7 +4,7 @@ const router = express.Router();
 // Middlewares de protección y validación
 const verificarToken = require('../middlewares/auth');
 const validarRol = require('../middlewares/validarRol');
-const validarSolicitud = require('../middlewares/validarSolicitud');
+
 
 // Controladores
 const {
@@ -23,15 +23,15 @@ const {
     actualizarEstadoSolicitud
 } = require('../controllers/solicitudController');
 
-router.post('/crear', crearSolicitud);
-router.get('/activa/:idAspi', verificarToken, getSolicitudActiva);
-router.get('/mapa/:idAspi', verificarToken, getMapaProceso);
-router.put('/cancelar/:id', cancelarSolicitud);
-router.put('/estado/:id', actualizarEstadoSolicitud);
-router.put('/modalidad/:id', actualizarModalidad);
-router.put('/enviar/:id', enviarExpediente);
+router.post('/crear',        verificarToken, validarRol('ASPIRANTE'),                          crearSolicitud);
+router.get('/activa/:idAspi', verificarToken,                                                    getSolicitudActiva);
+router.get('/mapa/:idAspi',   verificarToken,                                                    getMapaProceso);
+router.put('/cancelar/:id',  verificarToken, validarRol('ASPIRANTE', 'COORDINADOR', 'ADMIN'),    cancelarSolicitud);
+router.put('/estado/:id',    verificarToken, validarRol('COORDINADOR', 'ADMIN'),                 actualizarEstadoSolicitud);
+router.put('/modalidad/:id', verificarToken, validarRol('ASPIRANTE', 'COORDINADOR', 'ADMIN'),                 actualizarModalidad);
+router.put('/enviar/:id',    verificarToken, validarRol('ASPIRANTE'),                            enviarExpediente);
 
-// Nuevos Endpoints Workflow
+//rutas de workflow
 router.get('/ingreso/modalidades', getModalidadesIngreso);
 router.get('/workflow/:idModalidad/etapas', getEtapasWorkflow);
 router.get('/acciones/:id', getAccionesSolicitud);
