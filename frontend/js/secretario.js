@@ -243,11 +243,8 @@ async function cargarAspirantes() {
     };
 
     try {
-        // Intenta primero la ruta en plural (/api/aspirantes) y si da 404 intenta en singular (/api/aspirante)
-        let respuesta = await fetch('/api/aspirantes', { headers });
-        if (respuesta.status === 404) {
-            respuesta = await fetch('/api/aspirante', { headers });
-        }
+        // Usar la ruta correcta para aspirantes
+        let respuesta = await fetch('/api/aspirante', { headers });
 
         if (respuesta.ok) {
             const aspirantes = await respuesta.json();
@@ -292,14 +289,14 @@ function actualizarMetricas(aspirantes = [], documentos = []) {
     // 2. Total de documentos subidos
     const totalDocumentos = documentos.length;
 
-    // 3. Documentos o expedientes pendientes (estado 'pendiente' o 'en_revision')
+    // 3. Documentos o expedientes pendientes
     const pendientes = documentos.filter(doc => 
-        doc.estado === 'pendiente' || doc.estado === 'en_revision'
+        doc.estadoValidacion === 'PENDIENTE' || doc.estadoValidacion === 'EN_REVISION'
     ).length;
 
-    // 4. Expedientes completos (estado 'aprobado' o 'completo')
+    // 4. Expedientes completos
     const completos = documentos.filter(doc => 
-        doc.estado === 'aprobado' || doc.estado === 'completo'
+        doc.estadoValidacion === 'APROBADO' || doc.estadoValidacion === 'COMPLETO'
     ).length;
 
     // Inserción de valores en el DOM
@@ -312,22 +309,70 @@ function actualizarMetricas(aspirantes = [], documentos = []) {
 // Carga e integración de datos desde la API
 async function cargarDatosInicio() {
     try {
-        const resAspirantes = await fetch('http://localhost:4000/api/secretario/aspirantes', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        const token = sessionStorage.getItem('token') || localStorage.getItem('token') || '';
+        const resAspirantes = await fetch('/api/aspirante', {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
-        const resDocumentos = await fetch('http://localhost:4000/api/secretario/documentos', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        const resDocumentos = await fetch('/api/documentos/explorador', {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (resAspirantes.ok && resDocumentos.ok) {
             const aspirantes = await resAspirantes.json();
-            const documentos = await resDocumentos.json();
+            const dataDocs = await resDocumentos.json();
+            const documentos = dataDocs.documentos || [];
             
             // Actualizar contadores
             actualizarMetricas(aspirantes, documentos);
         }
     } catch (error) {
         console.error('Error al actualizar métricas:', error);
+    }
+}
+
+// ────────────────────────────────────────────────────────────────
+//tabla de documentos
+// ────────────────────────────────────────────────────────────────
+async function cargarDocumentos() {
+    const tbody = document.getElementById('tablaDocumentosSecretario');
+    if (!tbody) return;
+
+    const token = sessionStorage.getItem('token') || localStorage.getItem('token') || '';
+    const headers = {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+    };
+
+    try {
+        const respuesta = await fetch('/api/documentos/explorador', { headers });
+
+        if (respuesta.ok) {
+            const data = await respuesta.json();
+            const documentos = data.documentos || [];
+
+            tbody.innerHTML = '';
+
+            if (documentos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 15px;">No hay documentos registrados.</td></tr>';
+                return;
+            }
+
+            documentos.forEach(doc => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><strong>${doc.idDocumento}</strong></td>
+                    <td>${doc.aspiranteNombreCompleto || "Aspirante"}</td>
+                    <td>${doc.requisitoNombre || "Documento"}</td>
+                    <td>${doc.estadoValidacion || "PENDIENTE"}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#dc2626; padding: 15px;">Error al obtener datos (Status ${respuesta.status}).</td></tr>`;
+        }
+    } catch (error) {
+        console.error("Error al conectar con la API:", error);
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#dc2626; padding: 15px;">Error de conexión con el servidor backend.</td></tr>`;
     }
 }
 

@@ -54,12 +54,10 @@ app.use(cors({
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, '../frontend')));
-<<<<<<< HEAD
+
 
 // Servir carpetas estáticas de archivos e imágenes
-=======
-// Servir imágenes y flyers generales
->>>>>>> f63615ce5019a483681d09ef4164995b93032334
+
 app.use('/files', express.static(path.join(__dirname, 'files')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
