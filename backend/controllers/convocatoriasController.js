@@ -67,7 +67,9 @@ const crearConvocatorias = async (req, res) => {
         connection = await db.getConnection();
         await connection.beginTransaction();
 
-        const idCreador = req.usuario ? req.usuario.id : (req.body.creado_por || 1);
+        // M-06: idCreador siempre proviene del JWT (req.usuario.id garantizado por auth middleware).
+        // Nunca se acepta del body para evitar spoofing del creador.
+        const idCreador = req.usuario.id;
 
         const [resultado] = await connection.query(
             'INSERT INTO convocatorias (nombre, descripcion, fecha_inicio, fecha_fin, estado, posgrado_id, tipo, fechaInicioDocumentos, fechaFinDocumentos, fechaEntrevistaInicio, fechaEntrevistaFin, fechaInicioEscolar, fechaResultados, duracion, modalidad, inicioCurso, finCurso, inicioExamen, finExamen, creado_por) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',

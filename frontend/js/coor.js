@@ -18,6 +18,35 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarNotificaciones();
     cargarPerfilCoordinador();
 
+    // F-B06 FIX: inyectar nombre real del coordinador en el topbar.
+    // El HTML tenía "Coordinador" hardcodeado; ahora se lee de sessionStorage.
+    try {
+        const usuStr = sessionStorage.getItem('usuario');
+        if (usuStr) {
+            const usu = JSON.parse(usuStr);
+            const nombre    = usu.nombre    || usu.usu_nombre    || '';
+            const apellido  = usu.primerApellido || usu.primer_apellido || '';
+            const nombreMostrar = `${nombre} ${apellido}`.trim() || 'Coordinador';
+            const primerNombre = nombre.trim().split(' ')[0] || 'Coordinador';
+
+            // Elementos del topbar que pueden existir en coor.html
+            const elNombre   = document.getElementById('topbar-nombre-usuario') ||
+                               document.getElementById('topbar-first-name');
+            const elIniciales = document.getElementById('topbar-iniciales');
+            // El span del userMenu que muestra el rol/nombre (línea ~125 de coor.html)
+            const elRolSpan = document.querySelector('#userMenu .fw-medium');
+
+            if (elNombre)    elNombre.textContent    = primerNombre;
+            if (elIniciales) {
+                const inits = (nombre.charAt(0) + apellido.charAt(0)).toUpperCase();
+                elIniciales.textContent = inits || 'CO';
+            }
+            if (elRolSpan)   elRolSpan.textContent   = primerNombre;
+        }
+    } catch (e) {
+        console.warn('F-B06: No se pudo cargar el nombre del coordinador:', e);
+    }
+
     // 3. Socket.io para actualización en tiempo real
     if (typeof io !== 'undefined') {
         const socket = io();
@@ -25,28 +54,41 @@ document.addEventListener('DOMContentLoaded', () => {
             cargarMetricas();
             const hash = window.location.hash;
             if (hash === '#aspirantes') cargarAspirantes();
-            if (
-                typeof window.cargarConvocatorias ===
-                "function"
-            ) {
+            if (typeof window.cargarConvocatorias === 'function') {
                 window.cargarConvocatorias();
             }
             if (hash === '#entrevistas') cargarEntrevistas();
         });
     }
 
-    // 4. Delegación global de eventos submit Y click para el modal de entrevistas
+    // 4. Delegación global de eventos submit para el modal de entrevistas
     document.addEventListener('submit', (e) => {
         if (e.target && (e.target.id === 'formModalEntrevista' || e.target.id === 'formEntrevista')) {
             guardarEntrevista(e);
         }
     });
 
+    // F-B09 FIX: resetear el modal de entrevista al cerrarse para no arrastrar
+    // datos del aspirante anterior a la próxima apertura.
+    const modalEntrevistaEl = document.getElementById('modalEntrevista');
+    if (modalEntrevistaEl) {
+        modalEntrevistaEl.addEventListener('hidden.bs.modal', () => {
+            const form = document.getElementById('formModalEntrevista');
+            if (form) form.reset();
+            // Limpiar explicitamente campos que form.reset() no siempre cubre
+            const idInput = document.getElementById('modalEntrevistaIdSolicitud');
+            const nombreEl = document.getElementById('modalEntrevistaNombre');
+            if (idInput)  idInput.value       = '';
+            if (nombreEl) nombreEl.textContent = '-';
+        });
+    }
+
     // 5. Cierre de sesión
     const logoutBtn = document.getElementById('menuLogout');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            sessionStorage.clear();
             localStorage.clear();
             window.location.href = '/login.html';
         });
@@ -79,9 +121,17 @@ function navegar() {
         document.getElementById('vista-inicio')?.classList.remove('d-none');
     }
 
-    // Activar link sidebar
+    // F-B17 FIX: activar link en el sidebar con fallback a #inicio si no coincide el hash
     const activeLink = document.querySelector(`.sidebar nav a[href="${hash}"]`);
-    if (activeLink) activeLink.classList.add('active');
+    if (activeLink) {
+        activeLink.classList.add('active');
+    } else {
+        const inicioLink = document.querySelector('.sidebar nav a[href="#inicio"]');
+        if (inicioLink) inicioLink.classList.add('active');
+    }
+
+    // FASE 4: Evitar que la página se quede abajo al cambiar de vista
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Cargar módulos
     switch (hash) {
@@ -195,85 +245,9 @@ async function cargarMetricas() {
 
 /* ==========================================================
    2. CONVOCATORIAS
+   F-03 FIX: cargarConvocatoriasViejas() eliminada — no tenía llamadores
+   y fue reemplazada por la lógica de convocatorias dinámica del coordinador.
 ========================================================== */
-async function cargarConvocatoriasViejas() {
-    const contenedor = document.getElementById('contenedorConvocatorias');
-    if (!contenedor) return;
-
-    contenedor.innerHTML = `
-        <div class="col-12 text-center py-4 text-muted">
-            <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-            Cargando convocatorias...
-        </div>
-    `;
-
-    try {
-        const res = await fetch('/api/convocatorias');
-        if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-
-        const convocatorias = await res.json();
-        contenedor.innerHTML = '';
-
-        if (!convocatorias || convocatorias.length === 0) {
-            contenedor.innerHTML = `
-                <div class="col-12 text-center py-4 text-muted">
-                    <i class="fa-solid fa-folder-open fa-2x mb-2 d-block opacity-50"></i>
-                    No hay convocatorias registradas en la base de datos.
-                </div>
-            `;
-            return;
-        }
-
-        convocatorias.forEach(c => {
-            const fInicioStr = c.fecha_inicio || c.fechaInicio;
-            const fFinStr = c.fecha_fin || c.fechaFin;
-
-            const fInicio = fInicioStr ? fInicioStr.substring(0, 10) : 'S/F';
-            const fFin = fFinStr ? fFinStr.substring(0, 10) : 'S/F';
-
-            const estatusTexto = (c.estatus || c.estado || '').toString().toUpperCase();
-            const hoy = new Date().toISOString().substring(0, 10);
-
-            const esActiva = (estatusTexto === 'ACTIVA' || c.activa === 1 || c.activa === true) &&
-                (!fFinStr || fFin >= hoy);
-
-            const badgeEstado = esActiva
-                ? `<span class="badge bg-success px-3 py-1">Activa</span>`
-                : `<span class="badge bg-secondary px-3 py-1">Cerrada</span>`;
-
-            const col = document.createElement('div');
-            col.className = 'col-md-4 col-sm-6';
-
-            col.innerHTML = `
-                <div class="card h-100 text-center p-4 border shadow-sm hover-shadow" style="border-radius: 12px;">
-                    <div class="mb-3">
-                        <i class="fa-solid fa-file-signature" style="font-size: 2.8rem; color: #8b5cf6;"></i>
-                    </div>
-                    <h6 class="fw-bold mb-2 text-dark" style="font-size: 1.05rem;">
-                        ${c.nombre || c.titulo || 'Convocatoria'}
-                    </h6>
-                    <p class="text-muted small mb-3">
-                        ${fInicio} a ${fFin}
-                    </p>
-                    <div>
-                        ${badgeEstado}
-                    </div>
-                </div>
-            `;
-
-            contenedor.appendChild(col);
-        });
-
-    } catch (err) {
-        console.error('Error al cargar convocatorias:', err);
-        contenedor.innerHTML = `
-            <div class="col-12 text-center py-3 text-danger">
-                <i class="fa-solid fa-circle-exclamation me-1"></i>
-                Error al conectar con la base de datos de convocatorias.
-            </div>
-        `;
-    }
-}
 
 /* ==========================================================
   3. ASPIRANTES
@@ -869,6 +843,24 @@ async function cargarEntrevistas() {
             tbody.appendChild(tr);
         });
 
+        // F-B13 FIX: actualizar métricas en las tarjetas de resumen de entrevistas
+        let numProg = 0, numPend = 0;
+        const docentesSet = new Set();
+        entrevistas.forEach(ent => {
+            const fRaw = ent.fecha || '';
+            if (fRaw && fRaw.trim()) numProg++;
+            else numPend++;
+            const docId = ent.idUsua || ent.id_docente || ent.id_usuario;
+            if (docId) docentesSet.add(String(docId));
+        });
+
+        const elProg = document.getElementById('cnt-entrevistas-programadas');
+        const elPend = document.getElementById('cnt-entrevistas-pendientes');
+        const elDoc  = document.getElementById('cnt-entrevistas-docentes');
+        if (elProg) elProg.textContent = `${numProg} programadas`;
+        if (elPend) elPend.textContent = `${numPend} sin fecha`;
+        if (elDoc)  elDoc.textContent  = `${docentesSet.size} evaluadores`;
+
         configurarBuscadorEntrevistas();
 
     } catch (err) {
@@ -1204,13 +1196,18 @@ async function verExpediente(idAspirante) {
 
         const respuesta =
             await fetch(
-                `/api/coordinador/aspirante/${idAspirante}/expediente`
+                `/api/coordinador/aspirante/${idAspirante}/expediente`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${sessionStorage.getItem('token') || localStorage.getItem('token') || ''}`
+                    }
+                }
             );
 
-        const resultado =
-            await respuesta.json();
-
+        // F-05 FIX: verificar res.ok ANTES de llamar .json() para evitar error
+        // si el servidor devuelve un cuerpo no-JSON en respuestas de error.
         if (!respuesta.ok) {
+            const resultado = await respuesta.json().catch(() => ({}));
 
             modalBody.innerHTML = `
                 <div class="alert alert-danger">
@@ -1222,6 +1219,8 @@ async function verExpediente(idAspirante) {
 
             return;
         }
+
+        const resultado = await respuesta.json();
 
         const perfil =
             resultado.aspirante || {};
@@ -1268,7 +1267,7 @@ async function verExpediente(idAspirante) {
                         <div>
 
                             <strong>
-                                ${doc.requisito || "Documento"}
+                                ${doc.requisitoNombre || doc.requisito || 'Documento'}
                             </strong>
 
                             <br>
@@ -1281,8 +1280,8 @@ async function verExpediente(idAspirante) {
 
                         <a
                             class="btn btn-sm btn-outline-primary"
-                            target="_blank"
-                            href="/api/files/${encodeURIComponent(archivo)}?token=${encodeURIComponent(token)}">
+                            style="cursor:pointer;"
+                            onclick="abrirArchivoSeguro('${doc.rutaArchivo || archivo}', event)">
 
                             <i class="fa-solid fa-file-pdf me-1"></i>
 
@@ -1416,8 +1415,19 @@ async function cargarDictamenes() {
 
         const res =
             await fetch(
-                "/api/coordinador/dictamenes"
+                "/api/coordinador/dictamenes",
+                {
+                    headers: {
+                        'Authorization': `Bearer ${sessionStorage.getItem('token') || localStorage.getItem('token') || ''}`
+                    }
+                }
             );
+
+        // F-11 FIX: verificar res.ok antes de parsear JSON para evitar
+        // asignar a listaDictamenes una respuesta de error como objeto.
+        if (!res.ok) {
+            throw new Error(`Error del servidor: ${res.status}`);
+        }
 
         listaDictamenes =
             await res.json();
@@ -1593,36 +1603,7 @@ function configurarBuscadorDictamenes() {
 
 }
 
-function configurarBuscadorDictamenes() {
-
-    const input =
-        document.getElementById(
-            "buscarDictamen"
-        );
-
-    if (!input) return;
-
-    if (
-        input.dataset.listener === "true"
-    ) return;
-
-    input.addEventListener(
-        "input",
-        function () {
-
-            textoBusquedaDictamen =
-                this.value
-                    .toLowerCase()
-                    .trim();
-
-            renderizarDictamenes();
-
-        }
-    );
-
-    input.dataset.listener = "true";
-
-}
+// F-01 FIX: Segunda definición duplicada de configurarBuscadorDictamenes eliminada.
 
 function configurarFiltrosDictamenes() {
 
@@ -1777,80 +1758,69 @@ async function cambiarDictamen(
 // ==========================================
 // 13. Guardar Dictamen
 // ==========================================
+// F-04 FIX: guardarDictamen unificado al mismo endpoint PUT que usa cambiarDictamen.
+// Antes usaba POST /api/coordinador/dictamen/:id con {resultado, motivo}.
+// Ahora usa PUT /api/coordinador/solicitud/:id/dictamen con {estado, motivo},
+// igual que cambiarDictamen(), eliminando el flujo duplicado.
 async function guardarDictamen() {
 
     const id = document.getElementById("dictamenSolicitud").value;
-
     const resultado = document.getElementById("dictamenResultado").value;
-
     const motivo = document.getElementById("dictamenMotivo").value;
+
+    if (!id || !resultado) {
+        Swal.fire('Datos incompletos', 'No se encontró la solicitud o el resultado seleccionado.', 'warning');
+        return;
+    }
+
+    // F-10 FIX: validar motivo obligatorio si el dictamen es de rechazo
+    if ((resultado === 'RECHAZADO' || resultado === 'NO_ACEPTADO') && !motivo.trim()) {
+        Swal.fire('Observaciones requeridas', 'Debes escribir el motivo del rechazo antes de guardar.', 'warning');
+        return;
+    }
+
+    const btnGuardar = document.querySelector('#modalDictamen .btn-primary, #modalDictamen [onclick*="guardarDictamen"]');
+    if (btnGuardar) btnGuardar.disabled = true;
 
     try {
 
-        const res = await fetch(`/api/coordinador/dictamen/${id}`, {
-
-            method: "POST",
-
+        const res = await fetch(`/api/coordinador/solicitud/${id}/dictamen`, {
+            method: "PUT",
             headers: {
-
-                "Content-Type": "application/json"
-
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${sessionStorage.getItem('token') || localStorage.getItem('token') || ''}`
             },
-
-            body: JSON.stringify({
-
-                resultado,
-
-                motivo
-
-            })
-
+            body: JSON.stringify({ estado: resultado, motivo })
         });
 
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
 
         if (res.ok) {
-
-            Swal.fire({
-
+            await Swal.fire({
                 icon: "success",
-
-                title: "Correcto",
-
-                text: data.mensaje,
-
+                title: "Dictamen guardado",
+                text: data.mensaje || "El dictamen fue registrado correctamente.",
                 timer: 1500,
-
                 showConfirmButton: false
-
             });
 
             bootstrap.Modal.getInstance(
-
                 document.getElementById("modalDictamen")
-
-            ).hide();
+            )?.hide();
 
             cargarDictamenes();
 
+            if (typeof cargarMetricas === 'function') cargarMetricas();
+
         } else {
-
-            Swal.fire(
-
-                "Error",
-
-                data.mensaje,
-
-                "error"
-
-            );
-
+            Swal.fire("Error", data.mensaje || `Error del servidor (${res.status}).`, "error");
         }
 
     } catch (error) {
-
-        console.error(error);
-
+        console.error('Error al guardar dictamen:', error);
+        Swal.fire('Error de conexión', 'No se pudo conectar con el servidor.', 'error');
+    } finally {
+        if (btnGuardar) btnGuardar.disabled = false;
     }
 
 }
@@ -1949,59 +1919,11 @@ async function cargarNotificaciones() {
 }
 
 
-// ==========================================
-// 15 FUNCIÓN PARA ABRIR EL MODAL Y ASIGNAR EL ID
-// ==========================================
-function abrirModalProgramar(idSolicitud) {
-    console.log("Abriendo modal para la solicitud ID:", idSolicitud);
+// F-14 FIX: abrirModalProgramar() eliminada — era un duplicado incompleto
+// de abrirModalEntrevista(), que ya gestiona correctamente el mismo modal.
 
-    // 1. Asignamos el idSolicitud al input oculto (para no perder el ID)
-    const inputSolicitud = document.getElementById('idSolicitud');
-    if (inputSolicitud) {
-        inputSolicitud.value = idSolicitud;
-    }
-
-    // 2. Reseteamos la selección del docente a la opción por defecto sin borrar las opciones
-    const selectDocente = document.getElementById('id_docente');
-    if (selectDocente) {
-        selectDocente.selectedIndex = 0; // Selecciona "Seleccione un docente..."
-    }
-
-    // 3. Abrimos el modal con Bootstrap
-    const modalElement = document.getElementById('modalEntrevista');
-    if (modalElement) {
-        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
-        modal.show();
-    }
-}
-
-function configurarBuscadorEntrevistas() {
-
-    const buscador = document.getElementById("buscarEntrevista");
-
-    if (!buscador) return;
-
-    buscador.onkeyup = function () {
-
-        const texto = this.value.toLowerCase().trim();
-
-        const filas = document.querySelectorAll("#tablaEntrevistasBody tr");
-
-        filas.forEach(fila => {
-
-            const nombre = fila.cells[0]?.innerText.toLowerCase() || "";
-
-            if (nombre.includes(texto)) {
-                fila.style.display = "";
-            } else {
-                fila.style.display = "none";
-            }
-
-        });
-
-    };
-
-}
+// F-02 FIX: Segunda definición duplicada de configurarBuscadorEntrevistas eliminada.
+// La versión canónica (con dataset.listenerBusqueda y addEventListener) está en la línea ~1123.
 
 function cargarPerfilCoordinador() {
 

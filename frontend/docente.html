@@ -62,22 +62,22 @@
 
         <ul class="side-menu top">
             <li>
-                <a href="#inicio" onclick="switchView('inicio')" id="nav-inicio" class="active" title="Inicio"
-                    data-i18n-title="sb_inicio">
+                <a href="#inicio" id="nav-inicio" class="active" title="Inicio"
+                    data-i18n-title="sb_inicio" onclick="switchView('inicio')">
                     <i class="fa-solid fa-chalkboard-user"></i>
                     <span class="text" data-i18n="sb_inicio">Inicio</span>
                 </a>
             </li>
             <li>
-                <a href="#expedientes" onclick="switchView('expedientes')" id="nav-expedientes" title="Expedientes"
-                    data-i18n-title="sb_expedientes">
+                <a href="#expedientes" id="nav-expedientes" title="Expedientes"
+                    data-i18n-title="sb_expedientes" onclick="switchView('expedientes')">
                     <i class="fa-solid fa-folder-open"></i>
                     <span class="text" data-i18n="sb_expedientes">Expedientes</span>
                 </a>
             </li>
             <li>
-                <a href="#aspirantes" onclick="switchView('aspirantes')" id="nav-aspirantes" title="Aspirantes"
-                    data-i18n-title="sb_aspirantes">
+                <a href="#aspirantes" id="nav-aspirantes" title="Aspirantes"
+                    data-i18n-title="sb_aspirantes" onclick="switchView('aspirantes')">
                     <i class="fa-solid fa-users"></i>
                     <span class="text" data-i18n="sb_aspirantes">Aspirantes</span>
                 </a>
@@ -96,11 +96,17 @@
         </div>
     </nav>
 
+    <!-- Overlay móvil para cerrar la barra lateral -->
+    <div id="sidebar-mobile-overlay" class="sidebar-overlay" onclick="toggleSidebarMobile()"></div>
+
     <main class="main-content" style="position: relative;">
         <header class="topbar-modern" style="padding: 0 20px;">
             <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 20px;">
                 <!-- Izquierda: Título -->
-                <div class="topbar-greeting" style="display: flex; align-items: center; min-width: 180px;">
+                <div class="topbar-greeting" style="display: flex; align-items: center; min-width: 180px; gap: 10px;">
+                    <button class="btn-mobile-toggle" id="btn-mobile-sidebar-toggle" onclick="toggleSidebarMobile()" aria-label="Abrir menú">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
                     <span id="topbar-nombre-usuario" data-i18n="docente_revisor"
                         style="font-weight: 600; font-size: 1.25rem;">Docente</span>
                 </div>
@@ -198,7 +204,7 @@
                                 style="padding-left: 35px; width: 100%; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; font-size: 0.9rem;">
                         </div>
                         <button id="btn-filtro-en-curso" onclick="toggleFiltroEnCurso()" 
-                            style="border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; padding: 0 15px; font-size: 0.9rem; flex-shrink: 0; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px;">
+                            style="border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-input-bg); color: var(--color-text); height: 40px; padding: 0 15px; font-size: 0.9rem; flex-shrink: 0; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px;" aria-label="Alternar menú">
                             <i class="fa-solid fa-graduation-cap"></i> En cursos
                         </button>
                         <div style="width: 150px; flex-shrink: 0;">
@@ -255,7 +261,7 @@
                 <div
                     style="display: flex; align-items: center; gap: 20px; min-width: 180px; justify-content: flex-end;">
                     <!-- Menú de Mensajes -->
-                    <div class="notification-container" onclick="toggleNotificationMenu(event)"
+                    <div class="notification-container" role="button" tabindex="0" aria-label="Notificaciones" onclick="toggleNotificationMenu(event)" onkeydown="if(event.key==='Enter' || event.key===' ') toggleNotificationMenu(event)"
                         style="position: relative;">
                         <div class="notification-trigger"
                             style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; color: var(--color-text); background: var(--color-card-bg);">
@@ -365,9 +371,9 @@
                 </div>
 
                 <!-- Controls -->
-                <button class="carousel-btn prev-btn" onclick="moveCarousel(-1)"><i
+                <button class="carousel-btn prev-btn" onclick="moveCarousel(-1)" aria-label="Anterior"><i
                         class="fa-solid fa-chevron-left"></i></button>
-                <button class="carousel-btn next-btn" onclick="moveCarousel(1)"><i
+                <button class="carousel-btn next-btn" onclick="moveCarousel(1)" aria-label="Siguiente"><i
                         class="fa-solid fa-chevron-right"></i></button>
 
                 <!-- Indicators -->
@@ -402,7 +408,12 @@
                             comenzar con la auditoría documental.</p>
                     </div>
 
-                    <div id="contenido-detalle" style="display: none;">
+                    <div id="contenido-detalle" style="display: none; position: relative;">
+                        <!-- Botón Volver (solo visible en móvil mediante CSS de la clase back-to-list-btn) -->
+                        <button id="btn-volver-lista" onclick="volverAListaAspirantes()" class="btn btn-sm btn-outline-secondary d-md-none mb-3" style="display: none;">
+                            <i class="fa-solid fa-arrow-left me-1"></i> Volver a la lista
+                        </button>
+
                         <div class="detail-header"
                             style="border-bottom: 1px solid var(--color-border); padding-bottom: 15px;">
                             <div>
@@ -458,19 +469,21 @@
             <div id="vistaTablaAspirantes">
                 <div class="card"
                     style="padding: 20px; overflow-x: auto; background: var(--color-card-bg); border: 1px solid var(--color-border); border-radius: 12px;">
-                    <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
-                        <thead>
-                            <tr
-                                style="border-bottom: 2px solid var(--color-border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted);">
-                                <th style="padding: 12px 15px;">Aspirante / Contacto</th>
-                                <th style="padding: 12px 15px;">CURP</th>
-                                <th style="padding: 12px 15px;">Antecedentes Académicos</th>
-                                <th style="padding: 12px 15px;">Posgrado Solicitado</th>
-                                <th style="padding: 12px 15px; text-align: center;">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaAspirantes"></tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table style="width: 100%; border-collapse: collapse; color: var(--color-text); text-align: left;">
+                            <thead>
+                                <tr
+                                    style="border-bottom: 2px solid var(--color-border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted);">
+                                    <th style="padding: 12px 15px;">Aspirante / Contacto</th>
+                                    <th style="padding: 12px 15px;">CURP</th>
+                                    <th style="padding: 12px 15px;">Antecedentes Académicos</th>
+                                    <th style="padding: 12px 15px;">Posgrado Solicitado</th>
+                                    <th style="padding: 12px 15px; text-align: center;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaAspirantes"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -478,11 +491,11 @@
             <div id="vistaPerfilAspirante" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                     <button class="btn-secondary shadow-sm" onclick="cerrarExpedienteAspirante()"
-                        style="border-radius: 8px; font-weight: 600; padding: 8px 16px; border: 1px solid var(--color-border); background: var(--color-card-bg); color: var(--color-text); cursor: pointer;">
+                        style="border-radius: 8px; font-weight: 600; padding: 8px 16px; border: 1px solid var(--color-border); background: var(--color-card-bg); color: var(--color-text); cursor: pointer;" aria-label="Cerrar expediente">
                         <i class="fa-solid fa-arrow-left me-2"></i> Volver a la lista
                     </button>
                     <button class="btn-primary shadow-sm" id="btnVerExpedienteCompleto"
-                        style="display: none; border-radius: 8px; font-weight: 600; padding: 8px 16px; background: var(--color-primary); color: white; border: none; cursor: pointer;">
+                        style="display: none; border-radius: 8px; font-weight: 600; padding: 8px 16px; background: var(--color-primary); color: white; border: none; cursor: pointer;" aria-label="Ver expediente completo">
                         <i class="fa-solid fa-file-pdf me-2"></i> Expediente
                     </button>
                 </div>
@@ -668,7 +681,7 @@
         <div id="settings-drawer" class="settings-drawer">
             <div class="drawer-header">
                 <h3><i class="fa-solid fa-gear icon-anim-gear"></i> <span data-i18n="st_ajustes">Ajustes</span></h3>
-                <button class="btn-close-drawer" onclick="cerrarDrawerAjustes()"><i
+                <button class="btn-close-drawer" onclick="cerrarDrawerAjustes()" aria-label="Cerrar"><i
                         class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="drawer-body">
@@ -683,7 +696,7 @@
                         </div>
                         <button class="btn-secondary btn-sm"
                             onclick="abrirModalCambiarPassword(); cerrarDrawerAjustes();"
-                            data-i18n="st_btn_cambiar">Cambiar</button>
+                            data-i18n="st_btn_cambiar" aria-label="Cambiar contraseña">Cambiar</button>
                     </div>
                 </div>
 
@@ -735,7 +748,7 @@
             </div>
             <div class="drawer-footer">
                 <button class="btn-primary w-100" onclick="cerrarDrawerAjustes()"
-                    style="padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px;">Cerrar</button>
+                    style="padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px;" aria-label="Cerrar ajustes">Cerrar</button>
             </div>
         </div>
     </main>
@@ -743,6 +756,7 @@
     <!-- Modal Genérico Dinámico para Módulos (Examen, Curso, etc.) -->
     <div class="modal-overlay" id="modal-docente-dinamico"
         style="display: none; align-items: center; justify-content: center; z-index: 1050; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);"
+        role="dialog" aria-modal="true" aria-labelledby="modal-dinamico-titulo"
         onclick="if (event.target === this) this.style.display='none'">
         <div class="modal-card"
             style="width: 950px; max-width: 95%; max-height: 95vh; display: flex; flex-direction: column; background: var(--color-card-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
@@ -753,7 +767,7 @@
                     Solicitada</h3>
                 <button class="btn-close"
                     onclick="document.getElementById('modal-docente-dinamico').style.display='none'"
-                    style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--color-text-muted); transition: color 0.2s;"><i
+                    style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--color-text-muted); transition: color 0.2s;" aria-label="Cerrar"><i
                         class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body" id="modal-dinamico-body" style="overflow-y: auto; padding: 25px;">
@@ -777,13 +791,17 @@
                     <div style="display: flex; gap: 10px; margin-left: 20px; flex-wrap: wrap;">
                         <button class="modal-tab-btn active" onclick="cambiarTabEvaluacion('documento')"
                             id="btn-tab-documento"
-                            style="padding: 5px 15px; border: none; background: var(--color-primary); color: white; border-radius: 20px; cursor: pointer; font-weight: bold;">Documento</button>
+                            style="padding: 5px 15px; border: none; background: var(--color-primary); color: white; border-radius: 20px; cursor: pointer; font-weight: bold;" aria-label="Ver documento">Documento</button>
+                        <!-- F-B11 FIX: botón de pestaña Comentarios añadido — el panel eval-tab-comentarios
+                             existía pero era inaccesible porque faltaba este botón. -->
+                        <button class="modal-tab-btn" onclick="cambiarTabEvaluacion('comentarios')" id="btn-tab-comentarios"
+                            style="padding: 5px 15px; border: none; background: transparent; color: var(--color-text-muted); border-radius: 20px; cursor: pointer;" aria-label="Ver comentarios">Comentarios</button>
                         <button class="modal-tab-btn" onclick="cambiarTabEvaluacion('historial')" id="btn-tab-historial"
-                            style="padding: 5px 15px; border: none; background: transparent; color: var(--color-text-muted); border-radius: 20px; cursor: pointer;">Historial</button>
+                            style="padding: 5px 15px; border: none; background: transparent; color: var(--color-text-muted); border-radius: 20px; cursor: pointer;" aria-label="Ver historial">Historial</button>
                     </div>
                 </div>
                 <button onclick="cerrarModalEvaluacion()"
-                    style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--color-text-muted); font-weight: bold;"><i
+                    style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--color-text-muted); font-weight: bold;" aria-label="Cerrar evaluación"><i
                         class="fa-solid fa-xmark"></i></button>
             </div>
 
@@ -809,10 +827,10 @@
                 <div style="display: flex; justify-content: center; align-items: center; gap: 15px;"
                     id="eval-botones-container">
                     <button id="btn-eval-aprobar-modal" class="btn-eval-aprobar"
-                        onclick="clickAprobarDocumentoModal(this)" data-i18n="docente_btn_aprobar"><i
+                        onclick="clickAprobarDocumentoModal(this)" data-i18n="docente_btn_aprobar" aria-label="Aprobar documento"><i
                             class="fa-solid fa-check"></i> Aprobar Documento</button>
                     <button class="btn-eval-rechazar" onclick="mostrarOpcionesRechazo()"
-                        data-i18n="docente_btn_rechazar"><i class="fa-solid fa-xmark"></i> Rechazar...</button>
+                        data-i18n="docente_btn_rechazar" aria-label="Rechazar documento"><i class="fa-solid fa-xmark"></i> Rechazar...</button>
                 </div>
 
                 <!-- Panel oculto para rechazo -->
@@ -825,9 +843,9 @@
                         style="width: 100%; height: 80px; padding: 10px; border-radius: 6px; border: 1px solid var(--color-border); font-family: inherit; margin-bottom: 10px; box-sizing: border-box; background: var(--color-input-bg); color: var(--color-text);"></textarea>
                     <div style="display: flex; gap: 16px; width: 100%; justify-content: center;">
                         <button class="btn-secondary" onclick="ocultarOpcionesRechazo()"
-                            style="flex: 1; max-width: 180px; height: 40px; padding: 8px 15px; border-radius: 6px; cursor: pointer; border: 1px solid var(--color-text-muted); background: transparent; color: var(--color-text-muted); font-weight: bold; display: flex; justify-content: center; align-items: center;">Cancelar</button>
+                            style="flex: 1; max-width: 180px; height: 40px; padding: 8px 15px; border-radius: 6px; cursor: pointer; border: 1px solid var(--color-text-muted); background: transparent; color: var(--color-text-muted); font-weight: bold; display: flex; justify-content: center; align-items: center;" aria-label="Cancelar rechazo">Cancelar</button>
                         <button class="btn-eval-rechazar" onclick="rechazarDocumentoModal()"
-                            style="flex: 1; max-width: 180px; height: 40px; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center;">Confirmar
+                            style="flex: 1; max-width: 180px; height: 40px; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center;" aria-label="Confirmar rechazo">Confirmar
                             rechazo</button>
                     </div>
                 </div>

@@ -10,14 +10,22 @@ class SolicitudTemaService {
     static async generarTemasSiNoExisten(idSolicitud, conn = db) {
         // 1. Obtener idOpcionPosgrado de la solicitud
         const [solicitudes] = await conn.query(
-            `SELECT co.opcion_posgrado_id 
+            `SELECT co.opcion_posgrado_id, c.tipo 
              FROM solicitud s
-             JOIN convocatoria_opcion co ON s.idConvocatoriaOpcion = co.id
+             LEFT JOIN convocatoria_opcion co ON s.idConvocatoriaOpcion = co.id
+             JOIN convocatorias c ON s.idConvocatoria = c.id
              WHERE s.id = ?`,
             [idSolicitud]
         );
 
-        if (solicitudes.length === 0 || !solicitudes[0].opcion_posgrado_id) {
+        if (solicitudes.length === 0) {
+            throw new Error('La solicitud no existe.');
+        }
+
+        if (!solicitudes[0].opcion_posgrado_id) {
+            if (solicitudes[0].tipo === 'DOCTORADO') {
+                return; // Doctorado no requiere temas de evaluación por opción
+            }
             throw new Error('La solicitud no tiene una opción de posgrado válida asignada.');
         }
 
@@ -92,8 +100,11 @@ class SolicitudTemaService {
         }
 
         const solicitud = solicitudes[0];
-        // 3 = Examen, 4 = Curso Propedéutico, 8 = Examen programado
-        const ETAPAS_PERMITIDAS = [3, 4, 8];
+        
+        const [etapasResult] = await db.query(
+            "SELECT id FROM etapa_proceso WHERE nombre IN ('Examen', 'Curso Propedéutico', 'Examen programado')"
+        );
+        const ETAPAS_PERMITIDAS = etapasResult.map(e => e.id);
         
         if (!ETAPAS_PERMITIDAS.includes(solicitud.idEtapaActual) || solicitud.estado !== 'PENDIENTE') {
             throw new Error('No se pueden modificar calificaciones en esta etapa o estado del proceso.');

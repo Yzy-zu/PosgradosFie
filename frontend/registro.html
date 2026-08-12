@@ -62,7 +62,7 @@
                                 <i class="fa-solid fa-lock input-icon"></i>
                                 <input type="password" id="password" placeholder="Contraseña nueva" required
                                     autocomplete="new-password">
-                                <i class="fa-solid fa-eye toggle-pwd" onclick="togglePwd('password', this)"></i>
+                                <i class="fa-solid fa-eye toggle-pwd password-toggle-icon" onclick="togglePwd('password', this)" role="button" tabindex="0" aria-label="Mostrar contraseña" onkeydown="if(event.key==='Enter' || event.key===' ') togglePwd('password', this)"></i>
                             </div>
                         </div>
                     </div>
@@ -135,9 +135,8 @@
                             </div>
                             <div class="input-group">
                                 <label>Código postal</label>
-                                <div class="input-wrapper"><input type="number" id="direccionPostal" placeholder="C.P."
-                                        autocomplete="off">
-                                </div>
+                                <div class="input-wrapper"><input type="number" id="direccionPostal" placeholder="C.P." inputmode="numeric"
+                                        required autocomplete="postal-code"></div>
                             </div>
                             <div class="input-group">
                                 <label>Dirección (opcional)</label>
@@ -178,8 +177,8 @@
                             </div>
                             <div class="input-group">
                                 <label>Promedio general</label>
-                                <div class="input-wrapper"><input type="number" step="0.01" id="promedio"
-                                        placeholder="Ej. 8.5" required autocomplete="off"></div>
+                                <div class="input-wrapper"><input type="number" step="0.01" id="promedio" inputmode="decimal"
+                                        placeholder="0.0 - 10.0" required autocomplete="off"></div>
                             </div>
                         </div>
 

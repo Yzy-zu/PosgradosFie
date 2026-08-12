@@ -164,6 +164,9 @@ function activarSeccionPorHash() {
         void seccionMostrar.offsetWidth; // Trigger reflow for animation
         seccionMostrar.classList.add("fade-in");
     }
+
+    // FASE 4: Evitar que la página se quede abajo al cambiar de sección
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function configurarNavegacion() {
@@ -1795,7 +1798,7 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
                 if (doc.estadoValidacion === "APROBADO") { badgeClass = "success"; textStatus = "Aprobado"; iconStatus = "fa-check-circle"; }
                 else if (doc.estadoValidacion === "RECHAZADO") { badgeClass = "danger"; textStatus = "Rechazado"; iconStatus = "fa-times-circle"; }
                 docsHtml += `
-                    <div class="list-group-item d-flex justify-content-between align-items-center" style="background: transparent; border-color: var(--color-border); padding: 15px 20px;">
+                    <div id="doc-item-admin-${doc.idDocumento || doc.id}" class="list-group-item d-flex justify-content-between align-items-center" style="background: transparent; border-color: var(--color-border); padding: 15px 20px;">
                         <div class="d-flex align-items-center gap-3">
                             <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(59,130,246,0.1); color: var(--color-primary); display: flex; justify-content: center; align-items: center; font-size: 1.2rem;">
                                 <i class="fa-solid fa-file-pdf"></i>
@@ -1806,7 +1809,7 @@ async function abrirDetalleSolicitudAdmin(idSolicitud, idAspi) {
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-${badgeClass} rounded-pill px-3 py-2 fw-semibold shadow-sm d-flex align-items-center gap-1 me-1">
+                            <span id="doc-badge-admin-${doc.idDocumento || doc.id}" class="badge bg-${badgeClass} rounded-pill px-3 py-2 fw-semibold shadow-sm d-flex align-items-center gap-1 me-1">
                                 <i class="fa-solid ${iconStatus}"></i> ${textStatus}
                             </span>
                             <button onclick="evaluarDocumentoAdmin(${doc.idDocumento || doc.id}, 'APROBADO', ${idSolicitud}, ${idAspi})" class="btn btn-sm btn-outline-success rounded-circle" style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Aprobar Documento">
@@ -2084,8 +2087,20 @@ async function evaluarDocumentoAdmin(idDocumento, estadoValidacion, idSolicitud,
                 timer: 1500,
                 showConfirmButton: false
             });
-            await cargarSolicitudesAdmin();
-            await abrirDetalleSolicitudAdmin(idSolicitud, idAspi);
+            
+            // F-C05 FIX: Actualizar el DOM localmente sin recargar el modal
+            const badge = document.getElementById(`doc-badge-admin-${idDocumento}`);
+            if (badge) {
+                let badgeClass = estadoValidacion === "APROBADO" ? "success" : "danger";
+                let textStatus = estadoValidacion === "APROBADO" ? "Aprobado" : "Rechazado";
+                let iconStatus = estadoValidacion === "APROBADO" ? "fa-check-circle" : "fa-times-circle";
+                
+                badge.className = `badge bg-${badgeClass} rounded-pill px-3 py-2 fw-semibold shadow-sm d-flex align-items-center gap-1 me-1`;
+                badge.innerHTML = `<i class="fa-solid ${iconStatus}"></i> ${textStatus}`;
+            }
+
+            // Aún actualizamos la tabla en segundo plano por si el usuario la revisa después
+            cargarSolicitudesAdmin();
         } else {
             throw new Error(data.mensaje || 'Error al evaluar el documento.');
         }
@@ -2630,6 +2645,9 @@ function abrirDrawerAjustes() {
     const drawer = document.getElementById('settings-drawer');
     if (overlay) overlay.classList.add('show');
     if (drawer) drawer.classList.add('open');
+    if (typeof sincronizarDrawerAjustes === 'function') {
+        sincronizarDrawerAjustes();
+    }
 }
 
 function cerrarDrawerAjustes() {

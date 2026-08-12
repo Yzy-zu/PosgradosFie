@@ -31,6 +31,8 @@ module.exports = {
     // Tabla: etapa_proceso
     // ----------------------------------------------------------
     ETAPAS: {
+        DOCUMENTACION:       1,
+        ENTREVISTA:         10,
         VALIDACION_PROMEDIO: 5,
         RESULTADO:           6,
         PAGO:                9,

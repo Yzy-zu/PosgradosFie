@@ -2,18 +2,31 @@
 let aspirantes = [];
 let idAspiranteActivo = null;
 
-// Registro de Módulos (Data-Driven Architecture)
-const DOCENTE_MODULOS_REGISTRY = {
-    'PROGRAMAR_EXAMEN': typeof moduloProgramacionExamen !== 'undefined' ? moduloProgramacionExamen : null,
-    'HABILITAR_CAPTURA_RESULTADO': typeof moduloProgramacionExamen !== 'undefined' ? moduloProgramacionExamen : null,
-    'CAPTURAR_RESULTADO_EXAMEN': typeof moduloProgramacionExamen !== 'undefined' ? moduloProgramacionExamen : null,
-    'PROGRAMAR_CURSO': typeof moduloCurso !== 'undefined' ? moduloCurso : null,
-    'CAPTURAR_RESULTADO_CURSO': typeof moduloCurso !== 'undefined' ? moduloCurso : null,
-    'CAPTURAR_RESULTADO_PROPEDEUTICO': typeof moduloCurso !== 'undefined' ? moduloCurso : null,
-    'VALIDAR_PROMEDIO': typeof moduloPromedio !== 'undefined' ? moduloPromedio : null,
-    'SUBIR_COMPROBANTE_PAGO': typeof moduloPago !== 'undefined' ? moduloPago : null,
-    'VERIFICAR_PAGO': typeof moduloPago !== 'undefined' ? moduloPago : null
-};
+// F-12 FIX: DOCENTE_MODULOS_REGISTRY convertido a función lazy.
+// El problema: el objeto const se evaluaba al parsear el script, ANTES de que
+// los módulos (<script> en el HTML) estuvieran disponibles → todos quedaban null.
+// La solución: una función que construye el mapa en tiempo de ejecución, cuando
+// los módulos ya están cargados en el scope global.
+function getDocenteModulosRegistry() {
+    return {
+        'PROGRAMAR_EXAMEN':              typeof moduloProgramacionExamen !== 'undefined' ? moduloProgramacionExamen : null,
+        'HABILITAR_CAPTURA_RESULTADO':   typeof moduloProgramacionExamen !== 'undefined' ? moduloProgramacionExamen : null,
+        'CAPTURAR_RESULTADO_EXAMEN':     typeof moduloProgramacionExamen !== 'undefined' ? moduloProgramacionExamen : null,
+        'PROGRAMAR_CURSO':               typeof moduloCurso  !== 'undefined' ? moduloCurso  : null,
+        'CAPTURAR_RESULTADO_CURSO':      typeof moduloCurso  !== 'undefined' ? moduloCurso  : null,
+        'CAPTURAR_RESULTADO_PROPEDEUTICO': typeof moduloCurso !== 'undefined' ? moduloCurso : null,
+        'VALIDAR_PROMEDIO':              typeof moduloPromedio !== 'undefined' ? moduloPromedio : null,
+        'SUBIR_COMPROBANTE_PAGO':        typeof moduloPago !== 'undefined' ? moduloPago : null,
+        'VERIFICAR_PAGO':                typeof moduloPago !== 'undefined' ? moduloPago : null,
+    };
+}
+// Alias de compatibilidad: mantener el nombre original para cualquier acceso
+// directo que ya exista en el código (se evaluará vía getter siempre fresco).
+const DOCENTE_MODULOS_REGISTRY = new Proxy({}, {
+    get(_, prop) {
+        return getDocenteModulosRegistry()[prop];
+    }
+});
 
 function abrirModalDinamico() {
     const modal = document.getElementById('modal-docente-dinamico');
@@ -528,6 +541,14 @@ function renderizarListaAspirantes(lista) {
     });
 }
 
+// Función para volver a la lista de aspirantes en móvil
+function volverAListaAspirantes() {
+    const layout = document.querySelector('.aspirantes-layout');
+    if (layout) {
+        layout.classList.remove('mobile-detail-active');
+    }
+}
+
 /**
  * Abre el expediente del aspirante seleccionado en el panel de detalle derecho
  */
@@ -539,6 +560,10 @@ async function seleccionarAspirante(id) {
 
     const asp = aspirantes.find(a => a.id === id);
     if (!asp) return;
+
+    // Activar vista detalle en móvil
+    const layout = document.querySelector('.aspirantes-layout');
+    if (layout) layout.classList.add('mobile-detail-active');
 
     // Mostrar panel de contenido y ocultar placeholder
     document.getElementById('placeholder-detalle').style.display = 'none';
@@ -773,10 +798,17 @@ async function verificarPagoDocente(idSolicitud, estado) {
             showCancelButton: true,
             confirmButtonText: 'Confirmar Rechazo',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#ef4444'
+            confirmButtonColor: '#ef4444',
+            // F-B10 FIX: validar que el motivo no esté vacío antes de confirmar.
+            // Sin esta validación, confirmar sin escribir guardaba 'Comprobante no válido.' automáticamente.
+            inputValidator: (value) => {
+                if (!value || value.trim().length < 5) {
+                    return 'Por favor, describe el motivo del rechazo (mínimo 5 caracteres).';
+                }
+            }
         });
         if (!isConfirmed) return;
-        observaciones = text || 'Comprobante no válido.';
+        observaciones = text.trim();
     }
 
     mostrarLoader();
@@ -1323,8 +1355,13 @@ document.addEventListener('click', function (event) {
 // FUNCIONES DEL PANEL LATERAL DE AJUSTES
 // ==========================================
 function abrirDrawerAjustes() {
-    document.getElementById('settings-drawer').classList.add('open');
-    document.getElementById('settings-drawer-overlay').classList.add('show');
+    const drawer = document.getElementById('settings-drawer');
+    const overlay = document.getElementById('settings-drawer-overlay');
+    if (drawer) drawer.classList.add('open');
+    if (overlay) overlay.classList.add('show');
+    if (typeof sincronizarDrawerAjustes === 'function') {
+        sincronizarDrawerAjustes();
+    }
 }
 
 function cerrarDrawerAjustes() {
@@ -2581,13 +2618,13 @@ const EvaluacionTemasHelper = {
                     <h6 style="margin-bottom: 12px; font-weight: 600; color: var(--color-text);">Evaluación por Temas</h6>
                     <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 15px;">Guarde cada tema individualmente antes de finalizar la captura general.</p>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 custom-premium-table">
+                        <table class="table table-hover align-middle mb-0 custom-premium-table eval-temas-table">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Tema</th>
-                                    <th style="width: 130px;">Calificación</th>
-                                    <th>Observaciones</th>
-                                    <th style="width: 110px;">Acción</th>
+                                    <th style="min-width: 150px;">Tema</th>
+                                    <th style="width: 130px; min-width: 100px;">Calificación</th>
+                                    <th style="min-width: 150px;">Observaciones</th>
+                                    <th style="width: 110px; min-width: 120px;">Acción</th>
                                 </tr>
                             </thead>
                             <tbody id="temas-tbody-${idSolicitud}">
@@ -2604,13 +2641,13 @@ const EvaluacionTemasHelper = {
                     <tr data-tema-id="${tema.id}">
                         <td style="font-size: 0.9rem; color: var(--color-text);">${tema.nombreTema || 'Tema'}</td>
                         <td>
-                            <input type="number" class="form-control form-control-sm tema-calif" step="1" min="1" max="10" value="${calif}" placeholder="1-10" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px;">
+                            <input type="number" class="form-control tema-calif" step="1" min="1" max="10" value="${calif}" placeholder="1-10" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px; min-height: 40px;" aria-label="Calificación para el tema ${tema.nombreTema || 'Tema'}">
                         </td>
                         <td>
-                            <input type="text" class="form-control form-control-sm tema-obs" value="${obs}" placeholder="Opcional" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px;">
+                            <input type="text" class="form-control tema-obs" value="${obs}" placeholder="Opcional" oninput="EvaluacionTemasHelper.marcarComoModificado(this, ${idSolicitud})" style="background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 4px; min-height: 40px;" aria-label="Observaciones para el tema ${tema.nombreTema || 'Tema'}">
                         </td>
                         <td>
-                            <button type="button" class="btn btn-sm ${btnClase} btn-guardar-tema" onclick="EvaluacionTemasHelper.guardarTema(this, ${tema.id}, ${idSolicitud})" title="Guardar">
+                            <button type="button" class="btn ${btnClase} btn-guardar-tema w-100" onclick="EvaluacionTemasHelper.guardarTema(this, ${tema.id}, ${idSolicitud})" title="Guardar calificación de ${tema.nombreTema || 'Tema'}" style="min-height: 40px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                                 <i class="fa-solid ${btnIcon}"></i> <span class="btn-text">${btnText}</span>
                             </button>
                         </td>

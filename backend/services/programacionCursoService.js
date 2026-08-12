@@ -116,14 +116,11 @@ class ProgramacionCursoService {
                 );
             }
 
-            // Al capturar la calificación, avanzamos directamente a la etapa de Resultado
-            const [etapasResultado] = await conn.query("SELECT id FROM etapa_proceso WHERE nombre = 'Resultado' LIMIT 1");
-            const idEtapaResultado = etapasResultado.length > 0 ? etapasResultado[0].id : 6;
-
-            await conn.query('UPDATE solicitud SET idEtapaActual = ? WHERE id = ?', [idEtapaResultado, idSolicitud]);
+            // Avanzar a la siguiente etapa de forma centralizada según la modalidad configurada
+            await WorkflowService.avanzarEtapa(idSolicitud, conn);
 
             await conn.commit();
-            return { success: true, mensaje: 'Resultado capturado y etapa avanzada a Resultado correctamente.' };
+            return { success: true, mensaje: 'Resultado capturado y etapa avanzada correctamente.' };
         } catch (error) {
             await conn.rollback();
             throw error;

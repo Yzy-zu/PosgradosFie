@@ -120,12 +120,11 @@ html {
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     overflow-x: hidden;
-    overflow-y: hidden;   /* sin scroll de página */
+    overflow-y: auto;   /* con scroll de página en móvil */
     background: linear-gradient(135deg, #071527 0%, #0e2a47 50%, #0b1d33 100%);
     background-attachment: fixed;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -6448,15 +6447,34 @@ body.dark-mode .status-banner.status-aprobado .status-banner-badge {
     /* 4. Topbar Moderno Adaptado */
     .topbar-modern {
         margin: -15px -12px 15px -12px !important;
-        padding: 0 15px !important;
-        height: 65px !important;
+        padding: 10px 15px !important;
+        height: auto !important;
+        min-height: 65px !important;
         gap: 8px !important;
         border-radius: 0 !important;
+        flex-wrap: wrap !important;
+    }
+
+    .topbar-filtros {
+        order: 3 !important;
+        flex-basis: 100% !important;
+        margin-top: 10px !important;
+        flex-wrap: wrap !important;
+        justify-content: space-between !important;
+    }
+
+    .topbar-filtros > div {
+        flex: 1 1 48% !important;
+        min-width: 140px !important;
     }
 
     .topbar-greeting {
         overflow: hidden !important;
         max-width: calc(100vw - 170px) !important;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr !important;
     }
 
     .topbar-greeting span {
@@ -6468,13 +6486,13 @@ body.dark-mode .status-banner.status-aprobado .status-banner-badge {
 
     /* 5. Bandeja Mega Dropdown Notificaciones */
     .messages-mega-dropdown {
-        position: fixed !important;
-        top: 65px !important;
-        left: 10px !important;
-        right: 10px !important;
-        width: calc(100vw - 20px) !important;
-        max-width: none !important;
-        max-height: 80vh !important;
+        position: absolute !important;
+        top: calc(100% + 15px) !important;
+        right: -10px !important;
+        left: auto !important;
+        width: 320px !important;
+        max-width: calc(100vw - 20px) !important;
+        max-height: 70vh !important;
         flex-direction: column !important;
         overflow-y: auto !important;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
@@ -6584,20 +6602,16 @@ body.dark-mode .status-banner.status-aprobado .status-banner-badge {
     }
 
     /* 10. Botones de Acción Táctiles */
-    #form-estacion-0 > div,
-    #form-estacion-1 > div,
-    #form-estacion-2 > div,
-    #botones-estacion-3 {
+    [id^="form-estacion-"] > div,
+    [id^="botones-estacion-"] {
         flex-direction: column-reverse !important;
         width: 100% !important;
         gap: 10px !important;
         align-items: stretch !important;
     }
 
-    #form-estacion-0 button,
-    #form-estacion-1 button,
-    #form-estacion-2 button,
-    #botones-estacion-3 button {
+    [id^="form-estacion-"] button,
+    [id^="botones-estacion-"] button {
         width: 100% !important;
         justify-content: center !important;
         padding: 13px 20px !important;
@@ -6645,6 +6659,35 @@ body.dark-mode .status-banner.status-aprobado .status-banner-badge {
     #modal-doc-enlace {
         width: 100% !important;
         justify-content: center !important;
+    }
+
+    #modal-evaluacion-doc .modal-card {
+        width: 96% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: 95svh !important;
+    }
+
+    /* 13. Vista Split Docente */
+    .aspirantes-layout {
+        flex-direction: column !important;
+        height: auto !important;
+    }
+    
+    .aspirantes-sidebar, .aspirante-detail {
+        width: 100% !important;
+    }
+
+    .aspirantes-layout.mobile-detail-active .aspirantes-sidebar {
+        display: none !important;
+    }
+
+    .aspirantes-layout:not(.mobile-detail-active) .aspirante-detail {
+        display: none !important;
+    }
+
+    #btn-volver-lista {
+        display: inline-block !important;
     }
 }
 
@@ -6951,5 +6994,191 @@ body.dark-mode .status-banner.status-aprobado .status-banner-badge {
     .info-grid {
         grid-template-columns: 1fr; /* Una columna en móvil */
         gap: 15px;
+    }
+}
+
+/* =========================================================
+   FASE 3 - Accesibilidad y Touch (A11Y)
+   ========================================================= */
+
+/* 1. Áreas táctiles y feedback */
+button, 
+.btn,
+.sidebar-nav-item,
+.topbar-action-btn,
+.notification-trigger,
+.doc-action-ver,
+.btn-mobile-toggle,
+.password-toggle-icon,
+[role="button"],
+input[type="checkbox"],
+input[type="radio"],
+select {
+    min-height: 44px; /* Área táctil recomendada */
+    touch-action: manipulation; /* Evitar zoom al hacer doble tap en botones */
+}
+
+/* 2. Estados :active para feedback inmediato en móviles */
+button:active, 
+.btn:active,
+.sidebar-nav-item:active,
+.topbar-action-btn:active,
+.doc-action-ver:active,
+.btn-mobile-toggle:active,
+.item-aspirante:active,
+[role="button"]:active {
+    transform: scale(0.96) !important;
+    opacity: 0.8;
+    transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+/* Focus styles para navegación por teclado */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb, 67, 56, 202), 0.2);
+}
+
+/* Toggle de contraseña con buen tamaño */
+.password-toggle-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    color: var(--color-text-muted);
+}
+
+/* Ocultar iconos decorativos a lectores de pantalla */
+i.fa-solid, i.fa-regular, i.fa-brands {
+    pointer-events: none; /* Asegura que el click pase al botón contenedor */
+}
+i.fa-solid[onclick], i.fa-regular[onclick] {
+    pointer-events: auto; /* Excepto si tienen onclick directo */
+}
+
+/* =========================================================
+   AUDITORÍA VISUAL MOBILE (320px - 430px) - FASE 5
+   ========================================================= */
+
+@media (max-width: 430px) {
+    /* 1. Modales y Paneles: Reducción de paddings asfixiantes */
+    .modal-card,
+    .split-form-panel,
+    .modal-content-modern,
+    .modal-card-perfil {
+        padding: 15px !important;
+    }
+    
+    /* Títulos de modales */
+    .modal-title, .form-title, .swal2-title, .profile-name-large {
+        font-size: 1.25rem !important;
+        line-height: 1.3 !important;
+    }
+
+    /* 2. Dropdown de Notificaciones: Centrado como modal flotante */
+    .messages-mega-dropdown {
+        position: fixed !important;
+        top: 70px !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        width: 95vw !important;
+        max-width: 400px !important;
+        max-height: calc(100vh - 90px) !important;
+        border-radius: 12px !important;
+    }
+
+    /* 3. Filtros Superiores: 100% de ancho para evitar deformación de texto */
+    .topbar-filtros > div {
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+
+    /* 4. Botones de Acción en Tablas: Evitar columnas de acciones anchas */
+    /* Aplica a botones redondeados y normales que se encuentren dentro de celdas en dispositivos pequeños */
+    .table-responsive td .btn {
+        width: 100% !important;
+        margin-bottom: 5px !important;
+        border-radius: 8px !important; /* Si era redondeado circular (36px), en móvil se hace bloque ancho */
+    }
+    
+    /* Específicamente, agrupamos los botones de acción verticalmente */
+    .table-responsive td[style*="display: flex"],
+    .table-responsive td {
+        white-space: normal !important;
+    }
+    
+    .table-responsive tr {
+        /* Para no deformar el contenedor total, la tabla usará scroll si es necesario, 
+           pero las acciones se apilarán gracias a flex-direction en celdas flexibles */
+    }
+}
+
+/* Modal de Perfil Grid: Regla especial para max-width: 600px */
+@media (max-width: 600px) {
+    .info-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* EvaluacionTemasHelper Card Layout (FASE 5) */
+    .eval-temas-table thead {
+        display: none !important;
+    }
+    .eval-temas-table tbody, 
+    .eval-temas-table tr, 
+    .eval-temas-table td {
+        display: block !important;
+        width: 100% !important;
+    }
+    .eval-temas-table tr {
+        margin-bottom: 15px !important;
+        border: 1px solid var(--color-border) !important;
+        border-radius: 8px !important;
+        padding: 12px !important;
+        background: var(--color-bg) !important;
+    }
+    .eval-temas-table td {
+        border: none !important;
+        padding: 6px 0 !important;
+    }
+    .eval-temas-table td:first-child {
+        font-weight: 600 !important;
+        font-size: 1.05rem !important;
+        margin-bottom: 8px !important;
+        border-bottom: 1px solid var(--color-border) !important;
+        padding-bottom: 10px !important;
+        color: var(--color-primary) !important;
+    }
+    .eval-temas-table td:nth-child(2)::before {
+        content: "Calificación:" !important;
+        display: block !important;
+        font-size: 0.85rem !important;
+        color: var(--color-text-muted) !important;
+        margin-bottom: 4px !important;
+        font-weight: 600 !important;
+    }
+    .eval-temas-table td:nth-child(3)::before {
+        content: "Observaciones:" !important;
+        display: block !important;
+        font-size: 0.85rem !important;
+        color: var(--color-text-muted) !important;
+        margin-bottom: 4px !important;
+        font-weight: 600 !important;
+    }
+    .eval-temas-table td:last-child {
+        margin-top: 10px !important;
+    }
+}
+@media (max-width: 360px) {
+    .info-grid {
+        grid-template-columns: 1fr !important;
     }
 }
