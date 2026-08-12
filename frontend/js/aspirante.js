@@ -12,7 +12,7 @@ socket.on('connect', () => {
     socket.emit('registrarSala', { rol: 'ASPIRANTE', idUsuario: usr.id });
 });
 socket.on('actualizacionGlobal', () => {
-    // Recargar vista actual si hay un cambio en el sistema (ej. evaluación de docente)
+    //recargar vista al detectar cambios
     const currentHash = window.location.hash;
     if (currentHash === '#inicio' || currentHash === '') {
         if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
@@ -41,7 +41,7 @@ socket.on('actualizacionGlobal', () => {
                 .catch(e => console.error("Error validando estado de solicitud:", e));
         }
     } else if (currentHash === '#convocatorias') {
-        // Antes de renderizar la lista, verificar si ya hay solicitud activa.
+        // verificar si hay solicitud activa
         // Si la hay, mantener la tarjeta de solicitud activa en lugar de sobreescribirla.
         if (aspiranteData && aspiranteData.id) {
             fetch(`/api/solicitud/activa/${aspiranteData.id}`)
@@ -61,11 +61,7 @@ socket.on('actualizacionGlobal', () => {
 });
 
 // Manejo y persistencia de estado de la barra lateral (Sidebar)
-// Bug 5 Fix: toggleSidebar() es la versión canónica definida en utils.js
-// Se elimina la definición local para evitar duplicación.
-
-// BUG-07 Fix: restaurarEstadoSidebar() ya es manejada por utils.js (DOMContentLoaded).
-// Se mantiene como no-op para no romper la llamada en línea 37 en caso de orden de carga.
+// mantener como no-op para retrocompatibilidad
 function restaurarEstadoSidebar() {
     // Delegado a utils.js — no duplicar lógica
 }
@@ -95,7 +91,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     };
 
     // Obtener datos del aspirante real
-    // Bug 1 Fix: usar /api/aspirante/me en lugar de descargar toda la tabla
+    // obtener datos del aspirante
     try {
         const resAspirantes = await fetch('/api/aspirante/me');
         if (resAspirantes.ok) {
@@ -146,7 +142,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                             window.location.hash = targetHash;
                             switchView(targetHash);
 
-                            // F-B03 FIX: ocultar loader siempre antes de salir
+                            // ocultar loader
                             ocultarLoader();
                             return;
                         }
@@ -172,8 +168,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     window.location.hash = fallbackHash;
     switchView(fallbackHash);
 
-    // F-B03 FIX: garantizar que el loader se oculte SIEMPRE en este camino de salida.
-    // Sin esto, si no había solicitud activa o fallaba el fetch, el loader quedaba visible.
+    // ocultar loader
     ocultarLoader();
 });
 
@@ -232,7 +227,7 @@ function switchView(viewId) {
                 'admision': typeof t === 'function' ? t('sb_admision') : 'Admisión'
             };
             topbarNombre.innerText = titulos[viewId] || (viewId.charAt(0).toUpperCase() + viewId.slice(1));
-            // Bug 6 Fix: cargar datos reales para la gráfica de proceso
+            // cargar datos para gráfica de proceso
             if (viewId === 'proceso') {
                 cargarDatosProceso();
             }
@@ -405,7 +400,7 @@ async function cargarDatosProceso() {
                     avance = total > 0 ? (aprobados / total) : 0.05; // 0.05 minimo para ver zorro avanzar poquito
                 }
             } else {
-                // Otras etapas podrían tener lógicas de avance, por ahora 0.1
+                // lógicas de avance adicionales
                 avance = 0.1; 
             }
         }
@@ -475,7 +470,7 @@ async function cargarNotificaciones() {
                     grupos[remitente].mensajes.push(notif);
                 });
 
-                // Ordenar mensajes de cada grupo (más viejo al más nuevo para leer como chat)
+                //ordenar mensajes cronológicamente
                 Object.values(grupos).forEach(grupo => {
                     grupo.mensajes.sort((a, b) => new Date(a.creado_en || 0) - new Date(b.creado_en || 0));
                 });
@@ -651,7 +646,7 @@ function abrirNotificacion(remitenteKey, element) {
 
         if (!grupo) return;
 
-        // BUG-08 Fix: función para escapar HTML y prevenir XSS en mensajes del servidor
+        // escapar HTML para prevenir XSS
         const escaparHTML = (str) => {
             if (!str) return '';
             return String(str)
@@ -726,7 +721,7 @@ function seleccionarPrograma(nombrePrograma) {
     const token = sessionStorage.getItem('token');
     const usuario = sessionStorage.getItem('usuario');
 
-    // SI NO HA INICIADO SESIÓN (Es un aspirante nuevo o sin credenciales activas)
+    //aspirante sin sesión
     if (!token || !usuario) {
         Swal.fire({
             title: 'Atención',
@@ -734,7 +729,7 @@ function seleccionarPrograma(nombrePrograma) {
             icon: 'info',
             confirmButtonColor: 'var(--color-info)'
         }).then(() => {
-            // Guardamos temporalmente qué programa seleccionó
+            //guardar selección temporalmente
             sessionStorage.setItem('programaPendiente', nombrePrograma);
             // Lo mandamos al formulario de registro limpio (registro.html)
             window.location.href = "registro.html";
@@ -893,7 +888,7 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                // idAspi se deriva del JWT en el backend (M-01)
+                //derivar id desde token
                 idC: idConvocatoria,
                 idConvocatoriaOpcion: idOpcionSeleccionada
             })
@@ -937,7 +932,7 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
     if (idConvocatoria) sessionStorage.setItem('idConvocatoriaPendiente', idConvocatoria);
     nivelAcademicoSeleccionado = nivel;
 
-    // Mostrar pestaña de Documentos ahora que ya seleccionó convocatoria
+    // mostrar pestaña de documentos
     const navDocumentos = document.getElementById('li-nav-documentos');
     if (navDocumentos) {
         navDocumentos.style.display = 'block';
@@ -951,7 +946,7 @@ async function prepararFlujoEstaciones(nivel, idConvocatoria) {
  * LÓGICA DE LAS ESTACIONES (STEPPER) - NAVEGACIÓN
  */
 function cambiarEstacion(nuevaEstacion) {
-    // Ocultar panel actual y mostrar el nuevo
+    // mostrar panel destino
     const panelAnterior = document.getElementById(`panel-estacion-${estacionActual}`);
     const panelNuevo = document.getElementById(`panel-estacion-${nuevaEstacion}`);
     
@@ -964,7 +959,7 @@ function cambiarEstacion(nuevaEstacion) {
         panelNuevo.style.display = 'block';
     }
 
-    // F-C04 FIX: Recorrer todos los nodos para asegurar los estados active/completed
+    // asegurar estados active y completed en nodos
     const maxEtapas = typeof totalEstaciones !== 'undefined' && totalEstaciones > 0 ? totalEstaciones : 3;
     for (let i = 0; i <= maxEtapas; i++) {
         const nodo = document.getElementById(`node-${i}`);
@@ -980,7 +975,7 @@ function cambiarEstacion(nuevaEstacion) {
 
     estacionActual = nuevaEstacion;
     
-    // F-C03 FIX: Guardar en sessionStorage para persistir entre recargas
+    // persistir en sessionStorage
     if (currentSolicitudId) {
         sessionStorage.setItem(`estacion_actual_soli_${currentSolicitudId}`, nuevaEstacion);
     }
@@ -1036,7 +1031,7 @@ window.addEventListener('resize', () => {
  */
 async function avanzarEstacion(nuevaEstacion) {
     const boton = document.getElementById(`btn-next-${estacionActual}`);
-    if (boton) boton.disabled = true; // Deshabilitar temporalmente para evitar doble click
+    if (boton) boton.disabled = true; //evitar doble click
 
     // Interceptar si es la estación 0 para guardar la modalidad de admisión
     if (estacionActual === 0 && currentSolicitudId) {
@@ -1069,13 +1064,13 @@ async function avanzarEstacion(nuevaEstacion) {
                 console.error("Error al guardar la modalidad en la base de datos.");
                 Swal.fire('Error', 'No se pudo guardar la modalidad de admisión. Inténtalo de nuevo.', 'error');
                 if (boton) boton.disabled = false;
-                return; // F-C01 FIX: abortar avance si falla guardar modalidad
+                return; // abortar avance si falla modalidad
             }
         } catch (e) {
             console.error("Error de conexión al guardar modalidad:", e);
             Swal.fire('Error de conexión', 'No se pudo contactar al servidor. Inténtalo de nuevo.', 'error');
             if (boton) boton.disabled = false;
-            return; // F-C01 FIX: abortar avance si falla conexión
+            return; // abortar avance si falla conexión
         }
     }
 
@@ -1084,14 +1079,14 @@ async function avanzarEstacion(nuevaEstacion) {
 
     if (form && currentSolicitudId) {
         const formData = new FormData(form);
-        // Bug 8 Fix: rastrear fallos de subida y notificar al usuario
+        // rastrear fallos de subida
         const fallos = [];
         // Iterar sobre los archivos seleccionados en este form
         for (let [name, file] of formData.entries()) {
             if (file && file.size > 0) {
                 const subidaData = new FormData();
                 subidaData.append('idSoli', currentSolicitudId);
-                // El name del input ahora es el idRequisito dinámico
+                //usar id de requisito como nombre de input
                 subidaData.append('idRequisito', name);
                 subidaData.append('archivo', file);
 
@@ -1121,7 +1116,7 @@ async function avanzarEstacion(nuevaEstacion) {
                 confirmButtonColor: '#8a1c24'
             });
             if (boton) boton.disabled = false;
-            return; // F-C02 FIX: Abortar el cambio de estación si hay errores de subida
+            return; // abortar si hay errores de subida
         }
     }
 
@@ -1643,7 +1638,7 @@ async function iniciarReSubidaDocumento(idDoc, nombreReqEncoded, intentosActuale
                     confirmButtonColor: '#10b981'
                 });
 
-                // Recargar el panel dinámico para reflejar el nuevo estado en tiempo real
+                // recargar panel dinámico
                 bloquearInterfazPorRevision();
             } else {
                 Swal.fire({
@@ -1724,7 +1719,7 @@ async function finalizarProcesoEstaciones() {
                 method: 'PUT'
             });
 
-            // BUG-06 Fix: verificar res.ok antes de mostrar éxito
+            // verificar respuesta exitosa
             if (!envioRes.ok) {
                 const errData = await envioRes.json().catch(() => ({}));
                 ocultarLoader();
@@ -1756,7 +1751,7 @@ async function finalizarProcesoEstaciones() {
             }
         } catch (e) {
             console.error("Error al enviar expediente a revisión en DB:", e);
-            // BUG-03 Fix: ocultar loader en el catch para no bloquear la pantalla
+            // ocultar loader en caso de error
             ocultarLoader();
             Swal.fire({
                 title: 'Error de conexión',
@@ -1782,7 +1777,7 @@ async function finalizarProcesoEstaciones() {
  */
 function cargarConvocatorias() {
     if (nivelAcademicoSeleccionado) {
-        // F-09 FIX: eliminar nombre de programa hardcodeado.
+        // establecer nombre del programa
         // activarModulosPostRegistro solo necesita el nivel ('Maestría' | 'Doctorado')
         // para filtrar las convocatorias — no el nombre completo del programa.
         activarModulosPostRegistro(nivelAcademicoSeleccionado);
@@ -1960,7 +1955,7 @@ function regresarAConvocatorias() {
     }
 }
 
-// --- NUEVAS FUNCIONES DE SEGURIDAD Y CANCELACION ---
+// --- FUNCIONES DE SEGURIDAD Y CANCELACIÓN ---
 
 function bloquearConvocatorias(soliData = null) {
     const seleccion = document.getElementById('seleccion-programa');
@@ -2074,7 +2069,7 @@ function bloquearConvocatorias(soliData = null) {
             if (!infoContainer) {
                 infoContainer = document.createElement('div');
                 infoContainer.id = 'bloqueo-info-convocatoria';
-                // Insertamos antes del boton de regresar a mis documentos
+                //insertar antes de regresar
                 const btn = bloqueo.querySelector('button');
                 bloqueo.insertBefore(infoContainer, btn);
             }
@@ -2115,7 +2110,7 @@ async function cancelarSolicitudActual() {
             if (seleccion) seleccion.style.display = 'flex';
             if (bloqueo) bloqueo.style.display = 'none';
 
-            // Bug 7 Fix: null-check antes de acceder al elemento
+            // validar existencia del elemento
             const navDocumentos = document.getElementById('li-nav-documentos');
             if (navDocumentos) navDocumentos.style.display = 'none';
 
@@ -2166,7 +2161,7 @@ async function cargarModalidadesAdmision() {
 /**
  * Abre modal informativo al hacer clic en el ícono (i) de cada opción de Estación 0
  */
-// F-15 FIX: el modal de información de modalidad ahora muestra la descripción
+// modal de información de modalidad
 // real que ya viene del backend en lugar de buscarla por clave i18n (que no existe).
 function abrirModalInfoModalidad(modKey, descripcionReal) {
     // Usar la descripción real del backend; solo como fallback intentar i18n
@@ -2205,7 +2200,7 @@ async function cargarRequisitosDocumentales(idConvocatoria, documentosSubidos = 
 
             if (dynamicPanelsContainer) dynamicPanelsContainer.innerHTML = '';
             
-            // Eliminar nodos dinámicos previos (id que empieza con node- y no es node-0)
+            //eliminar nodos dinámicos previos
             if (stepperContainer) {
                 const nodos = stepperContainer.querySelectorAll('.step-node');
                 nodos.forEach(n => { if (n.id !== 'node-0') n.remove(); });
@@ -2379,7 +2374,7 @@ const MODULOS_REGISTRY = {
  * Hidrata la UI con el progreso guardado en la base de datos (Backend como fuente de verdad)
  */
 function hidratarUI(soliData) {
-    // F-13 FIX: resetear estacionActual a 0 antes de hidratar para que
+    //resetear estación actual antes de hidratar
     // cambiarEstacion() no intente acceder a un panel que no existe.
     estacionActual = 0;
 
@@ -2596,7 +2591,7 @@ document.addEventListener('change', function (e) {
         if (fileBox) {
             const files = e.target.files;
 
-            // Eliminar nombre de archivo previo si existe
+            //eliminar nombre de archivo previo
             const existingDisplay = fileBox.querySelector('.file-name-display');
             if (existingDisplay) {
                 existingDisplay.remove();
@@ -2768,7 +2763,7 @@ async function cargarDictamen() {
 
         const dictamen = await res.json();
 
-        // M-08: el backend ahora retorna un campo 'estado' que distingue los tres casos
+        // evaluar estado de solicitud
         // SIN_SOLICITUD → no hay proceso activo; no mostrar nada
         if (!dictamen || dictamen.estado === 'SIN_SOLICITUD') return;
 

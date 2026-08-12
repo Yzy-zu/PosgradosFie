@@ -2,11 +2,6 @@
 let aspirantes = [];
 let idAspiranteActivo = null;
 
-// F-12 FIX: DOCENTE_MODULOS_REGISTRY convertido a función lazy.
-// El problema: el objeto const se evaluaba al parsear el script, ANTES de que
-// los módulos (<script> en el HTML) estuvieran disponibles → todos quedaban null.
-// La solución: una función que construye el mapa en tiempo de ejecución, cuando
-// los módulos ya están cargados en el scope global.
 function getDocenteModulosRegistry() {
     return {
         'PROGRAMAR_EXAMEN':              typeof moduloProgramacionExamen !== 'undefined' ? moduloProgramacionExamen : null,
@@ -537,7 +532,7 @@ function renderizarListaAspirantes(lista) {
     });
 }
 
-// Función para volver a la lista de aspirantes en móvil
+//volver a lista de aspirantes en móvil
 function volverAListaAspirantes() {
     const layout = document.querySelector('.aspirantes-layout');
     if (layout) {
@@ -795,7 +790,7 @@ async function verificarPagoDocente(idSolicitud, estado) {
             confirmButtonText: 'Confirmar Rechazo',
             cancelButtonText: 'Cancelar',
             confirmButtonColor: '#ef4444',
-            // F-B10 FIX: validar que el motivo no esté vacío antes de confirmar.
+            // validar motivo no vacío
             // Sin esta validación, confirmar sin escribir guardaba 'Comprobante no válido.' automáticamente.
             inputValidator: (value) => {
                 if (!value || value.trim().length < 5) {
@@ -1273,7 +1268,7 @@ async function cargarNotificaciones() {
                     grupos[remitente].mensajes.push(notif);
                 });
 
-                // Ordenar mensajes de cada grupo (más viejo al más nuevo para leer como chat)
+                //ordenar mensajes cronológicamente
                 Object.values(grupos).forEach(grupo => {
                     grupo.mensajes.sort((a, b) => new Date(a.creado_en || 0) - new Date(b.creado_en || 0));
                 });
@@ -2449,7 +2444,7 @@ function toggleSolicitudDocs(containerId, chevronId) {
     }
 }
 
-// Funciones de Filtrado UI para Aspirantes
+//funciones de filtrado para aspirantes
 window.filtrarTablaAspirantesUI = function () {
     const texto = (document.getElementById('filtro-aspirantes-texto')?.value || '').toLowerCase();
     const programa = (document.getElementById('filtro-aspirantes-programa')?.value || '').toLowerCase();

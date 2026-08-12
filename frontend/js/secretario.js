@@ -1,12 +1,11 @@
-// F-08 FIX: 4 bloques DOMContentLoaded consolidados en uno solo.
-// También se corrigen: cargarPerfilUsuario (clave sesión correcta) y cargarDatosInicio (URLs relativas reales).
+
 
 document.addEventListener('DOMContentLoaded', function () {
 
     // ── 1. Cargar perfil del usuario ────────────────────────────
     cargarPerfilUsuario();
 
-    // ── 2. Cargar tabla de aspirantes ───────────────────────────
+    //cargar tabla de aspirantes
     cargarAspirantes();
 
     // ── 3. Cargar métricas del dashboard ────────────────────────
@@ -72,8 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // ────────────────────────────────────────────────────────────────
 // PERFIL DE USUARIO
-// F-B05 FIX: leer 'usuario' (clave real del sistema) en lugar de
-// 'usuarioLogueado' (clave que nunca se escribe al hacer login).
+// leer clave usuario
 // ────────────────────────────────────────────────────────────────
 function cargarPerfilUsuario() {
     let nombreCompleto = 'Secretario Académico';
@@ -139,7 +137,7 @@ function llenarDatosTarjetaModal() {
     if (!nombreCompleto) nombreCompleto = 'Secretario Académico';
 
     const correo    = datos.correo    || datos.usu_correo || 'Sin correo registrado';
-    // F-B02 FIX: etiquetas de labels corregidas en el HTML; aquí accedemos al campo real con fallbacks
+    // acceder al campo con fallbacks
     const area      = datos.area      || datos.secre_area      || datos.SECRE_AREA      || 'Sin área asignada';
     const extension = datos.extension || datos.secre_extension || datos.SECRE_EXTENSION || 'Sin extensión';
 
@@ -231,7 +229,7 @@ function switchView(viewId) {
 }
 
 // ────────────────────────────────────────────────────────────────
-// TABLA DE ASPIRANTES
+//tabla de aspirantes
 // ────────────────────────────────────────────────────────────────
 async function cargarAspirantes() {
     const tbody = document.getElementById('tablaAspirantesSecretario');
@@ -262,7 +260,7 @@ async function cargarAspirantes() {
             aspirantes.forEach(asp => {
                 const tr = document.createElement('tr');
                 const nombreCompleto = `${asp.nombre || ''} ${asp.primerApellido || ''} ${asp.segundoApellido || ''}`.trim();
-                // F-B12 FIX: columna CURP muestra CURP real; el correo se mantiene como referencia secundaria
+                // mostrar curp y correo
                 const curp     = asp.curp     || '—';
                 const telefono = asp.telefono || 'Sin teléfono';
 
@@ -284,9 +282,7 @@ async function cargarAspirantes() {
 
 // ────────────────────────────────────────────────────────────────
 // MÉTRICAS DEL DASHBOARD
-// F-B01/F-B20 FIX: eliminadas URLs absolutas localhost:4000 y
-// endpoints inexistentes (/api/secretario/aspirantes).
-// Se usa el endpoint real /api/aspirantes.
+
 // ────────────────────────────────────────────────────────────────
 async function cargarDatosInicio() {
     const token = sessionStorage.getItem('token') || '';
@@ -296,7 +292,7 @@ async function cargarDatosInicio() {
         const resAspirantes = await fetch('/api/aspirante', { headers });
         if (resAspirantes.ok) {
             const aspirantes = await resAspirantes.json();
-            // Por ahora, los documentos no tienen endpoint propio en secretario.
+            //sin endpoint propio en secretario
             // Se pasan vacíos hasta que el backend lo implemente.
             actualizarMetricas(aspirantes, []);
         }

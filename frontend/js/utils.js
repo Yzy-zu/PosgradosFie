@@ -16,7 +16,7 @@ function ocultarLoader() {
 }
 
 // ==== SIDEBAR TOGGLE ====
-// Bug 5 Fix: implementación canónica con toggle sincronizado
+// sincronizar toggle
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const mainContent = document.querySelector('.main-content');
@@ -64,8 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const temaSeleccionado = localStorage.getItem('temaSeleccionado') || 'Claro';
     cambiarTema(temaSeleccionado);
 
-    // F-B21 FIX: sincronizar el select de tema al abrir la página
-    // (antes solo se sincronizaba si el elemento ya existía — race condition en SPAs)
+    // sincronizar select de tema al abrir página
     const selectTema = document.getElementById('setting-tema');
     if (selectTema) selectTema.value = temaSeleccionado;
 
@@ -73,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-    // Cierra el menú de perfil si se hace clic fuera de él
+    //cerrar menú de perfil si se hace clic fuera
     window.addEventListener('click', function () {
         const dropdown = document.getElementById('profile-dropdown');
         if (dropdown && dropdown.classList.contains('show')) {
@@ -127,7 +126,7 @@ function toggleProfileMenu(event) {
 
 // Inicializar eventos globales al cargar el DOM
 document.addEventListener("DOMContentLoaded", () => {
-    // Cierra el menú si se hace clic fuera de él
+    //cerrar menú de perfil si se hace clic fuera
     window.addEventListener('click', function () {
         const dropdown = document.getElementById('profile-dropdown');
         if (dropdown && dropdown.classList.contains('show')) {
@@ -286,7 +285,7 @@ function cambiarTema(tema) {
     localStorage.setItem('temaSeleccionado', tema);
 }
 
-// Escuchar cambios a nivel de sistema operativo si está en modo "Sistema"
+//escuchar cambios de tema del sistema operativo
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
     const tema = localStorage.getItem('temaSeleccionado') || 'Claro';
     if (tema === 'Sistema') {
@@ -361,9 +360,7 @@ async function abrirArchivoSeguro(rutaArchivo) {
 
 
 
-// ==== F-B21 FIX: SINCRONIZAR DRAWER AL ABRIRLO ====
-// Garantiza que todos los controles del drawer reflejen el estado guardado
-// CADA VEZ que se abre, no solo al cargar la página.
+// sincronizar controles del drawer al abrirlo
 function sincronizarDrawerAjustes() {
     // Tema
     const tema = localStorage.getItem('temaSeleccionado') || 'Claro';
