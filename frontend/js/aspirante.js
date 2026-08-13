@@ -5,60 +5,246 @@ let totalEstaciones = 0;
 let aspiranteData = null; // Almacenará los datos de la BD del aspirante
 let currentSolicitudId = null;
 
-// Conexión Socket.io — registrar sala al conectar
+// ==========================================================
+// SOCKET.IO - ACTUALIZACIÓN EN TIEMPO REAL
+// ==========================================================
 const socket = io();
+
 socket.on('connect', () => {
-    const usr = JSON.parse(sessionStorage.getItem('usuario') || '{}');
-    socket.emit('registrarSala', { rol: 'ASPIRANTE', idUsuario: usr.id });
+
+    const usr =
+        JSON.parse(
+            sessionStorage.getItem('usuario') ||
+            '{}'
+        );
+
+    socket.emit(
+        'registrarSala',
+        {
+            rol: 'ASPIRANTE',
+            idUsuario: usr.id
+        }
+    );
+
+    console.log(
+        'Socket conectado:',
+        socket.id,
+        'Usuario:',
+        usr.id
+    );
 });
-socket.on('actualizacionGlobal', () => {
-    //recargar vista al detectar cambios
-    const currentHash = window.location.hash;
-    if (currentHash === '#inicio' || currentHash === '') {
-        if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
-        if (typeof cargarStatsInicio === 'function') cargarStatsInicio();
-        if (aspiranteData && aspiranteData.id) {
-            fetch(`/api/solicitud/activa/${aspiranteData.id}`)
-                .then(res => res.json())
-                .then(soliData => {
-                    if (soliData && soliData.existe) {
-                        hidratarUI(soliData);
-                    }
-                })
-                .catch(e => console.error("Error actualizando inicio:", e));
+
+
+socket.on(
+    'actualizacionGlobal',
+    () => {
+
+        console.log(
+            'Actualización global recibida'
+        );
+
+        // ==========================================
+        // SIEMPRE ACTUALIZAR NOTIFICACIONES
+        // ==========================================
+        if (
+            typeof cargarNotificaciones ===
+            'function'
+        ) {
+            cargarNotificaciones();
         }
-    } else if (currentHash === '#proceso') {
-        if (typeof cargarDatosProceso === 'function') cargarDatosProceso();
-    } else if (currentHash === '#documentos' || currentHash === '#admision') {
-        if (aspiranteData && aspiranteData.id) {
-            fetch(`/api/solicitud/activa/${aspiranteData.id}`)
-                .then(res => res.json())
-                .then(soliData => {
-                    if (soliData && soliData.existe) {
-                        hidratarUI(soliData);
-                    }
-                })
-                .catch(e => console.error("Error validando estado de solicitud:", e));
-        }
-    } else if (currentHash === '#convocatorias') {
-        // verificar si hay solicitud activa
-        // Si la hay, mantener la tarjeta de solicitud activa en lugar de sobreescribirla.
-        if (aspiranteData && aspiranteData.id) {
-            fetch(`/api/solicitud/activa/${aspiranteData.id}`)
-                .then(res => res.json())
-                .then(soliData => {
-                    if (soliData && soliData.existe) {
-                        hidratarUI(soliData); // Conservar la tarjeta de solicitud activa
-                    } else {
-                        cargarConvocatorias(); // Solo mostrar lista si no hay solicitud
-                    }
-                })
-                .catch(() => cargarConvocatorias()); // Fallback seguro
-        } else {
-            cargarConvocatorias();
+
+
+        // ==========================================
+        // ACTUALIZAR SEGÚN LA VISTA ACTUAL
+        // ==========================================
+        const currentHash =
+            window.location.hash;
+
+        if (
+            currentHash === '#inicio' ||
+            currentHash === ''
+        ) {
+
+            if (
+                typeof cargarStatsInicio ===
+                'function'
+            ) {
+                cargarStatsInicio();
+            }
+
+            if (
+                aspiranteData &&
+                aspiranteData.id
+            ) {
+
+                fetch(
+                    `/api/solicitud/activa/${aspiranteData.id}`
+                )
+                    .then(
+                        res =>
+                            res.json()
+                    )
+                    .then(
+                        soliData => {
+
+                            if (
+                                soliData &&
+                                soliData.existe
+                            ) {
+                                hidratarUI(
+                                    soliData
+                                );
+                            }
+                        }
+                    )
+                    .catch(
+                        e =>
+                            console.error(
+                                'Error actualizando inicio:',
+                                e
+                            )
+                    );
+            }
+
+        } else if (
+            currentHash === '#proceso'
+        ) {
+
+            if (
+                typeof cargarDatosProceso ===
+                'function'
+            ) {
+                cargarDatosProceso();
+            }
+
+        } else if (
+            currentHash === '#documentos' ||
+            currentHash === '#admision'
+        ) {
+
+            if (
+                aspiranteData &&
+                aspiranteData.id
+            ) {
+
+                fetch(
+                    `/api/solicitud/activa/${aspiranteData.id}`
+                )
+                    .then(
+                        res =>
+                            res.json()
+                    )
+                    .then(
+                        soliData => {
+
+                            if (
+                                soliData &&
+                                soliData.existe
+                            ) {
+                                hidratarUI(
+                                    soliData
+                                );
+                            }
+                        }
+                    )
+                    .catch(
+                        e =>
+                            console.error(
+                                'Error validando estado de solicitud:',
+                                e
+                            )
+                    );
+            }
+
+        } else if (
+            currentHash ===
+            '#convocatorias'
+        ) {
+
+            if (
+                aspiranteData &&
+                aspiranteData.id
+            ) {
+
+                fetch(
+                    `/api/solicitud/activa/${aspiranteData.id}`
+                )
+                    .then(
+                        res =>
+                            res.json()
+                    )
+                    .then(
+                        soliData => {
+
+                            if (
+                                soliData &&
+                                soliData.existe
+                            ) {
+
+                                hidratarUI(
+                                    soliData
+                                );
+
+                            } else {
+
+                                cargarConvocatorias();
+                            }
+                        }
+                    )
+                    .catch(
+                        () =>
+                            cargarConvocatorias()
+                    );
+
+            } else {
+
+                cargarConvocatorias();
+            }
         }
     }
-});
+);
+
+
+// ==========================================================
+// EVENTO EXCLUSIVO DE NOTIFICACIONES
+// ==========================================================
+socket.on(
+    'actualizacionNotificaciones',
+    () => {
+
+        console.log(
+            'Nueva notificación recibida'
+        );
+
+        if (
+            typeof cargarNotificaciones ===
+            'function'
+        ) {
+            cargarNotificaciones();
+        }
+    }
+);
+
+
+// ==========================================================
+// NOTIFICACIÓN INDIVIDUAL
+// ==========================================================
+socket.on(
+    'notificacionAspirante',
+    () => {
+
+        console.log(
+            'Notificación individual recibida'
+        );
+
+        if (
+            typeof cargarNotificaciones ===
+            'function'
+        ) {
+            cargarNotificaciones();
+        }
+    }
+);
 
 // Manejo y persistencia de estado de la barra lateral (Sidebar)
 // mantener como no-op para retrocompatibilidad
