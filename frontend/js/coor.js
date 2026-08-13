@@ -1422,8 +1422,6 @@ async function cargarDictamenes() {
                 }
             );
 
-        //verificar respuesta exitosa antes de parsear json
-        // asignar a listaDictamenes una respuesta de error como objeto.
         if (!res.ok) {
             throw new Error(`Error del servidor: ${res.status}`);
         }
@@ -1634,21 +1632,28 @@ function configurarFiltrosDictamenes() {
 
 }
 
-// ==========================================
-// 11. Abrir Modal Dictamen
-// ==========================================
 function abrirModalDictamen(idSolicitud) {
 
-    document.getElementById("dictamenSolicitud").value = idSolicitud;
+    document.getElementById(
+        "dictamenSolicitud"
+    ).value = idSolicitud;
 
-    document.getElementById("dictamenResultado").value = "ACEPTADO";
+    document.getElementById(
+        "dictamenResultado"
+    ).value = "ACEPTADO";
 
-    document.getElementById("dictamenMotivo").value = "";
+    document.getElementById(
+        "dictamenMotivo"
+    ).value = "";
 
-    new bootstrap.Modal(
-        document.getElementById("modalDictamen")
-    ).show();
+    const modal =
+        bootstrap.Modal.getOrCreateInstance(
+            document.getElementById(
+                "modalDictamen"
+            )
+        );
 
+    modal.show();
 }
 
 /* ==========================================================
@@ -1757,68 +1762,164 @@ async function cambiarDictamen(
 // ==========================================
 // 13. Guardar Dictamen
 // ==========================================
-//unificar guardado y cambio de dictamen
 async function guardarDictamen() {
 
-    const id = document.getElementById("dictamenSolicitud").value;
-    const resultado = document.getElementById("dictamenResultado").value;
-    const motivo = document.getElementById("dictamenMotivo").value;
+    const id =
+        document.getElementById(
+            "dictamenSolicitud"
+        )?.value;
+
+    const resultado =
+        document.getElementById(
+            "dictamenResultado"
+        )?.value;
+
+    const motivo =
+        document.getElementById(
+            "dictamenMotivo"
+        )?.value.trim();
 
     if (!id || !resultado) {
-        Swal.fire('Datos incompletos', 'No se encontró la solicitud o el resultado seleccionado.', 'warning');
+
+        Swal.fire(
+            "Datos incompletos",
+            "No se encontró la solicitud o el resultado seleccionado.",
+            "warning"
+        );
+
         return;
     }
 
-    // validar motivo obligatorio para rechazo
-    if ((resultado === 'RECHAZADO' || resultado === 'NO_ACEPTADO') && !motivo.trim()) {
-        Swal.fire('Observaciones requeridas', 'Debes escribir el motivo del rechazo antes de guardar.', 'warning');
+    // En tu backend el motivo es obligatorio SIEMPRE
+    if (!motivo) {
+
+        Swal.fire(
+            "Observación requerida",
+            "Debes escribir una observación para el aspirante.",
+            "warning"
+        );
+
         return;
     }
 
-    const btnGuardar = document.querySelector('#modalDictamen .btn-primary, #modalDictamen [onclick*="guardarDictamen"]');
-    if (btnGuardar) btnGuardar.disabled = true;
+    const btnGuardar =
+        document.querySelector(
+            '#modalDictamen [onclick*="guardarDictamen"]'
+        );
+
+    if (btnGuardar) {
+        btnGuardar.disabled = true;
+    }
 
     try {
 
-        const res = await fetch(`/api/coordinador/solicitud/${id}/dictamen`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${sessionStorage.getItem('token') || localStorage.getItem('token') || ''}`
-            },
-            body: JSON.stringify({ estado: resultado, motivo })
+        // IMPORTANTE:
+        // Esta es la ruta de emitirDictamen
+        const res =
+            await fetch(
+                `/api/coordinador/dictamen/${id}`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+
+                        "Authorization":
+                            `Bearer ${
+                                sessionStorage.getItem("token") ||
+                                localStorage.getItem("token") ||
+                                ""
+                            }`
+                    },
+
+                    body:
+                        JSON.stringify({
+                            resultado,
+                            motivo
+                        })
+                }
+            );
+
+        const data =
+            await res
+                .json()
+                .catch(() => ({}));
+
+        console.log(
+            "Respuesta emitir dictamen:",
+            data
+        );
+
+        if (!res.ok) {
+
+            throw new Error(
+                data.mensaje ||
+                data.error ||
+                `Error del servidor (${res.status})`
+            );
+        }
+
+        await Swal.fire({
+            icon: "success",
+            title: "Dictamen publicado",
+            text:
+                data.mensaje ||
+                "El dictamen fue publicado y enviado al aspirante.",
+            timer: 1800,
+            showConfirmButton: false
         });
 
-        const data = await res.json().catch(() => ({}));
+        // Cerrar modal
+        const modalElement =
+            document.getElementById(
+                "modalDictamen"
+            );
 
-        if (res.ok) {
-            await Swal.fire({
-                icon: "success",
-                title: "Dictamen guardado",
-                text: data.mensaje || "El dictamen fue registrado correctamente.",
-                timer: 1500,
-                showConfirmButton: false
-            });
-
+        const modal =
             bootstrap.Modal.getInstance(
-                document.getElementById("modalDictamen")
-            )?.hide();
+                modalElement
+            );
 
-            cargarDictamenes();
+        if (modal) {
+            modal.hide();
+        }
 
-            if (typeof cargarMetricas === 'function') cargarMetricas();
+        // Limpiar
+        document.getElementById(
+            "dictamenMotivo"
+        ).value = "";
 
-        } else {
-            Swal.fire("Error", data.mensaje || `Error del servidor (${res.status}).`, "error");
+        // Recargar tabla
+        await cargarDictamenes();
+
+        // Recargar métricas
+        if (
+            typeof cargarMetricas ===
+            "function"
+        ) {
+            await cargarMetricas();
         }
 
     } catch (error) {
-        console.error('Error al guardar dictamen:', error);
-        Swal.fire('Error de conexión', 'No se pudo conectar con el servidor.', 'error');
-    } finally {
-        if (btnGuardar) btnGuardar.disabled = false;
-    }
 
+        console.error(
+            "Error al guardar dictamen final:",
+            error
+        );
+
+        Swal.fire(
+            "Error",
+            error.message,
+            "error"
+        );
+
+    } finally {
+
+        if (btnGuardar) {
+            btnGuardar.disabled = false;
+        }
+    }
 }
 
 /* ==========================================================
