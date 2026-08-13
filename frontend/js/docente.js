@@ -194,8 +194,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         'EXAMEN': { renderFn: cargarTablaExamenesPorCodigo, vistaId: 'examenes' },
         'PROPEDEUTICO': { renderFn: cargarTablaPropedeuticoPorCodigo, vistaId: 'curso-propedeutico' },
         'PROMEDIO': { renderFn: cargarTablaPromedioPorCodigo, vistaId: 'promedio' },
-        'CENEVAL': { renderFn: cargarTablaPromedioPorCodigo, vistaId: 'promedio' },
-        'EXTRANJERO': { renderFn: cargarTablaExamenesPorCodigo, vistaId: 'examenes' }
+        // 'CENEVAL': { renderFn: cargarTablaPromedioPorCodigo, vistaId: 'promedio' }, // Inhabilitado temporalmente
+        // 'EXTRANJERO': { renderFn: cargarTablaExamenesPorCodigo, vistaId: 'examenes' } // Inhabilitado temporalmente
     };
 
     async function inicializarMenusDinamicos() {

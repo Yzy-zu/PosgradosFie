@@ -2136,8 +2136,12 @@ async function cargarModalidadesAdmision() {
             const modalidades = await res.json();
             contenedor.innerHTML = '';
 
-            modalidades.forEach((mod, index) => {
-                const checkedStr = index === 0 ? 'checked' : '';
+            let count = 0;
+            modalidades.forEach((mod) => {
+                if (mod.codigo === 'CENEVAL' || mod.codigo === 'EXTRANJERO') return;
+                
+                const checkedStr = count === 0 ? 'checked' : '';
+                count++;
                 // 'mod' es un objeto { id, nombre, descripcion }
                 contenedor.innerHTML += `
                     <div class="file-box file-box-option" onclick="this.querySelector('input').checked=true; actualizarCostosAdmision();">

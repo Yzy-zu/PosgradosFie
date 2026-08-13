@@ -25,7 +25,7 @@ const moduloPromedioRenderer = {
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <div class="status-banner-icon"><i class="fa-solid fa-calculator"></i></div>
                         <div>
-                            <div class="status-banner-title">${typeof t === 'function' ? t('prom_evaluacion_titulo') : 'Evaluación por Promedio FIE'}</div>
+                            <div class="status-banner-title">${typeof t === 'function' ? t('prom_evaluacion_titulo') : 'Evaluación por Promedio Escolar'}</div>
                             <div class="status-banner-sub">${typeof t === 'function' ? t('doc_etapa_actual') : 'Etapa actual'}: <strong>${etapa}</strong></div>
                         </div>
                     </div>
@@ -75,7 +75,7 @@ const moduloPromedioRenderer = {
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <div class="status-banner-icon"><i class="fa-solid fa-calculator"></i></div>
                         <div>
-                            <div class="status-banner-title">${typeof t === 'function' ? t('prom_evaluacion_titulo') : 'Evaluación por Promedio FIE'}</div>
+                            <div class="status-banner-title">${typeof t === 'function' ? t('prom_evaluacion_titulo') : 'Evaluación por Promedio Escolar'}</div>
                             <div class="status-banner-sub">${typeof t === 'function' ? t('doc_etapa_actual') : 'Etapa actual'}: <strong>${etapa}</strong></div>
                         </div>
                     </div>
@@ -123,7 +123,7 @@ const moduloPromedioRenderer = {
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <div class="status-banner-icon"><i class="fa-solid fa-calculator"></i></div>
                         <div>
-                            <div class="status-banner-title">${typeof t === 'function' ? t('prom_evaluacion_titulo') : 'Evaluación por Promedio FIE'}</div>
+                            <div class="status-banner-title">${typeof t === 'function' ? t('prom_evaluacion_titulo') : 'Evaluación por Promedio Escolar'}</div>
                             <div class="status-banner-sub">${typeof t === 'function' ? t('doc_etapa_actual') : 'Etapa actual'}: <strong>${etapa}</strong></div>
                         </div>
                     </div>
