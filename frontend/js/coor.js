@@ -7,6 +7,63 @@ let filtroDictamen = "TODOS";
 let textoBusquedaDictamen = "";
 
 
+const socket = io();
+
+socket.on('connect', () => {
+    const usr = JSON.parse(
+        sessionStorage.getItem('usuario') || '{}'
+    );
+
+    const idUsuario = usr.idUsuario || usr.id;
+
+    socket.emit('registrarSala', {
+        rol: 'COORDINADOR',
+        idUsuario
+    });
+});
+
+socket.on('actualizacionGlobal', () => {
+
+    if (typeof cargarMetricas === 'function') {
+        cargarMetricas();
+    }
+
+    const currentHash = window.location.hash;
+
+    if (currentHash === '#aspirantes') {
+
+        if (typeof cargarAspirantes === 'function') {
+            cargarAspirantes();
+        }
+
+    } else if (currentHash === '#entrevistas') {
+
+        if (typeof cargarEntrevistas === 'function') {
+            cargarEntrevistas();
+        }
+
+    } else if (currentHash === '#dictamenes') {
+
+        if (typeof cargarDictamenes === 'function') {
+            cargarDictamenes();
+        }
+
+    } else if (currentHash === '#convocatorias') {
+
+        if (typeof cargarConvocatorias === 'function') {
+            cargarConvocatorias();
+        }
+    }
+});
+
+socket.on('actualizacionNotificaciones', () => {
+
+    if (typeof cargarNotificaciones === 'function') {
+        cargarNotificaciones();
+    }
+
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Inicializar enrutador
     initRouter();
