@@ -9,22 +9,22 @@ let currentSolicitudId = null;
 const socket = io();
 
 socket.on('connect', () => {
-    const usr = JSON.parse(
-        sessionStorage.getItem('usuario') || '{}'
-    );
-
+    const usr = JSON.parse(sessionStorage.getItem('usuario') || '{}');
     const idUsuario = usr.idUsuario || usr.id;
 
     socket.emit('registrarSala', {
         rol: 'ASPIRANTE',
-        idUsuario
+        idUsuario: idUsuario
     });
 });
-
 
 socket.on('actualizacionGlobal', () => {
 
     const currentHash = window.location.hash;
+
+    if (typeof cargarNotificaciones === 'function') {
+        cargarNotificaciones();
+    }
 
     if (currentHash === '#inicio' || currentHash === '') {
 
@@ -40,9 +40,10 @@ socket.on('actualizacionGlobal', () => {
                         hidratarUI(soliData);
                     }
                 })
-                .catch(e =>
-                    console.error("Error actualizando inicio:", e)
-                );
+                .catch(e => console.error(
+                    "Error actualizando inicio:",
+                    e
+                ));
         }
 
     } else if (currentHash === '#proceso') {
@@ -64,12 +65,10 @@ socket.on('actualizacionGlobal', () => {
                         hidratarUI(soliData);
                     }
                 })
-                .catch(e =>
-                    console.error(
-                        "Error validando estado de solicitud:",
-                        e
-                    )
-                );
+                .catch(e => console.error(
+                    "Error validando estado de solicitud:",
+                    e
+                ));
         }
 
     } else if (currentHash === '#convocatorias') {
@@ -89,15 +88,6 @@ socket.on('actualizacionGlobal', () => {
             cargarConvocatorias();
         }
     }
-});
-
-
-socket.on('actualizacionNotificaciones', () => {
-
-    if (typeof cargarNotificaciones === 'function') {
-        cargarNotificaciones();
-    }
-
 });
 
 // Manejo y persistencia de estado de la barra lateral (Sidebar)
