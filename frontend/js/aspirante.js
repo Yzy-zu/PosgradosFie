@@ -7,16 +7,31 @@ let currentSolicitudId = null;
 
 // Conexión Socket.io — registrar sala al conectar
 const socket = io();
+
 socket.on('connect', () => {
     const usr = JSON.parse(sessionStorage.getItem('usuario') || '{}');
-    socket.emit('registrarSala', { rol: 'ASPIRANTE', idUsuario: usr.id });
+    const idUsuario = usr.idUsuario || usr.id;
+
+    socket.emit('registrarSala', {
+        rol: 'ASPIRANTE',
+        idUsuario: idUsuario
+    });
 });
+
 socket.on('actualizacionGlobal', () => {
-    //recargar vista al detectar cambios
+
+    if (typeof cargarNotificaciones === 'function') {
+        cargarNotificaciones();
+    }
+
     const currentHash = window.location.hash;
+
     if (currentHash === '#inicio' || currentHash === '') {
-        if (typeof cargarNotificaciones === 'function') cargarNotificaciones();
-        if (typeof cargarStatsInicio === 'function') cargarStatsInicio();
+
+        if (typeof cargarStatsInicio === 'function') {
+            cargarStatsInicio();
+        }
+
         if (aspiranteData && aspiranteData.id) {
             fetch(`/api/solicitud/activa/${aspiranteData.id}`)
                 .then(res => res.json())
@@ -27,9 +42,18 @@ socket.on('actualizacionGlobal', () => {
                 })
                 .catch(e => console.error("Error actualizando inicio:", e));
         }
+
     } else if (currentHash === '#proceso') {
-        if (typeof cargarDatosProceso === 'function') cargarDatosProceso();
-    } else if (currentHash === '#documentos' || currentHash === '#admision') {
+
+        if (typeof cargarDatosProceso === 'function') {
+            cargarDatosProceso();
+        }
+
+    } else if (
+        currentHash === '#documentos' ||
+        currentHash === '#admision'
+    ) {
+
         if (aspiranteData && aspiranteData.id) {
             fetch(`/api/solicitud/activa/${aspiranteData.id}`)
                 .then(res => res.json())
@@ -38,22 +62,25 @@ socket.on('actualizacionGlobal', () => {
                         hidratarUI(soliData);
                     }
                 })
-                .catch(e => console.error("Error validando estado de solicitud:", e));
+                .catch(e => console.error(
+                    "Error validando estado de solicitud:",
+                    e
+                ));
         }
+
     } else if (currentHash === '#convocatorias') {
-        // verificar si hay solicitud activa
-        // Si la hay, mantener la tarjeta de solicitud activa en lugar de sobreescribirla.
+
         if (aspiranteData && aspiranteData.id) {
             fetch(`/api/solicitud/activa/${aspiranteData.id}`)
                 .then(res => res.json())
                 .then(soliData => {
                     if (soliData && soliData.existe) {
-                        hidratarUI(soliData); // Conservar la tarjeta de solicitud activa
+                        hidratarUI(soliData);
                     } else {
-                        cargarConvocatorias(); // Solo mostrar lista si no hay solicitud
+                        cargarConvocatorias();
                     }
                 })
-                .catch(() => cargarConvocatorias()); // Fallback seguro
+                .catch(() => cargarConvocatorias());
         } else {
             cargarConvocatorias();
         }

@@ -139,80 +139,308 @@ getAspirantes: async (req, res) => {
 // 3. Actualizar Estado / Dictamen
 // ==========================================
 actualizarDictamen: async (req, res) => {
+
     const { id } = req.params;
     const { estado, motivo } = req.body;
 
-    const whitelistEstados = ['APROBADO', 'RECHAZADO', 'ACEPTADO', 'NO_ACEPTADO', 'EN_REVISION', 'PENDIENTE', 'CANCELADO', 'LISTA_ESPERA'];
+    const whitelistEstados = [
+        'APROBADO',
+        'RECHAZADO',
+        'ACEPTADO',
+        'NO_ACEPTADO',
+        'EN_REVISION',
+        'PENDIENTE',
+        'CANCELADO',
+        'LISTA_ESPERA'
+    ];
+
     if (!estado || !whitelistEstados.includes(estado)) {
-        return res.status(400).json({ ok: false, mensaje: 'Estado no válido.' });
+        return res.status(400).json({
+            ok: false,
+            mensaje: 'Estado no válido.'
+        });
     }
+
 
     let estadoSolicitud = estado;
     let resultadoFinal = estado;
-    
-    if (estado === 'ACEPTADO') estadoSolicitud = 'APROBADO';
+
+    if (estado === 'ACEPTADO') {
+        estadoSolicitud = 'APROBADO';
+    }
+
     if (estado === 'NO_ACEPTADO') {
         estadoSolicitud = 'RECHAZADO';
         resultadoFinal = 'RECHAZADO';
     }
-    if (estado === 'APROBADO') resultadoFinal = 'ACEPTADO';
+
+    if (estado === 'APROBADO') {
+        resultadoFinal = 'ACEPTADO';
+    }
+
 
     let connection;
+
     try {
+
         connection = await db.getConnection();
         await connection.beginTransaction();
+
+
+        // ==========================================
+        // 1. ACTUALIZAR ESTADO DE LA SOLICITUD
+        // ==========================================
 
         await connection.query(`
             UPDATE solicitud
             SET estado = ?
             WHERE id = ?
-        `, [estadoSolicitud, id]);
+        `, [
+            estadoSolicitud,
+            id
+        ]);
 
-        if (['ACEPTADO', 'RECHAZADO', 'APROBADO', 'NO_ACEPTADO', 'LISTA_ESPERA'].includes(estado)) {
-            const [dictamenExistente] = await connection.query(`
-                SELECT id FROM resultado_final WHERE idSolicitud = ?
-            `, [id]);
+
+        // ==========================================
+        // 2. BUSCAR AL ASPIRANTE
+        // ==========================================
+
+        const [aspirantes] = await connection.query(`
+            SELECT
+                a.idUsuario,
+
+                CONCAT(
+                    a.nombre,
+                    ' ',
+                    a.primerApellido,
+                    ' ',
+                    IFNULL(a.segundoApellido, '')
+                ) AS nombreAspirante
+
+            FROM solicitud s
+
+            INNER JOIN aspirante a
+                ON s.idAspi = a.id
+
+            WHERE s.id = ?
+
+            LIMIT 1
+        `, [id]);
+
+
+        if (aspirantes.length === 0) {
+
+            await connection.rollback();
+
+            return res.status(404).json({
+                ok: false,
+                mensaje: 'Solicitud no encontrada.'
+            });
+        }
+
+
+        const aspirante = aspirantes[0];
+
+
+        // ==========================================
+        // 3. GUARDAR RESULTADO FINAL
+        // ==========================================
+
+        if (
+            [
+                'ACEPTADO',
+                'RECHAZADO',
+                'APROBADO',
+                'NO_ACEPTADO',
+                'LISTA_ESPERA'
+            ].includes(estado)
+        ) {
+
+            const [dictamenExistente] =
+                await connection.query(`
+                    SELECT id
+                    FROM resultado_final
+                    WHERE idSolicitud = ?
+                `, [id]);
+
 
             if (dictamenExistente.length > 0) {
+
                 await connection.query(`
                     UPDATE resultado_final
-                    SET resultado = ?, motivo = ?, publicado = 1, fechaPublicacion = NOW()
+
+                    SET
+                        resultado = ?,
+                        motivo = ?,
+                        publicado = 1,
+                        fechaPublicacion = NOW()
+
                     WHERE idSolicitud = ?
-                `, [resultadoFinal, (motivo || '').trim(), id]);
+                `, [
+                    resultadoFinal,
+                    (motivo || '').trim(),
+                    id
+                ]);
+
             } else {
+
                 await connection.query(`
-                    INSERT INTO resultado_final (idSolicitud, resultado, motivo, publicado, fechaPublicacion)
+                    INSERT INTO resultado_final
+                    (
+                        idSolicitud,
+                        resultado,
+                        motivo,
+                        publicado,
+                        fechaPublicacion
+                    )
+
                     VALUES (?, ?, ?, 1, NOW())
-                `, [id, resultadoFinal, (motivo || '').trim()]);
+                `, [
+                    id,
+                    resultadoFinal,
+                    (motivo || '').trim()
+                ]);
             }
         }
 
-        await connection.commit();
-        connection.release();
 
-        if (req.app.get('io')) {
-            const [solD] = await db.query(
-                'SELECT a.idUsuario FROM solicitud s JOIN aspirante a ON s.idAspi = a.id WHERE s.id = ?',
-                [id]
-            );
-            if (solD.length > 0) emit.aAspiranteEspecifico(req, solD[0].idUsuario);
-            else emit.aAdmin(req);
+        // ==========================================
+        // 4. CREAR NOTIFICACIÓN
+        // ==========================================
+
+        if (aspirante.idUsuario) {
+
+            let mensajeNotificacion = `
+Tu solicitud ha cambiado de estado.
+
+Estado: ${estadoSolicitud.replace('_', ' ')}
+            `.trim();
+
+
+            // Si escribió una observación, agregarla
+            if (motivo && motivo.trim()) {
+
+                mensajeNotificacion += `
+
+Observaciones:
+${motivo.trim()}`;
+
+            }
+
+
+            // ==========================================
+            // Evitar notificaciones duplicadas
+            // ==========================================
+
+            await connection.query(`
+                DELETE FROM notificaciones
+
+                WHERE nombre = 'Actualización de Solicitud'
+                  AND destino = 'individual'
+                  AND idDestino = ?
+            `, [
+                aspirante.idUsuario
+            ]);
+
+
+            // ==========================================
+            // Insertar nueva notificación
+            // ==========================================
+
+            await connection.query(`
+                INSERT INTO notificaciones
+                (
+                    nombre,
+                    mensaje,
+                    destino,
+                    activa,
+                    rolRemitente,
+                    nombreRemitente,
+                    idDestino
+                )
+
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `, [
+                'Actualización de Solicitud',
+
+                mensajeNotificacion,
+
+                'individual',
+
+                1,
+
+                'COORDINADOR',
+
+                'Coordinación Posgrados',
+
+                aspirante.idUsuario
+            ]);
         }
 
-        res.json({
+
+        // ==========================================
+        // 5. CONFIRMAR TRANSACCIÓN
+        // ==========================================
+
+        await connection.commit();
+
+
+        // ==========================================
+        // 6. SOCKET.IO
+        // ==========================================
+
+        if (
+            req.app.get('io') &&
+            aspirante.idUsuario
+        ) {
+
+            emit.aAspiranteEspecifico(
+                req,
+                aspirante.idUsuario
+            );
+        }
+
+
+        // ==========================================
+        // 7. RESPUESTA
+        // ==========================================
+
+        return res.json({
             ok: true,
-            mensaje: "Estado actualizado correctamente."
+            mensaje:
+                "Estado actualizado y notificación enviada correctamente."
         });
 
+
     } catch (error) {
+
         if (connection) {
             await connection.rollback();
+        }
+
+        console.error(
+            "Error al actualizar dictamen:",
+            error
+        );
+
+        return res.status(500).json({
+            ok: false,
+            mensaje:
+                "Error al actualizar el estado.",
+            error:
+                error.sqlMessage ||
+                error.message
+        });
+
+
+    } finally {
+
+        if (connection) {
             connection.release();
         }
-        console.error(error);
-        res.status(500).json({ ok: false, mensaje: "Error al actualizar." });
     }
 },
+
     // ==========================================
 // 4. Expediente del Aspirante
 // ==========================================
@@ -479,15 +707,37 @@ guardarEntrevista: async (req, res) => {
         hora,
         lugar,
         enlace,
-        idDocente
+        idDocente,
+        idDocente2,
+        idDocente3
     } = req.body;
 
-    if (!id || !fecha || !hora || !idDocente) {
+    if (
+        !id ||
+        !fecha ||
+        !hora ||
+        !idDocente ||
+        !idDocente2 ||
+        !idDocente3
+    ) {
 
         return res.status(400).json({
             ok: false,
             mensaje:
                 "Faltan datos obligatorios para programar la entrevista."
+        });
+    }
+
+    if (
+        String(idDocente) === String(idDocente2) ||
+        String(idDocente) === String(idDocente3) ||
+        String(idDocente2) === String(idDocente3)
+    ) {
+
+        return res.status(400).json({
+            ok: false,
+            mensaje:
+                "Debe seleccionar tres docentes diferentes."
         });
     }
 
@@ -499,9 +749,6 @@ guardarEntrevista: async (req, res) => {
 
         await connection.beginTransaction();
 
-        // ==========================================
-        // Verificar si ya existe entrevista
-        // ==========================================
         const [entrevistasExistentes] =
             await connection.query(
                 `
@@ -522,12 +769,13 @@ guardarEntrevista: async (req, res) => {
             const idEntrevista =
                 entrevistasExistentes[0].id;
 
-            // Actualizar solamente una entrevista
             await connection.query(
                 `
                     UPDATE entrevistas
                     SET
                         idDocente = ?,
+                        idDocente2 = ?,
+                        idDocente3 = ?,
                         fecha = ?,
                         hora = ?,
                         lugar = ?,
@@ -538,6 +786,8 @@ guardarEntrevista: async (req, res) => {
                 `,
                 [
                     idDocente,
+                    idDocente2,
+                    idDocente3,
                     fecha,
                     hora,
                     lugar || "",
@@ -546,10 +796,6 @@ guardarEntrevista: async (req, res) => {
                 ]
             );
 
-            /*
-             * Eliminar entrevistas duplicadas antiguas
-             * y conservar únicamente la actual.
-             */
             await connection.query(
                 `
                     DELETE FROM entrevistas
@@ -564,24 +810,27 @@ guardarEntrevista: async (req, res) => {
 
         } else {
 
-            // Crear la entrevista por primera vez
             await connection.query(
                 `
                     INSERT INTO entrevistas
                     (
                         idSolicitud,
                         idDocente,
+                        idDocente2,
+                        idDocente3,
                         fecha,
                         hora,
                         lugar,
                         enlace,
                         estatus
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, 'PROGRAMADA')
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PROGRAMADA')
                 `,
                 [
                     id,
                     idDocente,
+                    idDocente2,
+                    idDocente3,
                     fecha,
                     hora,
                     lugar || "",
@@ -589,20 +838,29 @@ guardarEntrevista: async (req, res) => {
                 ]
             );
 
-            // M-02: avanzar el workflow solo si la solicitud aún está en la etapa de Entrevista.
-            // Esto sincroniza coordinadorController con entrevistaController (que sí avanzaba la etapa).
-            const [[solicitudEtapa]] = await connection.query(
-                'SELECT idEtapaActual FROM solicitud WHERE id = ?', [id]
-            );
-            if (solicitudEtapa && Number(solicitudEtapa.idEtapaActual) === ETAPAS.ENTREVISTA) {
-                await WorkflowService.avanzarEtapa(parseInt(id), connection);
+            const [[solicitudEtapa]] =
+                await connection.query(
+                    `
+                        SELECT idEtapaActual
+                        FROM solicitud
+                        WHERE id = ?
+                    `,
+                    [id]
+                );
+
+            if (
+                solicitudEtapa &&
+                Number(solicitudEtapa.idEtapaActual) ===
+                ETAPAS.ENTREVISTA
+            ) {
+
+                await WorkflowService.avanzarEtapa(
+                    parseInt(id),
+                    connection
+                );
             }
+        }
 
-        } // fin else (nueva entrevista)
-
-        // ==========================================
-        // Buscar aspirante y usuario
-        // ==========================================
         const [aspirantes] =
             await connection.query(
                 `
@@ -623,6 +881,7 @@ guardarEntrevista: async (req, res) => {
                         ON s.idAspi = a.id
 
                     WHERE s.id = ?
+
                     LIMIT 1
                 `,
                 [id]
@@ -631,13 +890,12 @@ guardarEntrevista: async (req, res) => {
         const aspirante =
             aspirantes[0];
 
-        // ==========================================
-        // Obtener nombre del docente
-        // ==========================================
         const [docentes] =
             await connection.query(
                 `
                     SELECT
+                        id,
+
                         CONCAT(
                             nombre,
                             ' ',
@@ -648,37 +906,56 @@ guardarEntrevista: async (req, res) => {
 
                     FROM docente
 
-                    WHERE id = ?
-                    LIMIT 1
+                    WHERE id IN (?, ?, ?)
                 `,
-                [idDocente]
+                [
+                    idDocente,
+                    idDocente2,
+                    idDocente3
+                ]
             );
 
-        const docente =
-            docentes[0];
+        const docente1 =
+            docentes.find(
+                d => String(d.id) === String(idDocente)
+            );
+
+        const docente2 =
+            docentes.find(
+                d => String(d.id) === String(idDocente2)
+            );
+
+        const docente3 =
+            docentes.find(
+                d => String(d.id) === String(idDocente3)
+            );
 
         const mensaje = `
 Tu entrevista ha sido programada.
 
 Fecha: ${fecha}
 Hora: ${hora}
-Docente: ${docente?.nombreDocente || "Docente asignado"}
+
+Docente 1: ${docente1?.nombreDocente || "Docente asignado"}
+Docente 2: ${docente2?.nombreDocente || "Docente asignado"}
+Docente 3: ${docente3?.nombreDocente || "Docente asignado"}
+
 Lugar: ${lugar || "Por definir"}
         `.trim();
 
-        // ==========================================
-        // Evitar notificaciones duplicadas
-        // ==========================================
         if (aspirante?.idUsuario) {
 
             await connection.query(
                 `
                     DELETE FROM notificaciones
+
                     WHERE nombre = 'Entrevista Programada'
                       AND destino = 'individual'
                       AND idDestino = ?
                 `,
-                [aspirante.idUsuario]
+                [
+                    aspirante.idUsuario
+                ]
             );
 
             await connection.query(
@@ -693,6 +970,7 @@ Lugar: ${lugar || "Por definir"}
                         nombreRemitente,
                         idDestino
                     )
+
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 `,
                 [
@@ -709,12 +987,20 @@ Lugar: ${lugar || "Por definir"}
 
         await connection.commit();
 
-        if (req.app.get("io")) {
-            emit.aAspiranteEspecifico(req, aspirante.idUsuario);
+        if (
+            req.app.get("io") &&
+            aspirante?.idUsuario
+        ) {
+
+            emit.aAspiranteEspecifico(
+                req,
+                aspirante.idUsuario
+            );
         }
 
         return res.json({
             ok: true,
+
             mensaje:
                 entrevistaYaExistia
                     ? "Entrevista actualizada correctamente."
@@ -734,8 +1020,10 @@ Lugar: ${lugar || "Por definir"}
 
         return res.status(500).json({
             ok: false,
+
             mensaje:
                 "Error al guardar la entrevista.",
+
             error:
                 error.sqlMessage ||
                 error.message
@@ -748,6 +1036,7 @@ Lugar: ${lugar || "Por definir"}
         }
     }
 },
+
 // ==========================================
 // 8. Obtener Dictámenes
 // ==========================================

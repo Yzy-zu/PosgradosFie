@@ -872,86 +872,182 @@ async function cargarEntrevistas() {
 
 // B. Llenar el select de docentes
 async function cargarDocentesSelect() {
-    const select = document.getElementById('selectDocente');
-    if (!select) return;
+    const select1 = document.getElementById('selectDocente');
+    const select2 = document.getElementById('selectDocente2');
+    const select3 = document.getElementById('selectDocente3');
+
+    if (!select1 || !select2 || !select3) return;
 
     try {
         if (!listaDocentesCache || listaDocentesCache.length === 0) {
             const res = await fetch('/api/coordinador/docentes');
+
             if (!res.ok) {
-                select.innerHTML = '<option value="" disabled selected>Error al cargar docentes</option>';
+                const errorOption =
+                    '<option value="" disabled selected>Error al cargar docentes</option>';
+
+                select1.innerHTML = errorOption;
+                select2.innerHTML = errorOption;
+                select3.innerHTML = errorOption;
                 return;
             }
+
             listaDocentesCache = await res.json();
         }
 
-        if (!Array.isArray(listaDocentesCache) || listaDocentesCache.length === 0) {
-            select.innerHTML = '<option value="" disabled selected>No hay docentes disponibles</option>';
+        if (
+            !Array.isArray(listaDocentesCache) ||
+            listaDocentesCache.length === 0
+        ) {
+            const vacioOption =
+                '<option value="" disabled selected>No hay docentes disponibles</option>';
+
+            select1.innerHTML = vacioOption;
+            select2.innerHTML = vacioOption;
+            select3.innerHTML = vacioOption;
             return;
         }
 
-        let htmlOptions = '<option value="" disabled selected>Seleccione un docente...</option>';
+        let htmlOptions =
+            '<option value="" disabled selected>Seleccione un docente...</option>';
 
         listaDocentesCache.forEach(d => {
-            const idDoc = d.id_docente ?? d.id_usuario ?? d.id_docente_asignado ?? d.id;
-            const nombreDoc = d.nombre_completo ?? d.nombre_docente ?? `${d.nombre || ''} ${d.primerApellido || d.apellidos || ''}`.trim();
+            const idDoc =
+                d.id_docente ??
+                d.id_usuario ??
+                d.id_docente_asignado ??
+                d.id;
+
+            const nombreDoc =
+                d.nombre_completo ??
+                d.nombre_docente ??
+                `${d.nombre || ''} ${d.primerApellido || d.apellidos || ''}`.trim();
 
             if (idDoc !== undefined && nombreDoc) {
-                htmlOptions += `<option value="${idDoc}">${nombreDoc}</option>`;
+                htmlOptions += `
+                    <option value="${idDoc}">
+                        ${nombreDoc}
+                    </option>
+                `;
             }
         });
 
-        select.innerHTML = htmlOptions;
+        select1.innerHTML = htmlOptions;
+        select2.innerHTML = htmlOptions;
+        select3.innerHTML = htmlOptions;
 
     } catch (err) {
-        console.error('Error crítico en cargarDocentesSelect:', err);
-        select.innerHTML = '<option value="" disabled selected>Error de conexión</option>';
+        console.error(
+            'Error crítico en cargarDocentesSelect:',
+            err
+        );
+
+        const errorOption =
+            '<option value="" disabled selected>Error de conexión</option>';
+
+        select1.innerHTML = errorOption;
+        select2.innerHTML = errorOption;
+        select3.innerHTML = errorOption;
     }
 }
 
-// C. Abrir el modal de entrevista
+
 async function abrirModalEntrevista(
     idSolicitud,
     nombreAspirante,
     fecha = '',
     hora = '',
     idDocente = '',
+    idDocente2 = '',
+    idDocente3 = '',
     lugar = ''
 ) {
-    const modalElement = document.getElementById('modalEntrevista');
+    const modalElement =
+        document.getElementById('modalEntrevista');
+
     if (!modalElement) return;
 
-    const inputSolicitud = document.getElementById('modalEntrevistaIdSolicitud');
-    const txtNombre = document.getElementById('modalEntrevistaNombre');
-    const inputFecha = document.getElementById('modalEntrevistaFecha');
-    const inputHora = document.getElementById('modalEntrevistaHora');
-    const inputLugar = document.getElementById('modalEntrevistaLugar');
-    const selectDocente = document.getElementById('selectDocente');
+    const inputSolicitud =
+        document.getElementById('modalEntrevistaIdSolicitud');
 
-    if (inputSolicitud) inputSolicitud.value = idSolicitud;
-    if (txtNombre) txtNombre.textContent = nombreAspirante;
-    if (inputFecha) inputFecha.value = fecha || '';
-    if (inputHora) inputHora.value = hora || '';
-    if (inputLugar) inputLugar.value = lugar || '';
+    const txtNombre =
+        document.getElementById('modalEntrevistaNombre');
 
-    // Cargar la lista de docentes en el select
-    await cargarDocentesSelect();
+    const inputFecha =
+        document.getElementById('modalEntrevistaFecha');
 
-    // Asignación directa e inmediata del docente seleccionado
-    if (selectDocente) {
-        const targetVal = (idDocente && idDocente !== 'null' && idDocente !== 'undefined')
-            ? String(idDocente)
-            : '';
-        selectDocente.value = targetVal;
+    const inputHora =
+        document.getElementById('modalEntrevistaHora');
+
+    const inputLugar =
+        document.getElementById('modalEntrevistaLugar');
+
+    const select1 =
+        document.getElementById('selectDocente');
+
+    const select2 =
+        document.getElementById('selectDocente2');
+
+    const select3 =
+        document.getElementById('selectDocente3');
+
+    if (inputSolicitud) {
+        inputSolicitud.value = idSolicitud;
     }
 
-    const modal = bootstrap.Modal.getInstance(modalElement)
-        || new bootstrap.Modal(modalElement);
+    if (txtNombre) {
+        txtNombre.textContent = nombreAspirante;
+    }
+
+    if (inputFecha) {
+        inputFecha.value = fecha || '';
+    }
+
+    if (inputHora) {
+        inputHora.value = hora || '';
+    }
+
+    if (inputLugar) {
+        inputLugar.value = lugar || '';
+    }
+
+    await cargarDocentesSelect();
+
+    if (select1) {
+        select1.value =
+            idDocente &&
+            idDocente !== 'null' &&
+            idDocente !== 'undefined'
+                ? String(idDocente)
+                : '';
+    }
+
+    if (select2) {
+        select2.value =
+            idDocente2 &&
+            idDocente2 !== 'null' &&
+            idDocente2 !== 'undefined'
+                ? String(idDocente2)
+                : '';
+    }
+
+    if (select3) {
+        select3.value =
+            idDocente3 &&
+            idDocente3 !== 'null' &&
+            idDocente3 !== 'undefined'
+                ? String(idDocente3)
+                : '';
+    }
+
+    const modal =
+        bootstrap.Modal.getInstance(modalElement) ||
+        new bootstrap.Modal(modalElement);
 
     modal.show();
 }
 
-// D. Guardar/programar entrevista
+
 async function guardarEntrevista(event) {
 
     if (event) {
@@ -1008,21 +1104,51 @@ async function guardarEntrevista(event) {
                 "selectDocente"
             )?.value;
 
+        const idDocente2 =
+            document.getElementById(
+                "selectDocente2"
+            )?.value;
+
+        const idDocente3 =
+            document.getElementById(
+                "selectDocente3"
+            )?.value;
+
+
         if (
             !idSolicitud ||
             !fecha ||
             !hora ||
-            !idDocente
+            !idDocente ||
+            !idDocente2 ||
+            !idDocente3
         ) {
 
             await Swal.fire(
                 "Campos incompletos",
-                "Seleccione docente, fecha y hora.",
+                "Seleccione los tres docentes, fecha y hora.",
                 "warning"
             );
 
             return;
         }
+
+
+        if (
+            idDocente === idDocente2 ||
+            idDocente === idDocente3 ||
+            idDocente2 === idDocente3
+        ) {
+
+            await Swal.fire(
+                "Docentes repetidos",
+                "Seleccione tres docentes diferentes.",
+                "warning"
+            );
+
+            return;
+        }
+
 
         const respuesta =
             await fetch(
@@ -1040,7 +1166,9 @@ async function guardarEntrevista(event) {
                         hora,
                         lugar,
                         enlace: "",
-                        idDocente
+                        idDocente,
+                        idDocente2,
+                        idDocente3
                     })
                 }
             );
@@ -1058,6 +1186,7 @@ async function guardarEntrevista(event) {
             );
         }
 
+
         await Swal.fire({
             icon: "success",
             title: "Entrevista guardada",
@@ -1068,6 +1197,7 @@ async function guardarEntrevista(event) {
             showConfirmButton: false
         });
 
+
         bootstrap.Modal
             .getInstance(
                 document.getElementById(
@@ -1076,7 +1206,9 @@ async function guardarEntrevista(event) {
             )
             ?.hide();
 
+
         await cargarEntrevistas();
+
 
     } catch (error) {
 
@@ -1090,6 +1222,7 @@ async function guardarEntrevista(event) {
             error.message,
             "error"
         );
+
 
     } finally {
 
